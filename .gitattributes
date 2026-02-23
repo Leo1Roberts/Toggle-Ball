@@ -1,0 +1,10 @@
+# Normalize text files
+.c     text
+.cpp   text
+.h     text
+.hpp   text
+.java  text
+.kt    text
+
+# Ensure consistent line endings on Windows machines
+text=auto

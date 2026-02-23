@@ -1,0 +1,36 @@
+# Ignore everything by default
+*
+
+# Git metadata and ignore files
+!.gitignore
+!.gitattributes
+!.git/
+
+# Core source files
+!core/
+!core/source/
+!core/source/**/*.cpp
+!core/include/
+!core/include/**/*.h
+!core/assets/
+!core/assets/shaders/
+!core/assets/shaders/**/*.frag
+!core/assets/shaders/**/*.vert
+
+# Android files
+!android/
+!android/app/
+!android/app/src/
+!android/app/src/main/
+
+!android/app/src/main/cpp/
+!android/app/src/main/cpp/main.cpp
+
+!android/app/src/main/java/
+!android/app/src/main/java/leo1/
+!android/app/src/main/java/leo1/toggleball/
+!android/app/src/main/java/leo1/toggleball/MainActivity.java
+
+# Windows files
+!windows/
+!windows/main.cpp
