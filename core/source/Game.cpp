@@ -2008,6 +2008,7 @@ void Game::selectLevelCallback(int levelIndex) {
 
 short Game::savedIndex;
 void Game::saveLevel(int _) {
+#ifdef WINDOWS_VERSION
 	std::string data = std::move(level.exportLevel());
 
 	std::ofstream ofs((ASSETS_PATH + "levels/" + level.name + ".lvl").c_str());
@@ -2016,6 +2017,7 @@ void Game::saveLevel(int _) {
 		ofs.close();
 		savedIndex = bufferIndex;
 	}
+#endif
 }
 
 #ifdef WINDOWS_VERSION
