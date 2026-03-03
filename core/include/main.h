@@ -1,12 +1,16 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#include <string>
+
 #ifdef WINDOWS_VERSION
 #define NOMINMAX
 #include <windows.h>
 #include <GLAD/glad.h>
 #include <GLFW/glfw3.h>
 #define _USE_MATH_DEFINES
+
+const std::string ASSETS_PATH = "C:/Users/leo/Toggle Ball/core/assets/";
 
 #else
 
@@ -23,7 +27,6 @@ typedef unsigned char byte;
 #include <cmath>
 #include <memory>
 #include <vector>
-#include <string>
 #include <map>
 #include "VectorMatrix.h"
 #include "Utilities.h"

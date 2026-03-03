@@ -109,9 +109,9 @@ bool Cursor::initShader(
 	glEnableVertexAttribArray(uv);
 
 #ifdef WINDOWS_VERSION
-	arrowTex = TextureAsset::loadAsset("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/cursors/arrow.png", false);
-	handTex = TextureAsset::loadAsset("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/cursors/hand.png", false);
-	resizeTex = TextureAsset::loadAsset("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/cursors/resize.png", false);
+	arrowTex = TextureAsset::loadAsset(ASSETS_PATH + "cursors/arrow.png", false);
+	handTex = TextureAsset::loadAsset(ASSETS_PATH + "cursors/hand.png", false);
+	resizeTex = TextureAsset::loadAsset(ASSETS_PATH + "cursors/resize.png", false);
 #endif
 
 	tex = arrowTex;

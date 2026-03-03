@@ -12,14 +12,14 @@ int addFileIndices(std::vector<FileIndices>* fileIndices, const FileIndices* new
 }
 
 #ifdef WINDOWS_VERSION
-bool loadOBJ(const char* path, std::vector<Vertex>* vertices, std::vector<Index>* indices, const col& color) {
+bool loadOBJ(const std::string& path, std::vector<Vertex>* vertices, std::vector<Index>* indices, const col& color) {
 	std::vector<vec3> tempVertices;
 	std::vector<vec2> tempUVs;
 	std::vector<vec3> tempNormals;
 	std::vector<FileIndices> fileIndices;
 
 	FILE* file;
-	fopen_s(&file, path, "r");
+	fopen_s(&file, path.c_str(), "r");
 	if (file == nullptr) {
 		return false;
 	}
@@ -63,7 +63,7 @@ bool loadOBJ(const char* path, std::vector<Vertex>* vertices, std::vector<Index>
 }
 #else
 
-bool loadOBJ(AAssetManager* assetManager, const char* path, std::vector<Vertex>* vertices,
+bool loadOBJ(AAssetManager* assetManager, const std::string& path, std::vector<Vertex>* vertices,
              std::vector<Index>* indices, const col& color) {
 	std::vector<vec3> tempVertices;
 	std::vector<vec2> tempUVs;
@@ -72,7 +72,7 @@ bool loadOBJ(AAssetManager* assetManager, const char* path, std::vector<Vertex>*
 
 	AAsset* file = AAssetManager_open(
 	        assetManager,
-	        path,
+	        path.c_str(),
 	        AASSET_MODE_BUFFER);
 	if (file == nullptr) {
 		return false;

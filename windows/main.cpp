@@ -1,5 +1,5 @@
-#include "C:\Users\leo\AndroidStudioProjects\ToggleBall\app\src\main\cpp\main.h"
-#include "C:\Users\leo\AndroidStudioProjects\ToggleBall\app\src\main\cpp\Game.h"
+#include "main.h"
+#include "Game.h"
 #include <iostream>
 
 inline unsigned max_unsigned(unsigned a, unsigned b) { return (a > b) ? a : b; }

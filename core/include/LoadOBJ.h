@@ -16,10 +16,10 @@ struct FileIndices {
 int addFileIndices(std::vector<FileIndices>* fileIndices, const FileIndices* newIndices);
 
 #ifdef WINDOWS_VERSION
-bool loadOBJ(const char* path, std::vector<Vertex>* vertices, std::vector<Index>* indices, const col& color = WHITE);
+bool loadOBJ(const std::string& path, std::vector<Vertex>* vertices, std::vector<Index>* indices, const col& color = WHITE);
 #else
 
-bool loadOBJ(AAssetManager* assetManager, const char* path, std::vector<Vertex>* vertices,
+bool loadOBJ(AAssetManager* assetManager, const std::string& path, std::vector<Vertex>* vertices,
              std::vector<Index>* indices, const col& color = WHITE);
 
 #endif

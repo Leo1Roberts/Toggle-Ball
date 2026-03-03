@@ -100,8 +100,8 @@ void Game::setupObjShaders() {
 	std::string vsh, fsh;
 
 #ifdef WINDOWS_VERSION
-	vsh = importShader("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/shaders/object.vert");
-	fsh = importShader("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/shaders/object.frag");
+	vsh = importShader(ASSETS_PATH + "shaders/object.vert");
+	fsh = importShader(ASSETS_PATH + "shaders/object.frag");
 #else
 	vsh = importShader(androidApp->activity->assetManager, "shaders/object.vert");
 	fsh = importShader(androidApp->activity->assetManager, "shaders/object.frag");
@@ -138,8 +138,8 @@ void Game::setupObjShaders() {
 	uAlphaLoc = objShader->getUniformLocation("uAlpha");
 
 #ifdef WINDOWS_VERSION
-	vsh = importShader("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/shaders/objectOutline.vert");
-	fsh = importShader("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/shaders/objectOutline.frag");
+	vsh = importShader(ASSETS_PATH + "shaders/objectOutline.vert");
+	fsh = importShader(ASSETS_PATH + "shaders/objectOutline.frag");
 #else
 	vsh = importShader(androidApp->activity->assetManager, "shaders/objectOutline.vert");
 	fsh = importShader(androidApp->activity->assetManager, "shaders/objectOutline.frag");
@@ -427,8 +427,8 @@ void Game::initGame() {
 	std::string vsh, fsh;
 
 #ifdef WINDOWS_VERSION
-	vsh = importShader("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/shaders/text.vert");
-	fsh = importShader("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/shaders/text.frag");
+	vsh = importShader(ASSETS_PATH + "shaders/text.vert");
+	fsh = importShader(ASSETS_PATH + "shaders/text.frag");
 #else
 	vsh = importShader(androidApp->activity->assetManager, "shaders/text.vert");
 	fsh = importShader(androidApp->activity->assetManager, "shaders/text.frag");
@@ -436,8 +436,8 @@ void Game::initGame() {
 	Text::initTextShader(vsh, fsh, "inPos", "inUV", "inCol", "uProjection2D");
 
 #ifdef WINDOWS_VERSION
-	vsh = importShader("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/shaders/button.vert");
-	fsh = importShader("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/shaders/button.frag");
+	vsh = importShader(ASSETS_PATH + "shaders/button.vert");
+	fsh = importShader(ASSETS_PATH + "shaders/button.frag");
 #else
 	vsh = importShader(androidApp->activity->assetManager, "shaders/button.vert");
 	fsh = importShader(androidApp->activity->assetManager, "shaders/button.frag");
@@ -445,8 +445,8 @@ void Game::initGame() {
 	ButtonManager::initButtonShader(vsh, fsh, "inPos", "inUV", "inCol", "inOutlineCol", "inOutlineRad", "uProjection2D");
 
 #ifdef WINDOWS_VERSION
-	vsh = importShader("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/shaders/cursor.vert");
-	fsh = importShader("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/shaders/cursor.frag");
+	vsh = importShader(ASSETS_PATH + "shaders/cursor.vert");
+	fsh = importShader(ASSETS_PATH + "shaders/cursor.frag");
 	Cursor::initShader(vsh, fsh, "inPos", "inUV", "uProjection2D");
 #endif
 
@@ -459,8 +459,8 @@ void Game::initGame() {
 
 void Game::initFonts() {
 #ifdef WINDOWS_VERSION
-	byte BAHNSCHRIFT_FACE = Text::loadFace("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/fonts/", "Bahnschrift");
-	byte COURIER_NEW_FACE = Text::loadFace("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/fonts/", "Courier New");
+	byte BAHNSCHRIFT_FACE = Text::loadFace(ASSETS_PATH + "fonts/", "Bahnschrift");
+	byte COURIER_NEW_FACE = Text::loadFace(ASSETS_PATH + "fonts/", "Courier New");
 #else
 	byte BAHNSCHRIFT_FACE = Text::loadFace(androidApp->activity->assetManager, "fonts/", "Bahnschrift");
 	byte COURIER_NEW_FACE = Text::loadFace(androidApp->activity->assetManager, "fonts/", "Courier New");
@@ -568,10 +568,10 @@ void Game::createObjects() {
 	std::vector<Index> planeIndices;
 
 #ifdef WINDOWS_VERSION
-	whiteTex = TextureAsset::loadAsset("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/textures/white.png", false);
-	basketballTex = TextureAsset::loadAsset("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/textures/Ball.png", false);
-	loadOBJ("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/models/Ball.obj", &ballVertices, &ballIndices);
-	loadOBJ("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/models/Ground.obj", &planeVertices, &planeIndices, BOUNDARY);
+	whiteTex = TextureAsset::loadAsset(ASSETS_PATH + "textures/white.png", false);
+	basketballTex = TextureAsset::loadAsset(ASSETS_PATH + "textures/Ball.png", false);
+	loadOBJ(ASSETS_PATH + "models/Ball.obj", &ballVertices, &ballIndices);
+	loadOBJ(ASSETS_PATH + "models/Ground.obj", &planeVertices, &planeIndices, BOUNDARY);
 #else
 	whiteTex = TextureAsset::loadAsset(androidApp->activity->assetManager, "textures/white.png", false);
 	basketballTex = TextureAsset::loadAsset(androidApp->activity->assetManager, "textures/Ball.png", false);
@@ -1852,7 +1852,7 @@ std::vector<std::string> Game::getLevelList() {
 	std::vector<std::string> levelList;
 #ifdef WINDOWS_VERSION
 	WIN32_FIND_DATAA findFileData;
-	HANDLE hFind = FindFirstFileA("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/levels/*.lvl", &findFileData);
+	HANDLE hFind = FindFirstFileA((ASSETS_PATH + "levels/*.lvl").c_str(), &findFileData);
 	if (hFind != INVALID_HANDLE_VALUE) {
 		do {
 			std::string fileName = findFileData.cFileName;
@@ -1942,7 +1942,7 @@ void Game::selectLevel(const std::string& name) {
 		loaded = Level::importLevel(&newLevel, levelString, level.name);
 	else {
 #ifdef WINDOWS_VERSION
-		std::ifstream ifs(("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/levels/" + name + ".lvl").c_str());
+		std::ifstream ifs((ASSETS_PATH + "levels/" + name + ".lvl").c_str());
 		if (ifs.is_open()) {
 			std::string str(std::istreambuf_iterator<char>{ifs}, {});
 			ifs.close();
@@ -2010,7 +2010,7 @@ short Game::savedIndex;
 void Game::saveLevel(int _) {
 	std::string data = std::move(level.exportLevel());
 
-	std::ofstream ofs(("C:/Users/leo/AndroidStudioProjects/ToggleBall/app/src/main/assets/levels/" + level.name + ".lvl").c_str());
+	std::ofstream ofs((ASSETS_PATH + "levels/" + level.name + ".lvl").c_str());
 	if (ofs.is_open()) {
 		ofs << data;
 		ofs.close();
