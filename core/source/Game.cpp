@@ -2032,7 +2032,7 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 		if (altDown != (bool)(mods & GLFW_MOD_ALT)) {
 			altDown = mods & GLFW_MOD_ALT;
 			actionIsStateless = altDown; // Only update this if altDown has changed
-			                             // This ensures that if an action has been set as stateless by the program (e.g. when pasting obstcales), it is not overridden by the alt key state
+			                             // This ensures that if an action has been set as stateless by the program (e.g. when pasting obstacles), it is not overridden by the alt key state
 		} else
 			altDown = mods & GLFW_MOD_ALT;
 
