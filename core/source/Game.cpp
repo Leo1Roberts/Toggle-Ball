@@ -2121,41 +2121,47 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 		}
 			return;
 		}
+	}
 
+	if (keyAction == GLFW_PRESS || keyAction == GLFW_REPEAT) {
 		if (TextBoxManager::focusedBoxIndex >= 0) {
 			const bool NUM_LOCK = mods & GLFW_MOD_NUM_LOCK;
 
 			switch (key) {
 			case GLFW_KEY_A:
-				if (ctrlDown) {
+				if (ctrlDown && keyAction == GLFW_PRESS) {
 					TextBoxManager::selected = true;
 					TextBoxManager::cursorPos = (short)TextBoxManager::text.length();
 				}
 				break;
 			case GLFW_KEY_C:
-				if (ctrlDown && TextBoxManager::selected)
+				if (ctrlDown && TextBoxManager::selected && keyAction == GLFW_PRESS)
 					glfwSetClipboardString(window, TextBoxManager::text.c_str());
 				break;
 			case GLFW_KEY_V:
-				if (ctrlDown) {
+				if (ctrlDown && keyAction == GLFW_PRESS) {
 					const char* clipText = glfwGetClipboardString(window);
 					if (clipText)
 						TextBoxManager::typed(clipText);
 				}
 				break;
 			case GLFW_KEY_ESCAPE:
-				TextBoxManager::focusedBoxIndex = -1;
-				if (TextBoxManager::anythingChanged)
-					cancelAction();
-				if (dialogue == DLG_SAVE_AS)
-					requestDialogue(DLG_NONE);
+				if (keyAction == GLFW_PRESS) {
+					TextBoxManager::focusedBoxIndex = -1;
+					if (TextBoxManager::anythingChanged)
+						cancelAction();
+					if (dialogue == DLG_SAVE_AS)
+						requestDialogue(DLG_NONE);
+				}
 				break;
 			case GLFW_KEY_ENTER:
-				TextBoxManager::focusedBoxIndex = -1;
-				if (dialogue == DLG_SAVE_AS) {
-					requestDialogue(DLG_CONFIRM_OVERWRITE);
-				} else if (TextBoxManager::anythingChanged)
-					finishAction();
+				if (keyAction == GLFW_PRESS) {
+					TextBoxManager::focusedBoxIndex = -1;
+					if (dialogue == DLG_SAVE_AS) {
+						requestDialogue(DLG_CONFIRM_OVERWRITE);
+					} else if (TextBoxManager::anythingChanged)
+						finishAction();
+				}
 				break;
 			case GLFW_KEY_BACKSPACE:
 				if (TextBoxManager::selected) {
@@ -2211,9 +2217,11 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 				if (NUM_LOCK) break;
 				[[fallthrough]];
 			case GLFW_KEY_HOME:
-				TextBoxManager::cursorPos = 0;
-				TextBoxManager::start_ms = now_ms();
-				TextBoxManager::selected = false;
+				if (keyAction == GLFW_PRESS) {
+					TextBoxManager::cursorPos = 0;
+					TextBoxManager::start_ms = now_ms();
+					TextBoxManager::selected = false;
+				}
 				break;
 			case GLFW_KEY_KP_2:
 				if (NUM_LOCK) break;
@@ -2224,39 +2232,47 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 				if (NUM_LOCK) break;
 				[[fallthrough]];
 			case GLFW_KEY_END:
-				TextBoxManager::cursorPos = (short)TextBoxManager::text.length();
-				TextBoxManager::start_ms = now_ms();
-				TextBoxManager::selected = false;
+				if (keyAction == GLFW_PRESS) {
+					TextBoxManager::cursorPos = (short)TextBoxManager::text.length();
+					TextBoxManager::start_ms = now_ms();
+					TextBoxManager::selected = false;
+				}
 				break;
 			}
 		} else {
 			switch (key) {
 			case GLFW_KEY_ESCAPE:
-				if (action != ACTION_NONE)
-					cancelAction();
-				else
-					requestDialogue(DLG_NONE);
+				if (keyAction == GLFW_PRESS) {
+					if (action != ACTION_NONE)
+						cancelAction();
+					else
+						requestDialogue(DLG_NONE);
+				}
 				break;
 			case GLFW_KEY_F5:
-				if (altDown)
-					reloadShaders();
-				else
-					restartLevel(0);
+				if (keyAction == GLFW_PRESS) {
+					if (altDown)
+						reloadShaders();
+					else
+						restartLevel(0);
+				}
 				break;
 			case GLFW_KEY_F11:
-				if (glfwGetWindowMonitor(window))
-					glfwSetWindowMonitor(window, nullptr, windowInfo.posX, windowInfo.posY, windowInfo.width, windowInfo.height, windowInfo.refreshRate);
-				else {
-					const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-					glfwGetWindowPos(window, &windowInfo.posX, &windowInfo.posY);
-					glfwGetWindowSize(window, &windowInfo.width, &windowInfo.height);
-					windowInfo.refreshRate = mode->refreshRate;
-					glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
+				if (keyAction == GLFW_PRESS) {
+					if (glfwGetWindowMonitor(window))
+						glfwSetWindowMonitor(window, nullptr, windowInfo.posX, windowInfo.posY, windowInfo.width, windowInfo.height, windowInfo.refreshRate);
+					else {
+						const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+						glfwGetWindowPos(window, &windowInfo.posX, &windowInfo.posY);
+						glfwGetWindowSize(window, &windowInfo.width, &windowInfo.height);
+						windowInfo.refreshRate = mode->refreshRate;
+						glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
+					}
 				}
 				break;
 			case GLFW_KEY_DELETE:
 			case GLFW_KEY_BACKSPACE:
-				if (inEditor) {
+				if (inEditor && keyAction == GLFW_PRESS) {
 					if (action != ACTION_NONE) {
 						bool selectionCopy[MAX_OBSTACLES] = {};
 						memcpy(selectionCopy, selection, MAX_OBSTACLES);
@@ -2268,7 +2284,7 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 				}
 				break;
 			case GLFW_KEY_A:
-				if (inEditor && ctrlDown) {
+				if (inEditor && ctrlDown && keyAction == GLFW_PRESS) {
 					for (short i = 0; i < obstacles.size(); i++)
 						selection[i] = !shiftDown;
 					selection[MAX_OBSTACLES] = !shiftDown;
@@ -2281,12 +2297,11 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 				}
 				break;
 			case GLFW_KEY_C:
-				if (inEditor && action == ACTION_NONE && ctrlDown) {
+				if (inEditor && action == ACTION_NONE && ctrlDown && keyAction == GLFW_PRESS)
 					copyObstacles();
-				}
 				break;
 			case GLFW_KEY_D:
-				if (inEditor) {
+				if (inEditor && keyAction == GLFW_PRESS) {
 					if (action == ACTION_NONE) {
 						if (ctrlDown)
 							duplicateObstacles();
@@ -2308,7 +2323,7 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 				}
 				break;
 			case GLFW_KEY_R:
-				if (inEditor) {
+				if (inEditor && keyAction == GLFW_PRESS) {
 					switch (action) {
 					case ACTION_NONE:
 						action = ACTION_ROTATE;
@@ -2333,7 +2348,7 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 				}
 				break;
 			case GLFW_KEY_S:
-				if (inEditor) {
+				if (inEditor && keyAction == GLFW_PRESS) {
 					if (ctrlDown) {
 						if (action == ACTION_NONE)
 							if (shiftDown)
@@ -2367,7 +2382,7 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 					slowMotion = !slowMotion;
 				break;
 			case GLFW_KEY_T:
-				if (inEditor) {
+				if (inEditor && keyAction == GLFW_PRESS) {
 					switch (action) {
 					case ACTION_NONE:
 						action = ACTION_MOVE;
@@ -2385,11 +2400,11 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 				}
 				break;
 			case GLFW_KEY_V:
-				if (inEditor && action == ACTION_NONE && ctrlDown)
+				if (inEditor && action == ACTION_NONE && ctrlDown && keyAction == GLFW_PRESS)
 					pasteObstacles();
 				break;
 			case GLFW_KEY_X:
-				if (inEditor) {
+				if (inEditor && keyAction == GLFW_PRESS) {
 					if (action == ACTION_NONE) {
 						if (ctrlDown)
 							cutObstacles();
