@@ -607,7 +607,7 @@ void Game::update() {
 	then = now;
 
 	if (inEditor)
-		moveEditorObstacles();
+		updateEditorObstacles();
 	else
 		physicsUpdate();
 
@@ -1003,7 +1003,7 @@ void Game::physicsUpdate() {
 	}
 }
 
-void Game::moveEditorObstacles() {
+void Game::updateEditorObstacles() {
 	const float step = (float)frameTime * 0.001f;
 
 	for (short i = 0; i < (short)obstacles.size(); i++) {
@@ -1928,7 +1928,7 @@ void Game::loadLevel(const Level& newLevel, bool resetView) {
 	else
 		smoother.SetPosition(0, 0);
 
-	moveEditorObstacles();
+	updateEditorObstacles();
 }
 
 std::string Game::levelString;
@@ -4353,7 +4353,7 @@ void Game::pasteObstacles() {
 			selection[newIndex] = true;
 		}
 
-		moveEditorObstacles(); // Update pos of all obstacles so we can calculate centre point
+		updateEditorObstacles(); // Update pos of all obstacles so we can calculate centre point
 
 		float minX = MINIMUM_POS_X;
 		float maxX = MAXIMUM_POS_X;

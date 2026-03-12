@@ -129,7 +129,7 @@ private:
 
 	static void physicsUpdate();
 
-	static void moveEditorObstacles();
+	static void updateEditorObstacles();
 
 	static void setupObjShaders();
 
