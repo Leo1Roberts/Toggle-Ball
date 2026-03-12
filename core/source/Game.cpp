@@ -2188,25 +2188,27 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 				if (NUM_LOCK) break;
 				[[fallthrough]];
 			case GLFW_KEY_LEFT:
-				if (TextBoxManager::cursorPos > 0)
-					TextBoxManager::cursorPos--;
-				TextBoxManager::start_ms = now_ms();
+				if (TextBoxManager::cursorPos > 0 || keyAction == GLFW_PRESS)
+					TextBoxManager::start_ms = now_ms();
+
 				if (TextBoxManager::selected) {
 					TextBoxManager::selected = false;
 					TextBoxManager::cursorPos = 0;
-				}
+				} else if (TextBoxManager::cursorPos > 0)
+					TextBoxManager::cursorPos--;
 				break;
 			case GLFW_KEY_KP_6:
 				if (NUM_LOCK) break;
 				[[fallthrough]];
 			case GLFW_KEY_RIGHT:
-				if (TextBoxManager::cursorPos < (short)TextBoxManager::text.length())
-					TextBoxManager::cursorPos++;
-				TextBoxManager::start_ms = now_ms();
+				if (TextBoxManager::cursorPos < (short)TextBoxManager::text.length() || keyAction == GLFW_PRESS)
+					TextBoxManager::start_ms = now_ms();
+					
 				if (TextBoxManager::selected) {
 					TextBoxManager::selected = false;
 					TextBoxManager::cursorPos = (short)TextBoxManager::text.length();
-				}
+				} else if (TextBoxManager::cursorPos < (short)TextBoxManager::text.length())
+					TextBoxManager::cursorPos++;
 				break;
 			case GLFW_KEY_KP_8:
 				if (NUM_LOCK) break;
