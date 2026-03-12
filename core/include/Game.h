@@ -237,6 +237,7 @@ private:
 		ACTION_MOD_GLOBAL_Y,
 		ACTION_MOD_LOCAL_X,
 		ACTION_MOD_LOCAL_Y,
+		ACTION_MOD_UNIT,
 
 		// Rotate & scale
 		ACTION_MOD_INDIVIDUAL,
@@ -261,6 +262,7 @@ private:
 	static bool actionIsStateless;
 	static vec2 actionStartPointerPos;
 	static vec3 actionStartPointerWorldPos;
+	static vec3 actionVector;
 	static short pressedObIndex;
 	static float initialPointerObDist; // Used for radius adjustments
 
@@ -289,6 +291,8 @@ private:
 
 	static void moveObstacleByFull(short index, const vec3& vector);
 	static void moveObstacleTo(short index, const vec3& vector); // TODO: remove
+
+	static void moveObjectsWithArrowKey(int key, int keyAction);
 
 	static void rotateObstacleBy(short index, float angle);
 	static void rotateObstacleTo(short index, float angle); // TODO: remove
