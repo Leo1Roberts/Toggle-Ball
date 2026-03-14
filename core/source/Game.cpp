@@ -2033,6 +2033,29 @@ bool Game::allArrowKeysUp(int exceptKey) { // TODO: include numpad keys
 	return true;
 }
 
+vec3 keyContribution(int key) {
+	switch (key) {
+	case GLFW_KEY_KP_4:
+		[[fallthrough]];
+	case GLFW_KEY_LEFT:
+		return {0, -1, 0};
+	case GLFW_KEY_KP_6:
+		[[fallthrough]];
+	case GLFW_KEY_RIGHT:
+		return {0, 1, 0};
+	case GLFW_KEY_KP_8:
+		[[fallthrough]];
+	case GLFW_KEY_UP:
+		return {0, 0, 1};
+	case GLFW_KEY_KP_2:
+		[[fallthrough]];
+	case GLFW_KEY_DOWN:
+		return {0, 0, -1};
+	default:
+		return {0, 0, 0};
+	}
+} 
+
 void Game::moveObjectsWithArrowKey(int key, int keyAction) {
 	if (keyAction == GLFW_RELEASE) {
 		if (allArrowKeysUp())
@@ -2040,28 +2063,14 @@ void Game::moveObjectsWithArrowKey(int key, int keyAction) {
 		return;
 	}
 
-	vec3 moveDir;
-	switch (key) {
-	case GLFW_KEY_KP_4:
-		[[fallthrough]];
-	case GLFW_KEY_LEFT:
-		moveDir = {0, -1, 0};
-		break;
-	case GLFW_KEY_KP_6:
-		[[fallthrough]];
-	case GLFW_KEY_RIGHT:
-		moveDir = {0, 1, 0};
-		break;
-	case GLFW_KEY_KP_8:
-		[[fallthrough]];
-	case GLFW_KEY_UP:
-		moveDir = {0, 0, 1};
-		break;
-	case GLFW_KEY_KP_2:
-		[[fallthrough]];
-	case GLFW_KEY_DOWN:
-		moveDir = {0, 0, -1};
-		break;
+	vec3 moveDir = vec3(0);
+
+	if (keyAction == GLFW_PRESS)
+		moveDir = keyContribution(key);
+	else {
+		for (int k: arrowKeys)
+			if (glfwGetKey(window, k) == GLFW_PRESS)
+				moveDir += keyContribution(k);
 	}
 
 	float moveAmount;
