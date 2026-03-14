@@ -2024,6 +2024,67 @@ void Game::saveLevel(int _) {
 
 WindowInfo windowInfo;
 
+int arrowKeys[] = {GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_KP_4, GLFW_KEY_KP_6, GLFW_KEY_KP_8, GLFW_KEY_KP_2};
+
+bool Game::allArrowKeysUp(int exceptKey) { // TODO: include numpad keys
+	for (int key: arrowKeys)
+		if (glfwGetKey(window, key) == GLFW_PRESS && exceptKey != key)
+			return false;
+	return true;
+}
+
+void Game::moveObjectsWithArrowKey(int key, int keyAction) {
+	if (keyAction == GLFW_RELEASE) {
+		if (allArrowKeysUp())
+			finishAction();
+		return;
+	}
+
+	vec3 moveDir;
+	switch (key) {
+	case GLFW_KEY_KP_4:
+		[[fallthrough]];
+	case GLFW_KEY_LEFT:
+		moveDir = {0, -1, 0};
+		break;
+	case GLFW_KEY_KP_6:
+		[[fallthrough]];
+	case GLFW_KEY_RIGHT:
+		moveDir = {0, 1, 0};
+		break;
+	case GLFW_KEY_KP_8:
+		[[fallthrough]];
+	case GLFW_KEY_UP:
+		moveDir = {0, 0, 1};
+		break;
+	case GLFW_KEY_KP_2:
+		[[fallthrough]];
+	case GLFW_KEY_DOWN:
+		moveDir = {0, 0, -1};
+		break;
+	}
+
+	float moveAmount;
+	if (shiftDown && ctrlDown)
+		moveAmount = 0.01f;
+	else if (shiftDown)
+		moveAmount = 0.1f;
+	else if (ctrlDown)
+		moveAmount = 5.0f;
+	else
+		moveAmount = 1.0f;
+
+	if (keyAction == GLFW_PRESS && allArrowKeysUp(key)) {
+		action = ACTION_MOVE;
+		actionMod = ACTION_MOD_UNIT;
+		startAction();
+	}
+
+	actionVector += moveDir * moveAmount;
+
+	updateAction();
+}
+
 void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyAction, int mods) {
 	if (ctrlDown != (bool)(mods & GLFW_MOD_CONTROL) || shiftDown != (bool)(mods & GLFW_MOD_SHIFT) || altDown != (bool)(mods & GLFW_MOD_ALT)) {
 		ctrlDown = mods & GLFW_MOD_CONTROL;
@@ -2287,30 +2348,6 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 			deleteObstacles();
 		}
 		break;
-	case GLFW_KEY_KP_4:
-		if (NUM_LOCK) break;
-		[[fallthrough]];
-	case GLFW_KEY_LEFT:
-		moveObjectsWithArrowKey(GLFW_KEY_LEFT, keyAction);
-		break;
-	case GLFW_KEY_KP_6:
-		if (NUM_LOCK) break;
-		[[fallthrough]];
-	case GLFW_KEY_RIGHT:
-		moveObjectsWithArrowKey(GLFW_KEY_RIGHT, keyAction);
-		break;
-	case GLFW_KEY_KP_8:
-		if (NUM_LOCK) break;
-		[[fallthrough]];
-	case GLFW_KEY_UP:
-		moveObjectsWithArrowKey(GLFW_KEY_UP, keyAction);
-		break;
-	case GLFW_KEY_KP_2:
-		if (NUM_LOCK) break;
-		[[fallthrough]];
-	case GLFW_KEY_DOWN:
-		moveObjectsWithArrowKey(GLFW_KEY_DOWN, keyAction);
-		break;
 	case GLFW_KEY_A:
 		if (inEditor && ctrlDown && keyAction == GLFW_PRESS) {
 			for (short i = 0; i < obstacles.size(); i++)
@@ -2490,6 +2527,10 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 		}
 		break;
 	}
+
+	for (int i = 0; i < 8; i++)
+		if (key == arrowKeys[i] && !(NUM_LOCK && (i > 3)))
+			moveObjectsWithArrowKey(key, keyAction);
 }
 
 void Game::handleCharInput(GLFWwindow* window, unsigned int c) {
@@ -4181,49 +4222,6 @@ void Game::moveObstacleTo(short index, const vec3& pos) { // TODO: remove this f
 		obstacles[index].createDomainModel();
 	} else
 		obstacles[index].setInitPos(pos);
-}
-
-void Game::moveObjectsWithArrowKey(int key, int keyAction) {
-	if (keyAction == GLFW_RELEASE) {
-		finishAction();
-		return;
-	}
-
-	vec3 moveDir;
-	switch (key) {
-	case GLFW_KEY_UP:
-		moveDir = {0, 0, 1};
-		break;
-	case GLFW_KEY_DOWN:
-		moveDir = {0, 0, -1};
-		break;
-	case GLFW_KEY_LEFT:
-		moveDir = {0, -1, 0};
-		break;
-	case GLFW_KEY_RIGHT:
-		moveDir = {0, 1, 0};
-		break;
-	}
-
-	float moveAmount;
-	if (shiftDown && ctrlDown)
-		moveAmount = 0.01f;
-	else if (shiftDown)
-		moveAmount = 0.1f;
-	else if (ctrlDown)
-		moveAmount = 5.0f;
-	else
-		moveAmount = 1.0f;
-
-	if (keyAction == GLFW_PRESS) {
-		action = ACTION_MOVE;
-		actionMod = ACTION_MOD_UNIT;
-		startAction();
-	}
-
-	actionVector += moveDir * moveAmount;
-
-	updateAction();
 }
 
 void Game::rotateObstacleBy(short index, float angle) {

@@ -68,6 +68,9 @@ public:
 	static void handleMouseButtonInput(GLFWwindow* window, int mouseButton, int mouseButtonAction, int mods);
 	static void handleScrollInput(GLFWwindow* window, double xoffset, double yoffset);
 
+	static bool allArrowKeysUp(int exceptKey = GLFW_KEY_UNKNOWN);
+	static void moveObjectsWithArrowKey(int key, int keyAction);
+
 	static void updateCursor();
 #else
 
@@ -291,8 +294,6 @@ private:
 
 	static void moveObstacleByFull(short index, const vec3& vector);
 	static void moveObstacleTo(short index, const vec3& vector); // TODO: remove
-
-	static void moveObjectsWithArrowKey(int key, int keyAction);
 
 	static void rotateObstacleBy(short index, float angle);
 	static void rotateObstacleTo(short index, float angle); // TODO: remove
