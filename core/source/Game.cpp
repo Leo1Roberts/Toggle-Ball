@@ -2026,7 +2026,7 @@ WindowInfo windowInfo;
 
 int arrowKeys[] = {GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_KP_4, GLFW_KEY_KP_6, GLFW_KEY_KP_8, GLFW_KEY_KP_2};
 
-bool Game::allArrowKeysUp(int exceptKey) { // TODO: include numpad keys
+bool Game::allArrowKeysUp(int exceptKey) {
 	for (int key: arrowKeys)
 		if (glfwGetKey(window, key) == GLFW_PRESS && exceptKey != key)
 			return false;
