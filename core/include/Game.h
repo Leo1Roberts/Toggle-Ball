@@ -68,6 +68,9 @@ public:
 	static void handleMouseButtonInput(GLFWwindow* window, int mouseButton, int mouseButtonAction, int mods);
 	static void handleScrollInput(GLFWwindow* window, double xoffset, double yoffset);
 
+	static bool allArrowKeysUp(int exceptKey = GLFW_KEY_UNKNOWN);
+	static void moveObjectsWithArrowKey(int key, int keyAction);
+
 	static void updateCursor();
 #else
 
@@ -237,6 +240,7 @@ private:
 		ACTION_MOD_GLOBAL_Y,
 		ACTION_MOD_LOCAL_X,
 		ACTION_MOD_LOCAL_Y,
+		ACTION_MOD_UNIT,
 
 		// Rotate & scale
 		ACTION_MOD_INDIVIDUAL,
@@ -261,6 +265,7 @@ private:
 	static bool actionIsStateless;
 	static vec2 actionStartPointerPos;
 	static vec3 actionStartPointerWorldPos;
+	static vec3 actionVector;
 	static short pressedObIndex;
 	static float initialPointerObDist; // Used for radius adjustments
 

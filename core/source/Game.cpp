@@ -2024,6 +2024,76 @@ void Game::saveLevel(int _) {
 
 WindowInfo windowInfo;
 
+int arrowKeys[] = {GLFW_KEY_LEFT, GLFW_KEY_RIGHT, GLFW_KEY_UP, GLFW_KEY_DOWN, GLFW_KEY_KP_4, GLFW_KEY_KP_6, GLFW_KEY_KP_8, GLFW_KEY_KP_2};
+
+bool Game::allArrowKeysUp(int exceptKey) {
+	for (int key: arrowKeys)
+		if (glfwGetKey(window, key) == GLFW_PRESS && exceptKey != key)
+			return false;
+	return true;
+}
+
+vec3 keyContribution(int key) {
+	switch (key) {
+	case GLFW_KEY_KP_4:
+		[[fallthrough]];
+	case GLFW_KEY_LEFT:
+		return {0, -1, 0};
+	case GLFW_KEY_KP_6:
+		[[fallthrough]];
+	case GLFW_KEY_RIGHT:
+		return {0, 1, 0};
+	case GLFW_KEY_KP_8:
+		[[fallthrough]];
+	case GLFW_KEY_UP:
+		return {0, 0, 1};
+	case GLFW_KEY_KP_2:
+		[[fallthrough]];
+	case GLFW_KEY_DOWN:
+		return {0, 0, -1};
+	default:
+		return {0, 0, 0};
+	}
+} 
+
+void Game::moveObjectsWithArrowKey(int key, int keyAction) {
+	if (keyAction == GLFW_RELEASE) {
+		if (allArrowKeysUp())
+			finishAction();
+		return;
+	}
+
+	vec3 moveDir = vec3(0);
+
+	if (keyAction == GLFW_PRESS)
+		moveDir = keyContribution(key);
+	else {
+		for (int k: arrowKeys)
+			if (glfwGetKey(window, k) == GLFW_PRESS)
+				moveDir += keyContribution(k);
+	}
+
+	float moveAmount;
+	if (shiftDown && ctrlDown)
+		moveAmount = 0.01f;
+	else if (shiftDown)
+		moveAmount = 0.1f;
+	else if (ctrlDown)
+		moveAmount = 5.0f;
+	else
+		moveAmount = 1.0f;
+
+	if (keyAction == GLFW_PRESS && allArrowKeysUp(key)) {
+		action = ACTION_MOVE;
+		actionMod = ACTION_MOD_UNIT;
+		startAction();
+	}
+
+	actionVector += moveDir * moveAmount;
+
+	updateAction();
+}
+
 void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyAction, int mods) {
 	if (ctrlDown != (bool)(mods & GLFW_MOD_CONTROL) || shiftDown != (bool)(mods & GLFW_MOD_SHIFT) || altDown != (bool)(mods & GLFW_MOD_ALT)) {
 		ctrlDown = mods & GLFW_MOD_CONTROL;
@@ -2123,349 +2193,353 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 		}
 	}
 
-	if (keyAction == GLFW_PRESS || keyAction == GLFW_REPEAT) {
-		if (TextBoxManager::focusedBoxIndex >= 0) {
-			const bool NUM_LOCK = mods & GLFW_MOD_NUM_LOCK;
+	const bool NUM_LOCK = mods & GLFW_MOD_NUM_LOCK;
 
-			switch (key) {
-			case GLFW_KEY_A:
-				if (ctrlDown && keyAction == GLFW_PRESS) {
-					TextBoxManager::selected = true;
-					TextBoxManager::cursorPos = (short)TextBoxManager::text.length();
-				}
-				break;
-			case GLFW_KEY_C:
-				if (ctrlDown && TextBoxManager::selected && keyAction == GLFW_PRESS)
-					glfwSetClipboardString(window, TextBoxManager::text.c_str());
-				break;
-			case GLFW_KEY_V:
-				if (ctrlDown && keyAction == GLFW_PRESS) {
-					const char* clipText = glfwGetClipboardString(window);
-					if (clipText)
-						TextBoxManager::typed(clipText);
-				}
-				break;
-			case GLFW_KEY_ESCAPE:
-				if (keyAction == GLFW_PRESS) {
-					TextBoxManager::focusedBoxIndex = -1;
-					if (TextBoxManager::anythingChanged)
-						cancelAction();
-					if (dialogue == DLG_SAVE_AS)
-						requestDialogue(DLG_NONE);
-				}
-				break;
-			case GLFW_KEY_ENTER:
-				if (keyAction == GLFW_PRESS) {
-					TextBoxManager::focusedBoxIndex = -1;
-					if (dialogue == DLG_SAVE_AS) {
-						requestDialogue(DLG_CONFIRM_OVERWRITE);
-					} else if (TextBoxManager::anythingChanged)
-						finishAction();
-				}
-				break;
-			case GLFW_KEY_BACKSPACE:
-				if (TextBoxManager::selected) {
-					TextBoxManager::text.clear();
-					TextBoxManager::selected = false;
-					TextBoxManager::cursorPos = 0;
-				} else if (TextBoxManager::cursorPos > 0) {
-					TextBoxManager::text.erase((size_t)(TextBoxManager::cursorPos - 1), 1);
-					TextBoxManager::cursorPos--;
-					updatePropertyInput(TextBoxManager::getCurrentProperty());
-				}
-				break;
-			case GLFW_KEY_DELETE:
-				if (TextBoxManager::selected) {
-					TextBoxManager::text.clear();
-					TextBoxManager::selected = false;
-					TextBoxManager::cursorPos = 0;
-				} else if (TextBoxManager::cursorPos < (short)TextBoxManager::text.length()) {
-					TextBoxManager::text.erase(TextBoxManager::cursorPos, 1);
-					updatePropertyInput(TextBoxManager::getCurrentProperty());
-				}
-				break;
-			case GLFW_KEY_KP_4:
-				if (NUM_LOCK) break;
-				[[fallthrough]];
-			case GLFW_KEY_LEFT:
-				if (TextBoxManager::cursorPos > 0 || keyAction == GLFW_PRESS)
-					TextBoxManager::start_ms = now_ms();
-
-				if (TextBoxManager::selected) {
-					TextBoxManager::selected = false;
-					TextBoxManager::cursorPos = 0;
-				} else if (TextBoxManager::cursorPos > 0)
-					TextBoxManager::cursorPos--;
-				break;
-			case GLFW_KEY_KP_6:
-				if (NUM_LOCK) break;
-				[[fallthrough]];
-			case GLFW_KEY_RIGHT:
-				if (TextBoxManager::cursorPos < (short)TextBoxManager::text.length() || keyAction == GLFW_PRESS)
-					TextBoxManager::start_ms = now_ms();
-					
-				if (TextBoxManager::selected) {
-					TextBoxManager::selected = false;
-					TextBoxManager::cursorPos = (short)TextBoxManager::text.length();
-				} else if (TextBoxManager::cursorPos < (short)TextBoxManager::text.length())
-					TextBoxManager::cursorPos++;
-				break;
-			case GLFW_KEY_KP_8:
-				if (NUM_LOCK) break;
-				[[fallthrough]];
-			case GLFW_KEY_UP:
-				[[fallthrough]];
-			case GLFW_KEY_KP_7:
-				if (NUM_LOCK) break;
-				[[fallthrough]];
-			case GLFW_KEY_HOME:
-				if (keyAction == GLFW_PRESS) {
-					TextBoxManager::cursorPos = 0;
-					TextBoxManager::start_ms = now_ms();
-					TextBoxManager::selected = false;
-				}
-				break;
-			case GLFW_KEY_KP_2:
-				if (NUM_LOCK) break;
-				[[fallthrough]];
-			case GLFW_KEY_DOWN:
-				[[fallthrough]];
-			case GLFW_KEY_KP_1:
-				if (NUM_LOCK) break;
-				[[fallthrough]];
-			case GLFW_KEY_END:
-				if (keyAction == GLFW_PRESS) {
-					TextBoxManager::cursorPos = (short)TextBoxManager::text.length();
-					TextBoxManager::start_ms = now_ms();
-					TextBoxManager::selected = false;
-				}
-				break;
+	if (TextBoxManager::focusedBoxIndex >= 0 && (keyAction == GLFW_PRESS || keyAction == GLFW_REPEAT)) {
+		switch (key) {
+		case GLFW_KEY_A:
+			if (ctrlDown && keyAction == GLFW_PRESS) {
+				TextBoxManager::selected = true;
+				TextBoxManager::cursorPos = (short)TextBoxManager::text.length();
 			}
-		} else {
-			switch (key) {
-			case GLFW_KEY_ESCAPE:
-				if (keyAction == GLFW_PRESS) {
-					if (action != ACTION_NONE)
-						cancelAction();
-					else
-						requestDialogue(DLG_NONE);
-				}
-				break;
-			case GLFW_KEY_F5:
-				if (keyAction == GLFW_PRESS) {
-					if (altDown)
-						reloadShaders();
-					else
-						restartLevel(0);
-				}
-				break;
-			case GLFW_KEY_F11:
-				if (keyAction == GLFW_PRESS) {
-					if (glfwGetWindowMonitor(window))
-						glfwSetWindowMonitor(window, nullptr, windowInfo.posX, windowInfo.posY, windowInfo.width, windowInfo.height, windowInfo.refreshRate);
-					else {
-						const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-						glfwGetWindowPos(window, &windowInfo.posX, &windowInfo.posY);
-						glfwGetWindowSize(window, &windowInfo.width, &windowInfo.height);
-						windowInfo.refreshRate = mode->refreshRate;
-						glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
-					}
-				}
-				break;
-			case GLFW_KEY_DELETE:
-			case GLFW_KEY_BACKSPACE:
-				if (inEditor && keyAction == GLFW_PRESS) {
-					if (action != ACTION_NONE) {
-						bool selectionCopy[MAX_OBSTACLES] = {};
-						memcpy(selectionCopy, selection, MAX_OBSTACLES);
-						cancelAction();
-						memcpy(selection, selectionCopy, MAX_OBSTACLES);
-					}
-
-					deleteObstacles();
-				}
-				break;
-			case GLFW_KEY_A:
-				if (inEditor && ctrlDown && keyAction == GLFW_PRESS) {
-					for (short i = 0; i < obstacles.size(); i++)
-						selection[i] = !shiftDown;
-					selection[MAX_OBSTACLES] = !shiftDown;
-
-					if (shiftDown)
-						focus = -1;
-					else if (focus < 0)
-						focus = MAX_OBSTACLES;
+			break;
+		case GLFW_KEY_C:
+			if (ctrlDown && TextBoxManager::selected && keyAction == GLFW_PRESS)
+				glfwSetClipboardString(window, TextBoxManager::text.c_str());
+			break;
+		case GLFW_KEY_V:
+			if (ctrlDown && keyAction == GLFW_PRESS) {
+				const char* clipText = glfwGetClipboardString(window);
+				if (clipText)
+					TextBoxManager::typed(clipText);
+			}
+			break;
+		case GLFW_KEY_ESCAPE:
+			if (keyAction == GLFW_PRESS) {
+				TextBoxManager::focusedBoxIndex = -1;
+				if (TextBoxManager::anythingChanged)
+					cancelAction();
+				if (dialogue == DLG_SAVE_AS)
+					requestDialogue(DLG_NONE);
+			}
+			break;
+		case GLFW_KEY_ENTER:
+			if (keyAction == GLFW_PRESS) {
+				TextBoxManager::focusedBoxIndex = -1;
+				if (dialogue == DLG_SAVE_AS) {
+					requestDialogue(DLG_CONFIRM_OVERWRITE);
+				} else if (TextBoxManager::anythingChanged)
 					finishAction();
-				}
-				break;
-			case GLFW_KEY_C:
-				if (inEditor && action == ACTION_NONE && ctrlDown && keyAction == GLFW_PRESS)
-					copyObstacles();
-				break;
-			case GLFW_KEY_D:
-				if (inEditor && keyAction == GLFW_PRESS) {
-					if (action == ACTION_NONE) {
-						if (ctrlDown)
-							duplicateObstacles();
-					} else if (action == ACTION_SCALE) {
-						switch (actionMod) {
-						case ACTION_MOD_INDIVIDUAL:
-						case ACTION_MOD_GROUP:
-							actionMod = ACTION_MOD_MINOR;
-							break;
-						case ACTION_MOD_MINOR:
-							actionMod = ACTION_MOD_MAJOR;
-							break;
-						case ACTION_MOD_MAJOR:
-							actionMod = ACTION_MOD_INDIVIDUAL;
-							break;
-						}
-						changeAction();
-					}
-				}
-				break;
-			case GLFW_KEY_R:
-				if (inEditor && keyAction == GLFW_PRESS) {
-					switch (action) {
-					case ACTION_NONE:
-						action = ACTION_ROTATE;
-						actionMod = ACTION_MOD_INDIVIDUAL;
-						startAction();
-						break;
-					case ACTION_ROTATE:
-						if (actionMod == ACTION_MOD_INDIVIDUAL) {
-							actionMod = ACTION_MOD_GROUP;
-							changeAction();
-						} else {
-							actionMod = ACTION_MOD_INDIVIDUAL;
-							changeAction();
-						}
-						break;
-					default:
-						action = ACTION_ROTATE;
-						actionMod = ACTION_MOD_INDIVIDUAL;
-						changeAction();
-						break;
-					}
-				}
-				break;
-			case GLFW_KEY_S:
-				if (inEditor && keyAction == GLFW_PRESS) {
-					if (ctrlDown) {
-						if (action == ACTION_NONE)
-							if (shiftDown)
-								requestDialogue(DLG_SAVE_AS);
-							else
-								saveLevel();
-					} else {
-						switch (action) {
-						case ACTION_NONE:
-							action = ACTION_SCALE;
-							actionMod = ACTION_MOD_INDIVIDUAL;
-							startAction();
-							break;
-						case ACTION_SCALE:
-							if (actionMod == ACTION_MOD_INDIVIDUAL) {
-								actionMod = ACTION_MOD_GROUP;
-								changeAction();
-							} else {
-								actionMod = ACTION_MOD_INDIVIDUAL;
-								changeAction();
-							}
-							break;
-						default:
-							action = ACTION_SCALE;
-							actionMod = ACTION_MOD_INDIVIDUAL;
-							changeAction();
-							break;
-						}
-					}
-				} else
-					slowMotion = !slowMotion;
-				break;
-			case GLFW_KEY_T:
-				if (inEditor && keyAction == GLFW_PRESS) {
-					switch (action) {
-					case ACTION_NONE:
-						action = ACTION_MOVE;
-						actionMod = ACTION_MOD_FREE;
-						startAction();
-						break;
-					case ACTION_MOVE:
-						break;
-					default:
-						action = ACTION_MOVE;
-						actionMod = ACTION_MOD_FREE;
-						changeAction();
-						break;
-					}
-				}
-				break;
-			case GLFW_KEY_V:
-				if (inEditor && action == ACTION_NONE && ctrlDown && keyAction == GLFW_PRESS)
-					pasteObstacles();
-				break;
-			case GLFW_KEY_X:
-				if (inEditor && keyAction == GLFW_PRESS) {
-					if (action == ACTION_NONE) {
-						if (ctrlDown)
-							cutObstacles();
-					} else if (action == ACTION_MOVE) {
-						switch (actionMod) {
-						case ACTION_MOD_FREE:
-						case ACTION_MOD_GLOBAL_Y:
-							actionMod = ACTION_MOD_GLOBAL_X;
-							break;
-						case ACTION_MOD_GLOBAL_X:
-						case ACTION_MOD_LOCAL_Y:
-							actionMod = ACTION_MOD_LOCAL_X;
-							break;
-						case ACTION_MOD_LOCAL_X:
-							actionMod = ACTION_MOD_FREE;
-							break;
-						}
+			}
+			break;
+		case GLFW_KEY_BACKSPACE:
+			if (TextBoxManager::selected) {
+				TextBoxManager::text.clear();
+				TextBoxManager::selected = false;
+				TextBoxManager::cursorPos = 0;
+			} else if (TextBoxManager::cursorPos > 0) {
+				TextBoxManager::text.erase((size_t)(TextBoxManager::cursorPos - 1), 1);
+				TextBoxManager::cursorPos--;
+				updatePropertyInput(TextBoxManager::getCurrentProperty());
+			}
+			break;
+		case GLFW_KEY_DELETE:
+			if (TextBoxManager::selected) {
+				TextBoxManager::text.clear();
+				TextBoxManager::selected = false;
+				TextBoxManager::cursorPos = 0;
+			} else if (TextBoxManager::cursorPos < (short)TextBoxManager::text.length()) {
+				TextBoxManager::text.erase(TextBoxManager::cursorPos, 1);
+				updatePropertyInput(TextBoxManager::getCurrentProperty());
+			}
+			break;
+		case GLFW_KEY_KP_4:
+			if (NUM_LOCK) break;
+			[[fallthrough]];
+		case GLFW_KEY_LEFT:
+			if (TextBoxManager::cursorPos > 0 || keyAction == GLFW_PRESS)
+				TextBoxManager::start_ms = now_ms();
 
-						changeAction();
-					}
-				}
-				break;
-			case GLFW_KEY_Y:
-				if (inEditor) {
-					if (action == ACTION_NONE && ctrlDown)
-						redo();
-					else if (action == ACTION_MOVE) {
-						switch (actionMod) {
-						case ACTION_MOD_FREE:
-						case ACTION_MOD_GLOBAL_X:
-							actionMod = ACTION_MOD_GLOBAL_Y;
-							break;
-						case ACTION_MOD_GLOBAL_Y:
-						case ACTION_MOD_LOCAL_X:
-							actionMod = ACTION_MOD_LOCAL_Y;
-							break;
-						case ACTION_MOD_LOCAL_Y:
-							actionMod = ACTION_MOD_FREE;
-							break;
-						}
+			if (TextBoxManager::selected) {
+				TextBoxManager::selected = false;
+				TextBoxManager::cursorPos = 0;
+			} else if (TextBoxManager::cursorPos > 0)
+				TextBoxManager::cursorPos--;
+			break;
+		case GLFW_KEY_KP_6:
+			if (NUM_LOCK) break;
+			[[fallthrough]];
+		case GLFW_KEY_RIGHT:
+			if (TextBoxManager::cursorPos < (short)TextBoxManager::text.length() || keyAction == GLFW_PRESS)
+				TextBoxManager::start_ms = now_ms();
+					
+			if (TextBoxManager::selected) {
+				TextBoxManager::selected = false;
+				TextBoxManager::cursorPos = (short)TextBoxManager::text.length();
+			} else if (TextBoxManager::cursorPos < (short)TextBoxManager::text.length())
+				TextBoxManager::cursorPos++;
+			break;
+		case GLFW_KEY_KP_8:
+			if (NUM_LOCK) break;
+			[[fallthrough]];
+		case GLFW_KEY_UP:
+			[[fallthrough]];
+		case GLFW_KEY_KP_7:
+			if (NUM_LOCK) break;
+			[[fallthrough]];
+		case GLFW_KEY_HOME:
+			if (keyAction == GLFW_PRESS) {
+				TextBoxManager::cursorPos = 0;
+				TextBoxManager::start_ms = now_ms();
+				TextBoxManager::selected = false;
+			}
+			break;
+		case GLFW_KEY_KP_2:
+			if (NUM_LOCK) break;
+			[[fallthrough]];
+		case GLFW_KEY_DOWN:
+			[[fallthrough]];
+		case GLFW_KEY_KP_1:
+			if (NUM_LOCK) break;
+			[[fallthrough]];
+		case GLFW_KEY_END:
+			if (keyAction == GLFW_PRESS) {
+				TextBoxManager::cursorPos = (short)TextBoxManager::text.length();
+				TextBoxManager::start_ms = now_ms();
+				TextBoxManager::selected = false;
+			}
+			break;
+		}
 
-						changeAction();
-					}
+		return;
+	}
+
+	switch (key) {
+	case GLFW_KEY_ESCAPE:
+		if (keyAction == GLFW_PRESS) {
+			if (action != ACTION_NONE)
+				cancelAction();
+			else
+				requestDialogue(DLG_NONE);
+		}
+		break;
+	case GLFW_KEY_F5:
+		if (keyAction == GLFW_PRESS) {
+			if (altDown)
+				reloadShaders();
+			else
+				restartLevel(0);
+		}
+		break;
+	case GLFW_KEY_F11:
+		if (keyAction == GLFW_PRESS) {
+			if (glfwGetWindowMonitor(window))
+				glfwSetWindowMonitor(window, nullptr, windowInfo.posX, windowInfo.posY, windowInfo.width, windowInfo.height, windowInfo.refreshRate);
+			else {
+				const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+				glfwGetWindowPos(window, &windowInfo.posX, &windowInfo.posY);
+				glfwGetWindowSize(window, &windowInfo.width, &windowInfo.height);
+				windowInfo.refreshRate = mode->refreshRate;
+				glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, mode->width, mode->height, mode->refreshRate);
+			}
+		}
+		break;
+	case GLFW_KEY_DELETE:
+	case GLFW_KEY_BACKSPACE:
+		if (inEditor && keyAction == GLFW_PRESS) {
+			if (action != ACTION_NONE) {
+				bool selectionCopy[MAX_OBSTACLES] = {};
+				memcpy(selectionCopy, selection, MAX_OBSTACLES);
+				cancelAction();
+				memcpy(selection, selectionCopy, MAX_OBSTACLES);
+			}
+
+			deleteObstacles();
+		}
+		break;
+	case GLFW_KEY_A:
+		if (inEditor && ctrlDown && keyAction == GLFW_PRESS) {
+			for (short i = 0; i < obstacles.size(); i++)
+				selection[i] = !shiftDown;
+			selection[MAX_OBSTACLES] = !shiftDown;
+
+			if (shiftDown)
+				focus = -1;
+			else if (focus < 0)
+				focus = MAX_OBSTACLES;
+			finishAction();
+		}
+		break;
+	case GLFW_KEY_C:
+		if (inEditor && action == ACTION_NONE && ctrlDown && keyAction == GLFW_PRESS)
+			copyObstacles();
+		break;
+	case GLFW_KEY_D:
+		if (inEditor && keyAction == GLFW_PRESS) {
+			if (action == ACTION_NONE) {
+				if (ctrlDown)
+					duplicateObstacles();
+			} else if (action == ACTION_SCALE) {
+				switch (actionMod) {
+				case ACTION_MOD_INDIVIDUAL:
+				case ACTION_MOD_GROUP:
+					actionMod = ACTION_MOD_MINOR;
+					break;
+				case ACTION_MOD_MINOR:
+					actionMod = ACTION_MOD_MAJOR;
+					break;
+				case ACTION_MOD_MAJOR:
+					actionMod = ACTION_MOD_INDIVIDUAL;
+					break;
+				}
+				changeAction();
+			}
+		}
+		break;
+	case GLFW_KEY_R:
+		if (inEditor && keyAction == GLFW_PRESS) {
+			switch (action) {
+			case ACTION_NONE:
+				action = ACTION_ROTATE;
+				actionMod = ACTION_MOD_INDIVIDUAL;
+				startAction();
+				break;
+			case ACTION_ROTATE:
+				if (actionMod == ACTION_MOD_INDIVIDUAL) {
+					actionMod = ACTION_MOD_GROUP;
+					changeAction();
+				} else {
+					actionMod = ACTION_MOD_INDIVIDUAL;
+					changeAction();
 				}
 				break;
-			case GLFW_KEY_Z:
-				if (inEditor && ctrlDown) {
-					if (action == ACTION_NONE) {
-						if (shiftDown)
-							redo();
-						else
-							undo();
-					} else if (!shiftDown)
-						cancelAction();
-				}
+			default:
+				action = ACTION_ROTATE;
+				actionMod = ACTION_MOD_INDIVIDUAL;
+				changeAction();
 				break;
 			}
 		}
+		break;
+	case GLFW_KEY_S:
+		if (inEditor && keyAction == GLFW_PRESS) {
+			if (ctrlDown) {
+				if (action == ACTION_NONE)
+					if (shiftDown)
+						requestDialogue(DLG_SAVE_AS);
+					else
+						saveLevel();
+			} else {
+				switch (action) {
+				case ACTION_NONE:
+					action = ACTION_SCALE;
+					actionMod = ACTION_MOD_INDIVIDUAL;
+					startAction();
+					break;
+				case ACTION_SCALE:
+					if (actionMod == ACTION_MOD_INDIVIDUAL) {
+						actionMod = ACTION_MOD_GROUP;
+						changeAction();
+					} else {
+						actionMod = ACTION_MOD_INDIVIDUAL;
+						changeAction();
+					}
+					break;
+				default:
+					action = ACTION_SCALE;
+					actionMod = ACTION_MOD_INDIVIDUAL;
+					changeAction();
+					break;
+				}
+			}
+		} else
+			slowMotion = !slowMotion;
+		break;
+	case GLFW_KEY_T:
+		if (inEditor && keyAction == GLFW_PRESS) {
+			switch (action) {
+			case ACTION_NONE:
+				action = ACTION_MOVE;
+				actionMod = ACTION_MOD_FREE;
+				startAction();
+				break;
+			case ACTION_MOVE:
+				break;
+			default:
+				action = ACTION_MOVE;
+				actionMod = ACTION_MOD_FREE;
+				changeAction();
+				break;
+			}
+		}
+		break;
+	case GLFW_KEY_V:
+		if (inEditor && action == ACTION_NONE && ctrlDown && keyAction == GLFW_PRESS)
+			pasteObstacles();
+		break;
+	case GLFW_KEY_X:
+		if (inEditor && keyAction == GLFW_PRESS) {
+			if (action == ACTION_NONE) {
+				if (ctrlDown)
+					cutObstacles();
+			} else if (action == ACTION_MOVE) {
+				switch (actionMod) {
+				case ACTION_MOD_FREE:
+				case ACTION_MOD_GLOBAL_Y:
+					actionMod = ACTION_MOD_GLOBAL_X;
+					break;
+				case ACTION_MOD_GLOBAL_X:
+				case ACTION_MOD_LOCAL_Y:
+					actionMod = ACTION_MOD_LOCAL_X;
+					break;
+				case ACTION_MOD_LOCAL_X:
+					actionMod = ACTION_MOD_FREE;
+					break;
+				}
+
+				changeAction();
+			}
+		}
+		break;
+	case GLFW_KEY_Y:
+		if (inEditor && (keyAction == GLFW_PRESS || keyAction == GLFW_REPEAT)) {
+			if (action == ACTION_NONE && ctrlDown)
+				redo();
+			else if (action == ACTION_MOVE) {
+				switch (actionMod) {
+				case ACTION_MOD_FREE:
+				case ACTION_MOD_GLOBAL_X:
+					actionMod = ACTION_MOD_GLOBAL_Y;
+					break;
+				case ACTION_MOD_GLOBAL_Y:
+				case ACTION_MOD_LOCAL_X:
+					actionMod = ACTION_MOD_LOCAL_Y;
+					break;
+				case ACTION_MOD_LOCAL_Y:
+					actionMod = ACTION_MOD_FREE;
+					break;
+				}
+
+				changeAction();
+			}
+		}
+		break;
+	case GLFW_KEY_Z:
+		if (inEditor && ctrlDown && (keyAction == GLFW_PRESS || keyAction == GLFW_REPEAT)) {
+			if (action == ACTION_NONE) {
+				if (shiftDown)
+					redo();
+				else
+					undo();
+			} else if (!shiftDown)
+				cancelAction();
+		}
+		break;
 	}
+
+	for (int i = 0; i < 8; i++)
+		if (key == arrowKeys[i] && !(NUM_LOCK && (i > 3)))
+			moveObjectsWithArrowKey(key, keyAction);
 }
 
 void Game::handleCharInput(GLFWwindow* window, unsigned int c) {
@@ -2784,6 +2858,7 @@ byte Game::actionMod;
 bool Game::actionIsStateless;
 vec2 Game::actionStartPointerPos;
 vec3 Game::actionStartPointerWorldPos;
+vec3 Game::actionVector;
 short Game::pressedObIndex;
 float Game::initialPointerObDist;
 
@@ -2809,6 +2884,7 @@ static float getPointerObDist(const Obstacle* g, const vec3& pointerPos, byte se
 void Game::startAction() {
 	actionStartPointerPos = pointerPos;
 	actionStartPointerWorldPos = pointerBall.pos;
+	actionVector.set(0);
 
 	memset(limiting, false, sizeof(limiting));
 
@@ -3047,7 +3123,7 @@ void Game::updateAction() {
 		const vec3 xAxis = {0, 1, 0};
 		const vec3 yAxis = {0, 0, 1};
 
-		const vec3 rawTranslation = newPos - actionStartPointerWorldPos;
+		const vec3 rawTranslation = actionMod == ACTION_MOD_UNIT ? actionVector : newPos - actionStartPointerWorldPos;
 		vec3 limitedTranslation = rawTranslation;
 
 		vec3 focusedDir;
@@ -3071,6 +3147,8 @@ void Game::updateAction() {
 
 		if (selection[MAX_OBSTACLES]) {
 			switch (actionMod) {
+			case ACTION_MOD_UNIT:
+				[[fallthrough]];
 			case ACTION_MOD_FREE: {
 				byte vp1;
 				limitedTranslation.y = clamp(limitedTranslation.y, MINIMUM_BALL_POS_X - undoBuffer[bufferIndex].level.ballPos.y, MAXIMUM_BALL_POS_X - undoBuffer[bufferIndex].level.ballPos.y, &vp1);
@@ -3126,6 +3204,8 @@ void Game::updateAction() {
 				}
 
 				switch (actionMod) {
+				case ACTION_MOD_UNIT:
+					[[fallthrough]];
 				case ACTION_MOD_FREE: {
 					byte vp1;
 					limitedTranslation.y = clamp(limitedTranslation.y, minDX, maxDX, &vp1);
@@ -3158,6 +3238,8 @@ void Game::updateAction() {
 
 		if (selection[MAX_OBSTACLES]) {
 			switch (actionMod) {
+			case ACTION_MOD_UNIT:
+				[[fallthrough]];
 			case ACTION_MOD_FREE:
 				[[fallthrough]];
 			case ACTION_MOD_GLOBAL_X:
