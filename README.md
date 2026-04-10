@@ -1,4 +1,4 @@
-###### Use a single button to toggle the state of every obstacle, to guide the ball to the goal.
+### Use a single button to toggle the state of every obstacle, to guide the ball to the goal.
 
 
 
