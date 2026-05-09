@@ -24,6 +24,7 @@ const std::string ASSETS_PATH = "C:/Users/leo/Toggle Ball/core/assets/";
 
 typedef unsigned char byte;
 
+#include <stdexcept>
 #include <cmath>
 #include <memory>
 #include <vector>

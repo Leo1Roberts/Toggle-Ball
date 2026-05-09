@@ -1,5 +1,4 @@
 #include "main.h"
-#include <stdexcept>
 
 void colorToLinear(vec3* srgb) {
 	srgb->x = (float) pow(srgb->x, 2.2);
