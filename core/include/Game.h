@@ -2,7 +2,7 @@
 #define GAME_H
 
 #include "Object.h"
-#include "Level.h"
+#include "Level_old.h"
 #include "Smoother.h"
 #include <string>
 #include <vector>

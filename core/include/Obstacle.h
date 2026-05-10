@@ -188,11 +188,10 @@ private:
 
 class EditorObstacle {
 public:
-	explicit EditorObstacle(std::shared_ptr<ObstacleDescriptor> descriptor) :
-	    descriptor(std::move(descriptor)),
+	explicit EditorObstacle(ObstacleDescriptor* descriptor) :
+	    descriptor(descriptor),
 		phase(0) {
-		if (!descriptor)
-			throw std::invalid_argument("Descriptor cannot be null");
+		assert(descriptor != nullptr);
 	}
 
 	~EditorObstacle() = default;
@@ -203,7 +202,7 @@ public:
 	EditorObstacle& operator=(EditorObstacle&&) = default;
 
 private:
-	std::shared_ptr<ObstacleDescriptor> descriptor;
+	ObstacleDescriptor* descriptor;
 
 	/*
 	 * Needed for obstacles with 'memory':
