@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iomanip>
 #include <sstream>
+#include "Ball.h"
 #include "Level_old.h"
 
 bool Level::operator==(const Level& other) const {

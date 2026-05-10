@@ -93,7 +93,7 @@ struct Plane {
 	}
 };
 
-struct BallProperties {
+struct BallProperties_OLD {
 	byte material;
 	float mass;
 	float moi;
@@ -104,14 +104,7 @@ struct BallProperties {
 	TextureAsset* texture;
 };
 
-enum {
-	BASKETBALL,
-	FOOTBALL,
-	PING_PONG,
-	MARBLE
-};
-
-struct Ball {
+struct Ball_OLD {
 	TextureAsset* texture;
 	byte material;
 
@@ -132,7 +125,7 @@ struct Ball {
 	vec3 force;
 	vec3 torque;
 
-	Ball() :
+	Ball_OLD() :
 		texture(whiteTex),
 		material(0),
 		mass(0),
@@ -152,9 +145,9 @@ struct Ball {
 		torque(0) {
 	}
 
-	Ball(byte ballType, float normalise = false) : Ball(getProperties(ballType, normalise)) {}
+	Ball_OLD(byte ballType, float normalise = false) : Ball_OLD(getProperties(ballType, normalise)) {}
 
-	Ball(BallProperties properties) :
+	Ball_OLD(BallProperties_OLD properties) :
 		texture(properties.texture),
 		material(properties.material),
 		mass(properties.mass),
@@ -174,7 +167,7 @@ struct Ball {
 		torque(0) {}
 
 private:
-	static BallProperties getProperties(byte ballType, bool normalise);
+	static BallProperties_OLD getProperties(byte ballType, bool normalise);
 };
 
 enum {

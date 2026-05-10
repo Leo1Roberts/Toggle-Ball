@@ -75,8 +75,8 @@ std::vector<Obstacle> Game::obstacles;
 float Game::arenaWidth, Game::arenaHeight;
 Plane Game::arenaBounds[4];
 Plane Game::arenaBackground;
-Ball Game::ball;
-Ball Game::ballOutline;
+Ball_OLD Game::ball;
+Ball_OLD Game::ballOutline;
 
 void Game::setBallPos(const vec3& pos) {
 	ball.pos = pos;
@@ -593,7 +593,7 @@ void Game::createObjects() {
 
 	arenaBackground = Plane(whiteTex, BOUNDARY, MAT_CONCRETE, {1, 0, 0});
 
-	ballOutline = Ball();
+	ballOutline = Ball_OLD();
 
 	glUseProgram(0);
 }
@@ -641,7 +641,7 @@ static float ballSpringForce(float compression, float radius, float springK) {
 	return compression * springK + powf(compression, power) * (forceMultiplier - 1) * springK * powf(radius, 1 - power);
 }
 
-void Game::ballObstacleCollision(Ball* pBall, Obstacle* g, const vec3& normal, float separation) {
+void Game::ballObstacleCollision(Ball_OLD* pBall, Obstacle* g, const vec3& normal, float separation) {
 	float springFactor = ballSpringForce(pBall->radius - separation, pBall->radius, pBall->springK); //(pBall->radius - separation) * pBall->springK;
 
 	vec3 ballToPoint = normal * -separation;
@@ -684,7 +684,7 @@ void Game::ballObstacleCollision(Ball* pBall, Obstacle* g, const vec3& normal, f
 
 const float SUCCEED_TIME = 0.5f;
 
-short Game::checkBallObstacleCollision(Ball* pBall, bool getIndex, bool onlyRim, bool onlySection) {
+short Game::checkBallObstacleCollision(Ball_OLD* pBall, bool getIndex, bool onlyRim, bool onlySection) {
 	short obIndex = -1;
 	float obMinorRadius = 0;
 
@@ -1685,7 +1685,7 @@ void Game::render() {
 #endif
 }
 
-void Game::drawBall(const Ball& b) {
+void Game::drawBall(const Ball_OLD& b) {
 	drawObject(ballModel, b.texture, b.pos, b.rot, b.scale);
 }
 
@@ -1904,7 +1904,7 @@ void Game::loadLevel(const Level& newLevel, bool resetView) {
 	level = newLevel;
 	levelComplete = false;
 
-	ball = Ball(level.ballType, inEditor);
+	ball = Ball_OLD(level.ballType, inEditor);
 	resetBall();
 
 	updateArena();
@@ -4477,8 +4477,8 @@ void Game::updateAllOutlines() {
 }
 
 vec2 Game::pointerPos;
-Ball Game::pointerBall = Ball();
-Ball Game::pointerBallWide = Ball();
+Ball_OLD Game::pointerBall = Ball_OLD();
+Ball_OLD Game::pointerBallWide = Ball_OLD();
 
 short Game::bufferIndex;
 short Game::lastBufferIndex;

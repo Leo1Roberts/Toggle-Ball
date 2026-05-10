@@ -1,6 +1,8 @@
 #ifndef OBSTACLE_H
 #define OBSTACLE_H
 
+#include "Model.h"
+
 class IMotionSpec {
 public:
 	virtual ~IMotionSpec() = default;

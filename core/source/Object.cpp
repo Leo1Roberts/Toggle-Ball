@@ -4,6 +4,7 @@
 #include "Sizes.h"
 #include "ObjShader.h"
 #include <algorithm>
+#include <Ball.h>
 
 const byte SECTORS_PER_SEMICIRCLE = 64;
 const byte SECTORS_PER_CIRCLE = SECTORS_PER_SEMICIRCLE * 2;
@@ -11,8 +12,8 @@ const byte SECTORS_PER_DOT = 8;
 const float BEVEL_AMOUNT = 0.1f;
 
 
-BallProperties Ball::getProperties(byte ballType, bool normalise) {
-	BallProperties properties = {};
+BallProperties_OLD Ball_OLD::getProperties(byte ballType, bool normalise) {
+	BallProperties_OLD properties = {};
 	float radius;
 
 	switch (ballType) {

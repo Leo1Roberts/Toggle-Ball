@@ -114,8 +114,8 @@ private:
 	static float arenaWidth, arenaHeight;
 	static Plane arenaBounds[4];
 	static Plane arenaBackground;
-	static Ball ball;
-	static Ball ballOutline;
+	static Ball_OLD ball;
+	static Ball_OLD ballOutline;
 	static inline void setBallPos(const vec3& pos);
 
 	static std::vector<std::string> getLevelList();
@@ -126,9 +126,9 @@ private:
 
 	static void render();
 
-	static void ballObstacleCollision(Ball* pBall, Obstacle* g, const vec3& normal, float separation);
+	static void ballObstacleCollision(Ball_OLD* pBall, Obstacle* g, const vec3& normal, float separation);
 
-	static short checkBallObstacleCollision(Ball* pBall, bool getIndex, bool onlyRim = false, bool onlySection = false);
+	static short checkBallObstacleCollision(Ball_OLD* pBall, bool getIndex, bool onlyRim = false, bool onlySection = false);
 
 	static void physicsUpdate();
 
@@ -174,7 +174,7 @@ private:
 
 	static void createObjects();
 
-	static void drawBall(const Ball& b);
+	static void drawBall(const Ball_OLD& b);
 	static void drawPlane(const Plane& p);
 	static void drawObject(const Model* model, const TextureAsset* texture, const vec3& pos, const mat3& rot, const vec3& scale);
 	static void drawObstacles();
@@ -312,8 +312,8 @@ private:
 	static void updateAllOutlines();
 
 	static vec2 pointerPos;
-	static Ball pointerBall;
-	static Ball pointerBallWide;
+	static Ball_OLD pointerBall;
+	static Ball_OLD pointerBallWide;
 
 	static const byte MAX_UNDO = 50;
 	static short bufferIndex;
