@@ -3,6 +3,64 @@
 
 #include "Model.h"
 
+class AbstractShapeSpec {
+public:
+	virtual ~AbstractShapeSpec() = default;
+
+	void generateObstacleModel(Model& obstacleModel) const;
+	void generateOutlineModel(Model& outlineModel) const;
+
+protected:
+	explicit AbstractShapeSpec(float halfWidth) :
+	    halfWidth(halfWidth) {}
+
+	AbstractShapeSpec(const AbstractShapeSpec&) = default;
+	AbstractShapeSpec& operator=(const AbstractShapeSpec&) = default;
+	AbstractShapeSpec(AbstractShapeSpec&&) = default;
+	AbstractShapeSpec& operator=(AbstractShapeSpec&&) = default;
+
+private:
+	float halfWidth;
+
+	virtual void buildObstacleModel(Model& obstacleModel) const = 0;
+	virtual void buildOutlineModel(Model& outlineModel) const = 0;
+};
+
+class SegmentSpec : public AbstractShapeSpec {
+public:
+	SegmentSpec(float halfWidth, float left, float right) :
+	    AbstractShapeSpec(halfWidth),
+	    left(left),
+	    right(right) {}
+
+	~SegmentSpec() override = default;
+
+private:
+	float left;
+	float right;
+
+	void buildObstacleModel(Model& obstacleModel) const override;
+	void buildOutlineModel(Model& outlineModel) const override;
+};
+
+class ArcSpec : public AbstractShapeSpec {
+public:
+	ArcSpec(float halfWidth, float angle, float radius) :
+	    AbstractShapeSpec(halfWidth),
+	    angle(angle),
+	    radius(radius) {}
+
+	~ArcSpec() override = default;
+
+private:
+	float angle;
+	float radius;
+
+	void buildObstacleModel(Model& obstacleModel) const override;
+	void buildOutlineModel(Model& outlineModel) const override;
+};
+
+
 class IMotionSpec {
 public:
 	virtual ~IMotionSpec() = default;
@@ -12,8 +70,13 @@ public:
 	IMotionSpec(IMotionSpec&&) = delete;
 	IMotionSpec& operator=(IMotionSpec&&) = delete;
 
+	void generateDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const;
+
 protected:
 	IMotionSpec() = default;
+
+private:
+	virtual void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const {}
 };
 
 class StaticSpec : public IMotionSpec {
@@ -29,24 +92,6 @@ private:
 	float angle;
 };
 
-class SpinningSpec : public IMotionSpec {
-public:
-	explicit SpinningSpec(vec2 position, float initialAngle, float angularVelocityA, float angularVelocityB) :
-	    position(position),
-	    initialAngle(initialAngle),
-	    angularVelocityA(angularVelocityA),
-	    angularVelocityB(angularVelocityB) {}
-
-	~SpinningSpec() override = default;
-
-private:
-	vec2 position;
-	float initialAngle;
-
-	float angularVelocityA;
-	float angularVelocityB;
-};
-
 class TogglingPositionSpec : public IMotionSpec {
 public:
 	explicit TogglingPositionSpec(float angle, vec2 positionA, vec2 positionB) :
@@ -58,9 +103,10 @@ public:
 
 private:
 	float angle;
-
 	vec2 positionA;
 	vec2 positionB;
+
+	void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 class TogglingAngleSpec : public IMotionSpec {
@@ -74,9 +120,29 @@ public:
 
 private:
 	vec2 position;
-
 	float angleA;
 	float angleB;
+
+	void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const override;
+};
+
+class SpinningSpec : public IMotionSpec {
+public:
+	explicit SpinningSpec(vec2 position, float initialAngle, float angularVelocityA, float angularVelocityB) :
+	    position(position),
+	    initialAngle(initialAngle),
+	    angularVelocityA(angularVelocityA),
+	    angularVelocityB(angularVelocityB) {}
+
+	~SpinningSpec() override = default;
+
+private:
+	vec2 position;
+	float initialAngle;
+	float angularVelocityA;
+	float angularVelocityB;
+
+	void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 class OscillatingPositionSpec : public IMotionSpec {
@@ -94,9 +160,10 @@ private:
 	float angle;
 	vec2 position1;
 	vec2 position2;
-
 	float angularFrequencyA;
 	float angularFrequencyB;
+
+	void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 class OscillatingAngleSpec : public IMotionSpec {
@@ -114,9 +181,10 @@ private:
 	vec2 position;
 	float angle1;
 	float angle2;
-
 	float angularFrequencyA;
 	float angularFrequencyB;
+
+	void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 
@@ -125,52 +193,6 @@ struct KinematicState {
 	float angle;
 	vec2 velocity;
 	float angularVelocity;
-};
-
-
-class AbstractShapeSpec {
-public:
-	virtual ~AbstractShapeSpec() = default;
-
-protected:
-	explicit AbstractShapeSpec(float halfWidth) :
-	    halfWidth(halfWidth) {}
-
-	AbstractShapeSpec(const AbstractShapeSpec&) = default;
-	AbstractShapeSpec& operator=(const AbstractShapeSpec&) = default;
-	AbstractShapeSpec(AbstractShapeSpec&&) = default;
-	AbstractShapeSpec& operator=(AbstractShapeSpec&&) = default;
-
-private:
-	float halfWidth;
-};
-
-class SegmentSpec : public AbstractShapeSpec {
-public:
-	SegmentSpec(float halfWidth, float left, float right) :
-	    AbstractShapeSpec(halfWidth),
-	    left(left),
-	    right(right) {}
-
-	~SegmentSpec() override = default;
-
-private:
-	float left;
-	float right;
-};
-
-class ArcSpec : public AbstractShapeSpec {
-public:
-	ArcSpec(float halfWidth, float angle, float radius) :
-	    AbstractShapeSpec(halfWidth),
-	    angle(angle),
-	    radius(radius) {}
-
-	~ArcSpec() override = default;
-
-private:
-	float angle;
-	float radius;
 };
 
 
@@ -192,7 +214,8 @@ class EditorObstacle {
 public:
 	explicit EditorObstacle(ObstacleDescriptor* descriptor) :
 	    descriptor(descriptor),
-		phase(0) {
+		phase(0),
+		selected(false) {
 		assert(descriptor != nullptr);
 	}
 
@@ -213,6 +236,8 @@ private:
 	 * Oscillating obstacles: phase
 	 */
 	float phase;
+
+	bool selected;
 
 	Model obstacle;
 	Model outline;

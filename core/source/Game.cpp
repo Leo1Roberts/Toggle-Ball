@@ -2422,38 +2422,40 @@ void Game::handleKeyInput(GLFWwindow* window, int key, int scancode, int keyActi
 		}
 		break;
 	case GLFW_KEY_S:
-		if (inEditor && keyAction == GLFW_PRESS) {
-			if (ctrlDown) {
-				if (action == ACTION_NONE)
-					if (shiftDown)
-						requestDialogue(DLG_SAVE_AS);
-					else
-						saveLevel();
-			} else {
-				switch (action) {
-				case ACTION_NONE:
-					action = ACTION_SCALE;
-					actionMod = ACTION_MOD_INDIVIDUAL;
-					startAction();
-					break;
-				case ACTION_SCALE:
-					if (actionMod == ACTION_MOD_INDIVIDUAL) {
-						actionMod = ACTION_MOD_GROUP;
-						changeAction();
-					} else {
+		if (keyAction == GLFW_PRESS) {
+			if (inEditor) {
+				if (ctrlDown) {
+					if (action == ACTION_NONE)
+						if (shiftDown)
+							requestDialogue(DLG_SAVE_AS);
+						else
+							saveLevel();
+				} else {
+					switch (action) {
+					case ACTION_NONE:
+						action = ACTION_SCALE;
+						actionMod = ACTION_MOD_INDIVIDUAL;
+						startAction();
+						break;
+					case ACTION_SCALE:
+						if (actionMod == ACTION_MOD_INDIVIDUAL) {
+							actionMod = ACTION_MOD_GROUP;
+							changeAction();
+						} else {
+							actionMod = ACTION_MOD_INDIVIDUAL;
+							changeAction();
+						}
+						break;
+					default:
+						action = ACTION_SCALE;
 						actionMod = ACTION_MOD_INDIVIDUAL;
 						changeAction();
+						break;
 					}
-					break;
-				default:
-					action = ACTION_SCALE;
-					actionMod = ACTION_MOD_INDIVIDUAL;
-					changeAction();
-					break;
 				}
-			}
-		} else
-			slowMotion = !slowMotion;
+			} else
+				slowMotion = !slowMotion;
+		}
 		break;
 	case GLFW_KEY_T:
 		if (inEditor && keyAction == GLFW_PRESS) {
