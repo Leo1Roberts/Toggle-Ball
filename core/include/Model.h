@@ -3,6 +3,44 @@
 
 #include "Colors.h"
 
+struct BufferDeleter {
+	void operator()(GLsizei n, const GLuint* ids) const { glDeleteBuffers(n, ids); }
+};
+struct VAODeleter {
+	void operator()(GLsizei n, const GLuint* ids) const { glDeleteVertexArrays(n, ids); }
+};
+
+template <typename T, typename Deleter>
+class GLHandle {
+public:
+	GLHandle() = default;
+	explicit GLHandle(T id) : id(id) {}
+
+	~GLHandle() { if (id) Deleter{}(1, &id); }
+
+	GLHandle(const GLHandle&) = delete;
+	GLHandle& operator=(const GLHandle&) = delete;
+
+	GLHandle(GLHandle&& other) noexcept : id(other.id) { other.id = 0; }
+	GLHandle& operator=(GLHandle&& other) noexcept {
+		if (this != &other) {
+			if (id) Deleter{}(1, &id);
+			id = other.id;
+			other.id = 0;
+		}
+		return *this;
+	}
+
+	operator T() const { return id; }
+	T* ptr() { return &id; }
+
+private:
+	T id = 0;
+};
+
+using GLBuffer = GLHandle<GLuint, BufferDeleter>;
+using GLVertexArray = GLHandle<GLuint, VAODeleter>;
+
 struct Vertex {
 	constexpr Vertex(const vec3& iPosition, const vec2& iUv, const vec3& iNormal, const col& iColor) : position(iPosition),
 	                                                                                                   uv(iUv),
@@ -26,82 +64,21 @@ struct Model {
 	std::vector<Vertex> vertices;
 	std::vector<Index> indices;
 
-	GLuint vao;
-	GLuint vertex_buffer;
-	GLuint index_buffer;
+	GLVertexArray vao;
+	GLBuffer vertex_buffer;
+	GLBuffer index_buffer;
 
-	Model() : vao(0), vertex_buffer(0), index_buffer(0) {
-		setupBuffers();
-	}
+	Model() { setupBuffers(); }
 
 	Model(std::vector<Vertex> iVertices, std::vector<Index> iIndices) :
-	    vao(0), vertex_buffer(0), index_buffer(0),
 	    vertices(std::move(iVertices)),
 	    indices(std::move(iIndices)) {
 		setupBuffers();
 		sendToGpu();
 	}
 
-	~Model() { free(); }
-
-	//Model(const Model& other) :
-	//	vao(0),
-	//	vertex_buffer(0),
-	//	index_buffer(0),
-	//	vertices(other.vertices),
-	//	indices(other.indices) {
-	//	setupBuffers();
-	//	sendToGpu();
-	//}
-
-	//Model& operator=(const Model& other) {
-	//	if (this != &other) {
-	//		free();
-	//		vertices = other.vertices;
-	//		indices = other.indices;
-	//		setupBuffers();
-	//		sendToGpu();
-	//	}
-	//	return *this;
-	//}
-
-	Model(const Model&) = delete;
-	Model& operator=(const Model&) = delete;
-
-	Model(Model&& other) noexcept :
-		vao(other.vao),
-		vertex_buffer(other.vertex_buffer),
-		index_buffer(other.index_buffer),
-		vertices(std::move(other.vertices)),
-		indices(std::move(other.indices)) {
-		other.vao = other.vertex_buffer = other.index_buffer = 0;
-	}
-
-	Model& operator=(Model&& other) noexcept {
-		if (this != &other) {
-			free();
-			vao = other.vao;
-			vertex_buffer = other.vertex_buffer;
-			index_buffer = other.index_buffer;
-			vertices = std::move(other.vertices);
-			indices = std::move(other.indices);
-			other.vao = other.vertex_buffer = other.index_buffer = 0;
-		}
-		return *this;
-	}
-
 	void setupBuffers();
-
 	void sendToGpu();
-
-private:
-	
-	void free() {
-		if (vao) glDeleteVertexArrays(1, &vao);
-		if (vertex_buffer) glDeleteBuffers(1, &vertex_buffer);
-		if (index_buffer) glDeleteBuffers(1, &index_buffer);
-		vao = vertex_buffer = index_buffer = 0;
-	}
 };
 
 extern Model* ballModel;

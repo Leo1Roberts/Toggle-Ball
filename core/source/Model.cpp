@@ -2,10 +2,10 @@
 #include "Model.h"
 
 void Model::setupBuffers() {
-	glGenVertexArrays(1, &vao);
+	glGenVertexArrays(1, vao.ptr());
 	glBindVertexArray(vao);
-	glGenBuffers(1, &vertex_buffer);
-	glGenBuffers(1, &index_buffer);
+	glGenBuffers(1, vertex_buffer.ptr());
+	glGenBuffers(1, index_buffer.ptr());
 }
 
 void Model::sendToGpu() {

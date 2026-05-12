@@ -22,7 +22,7 @@ const std::string ASSETS_PATH = "C:/Users/leo/Toggle Ball/core/assets/";
 
 #endif
 
-typedef unsigned char byte;
+using byte = unsigned char;
 
 #include <stdexcept>
 #include <assert.h>
