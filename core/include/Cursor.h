@@ -20,8 +20,6 @@ struct Cursor {
 	static bool initShader(
 	        const std::string& vertexSource,
 	        const std::string& fragmentSource,
-	        const std::string& positionAttributeName,
-	        const std::string& uvAttributeName,
 	        const std::string& projectionMatrixUniformName);
 
 	static void activateShader() { glUseProgram(program); }
@@ -32,8 +30,6 @@ struct Cursor {
 
 private:
 	static GLuint program;
-	static GLint position;
-	static GLint uv;
 	static GLint projectionMatrix;
 
 	static GLuint vao;

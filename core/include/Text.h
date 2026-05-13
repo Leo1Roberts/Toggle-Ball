@@ -71,9 +71,6 @@ public:
 	static bool initTextShader(
 	        const std::string& vertexSource,
 	        const std::string& fragmentSource,
-	        const std::string& positionAttributeName,
-	        const std::string& uvAttributeName,
-	        const std::string& colorAttributeName,
 	        const std::string& projectionMatrixUniformName);
 
 	static void activateShader() { glUseProgram(program); };
@@ -91,9 +88,6 @@ private:
 	static unsigned short batchSize[];// If MAX_CHARS > 0x10000 this will need to be changed to an int
 
 	static GLuint program;
-	static GLint position;
-	static GLint uv;
-	static GLint color;
 	static GLint projectionMatrix;
 
 	static GLuint vao;

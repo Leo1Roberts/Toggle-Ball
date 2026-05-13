@@ -27,9 +27,6 @@ byte Text::batchToFill;
 unsigned short Text::batchSize[MAX_BATCHES];
 
 GLuint Text::program;
-GLint Text::position;
-GLint Text::uv;
-GLint Text::color;
 GLint Text::projectionMatrix;
 
 GLuint Text::vao;
@@ -256,9 +253,6 @@ void Text::drawText(byte batch) {
 bool Text::initTextShader(
         const std::string& vertexSource,
         const std::string& fragmentSource,
-        const std::string& positionAttributeName,
-        const std::string& uvAttributeName,
-        const std::string& colorAttributeName,
         const std::string& projectionMatrixUniformName) {
 	GLuint vertexShader = 0;
 	vertexShader = loadShader(GL_VERTEX_SHADER, vertexSource);
@@ -294,17 +288,11 @@ bool Text::initTextShader(
 
 			glDeleteProgram(iProgram);
 		} else {
-			GLint positionAttribute = glGetAttribLocation(iProgram, positionAttributeName.c_str());
-			GLint uvAttribute = glGetAttribLocation(iProgram, uvAttributeName.c_str());
-			GLint colorAttribute = glGetAttribLocation(iProgram, colorAttributeName.c_str());
 			GLint projectionMatrixUniform = glGetUniformLocation(iProgram,
 			                                                     projectionMatrixUniformName.c_str());
 
-			if (positionAttribute != -1 && uvAttribute != -1 && colorAttribute != -1 && projectionMatrixUniform != -1) {
+			if (projectionMatrixUniform != -1) {
 				program = iProgram;
-				position = positionAttribute;
-				uv = uvAttribute;
-				color = colorAttribute;
 				projectionMatrix = projectionMatrixUniform;
 			} else {
 				glDeleteProgram(iProgram);
@@ -328,36 +316,36 @@ bool Text::initTextShader(
 
 	// The position attribute is 3 floats
 	glVertexAttribPointer(
-	        position,          // attrib
+	        0,          // attrib
 	        2,                 // elements
 	        GL_FLOAT,          // of type float
 	        GL_FALSE,          // don't normalize
 	        sizeof(CharVertex),// stride is Vertex bytes
-	        0                  // pull from the start of the vertex data
+	        (void*)offsetof(CharVertex, pos)                  // pull from the start of the vertex data
 	);
-	glEnableVertexAttribArray(position);
+	glEnableVertexAttribArray(0);
 
 	// The uv attribute is 2 floats
 	glVertexAttribPointer(
-	        uv,                   // attrib
+	        1,                   // attrib
 	        2,                    // elements
 	        GL_FLOAT,             // of type float
 	        GL_FALSE,             // don't normalize
 	        sizeof(CharVertex),   // stride is Vertex bytes
-	        (uint8_t*)sizeof(vec2)// offset vec3 from the start
+	(void*)offsetof(CharVertex, uv)// offset vec3 from the start
 	);
-	glEnableVertexAttribArray(uv);
+	glEnableVertexAttribArray(1);
 
 	// The color attribute is 4 bytes
 	glVertexAttribPointer(
-	        color,                      // attrib
+	        2,                      // attrib
 	        4,                          // elements
 	        GL_UNSIGNED_BYTE,           // of type byte
 	        GL_TRUE,                    // normalize
 	        sizeof(CharVertex),         // stride is Vertex bytes
-	        (uint8_t*)(sizeof(vec2) * 2)// offset vec3 + vec2 from the start
+	(void*)offsetof(CharVertex, color)// offset vec3 + vec2 from the start
 	);
-	glEnableVertexAttribArray(color);
+	glEnableVertexAttribArray(2);
 
 	return true;
 }

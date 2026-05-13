@@ -4,13 +4,7 @@
 #include "ObjShader.h"
 #include "LoadOBJ.h"
 
-ObjShader* ObjShader::loadObjShader(
-		const std::string& vertexSource,
-		const std::string& fragmentSource,
-		const std::string& positionAttributeName,
-		const std::string& uvAttributeName,
-		const std::string& normalAttributeName,
-		const std::string& colorAttributeName) {
+ObjShader* ObjShader::loadObjShader(const std::string& vertexSource, const std::string& fragmentSource) {
 	ObjShader* shader = nullptr;
 
 	GLuint vertexShader = 0;
@@ -56,33 +50,7 @@ ObjShader* ObjShader::loadObjShader(
 			glDeleteProgram(program);
 			CHECK_ERROR();
 		} else {
-			// Get the attribute and uniform locations by name. You may also choose to hardcode
-			// indices with layout= in your shader, but it is not done in this sample
-			GLint positionAttribute = glGetAttribLocation(program, positionAttributeName.c_str());
-			CHECK_ERROR();
-			GLint uvAttribute = glGetAttribLocation(program, uvAttributeName.c_str());
-			CHECK_ERROR();
-			GLint normalAttribute = glGetAttribLocation(program, normalAttributeName.c_str());
-			CHECK_ERROR();
-			GLint colorAttribute = glGetAttribLocation(program, colorAttributeName.c_str());
-			CHECK_ERROR();
-
-			// Only create a new shader if all the attributes are found.
-			if (positionAttribute != -1
-			    && uvAttribute != -1
-			    && normalAttribute != -1
-			    && colorAttribute != -1) {
-
-				shader = new ObjShader(
-						program,
-						positionAttribute,
-						uvAttribute,
-						normalAttribute,
-						colorAttribute);
-			} else {
-				glDeleteProgram(program);
-				CHECK_ERROR();
-			}
+			shader = new ObjShader(program);
 		}
 	}
 
@@ -95,84 +63,57 @@ ObjShader* ObjShader::loadObjShader(
 	return shader;
 }
 
-/*void ObjShader::setupBuffers(Model &model) const {
-	glGenVertexArrays(1, &model.vao);
-	CHECK_ERROR();
-	glBindVertexArray(model.vao);
-	CHECK_ERROR();
-
-	glGenBuffers(1, &model.vertex_buffer);
-	CHECK_ERROR();
-	glBindBuffer(GL_ARRAY_BUFFER, model.vertex_buffer);
-	CHECK_ERROR();
-	const Vertex *vertices = model.vertices.data();
-	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * model.vertices.size(), vertices,
-	             GL_STATIC_DRAW);
-	CHECK_ERROR();
-
-	glGenBuffers(1, &model.index_buffer);
-	CHECK_ERROR();
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, model.index_buffer);
-	CHECK_ERROR();
-	const Index *indices = model.indices.data();
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Index) * model.indices.size(), indices,
-	             GL_STATIC_DRAW);
-	CHECK_ERROR();
-
-	setupVertexAttribs();
-}*/
-
 void ObjShader::setupVertexAttribs() const {
 	// The position attribute is 3 floats
 	glVertexAttribPointer(
-			position, // attrib
+			0, // attrib
 			3, // elements
 			GL_FLOAT, // of type float
 			GL_FALSE, // don't normalize
 			sizeof(Vertex), // stride is Vertex bytes
-			0 // pull from the start of the vertex data
+	(void*)offsetof(Vertex, position) // pull from the start of the vertex data
 	);
 	CHECK_ERROR();
-	glEnableVertexAttribArray(position);
+	glEnableVertexAttribArray(0);
 	CHECK_ERROR();
 
 	// The uv attribute is 2 floats
 	glVertexAttribPointer(
-			uv, // attrib
+			1, // attrib
 			2, // elements
 			GL_FLOAT, // of type float
 			GL_FALSE, // don't normalize
 			sizeof(Vertex), // stride is Vertex bytes
-			(uint8_t*) sizeof(vec3) // offset vec3 from the start
+			(void*)offsetof(Vertex, uv) // offset vec3 from the start
 	);
 	CHECK_ERROR();
-	glEnableVertexAttribArray(uv);
+	glEnableVertexAttribArray(1);
 	CHECK_ERROR();
 
 	// The normal attribute is 3 floats
 	glVertexAttribPointer(
-			normal, // attrib
+			2, // attrib
 			3, // elements
 			GL_FLOAT, // of type float
-			GL_FALSE, // don't normalize
+		GL_FALSE, // don't normalize
 			sizeof(Vertex), // stride is Vertex bytes
-			(uint8_t*) (sizeof(vec3) + sizeof(vec2)) // offset vec3 + vec2 from the start
+	(void*)offsetof(Vertex, normal) // offset vec3 + vec2 from the start
 	);
 	CHECK_ERROR();
-	glEnableVertexAttribArray(normal);
+	glEnableVertexAttribArray(2);
 	CHECK_ERROR();
 
 	// The color attribute is 4 bytes
 	glVertexAttribPointer(
-			color, // attrib
+			3, // attrib
 			4, // elements
 			GL_UNSIGNED_BYTE, // of type byte
 			GL_TRUE, // normalize
 			sizeof(Vertex), // stride is Vertex bytes
-			(uint8_t*) (sizeof(vec3) * 2 + sizeof(vec2)) // offset vec3 * 2 + vec2 from the start
+	(void*)offsetof(Vertex, color) // offset vec3 * 2 + vec2 from the start
 	);
 	CHECK_ERROR();
-	glEnableVertexAttribArray(color);
+	glEnableVertexAttribArray(3);
 	CHECK_ERROR();
 }
 

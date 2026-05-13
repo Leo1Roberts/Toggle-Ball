@@ -1,9 +1,9 @@
 #version 300 es
-in vec2 inPos;
-in vec2 inUV;
-in vec4 inCol;
-in vec4 inOutlineCol;
-in float inOutlineRad;
+layout(location = 0) in vec2 inPos;
+layout(location = 1) in vec2 inUV;
+layout(location = 2) in vec4 inCol;
+layout(location = 3) in vec4 inOutlineCol;
+layout(location = 4) in float inOutlineRad;
 
 out vec2 fragUV;
 out vec4 fragCol;

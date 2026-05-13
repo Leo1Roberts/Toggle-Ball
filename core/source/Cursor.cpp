@@ -11,8 +11,6 @@ float Cursor::size;
 bool Cursor::visible;
 
 GLuint Cursor::program;
-GLint Cursor::position;
-GLint Cursor::uv;
 GLint Cursor::projectionMatrix;
 
 GLuint Cursor::vao;
@@ -22,8 +20,6 @@ CursorVertex Cursor::vertices[6];
 bool Cursor::initShader(
         const std::string& vertexSource,
         const std::string& fragmentSource,
-        const std::string& positionAttributeName,
-        const std::string& uvAttributeName,
         const std::string& projectionMatrixUniformName) {
 	GLuint vertexShader = 0;
 	vertexShader = loadShader(GL_VERTEX_SHADER, vertexSource);
@@ -59,15 +55,11 @@ bool Cursor::initShader(
 
 			glDeleteProgram(iProgram);
 		} else {
-			GLint positionAttribute = glGetAttribLocation(iProgram, positionAttributeName.c_str());
-			GLint uvAttribute = glGetAttribLocation(iProgram, uvAttributeName.c_str());
 			GLint projectionMatrixUniform = glGetUniformLocation(iProgram,
 			                                                     projectionMatrixUniformName.c_str());
 
-			if (positionAttribute != -1 && uvAttribute != -1 && projectionMatrixUniform != -1) {
+			if (projectionMatrixUniform != -1) {
 				program = iProgram;
-				position = positionAttribute;
-				uv = uvAttribute;
 				projectionMatrix = projectionMatrixUniform;
 			} else {
 				glDeleteProgram(iProgram);
@@ -88,25 +80,25 @@ bool Cursor::initShader(
 
 	// The position attribute is 2 floats
 	glVertexAttribPointer(
-	        position,            // attrib
+	        0,            // attrib
 	        2,                   // elements
 	        GL_FLOAT,            // of type float
 	        GL_FALSE,            // don't normalize
 	        sizeof(CursorVertex),// stride is CursorVertex bytes
-	        0                    // pull from the start of the vertex data
+	(void*)offsetof(CursorVertex, pos)                    // pull from the start of the vertex data
 	);
-	glEnableVertexAttribArray(position);
+	glEnableVertexAttribArray(0);
 
 	// The uv attribute is 2 floats
 	glVertexAttribPointer(
-	        uv,                   // attrib
+	        1,                   // attrib
 	        2,                    // elements
 	        GL_FLOAT,             // of type float
 	        GL_FALSE,             // don't normalize
 	        sizeof(CursorVertex), // stride is CursorVertex bytes
-	        (uint8_t*)sizeof(vec2)// offset vec3 from the start
+	(void*)offsetof(CursorVertex, uv)// offset vec3 from the start
 	);
-	glEnableVertexAttribArray(uv);
+	glEnableVertexAttribArray(1);
 
 #ifdef WINDOWS_VERSION
 	arrowTex = TextureAsset::loadAsset(ASSETS_PATH + "cursors/arrow.png", false);

@@ -1,6 +1,6 @@
 #version 300 es
-in vec2 inPos;
-in vec2 inUV;
+layout(location = 0) in vec2 inPos;
+layout(location = 1) in vec2 inUV;
 
 out vec2 fragUV;
 

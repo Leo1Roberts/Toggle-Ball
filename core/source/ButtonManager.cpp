@@ -24,11 +24,6 @@ short ButtonManager::batchToFill;
 short ButtonManager::batchSize[MAX_BATCHES];
 
 GLuint ButtonManager::program;
-GLint ButtonManager::position;
-GLint ButtonManager::uv;
-GLint ButtonManager::color;
-GLint ButtonManager::outlineColor;
-GLint ButtonManager::outlineRadius;
 GLint ButtonManager::projectionMatrix;
 
 GLuint ButtonManager::vao;
@@ -187,11 +182,6 @@ void ButtonManager::drawButtons(byte batch) {
 bool ButtonManager::initButtonShader(
 		const std::string& vertexSource,
 		const std::string& fragmentSource,
-		const std::string& positionAttributeName,
-		const std::string& uvAttributeName,
-		const std::string& colorAttributeName,
-		const std::string& outlineColorAttributeName,
-		const std::string& outlineRadiusAttributeName,
 		const std::string& projectionMatrixUniformName) {
 	GLuint vertexShader = 0;
 	vertexShader = loadShader(GL_VERTEX_SHADER, vertexSource);
@@ -226,25 +216,10 @@ bool ButtonManager::initButtonShader(
 
 			glDeleteProgram(iProgram);
 		} else {
-			GLint positionAttribute = glGetAttribLocation(iProgram, positionAttributeName.c_str());
-			GLint uvAttribute = glGetAttribLocation(iProgram, uvAttributeName.c_str());
-			GLint colorAttribute = glGetAttribLocation(iProgram, colorAttributeName.c_str());
-			GLint outlineColorAttribute = glGetAttribLocation(iProgram, outlineColorAttributeName.c_str());
-			GLint outlineRadiusAttribute = glGetAttribLocation(iProgram, outlineRadiusAttributeName.c_str());
 			GLint projectionMatrixUniform = glGetUniformLocation(iProgram, projectionMatrixUniformName.c_str());
 
-			if (positionAttribute != -1
-			    && uvAttribute != -1
-			    && colorAttribute != -1
-				&& outlineColorAttribute != -1
-				&& outlineRadiusAttribute != -1
-			    && projectionMatrixUniform != -1) {
+			if (projectionMatrixUniform != -1) {
 				program = iProgram;
-				position = positionAttribute;
-				uv = uvAttribute;
-				color = colorAttribute;
-				outlineColor = outlineColorAttribute;
-				outlineRadius = outlineRadiusAttribute;
 				projectionMatrix = projectionMatrixUniform;
 			} else {
 				glDeleteProgram(iProgram);
@@ -268,58 +243,58 @@ bool ButtonManager::initButtonShader(
 
 	// The position attribute is 2 floats
 	glVertexAttribPointer(
-		position, // attrib
+		0, // attrib
 		2, // elements
 		GL_FLOAT, // of type float
 		GL_FALSE, // don't normalize
 		sizeof(ButtonVertex), // stride is ButtonVertex bytes
-		nullptr // pull from the start of the vertex data
+	(void*)offsetof(ButtonVertex, pos) // pull from the start of the vertex data
 	);
-	glEnableVertexAttribArray(position);
+	glEnableVertexAttribArray(0);
 
 	// The uv attribute is 2 floats
 	glVertexAttribPointer(
-		uv, // attrib
+		1, // attrib
 		2, // elements
 		GL_FLOAT, // of type float
 		GL_FALSE, // don't normalize
 		sizeof(ButtonVertex), // stride is ButtonVertex bytes
-		(uint8_t*) sizeof(vec2) // offset vec2 from the start
+	(void*)offsetof(ButtonVertex, uv) // offset vec2 from the start
 	);
-	glEnableVertexAttribArray(uv);
+	glEnableVertexAttribArray(1);
 
 	// The color attribute is 4 bytes
 	glVertexAttribPointer(
-		color, // attrib
+		2, // attrib
 		4, // elements
 		GL_UNSIGNED_BYTE, // of type byte
 		GL_TRUE, // normalize
 		sizeof(ButtonVertex), // stride is ButtonVertex bytes
-		(uint8_t*) (sizeof(vec2) * 2) // offset 2 * vec2 from the start
+	(void*)offsetof(ButtonVertex, color) // offset 2 * vec2 from the start
 	);
-	glEnableVertexAttribArray(color);
+	glEnableVertexAttribArray(2);
 
 	// The outline color attribute is 4 bytes
 	glVertexAttribPointer(
-		outlineColor, // attrib
+		3, // attrib
 		4, // elements
 		GL_UNSIGNED_BYTE, // of type byte
 		GL_TRUE, // normalize
 		sizeof(ButtonVertex), // stride is ButtonVertex bytes
-		(uint8_t*)(sizeof(vec2) * 2 + sizeof(col)) // offset 2 * vec2 + col from the start
+	(void*)offsetof(ButtonVertex, outlineColor) // offset 2 * vec2 + col from the start
 	);
-	glEnableVertexAttribArray(outlineColor);
+	glEnableVertexAttribArray(3);
 
 	// The uv attribute is 1 float
 	glVertexAttribPointer(
-		outlineRadius, // attrib
+		4, // attrib
 		1, // elements
 		GL_FLOAT, // of type float
 		GL_FALSE, // don't normalize
 		sizeof(ButtonVertex), // stride is ButtonVertex bytes
-		(uint8_t*)(sizeof(vec2) * 2 + sizeof(col) * 2) // offset 2 * vec2 + 2 * col from the start
+	(void*)offsetof(ButtonVertex, outlineRadius) // offset 2 * vec2 + 2 * col from the start
 	);
-	glEnableVertexAttribArray(outlineRadius);
+	glEnableVertexAttribArray(4);
 
 	return true;
 }

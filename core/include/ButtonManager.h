@@ -54,11 +54,6 @@ struct ButtonManager {
 	static bool initButtonShader(
 			const std::string& vertexSource,
 			const std::string& fragmentSource,
-			const std::string& positionAttributeName,
-			const std::string& uvAttributeName,
-			const std::string& colorAttributeName,
-			const std::string& outlineColorAttributeName,
-			const std::string& outlineRadiusAttributeName,
 			const std::string& projectionMatrixUniformName);
 
 	static void activateShader() { glUseProgram(program); }
@@ -77,11 +72,6 @@ private:
 	static short batchSize[]; // If MAX_BUTTONS > 256 this will need to be changed to a short
 
 	static GLuint program;
-	static GLint position;
-	static GLint uv;
-	static GLint color;
-	static GLint outlineColor;
-	static GLint outlineRadius;
 	static GLint projectionMatrix;
 
 	static GLuint vao;

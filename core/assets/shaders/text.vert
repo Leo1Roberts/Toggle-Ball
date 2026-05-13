@@ -1,7 +1,7 @@
 #version 300 es
-in vec2 inPos;
-in vec2 inUV;
-in vec4 inCol;
+layout(location = 0) in vec2 inPos;
+layout(location = 1) in vec2 inUV;
+layout(location = 2) in vec4 inCol;
 
 out vec2 fragUV;
 out vec4 fragCol;

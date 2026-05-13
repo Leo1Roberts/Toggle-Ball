@@ -107,7 +107,7 @@ void Game::setupObjShaders() {
 	fsh = importShader(androidApp->activity->assetManager, "shaders/object.frag");
 #endif
 
-	objShader = ObjShader::loadObjShader(vsh, fsh, "inPos", "inUV", "inNormal", "inColor");
+	objShader = ObjShader::loadObjShader(vsh, fsh);
 
 	objShader->activate();
 
@@ -145,7 +145,7 @@ void Game::setupObjShaders() {
 	fsh = importShader(androidApp->activity->assetManager, "shaders/objectOutline.frag");
 #endif
 
-	outlineShader = ObjShader::loadObjShader(vsh, fsh, "inPos", "inUV", "inNormal", "inColor");
+	outlineShader = ObjShader::loadObjShader(vsh, fsh);
 
 	outlineShader->activate();
 
@@ -433,7 +433,7 @@ void Game::initGame() {
 	vsh = importShader(androidApp->activity->assetManager, "shaders/text.vert");
 	fsh = importShader(androidApp->activity->assetManager, "shaders/text.frag");
 #endif
-	Text::initTextShader(vsh, fsh, "inPos", "inUV", "inCol", "uProjection2D");
+	Text::initTextShader(vsh, fsh, "uProjection2D");
 
 #ifdef WINDOWS_VERSION
 	vsh = importShader(ASSETS_PATH + "shaders/button.vert");
@@ -442,12 +442,12 @@ void Game::initGame() {
 	vsh = importShader(androidApp->activity->assetManager, "shaders/button.vert");
 	fsh = importShader(androidApp->activity->assetManager, "shaders/button.frag");
 #endif
-	ButtonManager::initButtonShader(vsh, fsh, "inPos", "inUV", "inCol", "inOutlineCol", "inOutlineRad", "uProjection2D");
+	ButtonManager::initButtonShader(vsh, fsh, "uProjection2D");
 
 #ifdef WINDOWS_VERSION
 	vsh = importShader(ASSETS_PATH + "shaders/cursor.vert");
 	fsh = importShader(ASSETS_PATH + "shaders/cursor.frag");
-	Cursor::initShader(vsh, fsh, "inPos", "inUV", "uProjection2D");
+	Cursor::initShader(vsh, fsh, "uProjection2D");
 #endif
 
 	initFonts();
