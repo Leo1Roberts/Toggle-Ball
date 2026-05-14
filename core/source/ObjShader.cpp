@@ -1,3 +1,4 @@
+#include <GLUtilities.h>
 #include "main.h"
 #include "MatrixUtilities.h"
 #include "Game.h"

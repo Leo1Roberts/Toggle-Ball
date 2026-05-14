@@ -10,8 +10,6 @@
 #include "TextureAsset.h"
 #include "VectorMatrix.h"
 
-#define CHECK_ERROR() CheckGLError()
-
 struct android_app;
 
 void CheckGLError();

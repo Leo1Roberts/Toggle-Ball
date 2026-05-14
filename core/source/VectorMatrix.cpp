@@ -35,7 +35,7 @@ vec4 lerp(const vec4& a, const vec4& b, float t) {
 
 // mat3
 
-mat3 mat3::operator*(const mat3& m) const {
+mat3 mat3::operator*(const mat3& m) const noexcept {
 	mat3 res;
 	res.a = a * m.a + b * m.d + c * m.g;
 	res.b = a * m.b + b * m.e + c * m.h;

@@ -73,7 +73,7 @@ struct Plane {
 		material(0),
 		definition({{0, 0, 1}, 0}) {}
 
-	Plane(TextureAsset* iTexture, const col& iColor, byte iMaterial, const vec3& iNormal, const vec3& iScale = {1}, const vec3& iPos = {0}) :
+	Plane(TextureAsset* iTexture, const col& iColor, byte iMaterial, const vec3& iNormal, const vec3& iScale = vec3(1), const vec3& iPos = vec3(0)) :
 		texture(iTexture),
 		color(iColor),
 		material(iMaterial),
@@ -138,7 +138,7 @@ struct Ball_OLD {
 		Cd(0),
 		scale(1),
 		pos(0),
-		rot(I_MAT3),
+		rot(mat3::I),
 		vel(0),
 		angVel(0),
 		force(0),
@@ -160,7 +160,7 @@ struct Ball_OLD {
 		Cd(properties.Cd),
 		scale(vec3(properties.radius)),
 		pos(0),
-		rot(I_MAT3),
+		rot(mat3::I),
 		vel(0),
 		angVel(0),
 		force(0),

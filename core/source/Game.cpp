@@ -15,6 +15,7 @@
 #include <algorithm>
 #include "Cursor.h"
 #include "TextBoxManager.h"
+#include "GLUtilities.h"
 #include "Game.h"
 
 #ifndef WINDOWS_VERSION
@@ -23,44 +24,6 @@
 #include <sys/param.h>
 
 #endif
-
-void CheckGLError() {
-#ifdef WINDOWS_VERSION
-	GLenum err = glGetError();
-
-	if (err == GL_NO_ERROR)
-		return;
-
-	const char* string = "unknown";
-	switch (err) {
-	case GL_INVALID_ENUM:
-		string = "GL_INVALID_ENUM";
-		break;
-	case GL_INVALID_VALUE:
-		string = "GL_INVALID_VALUE";
-		break;
-	case GL_INVALID_OPERATION:
-		string = "GL_INVALID_OPERATION";
-		break;
-	case GL_OUT_OF_MEMORY:
-		string = "GL_OUT_OF_MEMORY";
-		break;
-	case GL_INVALID_FRAMEBUFFER_OPERATION:
-		string = "GL_INVALID_FRAMEBUFFER_OPERATION";
-		break;
-	case 0x0507: //GL_CONTEXT_LOST:
-		string = "GL_CONTEXT_LOST";
-		break;
-	case 0x8031: //GL_TABLE_TOO_LARGE1:
-		string = "GL_TABLE_TOO_LARGE1";
-		break;
-	}
-
-	char buf[1024];
-	sprintf_s(buf, "Error %x: %s\n", err, string);
-	printf(buf);
-#endif
-}
 
 bool Game::inEditor = false;
 bool Game::toggled = false;
@@ -479,9 +442,9 @@ void Game::initFonts() {
 
 void Game::resetBall() {
 	setBallPos(level.ballPos * ball.radius);
-	ball.vel = {0};
+	ball.vel = vec3();
 	ball.rot.identity();
-	ball.angVel = {0};
+	ball.angVel = vec3();
 }
 
 void Game::restartLevel(int _) {
@@ -1803,7 +1766,7 @@ void Game::drawObstacleDomains() {
 			}
 
 			vec3 pos = depth + ((g.getStateType() == ST_POS || g.getStateType() == ST_POS_OSC) ? vec3() : g.getPos());
-			buildScaledWorldMatrix(&worldMat, I_MAT3, pos, vec3(1)); // Alpha sorting
+			buildScaledWorldMatrix(&worldMat, mat3::I, pos, vec3(1)); // Alpha sorting
 			projectionMatrix = worldMat * viewMat * projMat;
 			glUniformMatrix4fv(uProjectionFullLoc, 1, false, (float*)&projectionMatrix);
 			CHECK_ERROR();
@@ -1883,7 +1846,7 @@ void Game::updateArena() {
 	arenaHeight = level.arenaHeight * ball.radius;
 	const vec3 scale = {arenaWidth, arenaWidth, arenaHeight};
 
-	vec3 pos = {0};
+	vec3 pos = vec3();
 	arenaBounds[0].scale = scale;
 	arenaBounds[0].setPos(pos);
 	pos = {0, 0, arenaHeight};
@@ -4311,7 +4274,7 @@ void Game::addObstacle(bool isStraight, bool isGoal, byte stateType) {
 			switch (stateType) {
 			case ST_STATIC:
 				color = WHITE;
-				stateA = stateB = {0};
+				stateA = stateB = vec3();
 				break;
 			case ST_POS:
 				color = SOFT_BLUE;
@@ -4324,16 +4287,16 @@ void Game::addObstacle(bool isStraight, bool isGoal, byte stateType) {
 				break;
 			case ST_ANG:
 				color = SOFT_RED;
-				stateA = stateB = {0};
+				stateA = stateB = vec3();
 				break;
 			case ST_ANG_VEL:
 				color = SOFT_MAGENTA;
-				stateA = {0};
+				stateA = vec3();
 				stateB = {PI, 0, 0};
 				break;
 			case ST_ANG_OSC:
 				color = SOFT_YELLOW;
-				stateA = {0};
+				stateA = vec3();
 				stateB = {PI * 0.5f, 0, 0};
 				break;
 			}

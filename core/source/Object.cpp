@@ -941,7 +941,7 @@ PlaneDefinition Obstacle::getTopPlane() const {
 
 void Obstacle::restart() {
 	setPos(getInitPos());
-	setVel(0);
+	setVel(vec3());
 	setAngle(getInitAngle());
 	setAngVel(getStateType() == ST_ANG_VEL ? getStateA().x : 0);
 	setExtra(0);

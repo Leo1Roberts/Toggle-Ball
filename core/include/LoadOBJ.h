@@ -2,6 +2,7 @@
 #define LOAD_OBJ_H
 
 #include "Model.h"
+#include "Mesh.h"
 
 struct FileIndices {
 	int v;

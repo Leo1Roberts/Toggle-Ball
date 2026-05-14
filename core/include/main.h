@@ -31,6 +31,7 @@ using byte = unsigned char;
 #include <vector>
 #include <map>
 #include "VectorMatrix.h"
+#include "GLUtilities.h"
 #include "Utilities.h"
 
 const float PI = 3.14159265359f;

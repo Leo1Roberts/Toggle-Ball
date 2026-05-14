@@ -189,10 +189,10 @@ private:
 
 
 struct KinematicState {
-	vec2 position;
-	float angle;
-	vec2 velocity;
-	float angularVelocity;
+	vec2 position = vec2();
+	float angle = 0;
+	vec2 velocity = vec2();
+	float angularVelocity = 0;
 };
 
 
@@ -213,9 +213,7 @@ private:
 class EditorObstacle {
 public:
 	explicit EditorObstacle(ObstacleDescriptor* descriptor) :
-	    descriptor(descriptor),
-		phase(0),
-		selected(false) {
+	    descriptor(descriptor) {
 		assert(descriptor != nullptr);
 	}
 
@@ -226,18 +224,22 @@ public:
 	EditorObstacle(EditorObstacle&&) = default;
 	EditorObstacle& operator=(EditorObstacle&&) = default;
 
+	bool isSelected() { return selected; };
+	void select() { selected = true; };
+	void deselect() { selected = false; };
+
 private:
 	ObstacleDescriptor* descriptor;
 
 	/*
 	 * Needed for obstacles with 'memory':
 	 * Kinematic state cannot be calculated using only the motion spec and smoother
-	 * Spinning obstacles: angle
-	 * Oscillating obstacles: phase
+	 * Spinning obstacles - angle
+	 * Oscillating obstacles - phase
 	 */
-	float phase;
+	float phase = 0;
 
-	bool selected;
+	bool selected = false;
 
 	Model obstacle;
 	Model outline;

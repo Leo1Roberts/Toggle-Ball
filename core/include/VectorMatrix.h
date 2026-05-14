@@ -11,41 +11,35 @@ struct vec2 {
 		};
 	};
 
-	vec2() : x(0), y(0) {}
+	explicit constexpr vec2(float i = 0) noexcept : x(i), y(i) {}
+	constexpr vec2(float x, float y) noexcept : x(x), y(y) {}
 
-	vec2(float i) : x(i), y(i) {}
+	bool operator==(const vec2& v) const noexcept { return x == v.x && y == v.y; }
 
-	vec2(float ix, float iy) : x(ix), y(iy) {}
-
-	bool operator==(const vec2& v) const { return x == v.x && y == v.y; };
-
-	vec2 operator*(float s) const { return { x * s, y * s }; };
-
-	vec2 operator/(float s) const {
+	vec2 operator*(float s) const noexcept { return { x * s, y * s }; };
+	vec2 operator/(float s) const noexcept {
 		float r = 1.0f / s;
 		return { x * r, y * r };
 	};
 
-	vec2 operator*=(float s) {
+	vec2 operator*=(float s) noexcept {
 		x *= s;
 		y *= s;
 		return *this;
 	};
 
-	vec2 operator+(const vec2& v) const { return { x + v.x, y + v.y }; };
-
-	vec2 operator-(const vec2& v) const { return { x - v.x, y - v.y }; };
+	vec2 operator+(const vec2& v) const noexcept { return { x + v.x, y + v.y }; };
+	vec2 operator-(const vec2& v) const noexcept { return { x - v.x, y - v.y }; };
 
 	void set(float i) { x = y = i; }
-
 	void set(float ix, float iy) {
 		x = ix;
 		y = iy;
 	}
 
-	float lengthSq() const { return x * x + y * y; }
+	float lengthSq() const noexcept { return x * x + y * y; }
 
-	float length() const { return sqrtf(x * x + y * y); }
+	float length() const noexcept { return sqrtf(x * x + y * y); }
 };
 
 struct vec3 {
@@ -58,29 +52,26 @@ struct vec3 {
 		};
 	};
 
-	vec3() : x(0), y(0), z(0) {}
+	explicit constexpr vec3(float i = 0) noexcept : x(i), y(i), z(i) {}
+	constexpr vec3(float x, float y, float z) noexcept : x(x), y(y), z(z) {}
 
-	vec3(float i) : x(i), y(i), z(i) {}
+	bool operator==(const vec3& v) const noexcept {
+		return x == v.x && y == v.y && z == v.z;
+	}
 
-	vec3(float ix, float iy, float iz) : x(ix), y(iy), z(iz) {}
-
-	bool operator==(const vec3& v) const { return x == v.x && y == v.y && z == v.z; };
-
-	vec3 operator*(float s) const { return { x * s, y * s, z * s }; };
-
-	vec3 operator/(float s) const {
+	vec3 operator*(float s) const noexcept { return { x * s, y * s, z * s }; };
+	vec3 operator/(float s) const noexcept {
 		float r = 1.0f / s;
 		return { x * r, y * r, z * r };
 	};
 
-	vec3 operator*=(float s) {
+	vec3 operator*=(float s) noexcept {
 		x *= s;
 		y *= s;
 		z *= s;
 		return *this;
 	};
-
-	vec3 operator/=(float s) {
+	vec3 operator/=(float s) noexcept {
 		float r = 1.0f / s;
 		x *= r;
 		y *= r;
@@ -88,25 +79,21 @@ struct vec3 {
 		return *this;
 	};
 
-	vec3 operator+(const vec3& v) const { return { x + v.x, y + v.y, z + v.z }; };
+	vec3 operator+(const vec3& v) const noexcept { return { x + v.x, y + v.y, z + v.z }; };
+	vec3 operator-(const vec3& v) const noexcept { return { x - v.x, y - v.y, z - v.z }; };
 
-	vec3 operator-(const vec3& v) const { return { x - v.x, y - v.y, z - v.z }; };
-
-	vec3 operator+=(const vec3& v) {
+	vec3 operator+=(const vec3& v) noexcept {
 		x += v.x;
 		y += v.y;
 		z += v.z;
 		return *this;
 	};
-
-	vec3 operator-=(const vec3& v) {
+	vec3 operator-=(const vec3& v) noexcept {
 		x -= v.x;
 		y -= v.y;
 		z -= v.z;
 		return *this;
 	};
-
-	bool operator!=(const vec3& v) { return x != v.x || y != v.y || z != v.z; };
 
 	void set(float i) { x = y = z = i; }
 
@@ -123,9 +110,9 @@ struct vec3 {
 		z *= r;
 	}
 
-	float lengthSq() const { return x * x + y * y + z * z; }
+	float lengthSq() const noexcept { return x * x + y * y + z * z; }
 
-	float length() const { return sqrtf(x * x + y * y + z * z); }
+	float length() const noexcept { return sqrtf(x * x + y * y + z * z); }
 };
 
 float dot(const vec3& v1, const vec3& v2);
@@ -136,9 +123,9 @@ vec3 lerp(const vec3& a, const vec3& b, float t);
 struct vec4 {
 	float r, g, b, a;
 
-	vec4() : r(0), g(0), b(0), a(0) {}
+	constexpr vec4() noexcept : r(0), g(0), b(0), a(0) {}
 
-	vec4(float ir, float ig, float ib, float ia) : r(ir), g(ig), b(ib), a(ia) {}
+	constexpr vec4(float r, float g, float b, float a) noexcept : r(r), g(g), b(b), a(a) {}
 };
 
 vec4 lerp(const vec4& a, const vec4& b, float t);
@@ -149,14 +136,16 @@ struct mat3 {
 		d, e, f,
 		g, h, i;
 
-	mat3() : a(0), b(0), c(0), d(0), e(0), f(0), g(0), h(0), i(0) {}
+	static const mat3 I;
 
-	mat3(float iA, float iB, float iC, float iD, float iE, float iF, float iG, float iH, float iI) :
-	    a(iA), b(iB), c(iC), d(iD), e(iE), f(iF), g(iG), h(iH), i(iI) {}
+	constexpr mat3() noexcept : a(0), b(0), c(0), d(0), e(0), f(0), g(0), h(0), i(0) {}
 
-	mat3 operator*(const mat3& m) const;
+	constexpr mat3(float a, float b, float c, float d, float e, float f, float g, float h, float i) noexcept :
+	    a(a), b(b), c(c), d(d), e(e), f(f), g(g), h(h), i(i) {}
 
-	vec3 operator*(const vec3& v) const {
+	mat3 operator*(const mat3& m) const noexcept;
+
+	vec3 operator*(const vec3& v) const noexcept {
 		return {
 				a * v.x + b * v.y + c * v.z,
 				d * v.x + e * v.y + f * v.z,
@@ -164,7 +153,7 @@ struct mat3 {
 		};
 	};
 
-	void identity() {
+	constexpr void identity() noexcept {
 		a = e = i = 1.0f;
 		b = c = d = f = g = h = 0.0f;
 	}
@@ -187,11 +176,11 @@ struct mat3 {
 
 	void SetInverseOf(const mat3* m);
 };
-const mat3 I_MAT3 = mat3(
-           1, 0, 0,
-           0, 1, 0,
-           0, 0, 1
-           );
+inline constexpr mat3 mat3::I = mat3(
+	1, 0, 0,
+	0, 1, 0,
+	0, 0, 1
+);
 
 struct mat4 {
 	union {

@@ -114,15 +114,15 @@ bool Level::importLevel(Level* level, const std::string& levelData, const std::s
 			if (!(ss >> level->transitionTime))
 				return false;
 		} else if (header == 'o' && level->obstacleDefinitions.size() < MAX_OBSTACLES) {
-			vec3 pos = {0};
+			vec3 pos = vec3();
 			float angle;
 			char isStraightText[6] = {0};
 			float minorRadius;
-			vec3 start = {0};
-			vec3 end = {0};
+			vec3 start = vec3();
+			vec3 end = vec3();
 			char stateTypeText[8] = {0};
-			vec3 stateA = {0};
-			vec3 stateB = {0};
+			vec3 stateA = vec3();
+			vec3 stateB = vec3();
 			char isGoalText[6] = {0};
 
 			if (!(ss >> c >> pos.y >> c >> pos.z >> c >> angle >> isStraightText >> minorRadius >> c >> start.y >> c >> start.z >> c >> c >> end.y >> c >> end.z >> c >> stateTypeText >> c >> stateA.x >> c >> stateA.y >> c >> stateA.z >> c >> c >> stateB.x >> c >> stateB.y >> c >> stateB.z >> c >> isGoalText))

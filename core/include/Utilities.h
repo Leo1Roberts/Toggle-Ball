@@ -9,7 +9,7 @@ float randomFloat();
 
 float randomFloatBeyondValue(float val);
 
-inline float lerp(float a, float b, float t) {
+constexpr inline float lerp(float a, float b, float t) noexcept {
 	return a * (1-t) + b * t;
 }
 
