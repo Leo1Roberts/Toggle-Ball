@@ -18,6 +18,9 @@ struct ProgramDeleter {
 struct ShaderDeleter {
 	void operator()(GLsizei, const GLuint* id) const { glDeleteShader(*id); }
 };
+struct TextureDeleter {
+	void operator()(GLsizei n, const GLuint* ids) const { glDeleteTextures(n, ids); }
+};
 
 template <typename T, typename Deleter>
 class GLHandle {
@@ -51,5 +54,6 @@ using GLBuffer = GLHandle<GLuint, BufferDeleter>;
 using GLVertexArray = GLHandle<GLuint, VertexArrayDeleter>;
 using GLShader = GLHandle<GLuint, ShaderDeleter>;
 using GLProgram = GLHandle<GLuint, ProgramDeleter>;
+using GLTexture = GLHandle<GLuint, TextureDeleter>;
 
 #endif // GL_UTILITIES_H
