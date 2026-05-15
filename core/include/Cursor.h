@@ -1,7 +1,7 @@
 #ifndef CURSOR_H
 #define CURSOR_H
 
-#include "TextureAsset.h"
+#include "Texture.h"
 
 struct CursorVertex {
 	vec2 pos;
@@ -9,9 +9,7 @@ struct CursorVertex {
 };
 
 struct Cursor {
-	static TextureAsset *arrowTex, *handTex, *resizeTex;
-
-	static TextureAsset* tex;
+	static Texture* tex;
 	static vec2 pos;
 	static float angle;
 	static float size;

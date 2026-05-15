@@ -3,8 +3,7 @@
 #include "MatrixUtilities.h"
 #include "Cursor.h"
 
-TextureAsset *Cursor::arrowTex, *Cursor::handTex, *Cursor::resizeTex;
-TextureAsset* Cursor::tex;
+Texture* Cursor::tex;
 vec2 Cursor::pos;
 float Cursor::angle;
 float Cursor::size;
@@ -100,13 +99,7 @@ bool Cursor::initShader(
 	);
 	glEnableVertexAttribArray(1);
 
-#ifdef WINDOWS_VERSION
-	arrowTex = TextureAsset::loadAsset(ASSETS_PATH + "cursors/arrow.png", false);
-	handTex = TextureAsset::loadAsset(ASSETS_PATH + "cursors/hand.png", false);
-	resizeTex = TextureAsset::loadAsset(ASSETS_PATH + "cursors/resize.png", false);
-#endif
-
-	tex = arrowTex;
+	tex = Textures::Cursors::arrow.get();
 	angle = 0;
 	visible = false;
 
@@ -131,8 +124,7 @@ void Cursor::drawCursor() {
 	vertices[5] = {pos + vec2(cosf(angle + PI * 0.25f), sinf(angle + PI * 0.25f)) * size,
 	               {1.0f, 0.0f}};
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, tex->textureID);
+	tex->bind(0);
 
 	glBindVertexArray(vao);
 

@@ -7,7 +7,6 @@
 #include <string>
 #include <vector>
 #include "Model.h"
-#include "TextureAsset.h"
 #include "VectorMatrix.h"
 
 struct android_app;
@@ -174,7 +173,7 @@ private:
 
 	static void drawBall(const Ball_OLD& b);
 	static void drawPlane(const Plane& p);
-	static void drawObject(const Model* model, const TextureAsset* texture, const vec3& pos, const mat3& rot, const vec3& scale);
+	static void drawObject(const Model* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale);
 	static void drawObstacles();
 	static void drawObstacleOutline(const Obstacle& g);
 	static void drawObstacleDomains();

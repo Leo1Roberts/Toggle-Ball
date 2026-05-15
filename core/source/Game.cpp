@@ -2,7 +2,6 @@
 #include "Colors.h"
 #include "Sizes.h"
 #include "MatrixUtilities.h"
-#include "TextureAsset.h"
 #include "LoadOBJ.h"
 #include "ButtonManager.h"
 #include "Fonts.h"
@@ -22,6 +21,7 @@
 
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 #include <sys/param.h>
+#include <Texture.h>
 
 #endif
 
@@ -220,10 +220,6 @@ void Game::deleteGame() {
 		return;
 	} else
 		confirmExit();
-
-	delete Cursor::arrowTex;
-	delete Cursor::handTex;
-	delete Cursor::resizeTex;
 #else
 android_app* Game::androidApp;
 EGLDisplay Game::eglDisplay;
@@ -249,9 +245,6 @@ void Game::deleteGame() {
 	obstacles.clear();
 
 	ObjShader::deleteShaders();
-
-	delete whiteTex;
-	delete basketballTex;
 
 	delete ballModel;
 	delete planeModel;
@@ -531,13 +524,11 @@ void Game::createObjects() {
 	std::vector<Index> planeIndices;
 
 #ifdef WINDOWS_VERSION
-	whiteTex = TextureAsset::loadAsset(ASSETS_PATH + "textures/white.png", false);
-	basketballTex = TextureAsset::loadAsset(ASSETS_PATH + "textures/Ball.png", false);
+	Textures::init();
 	loadOBJ(ASSETS_PATH + "models/Ball.obj", &ballVertices, &ballIndices);
 	loadOBJ(ASSETS_PATH + "models/Ground.obj", &planeVertices, &planeIndices, BOUNDARY);
 #else
-	whiteTex = TextureAsset::loadAsset(androidApp->activity->assetManager, "textures/white.png", false);
-	basketballTex = TextureAsset::loadAsset(androidApp->activity->assetManager, "textures/Ball.png", false);
+	Textures::init(androidApp->activity->assetManager);
 	loadOBJ(androidApp->activity->assetManager, "models/Ball.obj", &ballVertices, &ballIndices);
 	loadOBJ(androidApp->activity->assetManager, "models/Ground.obj", &planeVertices, &planeIndices, BOUNDARY);
 #endif
@@ -549,12 +540,12 @@ void Game::createObjects() {
 	ballModel = new Model(ballVertices, ballIndices);
 	objShader->setupVertexAttribs();
 
-	arenaBounds[0] = Plane(whiteTex, BOUNDARY, MAT_CONCRETE, {0, 0, 1});
-	arenaBounds[1] = Plane(whiteTex, BOUNDARY, MAT_CONCRETE, {0, 0, -1});
-	arenaBounds[2] = Plane(whiteTex, BOUNDARY, MAT_CONCRETE, {0, 1, 0});
-	arenaBounds[3] = Plane(whiteTex, BOUNDARY, MAT_CONCRETE, {0, -1, 0});
+	arenaBounds[0] = Plane(Textures::white.get(), BOUNDARY, MAT_CONCRETE, {0, 0, 1});
+	arenaBounds[1] = Plane(Textures::white.get(), BOUNDARY, MAT_CONCRETE, {0, 0, -1});
+	arenaBounds[2] = Plane(Textures::white.get(), BOUNDARY, MAT_CONCRETE, {0, 1, 0});
+	arenaBounds[3] = Plane(Textures::white.get(), BOUNDARY, MAT_CONCRETE, {0, -1, 0});
 
-	arenaBackground = Plane(whiteTex, BOUNDARY, MAT_CONCRETE, {1, 0, 0});
+	arenaBackground = Plane(Textures::white.get(), BOUNDARY, MAT_CONCRETE, {1, 0, 0});
 
 	ballOutline = Ball_OLD();
 
@@ -1656,7 +1647,7 @@ void Game::drawPlane(const Plane& p) {
 	drawObject(planeModel, p.texture, p.pos, p.rot, p.scale);
 }
 
-void Game::drawObject(const Model* model, const TextureAsset* texture, const vec3& pos, const mat3& rot, const vec3& scale) {
+void Game::drawObject(const Model* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale) {
 	buildScaledWorldMatrix(&worldMat, rot, pos, scale);
 
 	mat4 bodyToView = worldMat * viewMat;
@@ -2629,9 +2620,9 @@ void Game::handleScrollInput(GLFWwindow* window, double xoffset, double yoffset)
 void Game::updateCursor() {
 	if (ButtonManager::focusedButtonIndex >= 0) {
 		if (ButtonManager::buttons[ButtonManager::focusedButtonIndex].affectsCursor)
-			Cursor::tex = Cursor::handTex;
+			Cursor::tex = Textures::Cursors::hand.get();
 		else
-			Cursor::tex = Cursor::arrowTex;
+			Cursor::tex = Textures::Cursors::arrow.get();
 		Cursor::angle = 0;
 	} else {
 		int i = focus;
@@ -2642,7 +2633,7 @@ void Game::updateCursor() {
 		}
 
 		if (i >= 0 && action == ACTION_NONE || (action == ACTION_SHAPE && actionMod == ACTION_MOD_MINOR)) {
-			Cursor::tex = Cursor::resizeTex;
+			Cursor::tex = Textures::Cursors::resize.get();
 			if (i < obstacles.size()) {
 				if (obstacles[i].getIsStraight()) {
 					Cursor::angle = obstacles[i].getAngle();
@@ -2662,12 +2653,12 @@ void Game::updateCursor() {
 				}
 			}
 		} else if (action == ACTION_ROTATE || action == ACTION_SCALE) {
-			Cursor::tex = Cursor::resizeTex;
+			Cursor::tex = Textures::Cursors::resize.get();
 			vec3 focusPos = focus == MAX_OBSTACLES ? ball.pos : obstacles[focus].getPos();
 			vec3 diff = pointerBallWide.pos - focusPos;
 			Cursor::angle = (action == ACTION_SCALE ? PI * 0.5f : 0) + atanf(diff.z / diff.y);
 		} else {
-			Cursor::tex = Cursor::arrowTex;
+			Cursor::tex = Textures::Cursors::arrow.get();
 			Cursor::angle = 0;
 		}
 	}

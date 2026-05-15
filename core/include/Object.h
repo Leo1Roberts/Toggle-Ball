@@ -1,9 +1,9 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include "TextureAsset.h"
 #include "Model.h"
 #include "Sizes.h"
+#include "Texture.h"
 
 enum {
 	MAT_BASKETBALL,
@@ -57,7 +57,7 @@ struct PlaneDefinition {
 };
 
 struct Plane {
-	TextureAsset* texture;
+	Texture* texture;
 	col color;
 	byte material;
 
@@ -68,12 +68,12 @@ struct Plane {
 	mat3 rot;
 
 	Plane() :
-	    texture(whiteTex),
+	    texture(Textures::white.get()),
 		color(WHITE),
 		material(0),
 		definition({{0, 0, 1}, 0}) {}
 
-	Plane(TextureAsset* iTexture, const col& iColor, byte iMaterial, const vec3& iNormal, const vec3& iScale = vec3(1), const vec3& iPos = vec3(0)) :
+	Plane(Texture* iTexture, const col& iColor, byte iMaterial, const vec3& iNormal, const vec3& iScale = vec3(1), const vec3& iPos = vec3(0)) :
 		texture(iTexture),
 		color(iColor),
 		material(iMaterial),
@@ -101,11 +101,11 @@ struct BallProperties_OLD {
 	float dampingK;
 	float radius;
 	float Cd;
-	TextureAsset* texture;
+	Texture* texture;
 };
 
 struct Ball_OLD {
-	TextureAsset* texture;
+	Texture* texture;
 	byte material;
 
 	float mass;
@@ -126,7 +126,7 @@ struct Ball_OLD {
 	vec3 torque;
 
 	Ball_OLD() :
-		texture(whiteTex),
+		texture(Textures::white.get()),
 		material(0),
 		mass(0),
 		springK(0),
@@ -266,7 +266,7 @@ struct ObstacleDefinition {
 };
 
 struct Obstacle {
-	TextureAsset* texture;
+	Texture* texture;
 	Model obstacle;
 	Model outline;
 	Model domain;
@@ -274,7 +274,7 @@ struct Obstacle {
 	Obstacle(ObstacleDefinition* definition, float scale) :
 	    pDef(definition),
 	    def(definition->scale(scale)),
-		texture(whiteTex),
+		texture(Textures::white.get()),
 		color(definition->color),
 		material(MAT_CONCRETE),
 		scale(1),

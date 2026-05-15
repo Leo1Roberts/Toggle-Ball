@@ -118,12 +118,9 @@ void ObjShader::setupVertexAttribs() const {
 	CHECK_ERROR();
 }
 
-void ObjShader::drawObject(const Model* model, const TextureAsset* texture) const {
+void ObjShader::drawObject(const Model* model, const Texture* texture) const {
 	// Setup the texture
-	glActiveTexture(GL_TEXTURE0);
-	CHECK_ERROR();
-	glBindTexture(GL_TEXTURE_2D, texture->textureID);
-	CHECK_ERROR();
+	texture->bind(0);
 
 	glBindVertexArray(model->vao);
 	CHECK_ERROR();

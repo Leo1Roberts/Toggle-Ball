@@ -39,7 +39,7 @@ Index Text::indices[MAX_CHARS * 6];
 int Text::loadFace(const std::string& folder, const std::string& name) {
 	std::string texturePath = folder + name + ".png";
 
-	TextureAsset* tex = TextureAsset::loadAsset(texturePath, true);
+	auto tex = std::make_unique<Texture>(texturePath, true);
 
 	std::string infoPath = folder + name + ".bin";
 
@@ -72,7 +72,7 @@ int Text::loadFace(const std::string& folder, const std::string& name) {
 		maxCharWidth = fmaxf(maxCharWidth, charWidth);
 	}
 
-	fontFaces[numFonts] = {tex, charLocations, info[0].bounds.bottom - info[0].bounds.top, digitWidth, maxCharWidth};
+	fontFaces[numFonts] = {std::move(tex), charLocations, info[0].bounds.bottom - info[0].bounds.top, digitWidth, maxCharWidth};
 
 	delete[] info;
 
@@ -83,7 +83,7 @@ int Text::loadFace(const std::string& folder, const std::string& name) {
 byte Text::loadFace(AAssetManager* assetManager, const std::string& folder, const std::string& name) {
 	std::string texturePath = folder + name + ".png";
 
-	TextureAsset* tex = TextureAsset::loadAsset(assetManager, texturePath, true);
+	auto tex = std::make_unique<Texture>(assetManager, texturePath, true);
 
 	std::string infoPath = folder + name + ".bin";
 
@@ -112,9 +112,7 @@ byte Text::loadFace(AAssetManager* assetManager, const std::string& folder, cons
 		maxCharWidth = fmax(maxCharWidth, charWidth);
 	}
 
-	fontFaces[numFonts] = {
-	        tex, charLocations, info[0].bounds.bottom - info[0].bounds.top,
-	        digitWidth, maxCharWidth};
+	fontFaces[numFonts] = {std::move(tex), charLocations, info[0].bounds.bottom - info[0].bounds.top, digitWidth, maxCharWidth};
 
 	AAsset_close(infoFile);
 
@@ -124,14 +122,12 @@ byte Text::loadFace(AAssetManager* assetManager, const std::string& folder, cons
 #endif
 
 void Text::deleteFonts() {
-	for (int i = 0; i < numFonts; i++) {
-		delete fontFaces[i].texture;
+	for (int i = 0; i < numFonts; i++)
 		delete[] fontFaces[i].charLocations;
-	}
 }
 
 int Text::addText(float x, float y, std::string text, const Font& font, float size, const col& textColor) {
-	FontFace fontFace = fontFaces[font.fontFaceId];
+	const FontFace& fontFace = fontFaces[font.fontFaceId];
 	int length = (int)text.length();
 	float xPos = x;
 	for (int i = 0; i < length; i++) {
@@ -155,7 +151,7 @@ int Text::addText(float x, float y, std::string text, const Font& font, float si
 				xPos += padding * scaleFactor;
 				width += padding;
 			}
-			charsToDraw[numChars++] = {{xPos, y}, fontFace.texture, bounds, textColor, scaleFactor};
+			charsToDraw[numChars++] = {{xPos, y}, fontFace.texture.get(), bounds, textColor, scaleFactor};
 			batchSize[batchToFill]++;
 			xPos += (width + font.charSpacing) * scaleFactor;
 		}
@@ -165,7 +161,7 @@ int Text::addText(float x, float y, std::string text, const Font& font, float si
 }
 
 float Text::calculateWidth(std::string text, const Font& font, float size) {
-	FontFace fontFace = fontFaces[font.fontFaceId];
+	const FontFace& fontFace = fontFaces[font.fontFaceId];
 	int length = (int)text.length();
 	float width = 0;
 	for (int i = 0; i < length; i++) {
@@ -201,7 +197,7 @@ void Text::drawText(byte batch) {
 	const int nextBatchStart = numCharsDrawn + batchSize[batch];
 
 	for (int i = 0; i < numFonts; i++) {
-		TextureAsset* tex = fontFaces[i].texture;
+		Texture* tex = fontFaces[i].texture.get();
 
 		int charNo = 0;
 		for (int j = numCharsDrawn; j < nextBatchStart; j++) {
@@ -231,8 +227,7 @@ void Text::drawText(byte batch) {
 			}
 		}
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, tex->textureID);
+		tex->bind(0);
 
 		glBindVertexArray(vao);
 

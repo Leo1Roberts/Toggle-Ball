@@ -2,7 +2,7 @@
 #define TEXT_H
 
 #include "Model.h"
-#include "TextureAsset.h"
+#include "Texture.h"
 
 struct CharBounds {
 	float left;
@@ -12,9 +12,9 @@ struct CharBounds {
 };
 
 struct FontFace {
-	TextureAsset* texture;
+	std::unique_ptr<Texture> texture;
 	CharBounds* charLocations;
-	float size;// Size (height) of font as a proportion of the texture height
+	float size; // Size (height) of font as a proportion of the texture height
 	float digitWidth;
 	float maxCharWidth;
 };
@@ -28,7 +28,7 @@ struct Font {
 
 struct CharToDraw {
 	vec2 pos;
-	TextureAsset* texture;
+	Texture* texture;
 	CharBounds bounds;
 	col color;
 	float scaleFactor;

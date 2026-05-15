@@ -27,7 +27,7 @@ BallProperties_OLD Ball_OLD::getProperties(byte ballType, bool normalise) {
 		4.0f,
 		radius,
 		0.5f,
-		basketballTex};
+		Textures::basketball.get()};
 		break;
 	}
 

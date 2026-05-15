@@ -24,4 +24,21 @@ private:
 	GLTexture texture;
 };
 
+namespace Textures {
+	extern std::unique_ptr<Texture> white;
+	extern std::unique_ptr<Texture> basketball;
+
+	namespace Cursors {
+		extern std::unique_ptr<Texture> arrow;
+		extern std::unique_ptr<Texture> hand;
+		extern std::unique_ptr<Texture> resize;
+	}
+
+#ifdef WINDOWS_VERSION
+	void init();
+#else
+	void init(AAssetManager* assetManager);
+#endif
+}
+
 #endif // TEXTURE_H

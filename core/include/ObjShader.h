@@ -19,7 +19,7 @@ struct ObjShader {
 
 	void setupVertexAttribs() const;
 
-	void drawObject(const Model* model, const TextureAsset* texture) const;
+	void drawObject(const Model* model, const Texture* texture) const;
 
 	GLint getUniformLocation(const std::string& name) const;
 

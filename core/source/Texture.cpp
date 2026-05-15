@@ -49,11 +49,7 @@ Texture::Texture(AAssetManager* assetManager, const std::string& path, bool mono
 	size_t stride = AImageDecoder_getMinimumStride(decoder);
 
 	auto data = std::vector<uint8_t>(height * stride);
-	AImageDecoder_decodeImage(
-	decoder,
-	data.data(),
-	stride,
-	data.size());
+	AImageDecoder_decodeImage(decoder, data.data(), stride, data.size());
 
 	GLint internalFormat = monochrome ? GL_R8 : GL_SRGB8_ALPHA8;
 	GLenum format = monochrome ? GL_RED : GL_RGBA;
@@ -61,7 +57,37 @@ Texture::Texture(AAssetManager* assetManager, const std::string& path, bool mono
 
 	glGenerateMipmap(GL_TEXTURE_2D);
 
+	AImageDecoder_delete(decoder);
+	AAsset_close(image);
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 #endif
+
+namespace Textures {
+	std::unique_ptr<Texture> white;
+	std::unique_ptr<Texture> basketball;
+
+	namespace Cursors {
+		std::unique_ptr<Texture> arrow;
+		std::unique_ptr<Texture> hand;
+		std::unique_ptr<Texture> resize;
+	}
+
+#ifdef WINDOWS_VERSION
+	void init() {
+		white = std::make_unique<Texture>(ASSETS_PATH + "textures/white.png", false);
+		basketball = std::make_unique<Texture>(ASSETS_PATH + "textures/Ball.png", false);
+
+		Cursors::arrow = std::make_unique<Texture>(ASSETS_PATH + "cursors/arrow.png", false);
+		Cursors::hand = std::make_unique<Texture>(ASSETS_PATH + "cursors/hand.png", false);
+		Cursors::resize = std::make_unique<Texture>(ASSETS_PATH + "cursors/resize.png", false);
+	}
+#else
+	void init(AAssetManager* assetManager) {
+		white = std::make_unique<Texture>(assetManager, "textures/white.png", false);
+		basketball = std::make_unique<Texture>(assetManager, "textures/Ball.png", false);
+	}
+#endif
+}
