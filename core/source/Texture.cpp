@@ -1,8 +1,6 @@
 #include "Texture.h"
 
 #ifdef WINDOWS_VERSION
-
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 
 Texture::Texture(const std::string& path, bool monochrome) {
