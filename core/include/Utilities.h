@@ -32,10 +32,10 @@ vec2 pixelsToYNorm(float x, float y, float width, float height);
 vec2 pixelsToYNorm(vec2 pixels, float width, float height);
 
 #ifdef WINDOWS_VERSION
-std::string importShader(const std::string& path);
+std::string importTextFile(const std::string& path);
 #else
 
-std::string importShader(AAssetManager* assetManager, const std::string& path);
+std::string importTextFile(AAssetManager* assetManager, const std::string& path);
 
 #endif
 

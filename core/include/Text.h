@@ -1,7 +1,8 @@
 #ifndef TEXT_H
 #define TEXT_H
 
-#include "Model.h"
+#include "Colors.h"
+#include "Mesh.h"
 #include "Texture.h"
 
 struct CharBounds {

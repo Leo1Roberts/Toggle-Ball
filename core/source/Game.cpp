@@ -2,7 +2,6 @@
 #include "Colors.h"
 #include "Sizes.h"
 #include "MatrixUtilities.h"
-#include "LoadOBJ.h"
 #include "ButtonManager.h"
 #include "Fonts.h"
 #include "Smoother.h"
@@ -16,13 +15,14 @@
 #include "TextBoxManager.h"
 #include "GLUtilities.h"
 #include "Game.h"
+#include <Texture.h>
+#include <Shader.h>
+
 
 #ifndef WINDOWS_VERSION
 
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 #include <sys/param.h>
-#include <Texture.h>
-
 #endif
 
 bool Game::inEditor = false;
@@ -46,33 +46,18 @@ void Game::setBallPos(const vec3& pos) {
 	ballOutline.pos = {-ballOutline.radius, pos.y, pos.z};
 }
 
-// Uniform locations
-GLint uProjectionLoc;
-GLint uUpDirectionLoc;
-GLint uSunDirectionLoc;
-GLint uBodyToViewRotLoc;
-GLint uBodyToViewLoc;
-GLint uAlphaLoc;
-
-GLint uProjectionFullLoc;
 // Matrices
 mat4 worldMat, viewMat, projMat;
 mat3 viewRotMat;
 
 void Game::setupObjShaders() {
-	std::string vsh, fsh;
-
 #ifdef WINDOWS_VERSION
-	vsh = importShader(ASSETS_PATH + "shaders/object.vert");
-	fsh = importShader(ASSETS_PATH + "shaders/object.frag");
+	Shaders::load();
 #else
-	vsh = importShader(androidApp->activity->assetManager, "shaders/object.vert");
-	fsh = importShader(androidApp->activity->assetManager, "shaders/object.frag");
+	Shaders::load(androidApp->activity->assetManager);
 #endif
 
-	objShader = ObjShader::loadObjShader(vsh, fsh);
-
-	objShader->activate();
+	Shaders::object->use();
 
 	// set the lighting uniforms
 	vec3 groundColor = {0.3f, 0.3f, 0.3f};
@@ -82,44 +67,14 @@ void Game::setupObjShaders() {
 	vec3 sunColor = {1.0f, 1.0f, 0.9f};
 	colorToLinear(&sunColor);
 
-	glUniform3fv(objShader->getUniformLocation("uGroundColor"), 1, (float*)&groundColor);
-	CHECK_ERROR();
-	glUniform3fv(objShader->getUniformLocation("uSkyColor"), 1, (float*)&skyColor);
-	CHECK_ERROR();
-	glUniform3fv(objShader->getUniformLocation("uSunColor"), 1, (float*)&sunColor);
-	CHECK_ERROR();
-	uProjectionLoc = objShader->getUniformLocation("uProjection");
-	CHECK_ERROR();
-	uUpDirectionLoc = objShader->getUniformLocation("uUpDirection");
-	CHECK_ERROR();
-	uSunDirectionLoc = objShader->getUniformLocation("uSunDirection");
-	CHECK_ERROR();
-	uBodyToViewRotLoc = objShader->getUniformLocation("uBodyToViewRot");
-	CHECK_ERROR();
-	uBodyToViewLoc = objShader->getUniformLocation("uBodyToView");
-	CHECK_ERROR();
-	uAlphaLoc = objShader->getUniformLocation("uAlpha");
+	Shaders::object->setVec3("uGroundColor", groundColor);
+	Shaders::object->setVec3("uSkyColor", skyColor);
+	Shaders::object->setVec3("uSunColor", sunColor);
 
-#ifdef WINDOWS_VERSION
-	vsh = importShader(ASSETS_PATH + "shaders/objectOutline.vert");
-	fsh = importShader(ASSETS_PATH + "shaders/objectOutline.frag");
-#else
-	vsh = importShader(androidApp->activity->assetManager, "shaders/objectOutline.vert");
-	fsh = importShader(androidApp->activity->assetManager, "shaders/objectOutline.frag");
-#endif
-
-	outlineShader = ObjShader::loadObjShader(vsh, fsh);
-
-	outlineShader->activate();
-
-	uProjectionFullLoc = outlineShader->getUniformLocation("uProjectionFull");
-	CHECK_ERROR();
-
-	glUseProgram(0);
+	Shaders::outline->use();
 }
 
 void Game::reloadShaders() {
-	ObjShader::deleteShaders();
 	setupObjShaders();
 }
 
@@ -244,11 +199,6 @@ void Game::deleteGame() {
 
 	obstacles.clear();
 
-	ObjShader::deleteShaders();
-
-	delete ballModel;
-	delete planeModel;
-
 	Text::deleteFonts();
 #ifdef WINDOWS_VERSION
 	glfwTerminate();    // Destroys all remaining windows and cursors, restores modified gamma ramps, and frees resources.
@@ -291,7 +241,6 @@ void Game::updateRenderArea() {
 	if (width != (int)WINDOW_WIDTH || height != (int)WINDOW_HEIGHT) {
 		updateSizes((float)width, (float)height);
 		glViewport(0, 0, width, height);
-		CHECK_ERROR();
 
 		updateHalfHeight();
 
@@ -375,34 +324,32 @@ void Game::initGame() {
 	selectLevel("Dev test");
 
 	glClearColor(0, 0, 0, 1);
-	CHECK_ERROR();
 	glEnable(GL_CULL_FACE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	CHECK_ERROR();
 
 	std::string vsh, fsh;
 
 #ifdef WINDOWS_VERSION
-	vsh = importShader(ASSETS_PATH + "shaders/text.vert");
-	fsh = importShader(ASSETS_PATH + "shaders/text.frag");
+	vsh = importTextFile(ASSETS_PATH + "shaders/text.vert");
+	fsh = importTextFile(ASSETS_PATH + "shaders/text.frag");
 #else
-	vsh = importShader(androidApp->activity->assetManager, "shaders/text.vert");
-	fsh = importShader(androidApp->activity->assetManager, "shaders/text.frag");
+	vsh = importTextFile(androidApp->activity->assetManager, "shaders/text.vert");
+	fsh = importTextFile(androidApp->activity->assetManager, "shaders/text.frag");
 #endif
 	Text::initTextShader(vsh, fsh, "uProjection2D");
 
 #ifdef WINDOWS_VERSION
-	vsh = importShader(ASSETS_PATH + "shaders/button.vert");
-	fsh = importShader(ASSETS_PATH + "shaders/button.frag");
+	vsh = importTextFile(ASSETS_PATH + "shaders/button.vert");
+	fsh = importTextFile(ASSETS_PATH + "shaders/button.frag");
 #else
-	vsh = importShader(androidApp->activity->assetManager, "shaders/button.vert");
-	fsh = importShader(androidApp->activity->assetManager, "shaders/button.frag");
+	vsh = importTextFile(androidApp->activity->assetManager, "shaders/button.vert");
+	fsh = importTextFile(androidApp->activity->assetManager, "shaders/button.frag");
 #endif
 	ButtonManager::initButtonShader(vsh, fsh, "uProjection2D");
 
 #ifdef WINDOWS_VERSION
-	vsh = importShader(ASSETS_PATH + "shaders/cursor.vert");
-	fsh = importShader(ASSETS_PATH + "shaders/cursor.frag");
+	vsh = importTextFile(ASSETS_PATH + "shaders/cursor.vert");
+	fsh = importTextFile(ASSETS_PATH + "shaders/cursor.frag");
 	Cursor::initShader(vsh, fsh, "uProjection2D");
 #endif
 
@@ -518,27 +465,13 @@ void Game::saveAs(int _) {
 
 
 void Game::createObjects() {
-	std::vector<Vertex> ballVertices;
-	std::vector<Index> ballIndices;
-	std::vector<Vertex> planeVertices;
-	std::vector<Index> planeIndices;
-
 #ifdef WINDOWS_VERSION
-	Textures::init();
-	loadOBJ(ASSETS_PATH + "models/Ball.obj", &ballVertices, &ballIndices);
-	loadOBJ(ASSETS_PATH + "models/Ground.obj", &planeVertices, &planeIndices, BOUNDARY);
+	Textures::load();
+	Meshes::load();
 #else
-	Textures::init(androidApp->activity->assetManager);
-	loadOBJ(androidApp->activity->assetManager, "models/Ball.obj", &ballVertices, &ballIndices);
-	loadOBJ(androidApp->activity->assetManager, "models/Ground.obj", &planeVertices, &planeIndices, BOUNDARY);
+	Textures::load(androidApp->activity->assetManager);
+	Meshes::load(androidApp->activity->assetManager);
 #endif
-	objShader->activate();
-
-	planeModel = new Model(planeVertices, planeIndices);
-	objShader->setupVertexAttribs();
-
-	ballModel = new Model(ballVertices, ballIndices);
-	objShader->setupVertexAttribs();
 
 	arenaBounds[0] = Plane(Textures::white.get(), BOUNDARY, MAT_CONCRETE, {0, 0, 1});
 	arenaBounds[1] = Plane(Textures::white.get(), BOUNDARY, MAT_CONCRETE, {0, 0, -1});
@@ -1413,7 +1346,6 @@ void Game::render() {
 
 	// clear the color & depth buffers
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	CHECK_ERROR();
 
 	vec3 up(0, 0, 1);
 	vec3 view_up = viewRotMat * up;
@@ -1422,27 +1354,24 @@ void Game::render() {
 	sunDir.unit();
 	vec3 view_sunDir = viewRotMat * sunDir;
 
-	objShader->activate();
+	Shaders::object->use();
 
-	glUniformMatrix4fv(uProjectionLoc, 1, false, (float*)&projMat);
-	CHECK_ERROR();
-	glUniform3fv(uUpDirectionLoc, 1, (float*)&view_up);
-	CHECK_ERROR();
-	glUniform3fv(uSunDirectionLoc, 1, (float*)&view_sunDir);
-	CHECK_ERROR();
+	Shaders::object->setMat4("uProjection", projMat);
+	Shaders::object->setVec3("uUpDirection", view_up);
+	Shaders::object->setVec3("uSunDirection", view_sunDir);
 
 	if (inEditor) {
 		drawPlane(arenaBackground);
 
-		outlineShader->activate();
+		Shaders::outline->use();
 		drawObstacleDomains();
 
-		objShader->activate();
+		Shaders::object->use();
 		drawObstacles();
 		glDepthFunc(GL_ALWAYS);
 		drawBall(ball);
 
-		outlineShader->activate();
+		Shaders::outline->use();
 
 		if (smoother.X == 0 || smoother.X == 1) {
 			glEnable(GL_DEPTH_TEST);
@@ -1451,9 +1380,9 @@ void Game::render() {
 			for (short i = 0; i < (short)obstacles.size(); i++) {
 				if (selection[i] && i != focus) {
 					if (action != ACTION_NONE && limiting[i])
-						glUniform4fv(outlineShader->getUniformLocation("uOutlineColor"), 1, (float*)&WARNING_VEC4);
+						Shaders::outline->setVec4("uOutlineColor", WARNING_VEC4);
 					else
-						glUniform4fv(outlineShader->getUniformLocation("uOutlineColor"), 1, (float*)&SELECTED_VEC4);
+						Shaders::outline->setVec4("uOutlineColor", SELECTED_VEC4);
 
 					drawObstacleOutline(obstacles[i]);
 				}
@@ -1461,9 +1390,9 @@ void Game::render() {
 
 			if (focus >= 0 && focus < MAX_OBSTACLES && selection[focus]) {
 				if (action != ACTION_NONE && limiting[focus])
-					glUniform4fv(outlineShader->getUniformLocation("uOutlineColor"), 1, (float*)&WARNING_VEC4);
+					Shaders::outline->setVec4("uOutlineColor", WARNING_VEC4);
 				else
-					glUniform4fv(outlineShader->getUniformLocation("uOutlineColor"), 1, (float*)&FOCUSED_VEC4);
+					Shaders::outline->setVec4("uOutlineColor", FOCUSED_VEC4);
 				drawObstacleOutline(obstacles[focus]);
 			}
 
@@ -1471,19 +1400,19 @@ void Game::render() {
 				ballOutline.pos.x = -ballOutline.radius;
 				buildScaledWorldMatrix(&worldMat, ballOutline.rot, ballOutline.pos, ballOutline.scale);
 				mat4 projectionMatrix = worldMat * viewMat * projMat;
-				glUniformMatrix4fv(uProjectionFullLoc, 1, false, (float*)&projectionMatrix);
-				CHECK_ERROR();
+				Shaders::outline->setMat4("uProjectionFull", projectionMatrix);
 
 				bool intersecting = checkBallObstacleCollision(&ball, true) >= 0;
 
 				if (intersecting || (action != ACTION_NONE && limiting[MAX_OBSTACLES]))
-					glUniform4fv(outlineShader->getUniformLocation("uOutlineColor"), 1, (float*)&WARNING_VEC4);
+					Shaders::outline->setVec4("uOutlineColor", WARNING_VEC4);
 				else if (MAX_OBSTACLES == focus)
-					glUniform4fv(outlineShader->getUniformLocation("uOutlineColor"), 1, (float*)&FOCUSED_VEC4);
+					Shaders::outline->setVec4("uOutlineColor", FOCUSED_VEC4);
 				else
-					glUniform4fv(outlineShader->getUniformLocation("uOutlineColor"), 1, (float*)&SELECTED_VEC4);
+					Shaders::outline->setVec4("uOutlineColor", SELECTED_VEC4);
 
-				outlineShader->drawObject(ballModel, ballOutline.texture);
+				ballOutline.texture->bind(0);
+				Meshes::ball->draw();
 			}
 		}
 	} else {
@@ -1640,28 +1569,26 @@ void Game::render() {
 }
 
 void Game::drawBall(const Ball_OLD& b) {
-	drawObject(ballModel, b.texture, b.pos, b.rot, b.scale);
+	drawObject(Meshes::ball.get(), b.texture, b.pos, b.rot, b.scale);
 }
 
 void Game::drawPlane(const Plane& p) {
-	drawObject(planeModel, p.texture, p.pos, p.rot, p.scale);
+	drawObject(Meshes::plane.get(), p.texture, p.pos, p.rot, p.scale);
 }
 
-void Game::drawObject(const Model* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale) {
+void Game::drawObject(const Mesh<Vertex3D>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale) {
 	buildScaledWorldMatrix(&worldMat, rot, pos, scale);
 
 	mat4 bodyToView = worldMat * viewMat;
 	mat3 bodyToViewRot = viewRotMat * rot;
 
-	glUniformMatrix3fv(uBodyToViewRotLoc, 1, true, (float*)&bodyToViewRot);
-	CHECK_ERROR();
-	glUniformMatrix4fv(uBodyToViewLoc, 1, false, (float*)&bodyToView);
-	CHECK_ERROR();
+	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRot, true);
+	Shaders::object->setMat4("uBodyToView", bodyToView);
 
-	glUniform1f(uAlphaLoc, 1);
-	CHECK_ERROR();
+	Shaders::object->setFloat("uAlpha", 1.0f);
 
-	objShader->drawObject(model, texture);
+	texture->bind(0);
+	model->draw();
 }
 
 void Game::drawObstacles() {
@@ -1674,10 +1601,8 @@ void Game::drawObstacles() {
 		mat4 bodyToView = worldMat * viewMat;
 		mat3 bodyToViewRot = viewRotMat * g.getRot();
 
-		glUniformMatrix3fv(uBodyToViewRotLoc, 1, true, (float*)&bodyToViewRot);
-		CHECK_ERROR();
-		glUniformMatrix4fv(uBodyToViewLoc, 1, false, (float*)&bodyToView);
-		CHECK_ERROR();
+		Shaders::object->setMat3("uBodyToViewRot", bodyToViewRot, true);
+		Shaders::object->setMat4("uBodyToView", bodyToView);
 
 		float alpha = 1;
 		if (inEditor) {
@@ -1686,10 +1611,11 @@ void Game::drawObstacles() {
 				alpha = 2.5f * fabsf(0.5f - smoother.X) - 0.2f; // Includes a small period where the obstacle is completely invisible
 			}
 		}
-		glUniform1f(uAlphaLoc, alpha);
-		CHECK_ERROR();
+		Shaders::object->setFloat("uAlpha", alpha);
 
-		objShader->drawObject(&g.obstacle, g.texture);
+		g.texture->bind(0);
+		g.obstacle.draw();
+
 		glDisable(GL_BLEND);
 	}
 }
@@ -1697,10 +1623,10 @@ void Game::drawObstacles() {
 void Game::drawObstacleOutline(const Obstacle& g) {
 	buildScaledWorldMatrix(&worldMat, g.getRot(), g.getPos(), vec3(1));
 	mat4 projectionMatrix = worldMat * viewMat * projMat;
-	glUniformMatrix4fv(uProjectionFullLoc, 1, false, (float*)&projectionMatrix);
-	CHECK_ERROR();
+	Shaders::outline->setMat4("uProjectionFull", projectionMatrix);
 
-	objShader->drawObject(&g.outline, g.texture);
+	g.texture->bind(0);
+	g.outline.draw();
 }
 
 void Game::drawObstacleDomains() {
@@ -1713,8 +1639,7 @@ void Game::drawObstacleDomains() {
 		if (selection[i] && g.getStateType() != ST_STATIC) {
 			vec4 DOMAIN_VEC4 = g.getColor().toVec4();
 			DOMAIN_VEC4.a = 0.35f;
-			glUniform4fv(outlineShader->getUniformLocation("uOutlineColor"), 1, (float*)&DOMAIN_VEC4);
-			CHECK_ERROR();
+			Shaders::outline->setVec4("uOutlineColor", DOMAIN_VEC4);
 
 			mat4 projectionMatrix;
 			const vec3 depth = vec3(((float)i - (float)obstacles.size()), 0, 0);
@@ -1733,10 +1658,11 @@ void Game::drawObstacleDomains() {
 					}
 					buildScaledWorldMatrix(&worldMat, rot, posYZ + depth, vec3(0, 1, 1));
 					projectionMatrix = worldMat * viewMat * projMat;
-					glUniformMatrix4fv(uProjectionFullLoc, 1, false, (float*)&projectionMatrix);
-					CHECK_ERROR();
+					Shaders::outline->setMat4("uProjectionFull", projectionMatrix);
 
-					outlineShader->drawObject(&g.obstacle, g.texture);
+					Shaders::outline->use();
+					g.texture->bind(0);
+					g.obstacle.draw();
 				}
 
 				if (smoother.X != 1) {
@@ -1749,20 +1675,21 @@ void Game::drawObstacleDomains() {
 					}
 					buildScaledWorldMatrix(&worldMat, rot, posYZ + depth, vec3(0, 1, 1));
 					projectionMatrix = worldMat * viewMat * projMat;
-					glUniformMatrix4fv(uProjectionFullLoc, 1, false, (float*)&projectionMatrix);
-					CHECK_ERROR();
+					Shaders::outline->setMat4("uProjectionFull", projectionMatrix);
 
-					outlineShader->drawObject(&g.obstacle, g.texture);
+					Shaders::outline->use();
+					g.texture->bind(0);
+					g.obstacle.draw();
 				}
 			}
 
 			vec3 pos = depth + ((g.getStateType() == ST_POS || g.getStateType() == ST_POS_OSC) ? vec3() : g.getPos());
 			buildScaledWorldMatrix(&worldMat, mat3::I, pos, vec3(1)); // Alpha sorting
 			projectionMatrix = worldMat * viewMat * projMat;
-			glUniformMatrix4fv(uProjectionFullLoc, 1, false, (float*)&projectionMatrix);
-			CHECK_ERROR();
+			Shaders::outline->setMat4("uProjectionFull", projectionMatrix);
 
-			outlineShader->drawObject(&g.domain, g.texture);
+			g.texture->bind(0);
+			g.domain.draw();
 		}
 	}
 	glDisable(GL_BLEND);

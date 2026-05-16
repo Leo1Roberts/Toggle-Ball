@@ -1,6 +1,5 @@
 #include "main.h"
 #include "Colors.h"
-#include "LoadOBJ.h"
 #include <algorithm>
 #include <iomanip>
 #include <sstream>

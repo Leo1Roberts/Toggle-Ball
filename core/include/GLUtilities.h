@@ -3,9 +3,6 @@
 
 #include "main.h"
 
-#define CHECK_ERROR() CheckGLError()
-void CheckGLError();
-
 struct BufferDeleter {
 	void operator()(GLsizei n, const GLuint* ids) const { glDeleteBuffers(n, ids); }
 };

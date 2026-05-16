@@ -1,14 +1,14 @@
 #ifndef OBSTACLE_H
 #define OBSTACLE_H
 
-#include "Model.h"
+#include "Mesh.h"
 
 class AbstractShapeSpec {
 public:
 	virtual ~AbstractShapeSpec() = default;
 
-	void generateObstacleModel(Model& obstacleModel) const;
-	void generateOutlineModel(Model& outlineModel) const;
+	void generateObstacleMesh(Mesh<Vertex3D>& obstacleMesh) const;
+	void generateOutlineMesh(Mesh<Vertex3D>& outlineMesh) const;
 
 protected:
 	explicit AbstractShapeSpec(float halfWidth) :
@@ -22,8 +22,8 @@ protected:
 private:
 	float halfWidth;
 
-	virtual void buildObstacleModel(Model& obstacleModel) const = 0;
-	virtual void buildOutlineModel(Model& outlineModel) const = 0;
+	virtual void buildObstacleMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const = 0;
+	virtual void buildOutlineMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const = 0;
 };
 
 class SegmentSpec : public AbstractShapeSpec {
@@ -39,8 +39,8 @@ private:
 	float left;
 	float right;
 
-	void buildObstacleModel(Model& obstacleModel) const override;
-	void buildOutlineModel(Model& outlineModel) const override;
+	void buildObstacleMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const override;
+	void buildOutlineMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const override;
 };
 
 class ArcSpec : public AbstractShapeSpec {
@@ -56,8 +56,8 @@ private:
 	float angle;
 	float radius;
 
-	void buildObstacleModel(Model& obstacleModel) const override;
-	void buildOutlineModel(Model& outlineModel) const override;
+	void buildObstacleMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const override;
+	void buildOutlineMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const override;
 };
 
 
@@ -70,13 +70,13 @@ public:
 	IMotionSpec(IMotionSpec&&) = delete;
 	IMotionSpec& operator=(IMotionSpec&&) = delete;
 
-	void generateDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const;
+	void generateDomainMesh(Mesh<Vertex3D>& domainMesh, const AbstractShapeSpec& shapeSpec) const;
 
 protected:
 	IMotionSpec() = default;
 
 private:
-	virtual void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const {}
+	virtual void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const {}
 };
 
 class StaticSpec : public IMotionSpec {
@@ -106,7 +106,7 @@ private:
 	vec2 positionA;
 	vec2 positionB;
 
-	void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const override;
+	void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 class TogglingAngleSpec : public IMotionSpec {
@@ -123,7 +123,7 @@ private:
 	float angleA;
 	float angleB;
 
-	void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const override;
+	void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 class SpinningSpec : public IMotionSpec {
@@ -142,7 +142,7 @@ private:
 	float angularVelocityA;
 	float angularVelocityB;
 
-	void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const override;
+	void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 class OscillatingPositionSpec : public IMotionSpec {
@@ -163,7 +163,7 @@ private:
 	float angularFrequencyA;
 	float angularFrequencyB;
 
-	void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const override;
+	void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 class OscillatingAngleSpec : public IMotionSpec {
@@ -184,7 +184,7 @@ private:
 	float angularFrequencyA;
 	float angularFrequencyB;
 
-	void buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const override;
+	void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 
@@ -214,7 +214,7 @@ class EditorObstacle {
 public:
 	explicit EditorObstacle(ObstacleDescriptor* descriptor) :
 	    descriptor(descriptor) {
-		assert(descriptor != nullptr);
+		assert(descriptor);
 	}
 
 	~EditorObstacle() = default;
@@ -241,9 +241,9 @@ private:
 
 	bool selected = false;
 
-	Model obstacle;
-	Model outline;
-	Model domain;
+	Mesh<Vertex3D> obstacle = Mesh<Vertex3D>(GL_STATIC_DRAW);
+	Mesh<Vertex3D> outline = Mesh<Vertex3D>(GL_STATIC_DRAW);
+	Mesh<Vertex3D> domain = Mesh<Vertex3D>(GL_STATIC_DRAW);
 };
 
 #endif // OBSTACLE_H

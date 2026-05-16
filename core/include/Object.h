@@ -1,9 +1,10 @@
 #ifndef OBJECT_H
 #define OBJECT_H
 
-#include "Model.h"
 #include "Sizes.h"
 #include "Texture.h"
+#include "Colors.h"
+#include "Mesh.h"
 
 enum {
 	MAT_BASKETBALL,
@@ -267,9 +268,9 @@ struct ObstacleDefinition {
 
 struct Obstacle {
 	Texture* texture;
-	Model obstacle;
-	Model outline;
-	Model domain;
+	Mesh<Vertex3D> obstacle;
+	Mesh<Vertex3D> outline;
+	Mesh<Vertex3D> domain;
 
 	Obstacle(ObstacleDefinition* definition, float scale) :
 	    pDef(definition),
@@ -281,9 +282,9 @@ struct Obstacle {
 		vel(0),
 		angVel(0),
 		extra(0),
-		obstacle(),
-		outline(),
-		domain() {
+		obstacle(GL_STATIC_DRAW),
+		outline(GL_STATIC_DRAW),
+		domain(GL_STATIC_DRAW) {
 		setPos(def.initPos);
 		setAngle(def.initAngle);
 	}

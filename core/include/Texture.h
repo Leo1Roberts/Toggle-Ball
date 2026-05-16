@@ -35,9 +35,9 @@ namespace Textures {
 	}
 
 #ifdef WINDOWS_VERSION
-	void init();
+	void load();
 #else
-	void init(AAssetManager* assetManager);
+	void load(AAssetManager* assetManager);
 #endif
 }
 

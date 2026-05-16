@@ -1,8 +1,6 @@
 #include "main.h"
-#include "Model.h"
 #include "Object.h"
 #include "Sizes.h"
-#include "ObjShader.h"
 #include <algorithm>
 #include <Ball.h>
 
@@ -69,10 +67,8 @@ void Obstacle::setAngle(float iAngle) {
 }
 
 void Obstacle::createObstacleModel() {
-	obstacle.vertices.clear();
-	obstacle.indices.clear();
-	std::vector<Vertex>& vs = obstacle.vertices;
-	std::vector<Index>& is = obstacle.indices;
+	std::vector<Vertex3D> vs;
+	std::vector<Index> is;
 
 	float bevel = BEVEL_AMOUNT * getMinorRadius();
 
@@ -242,15 +238,12 @@ void Obstacle::createObstacleModel() {
 		}
 	}
 
-	obstacle.sendToGpu();
-	objShader->setupVertexAttribs();
+	obstacle.setData(vs, is);
 }
 
 void Obstacle::createOutlineModel() {
-	outline.vertices.clear();
-	outline.indices.clear();
-	std::vector<Vertex>& vs = outline.vertices;
-	std::vector<Index>& is = outline.indices;
+	std::vector<Vertex3D> vs;
+	std::vector<Index> is;
 
 	const float outlineRadius = getMinorRadius() + OUTLINE_WIDTH_WORLD;
 
@@ -370,15 +363,12 @@ void Obstacle::createOutlineModel() {
 		}
 	}
 
-	outline.sendToGpu();
-	outlineShader->setupVertexAttribs();
+	outline.setData(vs, is);
 }
 
 void Obstacle::createDomainModel() {
-	domain.vertices.clear();
-	domain.indices.clear();
-	std::vector<Vertex>& vs = domain.vertices;
-	std::vector<Index>& is = domain.indices;
+	std::vector<Vertex3D> vs;
+	std::vector<Index> is;
 
 	switch (getStateType()) {
 	case ST_POS: {
@@ -910,8 +900,7 @@ void Obstacle::createDomainModel() {
 		break;
 	}
 
-	domain.sendToGpu();
-	outlineShader->setupVertexAttribs();
+	domain.setData(vs, is);
 }
 
 void Obstacle::createAllModels(bool inEditor) {

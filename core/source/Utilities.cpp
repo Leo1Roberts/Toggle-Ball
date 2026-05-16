@@ -93,12 +93,10 @@ vec2 pixelsToYNorm(vec2 pixels, float width, float height) {
 }
 
 #ifdef WINDOWS_VERSION
-std::string importShader(const std::string& path) {
+std::string importTextFile(const std::string& path) {
 	FILE* file;
 	fopen_s(&file, path.c_str(), "rt");
-	if (file == nullptr) {
-		return "";
-	}
+	if (!file) throw std::runtime_error("Failed to open file: " + path);
 
 	fseek(file, 0, SEEK_END);
 	int length = ftell(file);
@@ -114,11 +112,9 @@ std::string importShader(const std::string& path) {
 }
 #else
 
-std::string importShader(AAssetManager* assetManager, const std::string& path) {
+std::string importTextFile(AAssetManager* assetManager, const std::string& path) {
 	AAsset* file = AAssetManager_open(assetManager, path.c_str(), AASSET_MODE_BUFFER);
-	if (file == nullptr) {
-		return "";
-	}
+	if (!file) throw std::runtime_error("Failed to open asset: " + path);
 
 	const char* buffer = (const char*) AAsset_getBuffer(file);
 

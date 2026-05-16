@@ -1,8 +1,8 @@
 #ifndef BUTTON_MANAGER_H
 #define BUTTON_MANAGER_H
 
-#include "Model.h"
 #include "ButtonStyles.h"
+#include "Mesh.h"
 
 struct Button {
 	float l, r, t, b;

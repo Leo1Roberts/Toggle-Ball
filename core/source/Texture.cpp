@@ -2,7 +2,6 @@
 
 #ifdef WINDOWS_VERSION
 #include <stb/stb_image.h>
-
 Texture::Texture(const std::string& path, bool monochrome) {
 	glGenTextures(1, texture.ptr());
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -13,22 +12,19 @@ Texture::Texture(const std::string& path, bool monochrome) {
 	int width, height, channels;
 
 	unsigned char* data = stbi_load(path.c_str(), &width, &height, &channels, monochrome ? STBI_grey : STBI_rgb_alpha);
+	if (!data) throw std::runtime_error("Failed to open file: " + path);
 
-	if (data) {
-		GLint internalFormat = monochrome ? GL_R8 : GL_SRGB8_ALPHA8;
-		GLenum format = monochrome ? GL_RED : GL_RGBA;
-		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+	GLint internalFormat = monochrome ? GL_R8 : GL_SRGB8_ALPHA8;
+	GLenum format = monochrome ? GL_RED : GL_RGBA;
+	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 
-		glGenerateMipmap(GL_TEXTURE_2D);
+	glGenerateMipmap(GL_TEXTURE_2D);
 
-		stbi_image_free(data);
-	}
+	stbi_image_free(data);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
-
 #else
-
 Texture::Texture(AAssetManager* assetManager, const std::string& path, bool monochrome) {
 	glGenTextures(1, texture.ptr());
 	glBindTexture(GL_TEXTURE_2D, texture);
@@ -37,6 +33,8 @@ Texture::Texture(AAssetManager* assetManager, const std::string& path, bool mono
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	AAsset* image = AAssetManager_open(assetManager, path.c_str(), AASSET_MODE_BUFFER);
+	if (!image) throw std::runtime_error("Failed to open asset: " + path);
+
 	AImageDecoder* decoder = nullptr;
 	AImageDecoder_createFromAAsset(image, &decoder);
 	int32_t bitmapFormat = (monochrome) ? ANDROID_BITMAP_FORMAT_A_8 : ANDROID_BITMAP_FORMAT_RGBA_8888;
@@ -62,7 +60,6 @@ Texture::Texture(AAssetManager* assetManager, const std::string& path, bool mono
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
-
 #endif
 
 namespace Textures {
@@ -76,7 +73,7 @@ namespace Textures {
 	}
 
 #ifdef WINDOWS_VERSION
-	void init() {
+	void load() {
 		white = std::make_unique<Texture>(ASSETS_PATH + "textures/white.png", false);
 		basketball = std::make_unique<Texture>(ASSETS_PATH + "textures/Ball.png", false);
 
@@ -85,7 +82,7 @@ namespace Textures {
 		Cursors::resize = std::make_unique<Texture>(ASSETS_PATH + "cursors/resize.png", false);
 	}
 #else
-	void init(AAssetManager* assetManager) {
+	void load(AAssetManager* assetManager) {
 		white = std::make_unique<Texture>(assetManager, "textures/white.png", false);
 		basketball = std::make_unique<Texture>(assetManager, "textures/Ball.png", false);
 	}

@@ -12,6 +12,9 @@ struct Vertex3D {
 	vec3 normal;
 	col color;
 
+	Vertex3D() = default;
+	Vertex3D(vec3 position, vec2 uv, vec3 normal, col color) : position(position), uv(uv), normal(normal), color(color) {}
+
 	static void setupLayout();
 };
 
@@ -34,6 +37,12 @@ public:
 
 	Mesh(const std::vector<TVertex>& vertices, const std::vector<Index>& indices, GLenum usage = GL_STATIC_DRAW) :
 	    Mesh(usage) { setData(vertices, indices); }
+
+#ifdef WINDOWS_VERSION
+	Mesh(const std::string& path, col color = WHITE);
+#else
+	Mesh(AAssetManager* assetManager, const std::string& path, col color = WHITE);
+#endif
 
 	void setData(const std::vector<TVertex>& vertices, const std::vector<Index>& indices) {
 		indexCount = static_cast<GLsizei>(indices.size());
@@ -59,5 +68,23 @@ private:
 	GLsizei indexCount = 0;
 	GLenum usage; // GL_STATIC_DRAW or GL_DYNAMIC_DRAW
 };
+
+template <>
+#ifdef WINDOWS_VERSION
+Mesh<Vertex3D>::Mesh(const std::string& path, col color);
+#else
+Mesh<Vertex3D>::Mesh(AAssetManager* assetManager, const std::string& path, col color);
+#endif
+
+namespace Meshes {
+	extern std::unique_ptr<Mesh<Vertex3D>> ball;
+	extern std::unique_ptr<Mesh<Vertex3D>> plane;
+
+#ifdef WINDOWS_VERSION
+	void load();
+#else
+	void load(AAssetManager* assetManager);
+#endif
+}
 
 #endif // MESH_H

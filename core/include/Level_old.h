@@ -2,7 +2,6 @@
 #define LEVEL_H
 
 #include "Object.h"
-#include "ObjShader.h"
 
 const byte MAX_OBSTACLES = 200;
 

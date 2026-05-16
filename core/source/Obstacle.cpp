@@ -1,72 +1,69 @@
 #include "main.h"
 #include "Colors.h"
-#include "Model.h"
+#include "Mesh.h"
 #include "Obstacle.h"
 
-void AbstractShapeSpec::generateObstacleModel(Model& obstacleModel) const {
-	obstacleModel.vertices.clear();
-	obstacleModel.indices.clear();
+void AbstractShapeSpec::generateObstacleMesh(Mesh<Vertex3D>& obstacleMesh) const {
+	std::vector<Vertex3D> vs;
+	std::vector<Index> is;
 
-	buildObstacleModel(obstacleModel);
+	buildObstacleMesh(vs, is);
 
-	obstacleModel.sendToGpu();
-	// TODO: setupVertexAttribs ?
+	obstacleMesh.setData(vs, is);
 }
 
-void SegmentSpec::buildObstacleModel(Model& obstacleModel) const {
+void SegmentSpec::buildObstacleMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const {
 	// TODO
 }
 
-void ArcSpec::buildObstacleModel(Model& obstacleModel) const {
-	// TODO
-}
-
-
-void AbstractShapeSpec::generateOutlineModel(Model& outlineModel) const {
-	outlineModel.vertices.clear();
-	outlineModel.indices.clear();
-
-	buildOutlineModel(outlineModel);
-
-	outlineModel.sendToGpu();
-	// TODO: setupVertexAttribs ?
-}
-
-void SegmentSpec::buildOutlineModel(Model& outlineModel) const {
-	// TODO
-}
-
-void ArcSpec::buildOutlineModel(Model& outlineModel) const {
+void ArcSpec::buildObstacleMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const {
 	// TODO
 }
 
 
-void IMotionSpec::generateDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const {
-	domainModel.vertices.clear();
-	domainModel.indices.clear();
+void AbstractShapeSpec::generateOutlineMesh(Mesh<Vertex3D>& outlineMesh) const {
+	std::vector<Vertex3D> vs;
+	std::vector<Index> is;
 
-	buildDomainModel(domainModel, shapeSpec);
+	buildOutlineMesh(vs, is);
 
-	domainModel.sendToGpu();
-	// TODO: setupVertexAttribs ?
+	outlineMesh.setData(vs, is);
 }
 
-void TogglingPositionSpec::buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const {
+void SegmentSpec::buildOutlineMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const {
 	// TODO
 }
 
-void TogglingAngleSpec::buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const {
+void ArcSpec::buildOutlineMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const {
 	// TODO
 }
 
-void SpinningSpec::buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const {
+
+void IMotionSpec::generateDomainMesh(Mesh<Vertex3D>& domainMesh, const AbstractShapeSpec& shapeSpec) const {
+	std::vector<Vertex3D> vs;
+	std::vector<Index> is;
+
+	buildDomainMesh(vs, is, shapeSpec);
+
+	domainMesh.setData(vs, is);
+}
+
+void TogglingPositionSpec::buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const {
 	// TODO
 }
 
-void OscillatingPositionSpec::buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const {
+void TogglingAngleSpec::buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const {
 	// TODO
 }
 
-void OscillatingAngleSpec::buildDomainModel(Model& domainModel, const AbstractShapeSpec& shapeSpec) const {
+void SpinningSpec::buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const {
+	// TODO
+}
+
+void OscillatingPositionSpec::buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const {
+	// TODO
+}
+
+void OscillatingAngleSpec::buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const {
 	// TODO
 }
