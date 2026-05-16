@@ -268,9 +268,9 @@ struct ObstacleDefinition {
 
 struct Obstacle {
 	Texture* texture;
-	Mesh<Vertex3D> obstacle;
-	Mesh<Vertex3D> outline;
-	Mesh<Vertex3D> domain;
+	Mesh<ObjectVertex> obstacle;
+	Mesh<ObjectVertex> outline;
+	Mesh<ObjectVertex> domain;
 
 	Obstacle(ObstacleDefinition* definition, float scale) :
 	    pDef(definition),

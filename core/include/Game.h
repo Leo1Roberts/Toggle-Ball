@@ -171,7 +171,7 @@ private:
 
 	static void drawBall(const Ball_OLD& b);
 	static void drawPlane(const Plane& p);
-	static void drawObject(const Mesh<Vertex3D>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale);
+	static void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale);
 	static void drawObstacles();
 	static void drawObstacleOutline(const Obstacle& g);
 	static void drawObstacleDomains();

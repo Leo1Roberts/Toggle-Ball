@@ -338,14 +338,7 @@ void Game::initGame() {
 #endif
 	Text::initTextShader(vsh, fsh, "uProjection2D");
 
-#ifdef WINDOWS_VERSION
-	vsh = importTextFile(ASSETS_PATH + "shaders/button.vert");
-	fsh = importTextFile(ASSETS_PATH + "shaders/button.frag");
-#else
-	vsh = importTextFile(androidApp->activity->assetManager, "shaders/button.vert");
-	fsh = importTextFile(androidApp->activity->assetManager, "shaders/button.frag");
-#endif
-	ButtonManager::initButtonShader(vsh, fsh, "uProjection2D");
+	ButtonManager::init();
 
 #ifdef WINDOWS_VERSION
 	vsh = importTextFile(ASSETS_PATH + "shaders/cursor.vert");
@@ -1428,7 +1421,6 @@ void Game::render() {
 	Text::clearText();
 
 	ButtonManager::clearButtons();
-	ButtonManager::activateShader();
 	ButtonManager::updateProjectionMatrix();
 
 	TextBoxManager::clearTextBoxes();
@@ -1534,7 +1526,6 @@ void Game::render() {
 	Text::addText(LEFT + 0.05f, 0.95f, fpsText, COURIER_NEW, 0.06f, WHITE);
 
 	for (int i = 0; i < 2; i++) { // 2 = number of batches
-		ButtonManager::activateShader();
 		ButtonManager::drawButtons(i);
 		Text::activateShader();
 		Text::drawText(i);
@@ -1576,7 +1567,7 @@ void Game::drawPlane(const Plane& p) {
 	drawObject(Meshes::plane.get(), p.texture, p.pos, p.rot, p.scale);
 }
 
-void Game::drawObject(const Mesh<Vertex3D>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale) {
+void Game::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale) {
 	buildScaledWorldMatrix(&worldMat, rot, pos, scale);
 
 	mat4 bodyToView = worldMat * viewMat;

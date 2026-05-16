@@ -23,6 +23,10 @@ public:
 		use();
 		glUniform1f(glGetUniformLocation(program, name.c_str()), value);
 	}
+	void setVec2(const std::string& name, const vec2& value) const {
+		use();
+		glUniform2fv(glGetUniformLocation(program, name.c_str()), 1, &value.x);
+	}
 	void setVec3(const std::string& name, const vec3& value) const {
 		use();
 		glUniform3fv(glGetUniformLocation(program, name.c_str()), 1, &value.x);
@@ -49,6 +53,7 @@ private:
 namespace Shaders {
 	extern std::unique_ptr<Shader> object;
 	extern std::unique_ptr<Shader> outline;
+	extern std::unique_ptr<Shader> button;
 
 #ifdef WINDOWS_VERSION
 	void load();

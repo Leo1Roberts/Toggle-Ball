@@ -1,18 +1,28 @@
 #include "main.h"
 #include "Mesh.h"
 
-void Vertex3D::setupLayout() {
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, position));
+void ObjectVertex::setupLayout() {
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(ObjectVertex), (void*)offsetof(ObjectVertex, position));
 	glEnableVertexAttribArray(0);
-
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, uv));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ObjectVertex), (void*)offsetof(ObjectVertex, uv));
 	glEnableVertexAttribArray(1);
-
-	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, normal));
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(ObjectVertex), (void*)offsetof(ObjectVertex, normal));
 	glEnableVertexAttribArray(2);
-
-	glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), (void*)offsetof(Vertex3D, color));
+	glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ObjectVertex), (void*)offsetof(ObjectVertex, color));
 	glEnableVertexAttribArray(3);
+}
+
+void ButtonVertex::setupLayout() {
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, position));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, uv));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, fillColor));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, outlineColor));
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, outlineRadius));
+	glEnableVertexAttribArray(4);
 }
 
 struct FileIndices {
@@ -36,13 +46,13 @@ int addFileIndices(std::vector<FileIndices>* fileIndices, const FileIndices* new
 
 template <>
 #ifdef WINDOWS_VERSION
-Mesh<Vertex3D>::Mesh(const std::string& path, col color) : Mesh(GL_STATIC_DRAW) {
+Mesh<ObjectVertex>::Mesh(const std::string& path, col color) : Mesh(GL_STATIC_DRAW) {
 	std::vector<vec3> tempVertices;
 	std::vector<vec2> tempUVs;
 	std::vector<vec3> tempNormals;
 	std::vector<FileIndices> fileIndices;
 
-	std::vector<Vertex3D> vertices;
+	std::vector<ObjectVertex> vertices;
 	std::vector<Index> indices;
 
 	FILE* file;
@@ -86,13 +96,13 @@ Mesh<Vertex3D>::Mesh(const std::string& path, col color) : Mesh(GL_STATIC_DRAW) 
 	setData(vertices, indices);
 }
 #else
-Mesh<Vertex3D>::Mesh(AAssetManager* assetManager, const std::string& path, col color) : Mesh(GL_STATIC_DRAW) {
+Mesh<ObjectVertex>::Mesh(AAssetManager* assetManager, const std::string& path, col color) : Mesh(GL_STATIC_DRAW) {
 	std::vector<vec3> tempVertices;
 	std::vector<vec2> tempUVs;
 	std::vector<vec3> tempNormals;
 	std::vector<FileIndices> fileIndices;
 
-	std::vector<Vertex3D> vertices;
+	std::vector<ObjectVertex> vertices;
 	std::vector<Index> indices;
 
 	AAsset* file = AAssetManager_open(assetManager, path.c_str(), AASSET_MODE_BUFFER);
@@ -161,18 +171,18 @@ Mesh<Vertex3D>::Mesh(AAssetManager* assetManager, const std::string& path, col c
 #endif
 
 namespace Meshes {
-	std::unique_ptr<Mesh<Vertex3D>> ball;
-	std::unique_ptr<Mesh<Vertex3D>> plane;
+	std::unique_ptr<Mesh<ObjectVertex>> ball;
+	std::unique_ptr<Mesh<ObjectVertex>> plane;
 
 #ifdef WINDOWS_VERSION
 	void load() {
-		ball = std::make_unique<Mesh<Vertex3D>>(ASSETS_PATH + "models/Ball.obj");
-		plane = std::make_unique<Mesh<Vertex3D>>(ASSETS_PATH + "models/Ground.obj", BOUNDARY);
+		ball = std::make_unique<Mesh<ObjectVertex>>(ASSETS_PATH + "models/Ball.obj");
+		plane = std::make_unique<Mesh<ObjectVertex>>(ASSETS_PATH + "models/Ground.obj", BOUNDARY);
 	}
 #else
 	void load(AAssetManager* assetManager) {
-		ball = std::make_unique<Mesh<Vertex3D>>(assetManager, "models/Ball.obj");
-		plane = std::make_unique<Mesh<Vertex3D>>(assetManager, "models/Ground.obj", BOUNDARY);
+		ball = std::make_unique<Mesh<ObjectVertex>>(assetManager, "models/Ball.obj");
+		plane = std::make_unique<Mesh<ObjectVertex>>(assetManager, "models/Ground.obj", BOUNDARY);
 	}
 #endif
 }

@@ -12,16 +12,19 @@ GLShader Shader::compileShader(GLenum type, const std::string& source) const {
 namespace Shaders {
 	std::unique_ptr<Shader> object;
 	std::unique_ptr<Shader> outline;
+	std::unique_ptr<Shader> button;
 // TODO: prefix shader code with OpenGL version
 #ifdef WINDOWS_VERSION
 	void load() {
 		object = std::make_unique<Shader>(importTextFile(ASSETS_PATH + "shaders/object.vert"), importTextFile(ASSETS_PATH + "shaders/object.frag"));
 		outline = std::make_unique<Shader>(importTextFile(ASSETS_PATH + "shaders/objectOutline.vert"), importTextFile(ASSETS_PATH + "shaders/objectOutline.frag"));
+		button = std::make_unique<Shader>(importTextFile(ASSETS_PATH + "shaders/button.vert"), importTextFile(ASSETS_PATH + "shaders/button.frag"));
 	}
 #else
 	void load(AAssetManager* assetManager) {
 		object = std::make_unique<Shader>(importTextFile(assetManager, "shaders/object.vert"), importTextFile(assetManager, "shaders/object.frag"));
 		outline = std::make_unique<Shader>(importTextFile(assetManager, "shaders/objectOutline.vert"), importTextFile(assetManager, "shaders/objectOutline.frag"));
+		button = std::make_unique<Shader>(importTextFile(assetManager, "shaders/button.vert"), importTextFile(assetManager, "shaders/button.frag"));
 	}
 #endif
 }

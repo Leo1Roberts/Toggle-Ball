@@ -16,20 +16,14 @@ struct Button {
 	bool affectsCursor;
 };
 
-struct ButtonVertex {
-	vec2 pos;
-	vec2 uv;
-	col color;
-	col outlineColor;
-	float outlineRadius = 0;
-};
-
 struct ButtonManager {
 	static bool isPressed;
 	static vec2 pointerPos;
 
 	static int focusedButtonIndex;
 	static Button buttons[];
+
+	static void init() { mesh = std::make_unique<Mesh<ButtonVertex>>(GL_DYNAMIC_DRAW); }
 
 	static void clearButtons() { // MUST be called each frame before adding buttons
 		numButtons = 0;
@@ -51,13 +45,6 @@ struct ButtonManager {
 
 	static void drawButtons(byte batch);
 
-	static bool initButtonShader(
-			const std::string& vertexSource,
-			const std::string& fragmentSource,
-			const std::string& projectionMatrixUniformName);
-
-	static void activateShader() { glUseProgram(program); }
-
 	static void updateProjectionMatrix();
 
 	static bool pressed(); // Returns true if the press was on a button
@@ -69,16 +56,12 @@ private:
 	static int numButtons;
 	static int numButtonsDrawn;
 	static short batchToFill;
-	static short batchSize[]; // If MAX_BUTTONS > 256 this will need to be changed to a short
+	static short batchSize[];
 
-	static GLuint program;
-	static GLint projectionMatrix;
+	static std::vector<ButtonVertex> vertices;
+	static std::vector<Index> indices;
 
-	static GLuint vao;
-	static GLuint vertex_buffer;
-	static GLuint index_buffer;
-	static ButtonVertex vertices[];
-	static Index indices[];
+	static std::unique_ptr<Mesh<ButtonVertex>> mesh;
 
 	static void findFocusedButton();
 };

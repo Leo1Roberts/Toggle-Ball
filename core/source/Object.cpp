@@ -67,7 +67,7 @@ void Obstacle::setAngle(float iAngle) {
 }
 
 void Obstacle::createObstacleModel() {
-	std::vector<Vertex3D> vs;
+	std::vector<ObjectVertex> vs;
 	std::vector<Index> is;
 
 	float bevel = BEVEL_AMOUNT * getMinorRadius();
@@ -242,7 +242,7 @@ void Obstacle::createObstacleModel() {
 }
 
 void Obstacle::createOutlineModel() {
-	std::vector<Vertex3D> vs;
+	std::vector<ObjectVertex> vs;
 	std::vector<Index> is;
 
 	const float outlineRadius = getMinorRadius() + OUTLINE_WIDTH_WORLD;
@@ -367,7 +367,7 @@ void Obstacle::createOutlineModel() {
 }
 
 void Obstacle::createDomainModel() {
-	std::vector<Vertex3D> vs;
+	std::vector<ObjectVertex> vs;
 	std::vector<Index> is;
 
 	switch (getStateType()) {

@@ -7,8 +7,8 @@ class AbstractShapeSpec {
 public:
 	virtual ~AbstractShapeSpec() = default;
 
-	void generateObstacleMesh(Mesh<Vertex3D>& obstacleMesh) const;
-	void generateOutlineMesh(Mesh<Vertex3D>& outlineMesh) const;
+	void generateObstacleMesh(Mesh<ObjectVertex>& obstacleMesh) const;
+	void generateOutlineMesh(Mesh<ObjectVertex>& outlineMesh) const;
 
 protected:
 	explicit AbstractShapeSpec(float halfWidth) :
@@ -22,8 +22,8 @@ protected:
 private:
 	float halfWidth;
 
-	virtual void buildObstacleMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const = 0;
-	virtual void buildOutlineMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const = 0;
+	virtual void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
+	virtual void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
 };
 
 class SegmentSpec : public AbstractShapeSpec {
@@ -39,8 +39,8 @@ private:
 	float left;
 	float right;
 
-	void buildObstacleMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const override;
-	void buildOutlineMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const override;
+	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
+	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 };
 
 class ArcSpec : public AbstractShapeSpec {
@@ -56,8 +56,8 @@ private:
 	float angle;
 	float radius;
 
-	void buildObstacleMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const override;
-	void buildOutlineMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is) const override;
+	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
+	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 };
 
 
@@ -70,13 +70,13 @@ public:
 	IMotionSpec(IMotionSpec&&) = delete;
 	IMotionSpec& operator=(IMotionSpec&&) = delete;
 
-	void generateDomainMesh(Mesh<Vertex3D>& domainMesh, const AbstractShapeSpec& shapeSpec) const;
+	void generateDomainMesh(Mesh<ObjectVertex>& domainMesh, const AbstractShapeSpec& shapeSpec) const;
 
 protected:
 	IMotionSpec() = default;
 
 private:
-	virtual void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const {}
+	virtual void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const {}
 };
 
 class StaticSpec : public IMotionSpec {
@@ -106,7 +106,7 @@ private:
 	vec2 positionA;
 	vec2 positionB;
 
-	void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
+	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 class TogglingAngleSpec : public IMotionSpec {
@@ -123,7 +123,7 @@ private:
 	float angleA;
 	float angleB;
 
-	void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
+	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 class SpinningSpec : public IMotionSpec {
@@ -142,7 +142,7 @@ private:
 	float angularVelocityA;
 	float angularVelocityB;
 
-	void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
+	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 class OscillatingPositionSpec : public IMotionSpec {
@@ -163,7 +163,7 @@ private:
 	float angularFrequencyA;
 	float angularFrequencyB;
 
-	void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
+	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 class OscillatingAngleSpec : public IMotionSpec {
@@ -184,7 +184,7 @@ private:
 	float angularFrequencyA;
 	float angularFrequencyB;
 
-	void buildDomainMesh(std::vector<Vertex3D>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
+	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec& shapeSpec) const override;
 };
 
 
@@ -241,9 +241,9 @@ private:
 
 	bool selected = false;
 
-	Mesh<Vertex3D> obstacle = Mesh<Vertex3D>(GL_STATIC_DRAW);
-	Mesh<Vertex3D> outline = Mesh<Vertex3D>(GL_STATIC_DRAW);
-	Mesh<Vertex3D> domain = Mesh<Vertex3D>(GL_STATIC_DRAW);
+	Mesh<ObjectVertex> obstacle = Mesh<ObjectVertex>(GL_STATIC_DRAW);
+	Mesh<ObjectVertex> outline = Mesh<ObjectVertex>(GL_STATIC_DRAW);
+	Mesh<ObjectVertex> domain = Mesh<ObjectVertex>(GL_STATIC_DRAW);
 };
 
 #endif // OBSTACLE_H

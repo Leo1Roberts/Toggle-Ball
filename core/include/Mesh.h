@@ -6,14 +6,27 @@
 
 using Index = unsigned short; // Needs to match glDrawElements 'type' argument
 
-struct Vertex3D {
+struct ObjectVertex {
 	vec3 position;
 	vec2 uv;
 	vec3 normal;
 	col color;
 
-	Vertex3D() = default;
-	Vertex3D(vec3 position, vec2 uv, vec3 normal, col color) : position(position), uv(uv), normal(normal), color(color) {}
+	ObjectVertex() = default;
+	ObjectVertex(vec3 position, vec2 uv, vec3 normal, col color) : position(position), uv(uv), normal(normal), color(color) {}
+
+	static void setupLayout();
+};
+
+struct ButtonVertex {
+	vec2 position;
+	vec2 uv;
+	col fillColor;
+	col outlineColor;
+	float outlineRadius;
+
+	ButtonVertex() = default;
+	ButtonVertex(vec2 position, vec2 uv, col fillColor, col outlineColor, float outlineRadius) : position(position), uv(uv), fillColor(fillColor), outlineColor(outlineColor), outlineRadius(outlineRadius) {}
 
 	static void setupLayout();
 };
@@ -71,14 +84,14 @@ private:
 
 template <>
 #ifdef WINDOWS_VERSION
-Mesh<Vertex3D>::Mesh(const std::string& path, col color);
+Mesh<ObjectVertex>::Mesh(const std::string& path, col color);
 #else
-Mesh<Vertex3D>::Mesh(AAssetManager* assetManager, const std::string& path, col color);
+Mesh<ObjectVertex>::Mesh(AAssetManager* assetManager, const std::string& path, col color);
 #endif
 
 namespace Meshes {
-	extern std::unique_ptr<Mesh<Vertex3D>> ball;
-	extern std::unique_ptr<Mesh<Vertex3D>> plane;
+	extern std::unique_ptr<Mesh<ObjectVertex>> ball;
+	extern std::unique_ptr<Mesh<ObjectVertex>> plane;
 
 #ifdef WINDOWS_VERSION
 	void load();
