@@ -39,10 +39,17 @@ struct CharVertex {
 	vec2 pos;
 	vec2 uv;
 	col color;
+
+	CharVertex() = default;
+	CharVertex(vec2 pos, vec2 uv, col color) : pos(pos), uv(uv), color(color) {}
+
+	static void setupLayout();
 };
 
 class Text {
 public:
+	static void init();
+
 #ifdef WINDOWS_VERSION
 	static int loadFace(const std::string& folder, const std::string& name);// Returns index (font ID) of font face for fontFaces array, or -1 on fail
 #else
@@ -53,7 +60,7 @@ public:
 
 	static void deleteFonts();
 
-	static void clearText() {// MUST be called each frame before adding text
+	static void clearText() { // MUST be called each frame before adding text
 		numChars = 0;
 		numCharsDrawn = 0;
 	}
@@ -69,13 +76,6 @@ public:
 
 	static void drawText(byte batch);
 
-	static bool initTextShader(
-	        const std::string& vertexSource,
-	        const std::string& fragmentSource,
-	        const std::string& projectionMatrixUniformName);
-
-	static void activateShader() { glUseProgram(program); };
-
 	static void updateProjectionMatrix();
 
 private:
@@ -86,16 +86,12 @@ private:
 	static int numChars;
 	static int numCharsDrawn;
 	static byte batchToFill;
-	static unsigned short batchSize[];// If MAX_CHARS > 0x10000 this will need to be changed to an int
+	static unsigned short batchSize[]; // If MAX_CHARS > 0x10000 this will need to be changed to an int
 
-	static GLuint program;
-	static GLint projectionMatrix;
+	static std::unique_ptr<Mesh<CharVertex>> mesh;
 
-	static GLuint vao;
-	static GLuint vertex_buffer;
-	static GLuint index_buffer;
-	static CharVertex vertices[];
-	static Index indices[];
+	static std::vector<CharVertex> vertices;
+	static std::vector<Index> indices;
 };
 
 #endif// TEXT_H

@@ -12,19 +12,6 @@ void ObjectVertex::setupLayout() {
 	glEnableVertexAttribArray(3);
 }
 
-void ButtonVertex::setupLayout() {
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, position));
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, uv));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, fillColor));
-	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, outlineColor));
-	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, outlineRadius));
-	glEnableVertexAttribArray(4);
-}
-
 struct FileIndices {
 	int v;
 	int vt;

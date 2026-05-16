@@ -18,19 +18,6 @@ struct ObjectVertex {
 	static void setupLayout();
 };
 
-struct ButtonVertex {
-	vec2 position;
-	vec2 uv;
-	col fillColor;
-	col outlineColor;
-	float outlineRadius;
-
-	ButtonVertex() = default;
-	ButtonVertex(vec2 position, vec2 uv, col fillColor, col outlineColor, float outlineRadius) : position(position), uv(uv), fillColor(fillColor), outlineColor(outlineColor), outlineRadius(outlineRadius) {}
-
-	static void setupLayout();
-};
-
 template <typename TVertex>
 class Mesh {
 public:

@@ -54,6 +54,8 @@ namespace Shaders {
 	extern std::unique_ptr<Shader> object;
 	extern std::unique_ptr<Shader> outline;
 	extern std::unique_ptr<Shader> button;
+	extern std::unique_ptr<Shader> text;
+	extern std::unique_ptr<Shader> cursor;
 
 #ifdef WINDOWS_VERSION
 	void load();

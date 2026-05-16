@@ -12,6 +12,19 @@ const float BUTTON_TEXTURE_INSET = 0.0625f;
 const int MAX_BUTTONS = 1000; // WARNING: changing this may require changing the type of batchSize
 const int MAX_BATCHES = 5;
 
+void ButtonVertex::setupLayout() {
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, position));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, uv));
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, fillColor));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, outlineColor));
+	glEnableVertexAttribArray(3);
+	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, outlineRadius));
+	glEnableVertexAttribArray(4);
+}
+
 bool ButtonManager::isPressed;
 vec2 ButtonManager::pressedPos = { NAN, NAN };
 vec2 ButtonManager::pointerPos = { NAN, NAN };
@@ -28,6 +41,13 @@ std::vector<ButtonVertex> ButtonManager::vertices;
 std::vector<Index> ButtonManager::indices;
 
 std::unique_ptr<Mesh<ButtonVertex>> ButtonManager::mesh;
+
+void ButtonManager::init() {
+	mesh = std::make_unique<Mesh<ButtonVertex>>(GL_DYNAMIC_DRAW);
+
+	vertices.reserve(MAX_BUTTONS * 24);
+	indices.reserve(MAX_BUTTONS * 78);
+}
 
 bool focusedButtonIsPressed;
 void ButtonManager::findFocusedButton() {

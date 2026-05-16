@@ -327,23 +327,11 @@ void Game::initGame() {
 	glEnable(GL_CULL_FACE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	std::string vsh, fsh;
-
-#ifdef WINDOWS_VERSION
-	vsh = importTextFile(ASSETS_PATH + "shaders/text.vert");
-	fsh = importTextFile(ASSETS_PATH + "shaders/text.frag");
-#else
-	vsh = importTextFile(androidApp->activity->assetManager, "shaders/text.vert");
-	fsh = importTextFile(androidApp->activity->assetManager, "shaders/text.frag");
-#endif
-	Text::initTextShader(vsh, fsh, "uProjection2D");
-
+	Text::init();
 	ButtonManager::init();
 
 #ifdef WINDOWS_VERSION
-	vsh = importTextFile(ASSETS_PATH + "shaders/cursor.vert");
-	fsh = importTextFile(ASSETS_PATH + "shaders/cursor.frag");
-	Cursor::initShader(vsh, fsh, "uProjection2D");
+	Cursor::init();
 #endif
 
 	initFonts();
@@ -1519,7 +1507,6 @@ void Game::render() {
 
 	drawDialogue();
 
-	Text::activateShader();
 	Text::updateProjectionMatrix();
 	char fpsText[10];
 	snprintf(fpsText, 10, "%.1f", fps());
@@ -1527,7 +1514,6 @@ void Game::render() {
 
 	for (int i = 0; i < 2; i++) { // 2 = number of batches
 		ButtonManager::drawButtons(i);
-		Text::activateShader();
 		Text::drawText(i);
 	}
 
@@ -1539,8 +1525,6 @@ void Game::render() {
 	Line::drawLines();
 
 #ifdef WINDOWS_VERSION
-	Cursor::activateShader();
-	Cursor::updateProjectionMatrix();
 	Cursor::pos = pixelsToYNorm(pointerPos, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	glEnable(GL_BLEND);

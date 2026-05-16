@@ -2,10 +2,16 @@
 #define CURSOR_H
 
 #include "Texture.h"
+#include "Mesh.h"
 
 struct CursorVertex {
 	vec2 pos;
 	vec2 uv;
+
+	CursorVertex() = default;
+	CursorVertex(vec2 pos, vec2 uv) : pos(pos), uv(uv) {}
+
+	static void setupLayout();
 };
 
 struct Cursor {
@@ -15,24 +21,16 @@ struct Cursor {
 	static float size;
 	static bool visible;
 
-	static bool initShader(
-	        const std::string& vertexSource,
-	        const std::string& fragmentSource,
-	        const std::string& projectionMatrixUniformName);
-
-	static void activateShader() { glUseProgram(program); }
-
-	static void updateProjectionMatrix();
+	static void init();
 
 	static void drawCursor();
 
 private:
-	static GLuint program;
-	static GLint projectionMatrix;
+	static std::unique_ptr<Mesh<CursorVertex>> mesh;
+	static std::vector<CursorVertex> vertices;
+	static std::vector<Index> indices;
 
-	static GLuint vao;
-	static GLuint vertex_buffer;
-	static CursorVertex vertices[6];
+	static void updateProjectionMatrix();
 };
 
 #endif// CURSOR_H

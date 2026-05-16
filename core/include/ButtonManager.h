@@ -16,6 +16,19 @@ struct Button {
 	bool affectsCursor;
 };
 
+struct ButtonVertex {
+	vec2 position;
+	vec2 uv;
+	col fillColor;
+	col outlineColor;
+	float outlineRadius;
+
+	ButtonVertex() = default;
+	ButtonVertex(vec2 position, vec2 uv, col fillColor, col outlineColor, float outlineRadius) : position(position), uv(uv), fillColor(fillColor), outlineColor(outlineColor), outlineRadius(outlineRadius) {}
+
+	static void setupLayout();
+};
+
 struct ButtonManager {
 	static bool isPressed;
 	static vec2 pointerPos;
@@ -23,7 +36,7 @@ struct ButtonManager {
 	static int focusedButtonIndex;
 	static Button buttons[];
 
-	static void init() { mesh = std::make_unique<Mesh<ButtonVertex>>(GL_DYNAMIC_DRAW); }
+	static void init();
 
 	static void clearButtons() { // MUST be called each frame before adding buttons
 		numButtons = 0;

@@ -1,4 +1,5 @@
 #include <Mesh.h>
+#include <Shader.h>
 #include "main.h"
 #include "Colors.h"
 #include "Sizes.h"
@@ -9,6 +10,17 @@
 const int MAX_FONTS = 16;
 const int MAX_CHARS = 0x10000;// WARNING: changing this may require changing the type of batchSize
 const int MAX_BATCHES = 5;
+
+void CharVertex::setupLayout() {
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(CharVertex), (void*)offsetof(CharVertex, pos));
+	glEnableVertexAttribArray(0);
+
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(CharVertex), (void*)offsetof(CharVertex, uv));
+	glEnableVertexAttribArray(1);
+
+	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(CharVertex), (void*)offsetof(CharVertex, color));
+	glEnableVertexAttribArray(2);
+}
 
 struct charInfo {
 	char c;
@@ -27,14 +39,17 @@ int Text::numCharsDrawn;
 byte Text::batchToFill;
 unsigned short Text::batchSize[MAX_BATCHES];
 
-GLuint Text::program;
-GLint Text::projectionMatrix;
+std::unique_ptr<Mesh<CharVertex>> Text::mesh;
+std::vector<CharVertex> Text::vertices;
+std::vector<Index> Text::indices;
 
-GLuint Text::vao;
-GLuint Text::vertex_buffer;
-GLuint Text::index_buffer;
-CharVertex Text::vertices[MAX_CHARS * 4];
-Index Text::indices[MAX_CHARS * 6];
+
+void Text::init() {
+	mesh = std::make_unique<Mesh<CharVertex>>(GL_DYNAMIC_DRAW);
+
+	vertices.reserve(MAX_CHARS * 4);
+	indices.reserve(MAX_CHARS * 6);
+}
 
 #ifdef WINDOWS_VERSION
 int Text::loadFace(const std::string& folder, const std::string& name) {
@@ -200,6 +215,9 @@ void Text::drawText(byte batch) {
 	for (int i = 0; i < numFonts; i++) {
 		Texture* tex = fontFaces[i].texture.get();
 
+		vertices.clear();
+		indices.clear();
+
 		int charNo = 0;
 		for (int j = numCharsDrawn; j < nextBatchStart; j++) {
 			CharToDraw& ctd = charsToDraw[j];
@@ -210,144 +228,36 @@ void Text::drawText(byte batch) {
 				float width = (bounds.right - bounds.left) * ctd.scaleFactor;
 				float height = (bounds.bottom - bounds.top) * ctd.scaleFactor;
 
-				vertices[charNo * 4 + 0] = {{pos.x, pos.y}, {bounds.left, bounds.top}, ctd.color};
-				vertices[charNo * 4 + 1] = {{pos.x, pos.y - height}, {bounds.left, bounds.bottom}, ctd.color};
-				vertices[charNo * 4 + 2] = {{pos.x + width, pos.y - height},
-				                            {bounds.right, bounds.bottom},
-				                            ctd.color};
-				vertices[charNo * 4 + 3] = {{pos.x + width, pos.y}, {bounds.right, bounds.top}, ctd.color};
+				vertices.emplace_back(vec2(pos.x, pos.y), vec2(bounds.left, bounds.top), ctd.color);
+				vertices.emplace_back(vec2(pos.x, pos.y - height), vec2(bounds.left, bounds.bottom), ctd.color);
+				vertices.emplace_back(vec2(pos.x + width, pos.y - height), vec2(bounds.right, bounds.bottom), ctd.color);
+				vertices.emplace_back(vec2(pos.x + width, pos.y), vec2(bounds.right, bounds.top), ctd.color);
 
-				indices[charNo * 6 + 0] = charNo * 4;
-				indices[charNo * 6 + 1] = charNo * 4 + 1;
-				indices[charNo * 6 + 2] = charNo * 4 + 2;
-				indices[charNo * 6 + 3] = charNo * 4;
-				indices[charNo * 6 + 4] = charNo * 4 + 2;
-				indices[charNo * 6 + 5] = charNo * 4 + 3;
+				indices.emplace_back(charNo * 4);
+				indices.emplace_back(charNo * 4 + 1);
+				indices.emplace_back(charNo * 4 + 2);
+				indices.emplace_back(charNo * 4);
+				indices.emplace_back(charNo * 4 + 2);
+				indices.emplace_back(charNo * 4 + 3);
 
 				charNo++;
 			}
 		}
 
+		Shaders::text->use();
+
 		tex->bind(0);
 
-		glBindVertexArray(vao);
-
-		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(CharVertex) * charNo * 4, vertices, GL_DYNAMIC_DRAW);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Index) * charNo * 6, indices, GL_DYNAMIC_DRAW);
-
-		// Draw as indexed triangles
-		glDrawElements(GL_TRIANGLES, (GLsizei)charNo * 6, GL_UNSIGNED_SHORT, nullptr);
+		mesh->setData(vertices, indices);
+		mesh->draw();
 	}
 
 	numCharsDrawn = nextBatchStart;
 	batchSize[batch] = 0;
 }
 
-bool Text::initTextShader(
-        const std::string& vertexSource,
-        const std::string& fragmentSource,
-        const std::string& projectionMatrixUniformName) {
-	GLuint vertexShader = 0;
-	vertexShader = loadShader(GL_VERTEX_SHADER, vertexSource);
-	if (!vertexShader) {
-		return false;
-	}
-
-	GLuint fragmentShader = 0;
-	fragmentShader = loadShader(GL_FRAGMENT_SHADER, fragmentSource);
-	if (!fragmentShader) {
-		glDeleteShader(vertexShader);
-		return false;
-	}
-
-	GLuint iProgram = glCreateProgram();
-	if (iProgram) {
-		glAttachShader(iProgram, vertexShader);
-		glAttachShader(iProgram, fragmentShader);
-
-		glLinkProgram(iProgram);
-		GLint linkStatus = GL_FALSE;
-		glGetProgramiv(iProgram, GL_LINK_STATUS, &linkStatus);
-		if (linkStatus != GL_TRUE) {
-			GLint logLength = 0;
-			glGetProgramiv(iProgram, GL_INFO_LOG_LENGTH, &logLength);
-
-			// If we fail to link the shader program, log the result for debugging
-			if (logLength) {
-				GLchar* log = new GLchar[logLength];
-				glGetProgramInfoLog(iProgram, logLength, nullptr, log);
-				delete[] log;
-			}
-
-			glDeleteProgram(iProgram);
-		} else {
-			GLint projectionMatrixUniform = glGetUniformLocation(iProgram,
-			                                                     projectionMatrixUniformName.c_str());
-
-			if (projectionMatrixUniform != -1) {
-				program = iProgram;
-				projectionMatrix = projectionMatrixUniform;
-			} else {
-				glDeleteProgram(iProgram);
-			}
-		}
-	}
-
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
-	activateShader();
-
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
-	glGenBuffers(1, &vertex_buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-
-	glGenBuffers(1, &index_buffer);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer);
-
-	// The position attribute is 3 floats
-	glVertexAttribPointer(
-	        0,          // attrib
-	        2,                 // elements
-	        GL_FLOAT,          // of type float
-	        GL_FALSE,          // don't normalize
-	        sizeof(CharVertex),// stride is Vertex bytes
-	        (void*)offsetof(CharVertex, pos)                  // pull from the start of the vertex data
-	);
-	glEnableVertexAttribArray(0);
-
-	// The uv attribute is 2 floats
-	glVertexAttribPointer(
-	        1,                   // attrib
-	        2,                    // elements
-	        GL_FLOAT,             // of type float
-	        GL_FALSE,             // don't normalize
-	        sizeof(CharVertex),   // stride is Vertex bytes
-	(void*)offsetof(CharVertex, uv)// offset vec3 from the start
-	);
-	glEnableVertexAttribArray(1);
-
-	// The color attribute is 4 bytes
-	glVertexAttribPointer(
-	        2,                      // attrib
-	        4,                          // elements
-	        GL_UNSIGNED_BYTE,           // of type byte
-	        GL_TRUE,                    // normalize
-	        sizeof(CharVertex),         // stride is Vertex bytes
-	(void*)offsetof(CharVertex, color)// offset vec3 + vec2 from the start
-	);
-	glEnableVertexAttribArray(2);
-
-	return true;
-}
-
 void Text::updateProjectionMatrix() {
 	mat4 projMat;
 	buildOrthographicMatrix(&projMat, 1.0f, RATIO, -1.0f, 1.0f);
-	glUniformMatrix4fv(projectionMatrix, 1, false, projMat.m16);
+	Shaders::text->setMat4("uProjection2D", projMat);
 }
