@@ -233,12 +233,12 @@ void Text::drawText(byte batch) {
 				vertices.emplace_back(vec2(pos.x + width, pos.y - height), vec2(bounds.right, bounds.bottom), ctd.color);
 				vertices.emplace_back(vec2(pos.x + width, pos.y), vec2(bounds.right, bounds.top), ctd.color);
 
-				indices.emplace_back(charNo * 4);
-				indices.emplace_back(charNo * 4 + 1);
-				indices.emplace_back(charNo * 4 + 2);
-				indices.emplace_back(charNo * 4);
-				indices.emplace_back(charNo * 4 + 2);
-				indices.emplace_back(charNo * 4 + 3);
+				indices.push_back(charNo * 4);
+				indices.push_back(charNo * 4 + 1);
+				indices.push_back(charNo * 4 + 2);
+				indices.push_back(charNo * 4);
+				indices.push_back(charNo * 4 + 2);
+				indices.push_back(charNo * 4 + 3);
 
 				charNo++;
 			}

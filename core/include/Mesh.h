@@ -13,7 +13,7 @@ struct ObjectVertex {
 	col color;
 
 	ObjectVertex() = default;
-	ObjectVertex(vec3 position, vec2 uv, vec3 normal, col color) : position(position), uv(uv), normal(normal), color(color) {}
+	ObjectVertex(vec3 position, vec2 uv, vec3 normal, col color = WHITE) : position(position), uv(uv), normal(normal), color(color) {}
 
 	static void setupLayout();
 };

@@ -48,17 +48,17 @@ void Cursor::drawCursor() {
 	vertices.clear();
 	indices.clear();
 
-	vertices.emplace_back(pos + vec2(cosf(angle + PI * 0.75f), sinf(angle + PI * 0.75f)) * size, vec2(0.0f, 0.0f));
-	vertices.emplace_back(pos + vec2(cosf(angle + PI * -0.75f), sinf(angle + PI * -0.75f)) * size, vec2(0.0f, 1.0f));
-	vertices.emplace_back(pos + vec2(cosf(angle + PI * -0.25f), sinf(angle + PI * -0.25f)) * size, vec2(1.0f, 1.0f));
-	vertices.emplace_back(pos + vec2(cosf(angle + PI * 0.25f), sinf(angle + PI * 0.25f)) * size, vec2(1.0f, 0.0f));
+	vertices.emplace_back(pos + vec2(cos(angle + PI * 0.75f), sin(angle + PI * 0.75f)) * size, vec2(0.0f, 0.0f));
+	vertices.emplace_back(pos + vec2(cos(angle + PI * -0.75f), sin(angle + PI * -0.75f)) * size, vec2(0.0f, 1.0f));
+	vertices.emplace_back(pos + vec2(cos(angle + PI * -0.25f), sin(angle + PI * -0.25f)) * size, vec2(1.0f, 1.0f));
+	vertices.emplace_back(pos + vec2(cos(angle + PI * 0.25f), sin(angle + PI * 0.25f)) * size, vec2(1.0f, 0.0f));
 
-	indices.emplace_back(0);
-	indices.emplace_back(1);
-	indices.emplace_back(2);
-	indices.emplace_back(0);
-	indices.emplace_back(2);
-	indices.emplace_back(3);
+	indices.push_back(0);
+	indices.push_back(1);
+	indices.push_back(2);
+	indices.push_back(0);
+	indices.push_back(2);
+	indices.push_back(3);
 
 	Shaders::cursor->use();
 

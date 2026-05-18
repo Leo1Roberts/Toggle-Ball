@@ -57,9 +57,6 @@ void Game::setupObjShaders() {
 	Shaders::load(androidApp->activity->assetManager);
 #endif
 
-	Shaders::object->use();
-
-	// set the lighting uniforms
 	vec3 groundColor = {0.3f, 0.3f, 0.3f};
 	colorToLinear(&groundColor);
 	vec3 skyColor = {85.0f / 255.0f, 110.0f / 255.0f, 128.0f / 255.0f};
@@ -70,8 +67,6 @@ void Game::setupObjShaders() {
 	Shaders::object->setVec3("uGroundColor", groundColor);
 	Shaders::object->setVec3("uSkyColor", skyColor);
 	Shaders::object->setVec3("uSunColor", sunColor);
-
-	Shaders::outline->use();
 }
 
 void Game::reloadShaders() {
@@ -109,10 +104,10 @@ void Game::moveViewOrigin(float dx, float dy) {
 	float verticalDist = dy * metresPerPix;
 
 	float
-	ch = cosf(heading),
-	sh = sinf(heading),
-	cp = cosf(pitch),
-	sp = sinf(pitch);
+	ch = cos(heading),
+	sh = sin(heading),
+	cp = cos(pitch),
+	sp = sin(pitch);
 
 	viewOrigin.x += sh * horizontalDist - ch * sp * verticalDist;
 	viewOrigin.y += -ch * horizontalDist - sh * sp * verticalDist;
@@ -121,10 +116,10 @@ void Game::moveViewOrigin(float dx, float dy) {
 
 static void updateView() {
 	float
-	ch = cosf(heading),
-	sh = sinf(heading),
-	cp = cosf(pitch),
-	sp = sinf(pitch);
+	ch = cos(heading),
+	sh = sin(heading),
+	cp = cos(pitch),
+	sp = sin(pitch);
 	viewDir.x = ch * cp;
 	viewDir.y = sh * cp;
 	viewDir.z = sp;
@@ -583,7 +578,7 @@ short Game::checkBallObstacleCollision(Ball_OLD* pBall, bool getIndex, bool only
 
 					if (separation < pBall->radius) {
 						if (getIndex) {
-							if ((!onlyRim || onlyRim && fabsf(separation) < pBall->radius) && g->getMinorRadius() >= obMinorRadius) {
+							if ((!onlyRim || onlyRim && abs(separation) < pBall->radius) && g->getMinorRadius() >= obMinorRadius) {
 								obMinorRadius = g->getMinorRadius();
 								obIndex = i;
 							}
@@ -737,9 +732,9 @@ void Game::physicsUpdate() {
 				g.setVel((g.getStateB() - g.getStateA()) * smoother.V);
 				break;
 			case ST_POS_OSC: {
-				g.setPos(g.getStateA() + (g.getStateB() - g.getStateA()) * (0.5f - 0.5f * cosf(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * PHYSICS_TIMESTEP + g.getExtra())));
+				g.setPos(g.getStateA() + (g.getStateB() - g.getStateA()) * (0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * PHYSICS_TIMESTEP + g.getExtra())));
 				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.X) * PHYSICS_TIMESTEP));
-				vec3 vel = (g.getStateB() - g.getStateA()) * sinf(g.getExtra()) * lerp(g.getStateA().x, g.getStateB().x, smoother.X) * 0.5f;
+				vec3 vel = (g.getStateB() - g.getStateA()) * sin(g.getExtra()) * lerp(g.getStateA().x, g.getStateB().x, smoother.X) * 0.5f;
 				g.setVel(vel);
 			} break;
 			case ST_ANG:
@@ -751,9 +746,9 @@ void Game::physicsUpdate() {
 				g.setAngle(wrapAngle(g.getAngle() + g.getAngVel().x * PHYSICS_TIMESTEP));
 				break;
 			case ST_ANG_OSC: {
-				g.setAngle(lerp(g.getStateA().y, g.getStateB().y, 0.5f - 0.5f * cosf(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * PHYSICS_TIMESTEP + g.getExtra())));
+				g.setAngle(lerp(g.getStateA().y, g.getStateB().y, 0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * PHYSICS_TIMESTEP + g.getExtra())));
 				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.X) * PHYSICS_TIMESTEP));
-				float angVel = (g.getStateB().y - g.getStateA().y) * sinf(g.getExtra()) * lerp(g.getStateA().x, g.getStateB().x, smoother.X) * 0.5f;
+				float angVel = (g.getStateB().y - g.getStateA().y) * sin(g.getExtra()) * lerp(g.getStateA().x, g.getStateB().x, smoother.X) * 0.5f;
 				g.setAngVel(angVel);
 			} break;
 			}
@@ -833,7 +828,7 @@ void Game::physicsUpdate() {
 					// No spin in 2D
 					/*vec3 spin = d.normal * dot(d.normal, ball->angVel);
 					spin.unit();
-					ball->torque -= spin * FRICTION_COEFFICIENTS[ball->material][p.material] * totalForce * cosf(asinf(separation / ball->radius)) * ball->radius * 0.5f; // Spin friction*/
+					ball->torque -= spin * FRICTION_COEFFICIENTS[ball->material][p.material] * totalForce * cos(asin(separation / ball->radius)) * ball->radius * 0.5f; // Spin friction*/
 					if (ballVelLength > 0.0001f) {
 						vec3 rollingResistance = ball.vel / -ballVelLength * force.length() * ROLLING_RESISTANCE_COEFFICIENTS[ball.material][p.material];
 						vec3 maxRollingResistance = ball.vel * -ball.mass / PHYSICS_TIMESTEP;
@@ -883,7 +878,7 @@ void Game::updateEditorObstacles() {
 			break;
 		case ST_POS_OSC:
 			if (selection[i] && TextBoxManager::getCurrentProperty() == PROPERTY_OPM) {
-				g.setPos(lerp(g.getStateA(), g.getStateB(), 0.5f - 0.5f * cosf(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * step + g.getExtra())));
+				g.setPos(lerp(g.getStateA(), g.getStateB(), 0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * step + g.getExtra())));
 				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.X) * step));
 			} else {
 				g.setPos(smoother.X < 0.5f ? g.getStateA() : g.getStateB());
@@ -902,7 +897,7 @@ void Game::updateEditorObstacles() {
 			break;
 		case ST_ANG_OSC:
 			if (selection[i] && TextBoxManager::getCurrentProperty() == PROPERTY_OPM) {
-				g.setAngle(g.getStateA().y + (g.getStateB().y - g.getStateA().y) * (0.5f - 0.5f * cosf(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * step + g.getExtra())));
+				g.setAngle(g.getStateA().y + (g.getStateB().y - g.getStateA().y) * (0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * step + g.getExtra())));
 				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.X) * step));
 			} else {
 				g.setAngle(smoother.X < 0.5f ? g.getStateA().y : g.getStateB().y);
@@ -1320,7 +1315,7 @@ void Game::render() {
 	updateRenderArea();
 
 	buildOrthographicMatrix(&projMat, HALF_HEIGHT, WINDOW_WIDTH / WINDOW_HEIGHT, arenaWidth + viewDist * 2, -arenaWidth - viewDist * 2);
-	// For perspective use: buildProjectionMatrix(&projMat, 2 * tanf(FOV * 0.5f), 0.2f, 1000, { 0, 0 }, (int) WINDOW_WIDTH, (int) WINDOW_HEIGHT);
+	// For perspective use: buildProjectionMatrix(&projMat, 2 * tan(FOV * 0.5f), 0.2f, 1000, { 0, 0 }, (int) WINDOW_WIDTH, (int) WINDOW_HEIGHT);
 	updateView();
 	buildViewRotationMatrix(&viewRotMat, viewDir);
 	buildViewMatrix(&viewMat, viewRotMat, viewPos);
@@ -1583,7 +1578,7 @@ void Game::drawObstacles() {
 		if (inEditor) {
 			if (g.getStateType() == ST_POS_OSC || g.getStateType() == ST_ANG_OSC) {
 				glEnable(GL_BLEND);
-				alpha = 2.5f * fabsf(0.5f - smoother.X) - 0.2f; // Includes a small period where the obstacle is completely invisible
+				alpha = 2.5f * abs(0.5f - smoother.X) - 0.2f; // Includes a small period where the obstacle is completely invisible
 			}
 		}
 		Shaders::object->setFloat("uAlpha", alpha);
@@ -1678,10 +1673,10 @@ vec3 Game::getPointerWorldPos(float x, float y) {
 	vec3 mousePos, mouseDir;
 	vec2 posYNorm = pixelsToYNorm(x, y, WINDOW_WIDTH, WINDOW_HEIGHT);
 	float
-	ch = cosf(heading),
-	sh = sinf(heading),
-	cp = cosf(pitch),
-	sp = sinf(pitch);
+	ch = cos(heading),
+	sh = sin(heading),
+	cp = cos(pitch),
+	sp = sin(pitch);
 
 	vec3 offset;
 	offset.x = posYNorm.x * HALF_HEIGHT * -sh + posYNorm.y * HALF_HEIGHT * -sp * ch;
@@ -1691,7 +1686,7 @@ vec3 Game::getPointerWorldPos(float x, float y) {
 	mouseDir = viewDir * -1;
 	/* For perspective use:
 	vec2 posXNorm = pixelsToXNorm(x, y, WINDOW_WIDTH, WINDOW_HEIGHT);
-	vec3 v = { posXNorm.x * tanf(FOV * 0.5f), posXNorm.y * tanf(FOV * 0.5f), 1 };
+	vec3 v = { posXNorm.x * tan(FOV * 0.5f), posXNorm.y * tan(FOV * 0.5f), 1 };
 	mat3 rot;
 	rot.SetTransposeOf(&viewRotMat);
 	mouseDir = rot * v * -1;
@@ -2541,24 +2536,24 @@ void Game::updateCursor() {
 					Cursor::angle = obstacles[i].getAngle();
 				} else {
 					vec3 diff = pointerBallWide.pos - obstacles[i].getPos();
-					Cursor::angle = PI * 0.5f + atanf(diff.z / diff.y);
+					Cursor::angle = PI * 0.5f + atan(diff.z / diff.y);
 				}
 			} else {
 				if (i >= obstacles.size() * 2) { // End
 					i -= (int)obstacles.size() * 2;
 					vec3 diff = pointerBallWide.pos - (obstacles[i].getPos() + obstacles[i].getRot() * obstacles[i].getEnd());
-					Cursor::angle = PI * 0.5f + atanf(diff.z / diff.y);
+					Cursor::angle = PI * 0.5f + atan(diff.z / diff.y);
 				} else { // Start
 					i -= (int)obstacles.size();
 					vec3 diff = pointerBallWide.pos - (obstacles[i].getPos() + obstacles[i].getRot() * obstacles[i].getStart());
-					Cursor::angle = PI * 0.5f + atanf(diff.z / diff.y);
+					Cursor::angle = PI * 0.5f + atan(diff.z / diff.y);
 				}
 			}
 		} else if (action == ACTION_ROTATE || action == ACTION_SCALE) {
 			Cursor::tex = Textures::Cursors::resize.get();
 			vec3 focusPos = focus == MAX_OBSTACLES ? ball.pos : obstacles[focus].getPos();
 			vec3 diff = pointerBallWide.pos - focusPos;
-			Cursor::angle = (action == ACTION_SCALE ? PI * 0.5f : 0) + atanf(diff.z / diff.y);
+			Cursor::angle = (action == ACTION_SCALE ? PI * 0.5f : 0) + atan(diff.z / diff.y);
 		} else {
 			Cursor::tex = Textures::Cursors::arrow.get();
 			Cursor::angle = 0;
@@ -2731,10 +2726,10 @@ static float getPointerObDist(const Obstacle* g, const vec3& pointerPos, byte se
 		if (g->getIsStraight()) {
 			PlaneDefinition plane = g->getTopPlane();
 			float dist = dot(plane.normal, pointerPos) - plane.dotProduct + g->getMinorRadius();
-			return fabsf(dist);
+			return abs(dist);
 		} else {
 			float toCentre = (pointerPos - g->getPos()).length();
-			return fabsf(toCentre - g->getMajorRadius());
+			return abs(toCentre - g->getMajorRadius());
 		}
 	}
 }
@@ -2875,8 +2870,8 @@ float getAngleDiff(const vec3& oldPos, const vec3& newPos, const vec3& pivot) {
 	vec3 oldPosDiff = oldPos - pivot;
 	vec3 newPosDiff = newPos - pivot;
 	if (!(oldPosDiff.y == 0 && oldPosDiff.z == 0) && !(newPosDiff.y == 0 && newPosDiff.z == 0)) {
-		float oldAng = atan2f(oldPosDiff.z, oldPosDiff.y);
-		float newAng = atan2f(newPosDiff.z, newPosDiff.y);
+		float oldAng = atan2(oldPosDiff.z, oldPosDiff.y);
+		float newAng = atan2(newPosDiff.z, newPosDiff.y);
 		float angDiff = newAng - oldAng;
 		if (angDiff < -PI) angDiff += PI * 2;
 		else if (angDiff > PI)
@@ -3554,7 +3549,7 @@ void Game::updateAction() {
 
 						obstacles[i].setHalfArcAngle(halfArcAngle);
 
-						vec3 start = vec3(0, sinf(halfArcAngle), cosf(halfArcAngle)) * obstacles[i].getMajorRadius();
+						vec3 start = vec3(0, sin(halfArcAngle), cos(halfArcAngle)) * obstacles[i].getMajorRadius();
 						obstacles[i].setStart(start);
 						obstacles[i].setEnd({start.x, -start.y, start.z});
 
@@ -3813,10 +3808,10 @@ void Game::boxSelect() {
 					bool root1valid = (roots.x > br.z && roots.x < tl.z);
 					bool root2valid = (roots.y > br.z && roots.y < tl.z);
 					if (root1valid || root2valid) {
-						float startAng = atan2f(absStart.z - g->getPos().z, absStart.y - g->getPos().y);
-						float endAng = atan2f(absEnd.z - g->getPos().z, absEnd.y - g->getPos().y) - startAng;
-						float root1Ang = atan2f(roots.x - g->getPos().z, tl.y - g->getPos().y) - startAng;
-						float root2Ang = atan2f(roots.y - g->getPos().z, tl.y - g->getPos().y) - startAng;
+						float startAng = atan2(absStart.z - g->getPos().z, absStart.y - g->getPos().y);
+						float endAng = atan2(absEnd.z - g->getPos().z, absEnd.y - g->getPos().y) - startAng;
+						float root1Ang = atan2(roots.x - g->getPos().z, tl.y - g->getPos().y) - startAng;
+						float root2Ang = atan2(roots.y - g->getPos().z, tl.y - g->getPos().y) - startAng;
 						if (endAng < 0) endAng += PI * 2;
 						if (root1Ang < 0) root1Ang += PI * 2;
 						if (root2Ang < 0) root2Ang += PI * 2;
@@ -3836,10 +3831,10 @@ void Game::boxSelect() {
 					bool root1valid = (roots.x > br.z && roots.x < tl.z);
 					bool root2valid = (roots.y > br.z && roots.y < tl.z);
 					if (root1valid || root2valid) {
-						float startAng = atan2f(absStart.z - g->getPos().z, absStart.y - g->getPos().y);
-						float endAng = atan2f(absEnd.z - g->getPos().z, absEnd.y - g->getPos().y) - startAng;
-						float root1Ang = atan2f(roots.x - g->getPos().z, br.y - g->getPos().y) - startAng;
-						float root2Ang = atan2f(roots.y - g->getPos().z, br.y - g->getPos().y) - startAng;
+						float startAng = atan2(absStart.z - g->getPos().z, absStart.y - g->getPos().y);
+						float endAng = atan2(absEnd.z - g->getPos().z, absEnd.y - g->getPos().y) - startAng;
+						float root1Ang = atan2(roots.x - g->getPos().z, br.y - g->getPos().y) - startAng;
+						float root2Ang = atan2(roots.y - g->getPos().z, br.y - g->getPos().y) - startAng;
 						if (endAng < 0) endAng += PI * 2;
 						if (root1Ang < 0) root1Ang += PI * 2;
 						if (root2Ang < 0) root2Ang += PI * 2;
@@ -3859,10 +3854,10 @@ void Game::boxSelect() {
 					bool root1valid = (roots.x > tl.y && roots.x < br.y);
 					bool root2valid = (roots.y > tl.y && roots.y < br.y);
 					if (root1valid || root2valid) {
-						float startAng = atan2f(absStart.z - g->getPos().z, absStart.y - g->getPos().y);
-						float endAng = atan2f(absEnd.z - g->getPos().z, absEnd.y - g->getPos().y) - startAng;
-						float root1Ang = atan2f(tl.z - g->getPos().z, roots.x - g->getPos().y) - startAng;
-						float root2Ang = atan2f(tl.z - g->getPos().z, roots.y - g->getPos().y) - startAng;
+						float startAng = atan2(absStart.z - g->getPos().z, absStart.y - g->getPos().y);
+						float endAng = atan2(absEnd.z - g->getPos().z, absEnd.y - g->getPos().y) - startAng;
+						float root1Ang = atan2(tl.z - g->getPos().z, roots.x - g->getPos().y) - startAng;
+						float root2Ang = atan2(tl.z - g->getPos().z, roots.y - g->getPos().y) - startAng;
 						if (endAng < 0) endAng += PI * 2;
 						if (root1Ang < 0) root1Ang += PI * 2;
 						if (root2Ang < 0) root2Ang += PI * 2;
@@ -3882,10 +3877,10 @@ void Game::boxSelect() {
 					bool root1valid = (roots.x > tl.y && roots.x < br.y);
 					bool root2valid = (roots.y > tl.y && roots.y < br.y);
 					if (root1valid || root2valid) {
-						float startAng = atan2f(absStart.z - g->getPos().z, absStart.y - g->getPos().y);
-						float endAng = atan2f(absEnd.z - g->getPos().z, absEnd.y - g->getPos().y) - startAng;
-						float root1Ang = atan2f(br.z - g->getPos().z, roots.x - g->getPos().y) - startAng;
-						float root2Ang = atan2f(br.z - g->getPos().z, roots.y - g->getPos().y) - startAng;
+						float startAng = atan2(absStart.z - g->getPos().z, absStart.y - g->getPos().y);
+						float endAng = atan2(absEnd.z - g->getPos().z, absEnd.y - g->getPos().y) - startAng;
+						float root1Ang = atan2(br.z - g->getPos().z, roots.x - g->getPos().y) - startAng;
+						float root2Ang = atan2(br.z - g->getPos().z, roots.y - g->getPos().y) - startAng;
 						if (endAng < 0) endAng += PI * 2;
 						if (root1Ang < 0) root1Ang += PI * 2;
 						if (root2Ang < 0) root2Ang += PI * 2;

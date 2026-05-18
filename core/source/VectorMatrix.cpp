@@ -50,7 +50,7 @@ mat3 mat3::operator*(const mat3& m) const noexcept {
 }
 
 void mat3::R_VecAndAngle(const vec3& v, float t) {
-	float ct = cosf(t), st = sinf(t);
+	float ct = cos(t), st = sin(t);
 
 	float
 			vx2 = v.x * v.x,

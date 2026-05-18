@@ -136,51 +136,51 @@ void ButtonManager::drawButtons(byte batch) {
 
 		for (int j = 0; j < 9; j++) {
 			if (j == 4) {
-				indices.emplace_back(i * 24 + 16 + 0);
-				indices.emplace_back(i * 24 + 16 + 1);
-				indices.emplace_back(i * 24 + 16 + 2);
-				indices.emplace_back(i * 24 + 16 + 0);
-				indices.emplace_back(i * 24 + 16 + 2);
-				indices.emplace_back(i * 24 + 16 + 3);
+				indices.push_back(i * 24 + 16 + 0);
+				indices.push_back(i * 24 + 16 + 1);
+				indices.push_back(i * 24 + 16 + 2);
+				indices.push_back(i * 24 + 16 + 0);
+				indices.push_back(i * 24 + 16 + 2);
+				indices.push_back(i * 24 + 16 + 3);
 			} else {
-				indices.emplace_back(i * 24 + j / 3 * 4 + j % 3);
-				indices.emplace_back(i * 24 + j / 3 * 4 + j % 3 + 4);
-				indices.emplace_back(i * 24 + j / 3 * 4 + j % 3 + 5);
-				indices.emplace_back(i * 24 + j / 3 * 4 + j % 3);
-				indices.emplace_back(i * 24 + j / 3 * 4 + j % 3 + 5);
-				indices.emplace_back(i * 24 + j / 3 * 4 + j % 3 + 1);
+				indices.push_back(i * 24 + j / 3 * 4 + j % 3);
+				indices.push_back(i * 24 + j / 3 * 4 + j % 3 + 4);
+				indices.push_back(i * 24 + j / 3 * 4 + j % 3 + 5);
+				indices.push_back(i * 24 + j / 3 * 4 + j % 3);
+				indices.push_back(i * 24 + j / 3 * 4 + j % 3 + 5);
+				indices.push_back(i * 24 + j / 3 * 4 + j % 3 + 1);
 			}
 		}
 
 		// Trapezium insetting quads
 		// Top
-		indices.emplace_back(i * 24 +  5);
-		indices.emplace_back(i * 24 + 20);
-		indices.emplace_back(i * 24 + 23);
-		indices.emplace_back(i * 24 +  5);
-		indices.emplace_back(i * 24 + 23);
-		indices.emplace_back(i * 24 +  6);
+		indices.push_back(i * 24 +  5);
+		indices.push_back(i * 24 + 20);
+		indices.push_back(i * 24 + 23);
+		indices.push_back(i * 24 +  5);
+		indices.push_back(i * 24 + 23);
+		indices.push_back(i * 24 +  6);
 		// Left
-		indices.emplace_back(i * 24 +  5);
-		indices.emplace_back(i * 24 +  9);
-		indices.emplace_back(i * 24 + 21);
-		indices.emplace_back(i * 24 +  5);
-		indices.emplace_back(i * 24 + 21);
-		indices.emplace_back(i * 24 + 20);
+		indices.push_back(i * 24 +  5);
+		indices.push_back(i * 24 +  9);
+		indices.push_back(i * 24 + 21);
+		indices.push_back(i * 24 +  5);
+		indices.push_back(i * 24 + 21);
+		indices.push_back(i * 24 + 20);
 		// Bottom
-		indices.emplace_back(i * 24 + 21);
-		indices.emplace_back(i * 24 +  9);
-		indices.emplace_back(i * 24 + 10);
-		indices.emplace_back(i * 24 + 21);
-		indices.emplace_back(i * 24 + 10);
-		indices.emplace_back(i * 24 + 22);
+		indices.push_back(i * 24 + 21);
+		indices.push_back(i * 24 +  9);
+		indices.push_back(i * 24 + 10);
+		indices.push_back(i * 24 + 21);
+		indices.push_back(i * 24 + 10);
+		indices.push_back(i * 24 + 22);
 		// Right
-		indices.emplace_back(i * 24 + 23);
-		indices.emplace_back(i * 24 + 22);
-		indices.emplace_back(i * 24 + 10);
-		indices.emplace_back(i * 24 + 23);
-		indices.emplace_back(i * 24 + 10);
-		indices.emplace_back(i * 24 +  6);
+		indices.push_back(i * 24 + 23);
+		indices.push_back(i * 24 + 22);
+		indices.push_back(i * 24 + 10);
+		indices.push_back(i * 24 + 23);
+		indices.push_back(i * 24 + 10);
+		indices.push_back(i * 24 +  6);
 	}
 
 	Shaders::button->use();
