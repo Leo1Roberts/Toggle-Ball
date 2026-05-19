@@ -21,7 +21,7 @@ public:
 	void setDestination(float destPos, float destVel, float time);
 
 	float getCurrentPosition() const { return x; }
-	float getCurrentVelocity() const { return x; }
+	float getCurrentVelocity() const { return v; }
 	float getDestination() const { return d; }
 
 private:
