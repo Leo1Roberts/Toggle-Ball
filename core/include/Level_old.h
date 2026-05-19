@@ -1,9 +1,9 @@
-#ifndef LEVEL_H
-#define LEVEL_H
+#ifndef LEVEL_OLD_H
+#define LEVEL_OLD_H
 
 #include "Object.h"
 
-const byte MAX_OBSTACLES = 200;
+const int MAX_OBSTACLES = 200;
 
 struct Level {
 	std::string name;
@@ -29,4 +29,4 @@ struct Level {
 	static bool importLevel(Level* level, const std::string& levelData, const std::string& levelName);
 };
 
-#endif // LEVEL_H
+#endif // LEVEL_OLD_H

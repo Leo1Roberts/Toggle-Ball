@@ -7,6 +7,7 @@
 #include "Smoother.h"
 #include "Line.h"
 #include "Level_old.h"
+#include "Level.h"
 #include <fstream>
 #include <sstream>
 #include <iomanip>
