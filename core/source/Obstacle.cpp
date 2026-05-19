@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <iterator>
 
-void angleToRotation(float radians, mat3* rotation) {
+static void angleToRotation(float radians, mat3* rotation) {
 	rotation->R_VecAndAngle(OBSTACLE_ROTATION_AXIS, radians);
 }
 
@@ -162,7 +162,7 @@ void ArcSpec::buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index
 		is.push_back(i + 6);
 	}
 
-	// Banana
+	// Arc
 	for (int i = 0; i <= NUM_SECTORS; i++) {
 		float ang = (float)i / (float)NUM_SECTORS * getArcAngle() - getHalfArcAngle();
 		float y = sin(ang);
@@ -275,7 +275,7 @@ void ArcSpec::buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>&
 		is.push_back(1);
 	}
 
-	// Banana
+	// Arc
 	for (int i = 0; i <= NUM_SECTORS; i++) {
 		float ang = (float)i / (float)NUM_SECTORS * getArcAngle() - getHalfArcAngle();
 		float y = sin(ang);
@@ -340,7 +340,7 @@ void SegmentSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<In
 		is.push_back(i + 6);
 	}
 
-	// Straight section
+	// Segment
 
 	is.push_back(0);
 	is.push_back(3);
@@ -392,7 +392,7 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 		is.push_back(i + 6);
 	}
 
-	// Banana
+	// Arc
 	for (int i = 0; i <= NUM_SECTORS; i++) {
 		float ang = (float)i / (float)NUM_SECTORS * getArcAngle() - getHalfArcAngle();
 		float y = sin(ang);
@@ -509,8 +509,8 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 	int numDots2 = 2 * (((int)(line2Length / OUTLINE_WIDTH_WORLD / 2) + 1) / 2);
 	bool drawDots = numDots1 < 1000 && numDots2 < 1000; // Don't draw dots if there are too many
 
-	int vsSize = 2 * vs_shadow.size();
-	int isSize = 2 * is_shadow.size();
+	size_t vsSize = 2 * vs_shadow.size();
+	size_t isSize = 2 * is_shadow.size();
 	if (drawDots) {
 		vsSize += (numDots1 + numDots2) * (SECTORS_PER_DOT + 1);
 		isSize += (numDots1 + numDots2) * SECTORS_PER_DOT * 3;
@@ -570,7 +570,7 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 
 	mat3 rot = getRotation();
 	for (const vec3& pos : {getPositionA(), getPositionB()}) {
-		Index offset = vs.size();
+		Index offset = (Index)vs.size();
 
 		std::transform(vs_shadow.begin(), vs_shadow.end(), std::back_inserter(vs), [pos, rot](const ObjectVertex& v) {
 			return ObjectVertex(pos + rot * v.position, v.uv, v.normal, v.color);
@@ -620,8 +620,8 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 	int numDots2 = 2 * (((int)(arc2Length / OUTLINE_WIDTH_WORLD / 2) + 1) / 2);
 	bool drawDots = numDots1 < 1000 && numDots2 < 1000; // Don't draw dots if there are too many
 
-	int vsSize = 2 * vs_shadow.size();
-	int isSize = 2 * is_shadow.size();
+	size_t vsSize = 2 * vs_shadow.size();
+	size_t isSize = 2 * is_shadow.size();
 	if (drawDots) {
 		vsSize += (numDots1 + numDots2) * (SECTORS_PER_DOT + 1);
 		isSize += (numDots1 + numDots2) * SECTORS_PER_DOT * 3;
@@ -680,7 +680,7 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 	}
 
 	for (float angle : {getAngleA(), getAngleB()}) {
-		Index offset = vs.size();
+		Index offset = (Index)vs.size();
 
 		mat3 rot;
 		angleToRotation(angle, &rot);
@@ -855,7 +855,7 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 			is.push_back(i + 6);
 		}
 
-		// Banana
+		// Arc
 		for (int i = 0; i <= NUM_SECTORS; i++) {
 			float ang = (float)i / (float)NUM_SECTORS * arc->getArcAngle() - arc->getHalfArcAngle();
 			float y = sin(ang);
@@ -873,7 +873,7 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 		}
 		const int START_INDEX = 4 * (SECTORS_PER_SEMICIRCLE + 1) + 2;
 		for (int i = START_INDEX; i < START_INDEX + NUM_SECTORS * 4; i += 4) {
-			// Join bananas
+			// Join Arcs
 			// Inside
 			is.push_back(i + 0);
 			is.push_back(i + 1);
@@ -1033,7 +1033,7 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			START_INDEX = 2 + (SECTORS_PER_SEMICIRCLE + 1) * 2;
 		}
 
-		// Banana
+		// Arc
 		for (int i = 0; i <= NUM_SECTORS; i++) {
 			float ang = startAngle + (float)i / (float)NUM_SECTORS * (endAngle - startAngle);
 			vec3 dir = vec3(0, -sin(ang), cos(ang));
@@ -1049,4 +1049,68 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			is.push_back(i + 2);
 		}
 	} else return;
+}
+
+
+void TogglingPositionSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+	kinematicState.setPosition(lerp(getPositionA(), getPositionB(), smoother.getCurrentPosition()));
+	kinematicState.setVelocity((getPositionB() - getPositionA()) * smoother.getCurrentVelocity());
+}
+
+void TogglingAngleSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+	kinematicState.setAngle(lerp(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
+	kinematicState.setAngularVelocity((getAngleB() - getAngleA()) * smoother.getCurrentVelocity());
+}
+
+void SpinningSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+	kinematicState.setAngularVelocity(lerp(getAngularVelocityA(), getAngularVelocityB(), smoother.getCurrentPosition()));
+	kinematicState.setAngle(kinematicState.getAngle() + kinematicState.getAngularVelocity() * PHYSICS_TIMESTEP);
+}
+
+void OscillatingPositionSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+	float angularFrequency = lerp(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
+	kinematicState.setPhase(kinematicState.getPhase() + angularFrequency * PHYSICS_TIMESTEP);
+	kinematicState.setPosition(lerp(getPosition1(), getPosition2(), 0.5f - 0.5f * cos(kinematicState.getPhase())));
+	kinematicState.setVelocity((getPosition2() - getPosition1()) * (0.5f * sin(kinematicState.getPhase()) * angularFrequency));
+}
+
+void OscillatingAngleSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+	float angularFrequency = lerp(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
+	kinematicState.setPhase(kinematicState.getPhase() + angularFrequency * PHYSICS_TIMESTEP);
+	kinematicState.setAngle(lerp(getAngle1(), getAngle2(), 0.5f - 0.5f * cos(kinematicState.getPhase())));
+	kinematicState.setAngularVelocity((getAngle2() - getAngle1()) * (0.5f * sin(kinematicState.getPhase()) * angularFrequency));
+}
+
+
+void TogglingPositionSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+	kinematicState.setPosition(lerp(getPositionA(), getPositionB(), smoother.getCurrentPosition()));
+}
+
+void TogglingAngleSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+	kinematicState.setAngle(lerp(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
+}
+
+void SpinningSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother&) const {
+	kinematicState.setAngle(getInitialAngle());
+}
+
+void OscillatingPositionSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+	bool toggled = smoother.getCurrentPosition() > 0.5f;
+	kinematicState.setPhase(toggled ? PI : 0);
+	kinematicState.setPosition(toggled ? getPosition2() : getPosition1());
+}
+
+void OscillatingAngleSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+	bool toggled = smoother.getCurrentPosition() > 0.5f;
+	kinematicState.setPhase(toggled ? PI : 0);
+	kinematicState.setAngle(toggled ? getAngle2() : getAngle1());
+}
+
+
+void EditorObstacle::updateKinematicState(const Smoother& smoother, int numSteps) {
+	if (numSteps >= 0) // Demonstrate motion
+		while (numSteps--)
+			descriptor->getMotion()->stepKinematicState(kinematicState, smoother);
+	else // Just set 'stationary' attributes
+		descriptor->getMotion()->updateEditorKinematicState(kinematicState, smoother);
 }

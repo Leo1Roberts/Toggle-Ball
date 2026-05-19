@@ -27,11 +27,12 @@ float randomFloatBeyondValue(float val) {
 	return result;
 }
 
-float wrapAngle(float angle) {
-	angle = fmodf(angle, PI * 2);
-	if (angle <= -PI) angle += PI * 2;
-	else if (angle > PI) angle -= PI * 2;
-	return angle;
+float wrapAngle(float radians) {
+	radians = fmodf(radians, PI * 2);
+	if (radians <= -PI) radians += PI * 2;
+	else if (radians > PI)
+		radians -= PI * 2;
+	return radians;
 }
 
 float angleToDisplay(float angle) {
@@ -111,7 +112,6 @@ std::string importTextFile(const std::string& path) {
 	return result;
 }
 #else
-
 std::string importTextFile(AAssetManager* assetManager, const std::string& path) {
 	AAsset* file = AAssetManager_open(assetManager, path.c_str(), AASSET_MODE_BUFFER);
 	if (!file) throw std::runtime_error("Failed to open asset: " + path);
@@ -132,7 +132,6 @@ std::string importTextFile(AAssetManager* assetManager, const std::string& path)
 
 	return result;
 }
-
 #endif
 
 GLuint loadShader(GLenum shaderType, const std::string& shaderSource) {

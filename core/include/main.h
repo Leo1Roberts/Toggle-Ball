@@ -34,5 +34,6 @@ using byte = unsigned char;
 #include "Utilities.h"
 
 const float PI = 3.14159265359f;
+const float PHYSICS_TIMESTEP = 0.001f;
 
 #endif // MAIN_H

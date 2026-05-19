@@ -3,6 +3,7 @@
 
 #include "Mesh.h"
 #include "Sizes.h"
+#include "Smoother.h"
 
 enum {
 	MAT_BASKETBALL,
@@ -150,6 +151,37 @@ private:
 };
 
 
+class KinematicState {
+public:
+	KinematicState() = default;
+	KinematicState(vec3 position, float angle, vec3 velocity, float angularVelocity) :
+	    position(position),
+	    velocity(velocity),
+	    angularVelocity(angularVelocity) {
+		setAngle(angle);
+	}
+
+	void setPosition(vec3 pos) { position = pos; }
+	void setAngle(float radians) { angle = wrapAngle(radians); }
+	void setVelocity(vec3 vel) { velocity = vel; }
+	void setAngularVelocity(float angVel) { angularVelocity = angVel; }
+	void setPhase(float radians) { phase = wrapAngle(radians); }
+
+	[[nodiscard]] vec3 getPosition() const { return position; }
+	[[nodiscard]] float getAngle() const { return angle; }
+	[[nodiscard]] vec3 getVelocity() const { return velocity; }
+	[[nodiscard]] float getAngularVelocity() const { return angularVelocity; }
+	[[nodiscard]] float getPhase() const { return phase; }
+
+private:
+	vec3 position = vec3();
+	float angle = 0;
+	vec3 velocity = vec3();
+	float angularVelocity = 0;
+	float phase = 0;
+};
+
+
 class IMotionSpec {
 public:
 	virtual ~IMotionSpec() = default;
@@ -161,11 +193,16 @@ public:
 
 	void generateDomainMesh(Mesh<ObjectVertex>& domainMesh, const AbstractShapeSpec* shapeSpec) const;
 
+	// Updates KinematicState by one physics frame. Purely incremental - KinematicState must be initialised separately.
+	virtual void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const = 0;
+	// Updates the (stationary) KinematicState for obstacles in the editor. Purely incremental - KinematicState must be initialised separately.
+	virtual void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const = 0;
+
 protected:
 	IMotionSpec() = default;
 
 private:
-	virtual void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const {}
+	virtual void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const = 0;
 };
 
 class StaticSpec : public IMotionSpec {
@@ -178,10 +215,16 @@ public:
 
 	void setAngle(float radians);
 
+	void stepKinematicState(KinematicState&, const Smoother&) const override {}
+
+	void updateEditorKinematicState(KinematicState&, const Smoother&) const override {}
+
 private:
 	vec3 position;
 	float angle;
 	mat3 rotation;
+
+	void buildDomainMesh(std::vector<ObjectVertex>&, std::vector<Index>&, const AbstractShapeSpec*) const override {}
 };
 
 class TogglingPositionSpec : public IMotionSpec {
@@ -196,6 +239,10 @@ public:
 	~TogglingPositionSpec() override = default;
 
 	void setAngle(float radians);
+
+	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+
+	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
 	float angle;
@@ -220,6 +267,10 @@ public:
 
 	~TogglingAngleSpec() override = default;
 
+	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+
+	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+
 private:
 	vec3 position;
 	float angleA;
@@ -241,6 +292,10 @@ public:
 	    angularVelocityB(angularVelocityB) {}
 
 	~SpinningSpec() override = default;
+
+	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+
+	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother&) const override;
 
 private:
 	vec3 position;
@@ -269,6 +324,10 @@ public:
 
 	void setAngle(float radians);
 
+	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+
+	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+
 private:
 	vec3 position1;
 	vec3 position2;
@@ -278,7 +337,6 @@ private:
 	float angularFrequencyB;
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
-
 
 	[[nodiscard]] vec3 getPosition1() const { return position1; }
 	[[nodiscard]] vec3 getPosition2() const { return position2; }
@@ -299,6 +357,10 @@ public:
 	
 	~OscillatingAngleSpec() override = default;
 
+	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+
+	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+
 private:
 	vec3 position;
 	float angle1;
@@ -316,25 +378,21 @@ private:
 };
 
 
-struct KinematicState {
-	vec3 position = vec3();
-	float angle = 0;
-	vec3 velocity = vec3();
-	float angularVelocity = 0;
-};
-
-
 class ObstacleDescriptor {
 public:
-	ObstacleDescriptor(bool isGoal, std::unique_ptr<IMotionSpec> motion, std::unique_ptr<AbstractShapeSpec> shape) :
-	    isGoal(isGoal),
+	ObstacleDescriptor(std::unique_ptr<IMotionSpec> motion, std::unique_ptr<AbstractShapeSpec> shape, bool goal = false) :
 	    motion(std::move(motion)),
-	    shape(std::move(shape)) {}
+	    shape(std::move(shape)),
+	    goal(goal) {}
+
+	[[nodiscard]] IMotionSpec* getMotion() const { return motion.get(); }
+	[[nodiscard]] AbstractShapeSpec* getShape() const { return shape.get(); }
+	[[nodiscard]] bool isGoal() const { return goal; }
 
 private:
-	bool isGoal;
 	std::unique_ptr<IMotionSpec> motion;
 	std::unique_ptr<AbstractShapeSpec> shape;
+	bool goal;
 };
 
 
@@ -350,20 +408,17 @@ public:
 	EditorObstacle(EditorObstacle&&) = default;
 	EditorObstacle& operator=(EditorObstacle&&) = default;
 
-	bool isSelected() { return selected; };
+	bool isSelected() const { return selected; };
 	void select() { selected = true; };
 	void deselect() { selected = false; };
+
+	// Only provide numSteps if demonstrating the continuous motion of an obstacle
+	void updateKinematicState(const Smoother& smoother, int numSteps = -1);
 
 private:
 	ObstacleDescriptor* descriptor;
 
-	/*
-	 * Needed for obstacles with 'memory':
-	 * Kinematic state cannot be calculated using only the motion spec and smoother
-	 * Spinning obstacles - angle
-	 * Oscillating obstacles - phase
-	 */
-	float phase = 0;
+	KinematicState kinematicState;
 
 	bool selected = false;
 

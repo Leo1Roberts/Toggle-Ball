@@ -373,7 +373,7 @@ void Game::restartLevel(int _) {
 
 	toggled = false;
 	levelComplete = false;
-	smoother.Reset();
+	smoother.reset();
 }
 
 
@@ -480,9 +480,9 @@ void Game::update() {
 void Game::toggle(int _) {
 	toggled = !toggled;
 	if (ctrlDown && inEditor)
-		smoother.SetPosition(toggled ? 1.0f : 0.0f, 0.0f);
+		smoother.setPosition(toggled ? 1.0f : 0.0f, 0.0f);
 	else
-		smoother.SetDestination(toggled ? 1.0f : 0.0f, 0.0f, inEditor && shiftDown ? 0 : level.transitionTime);
+		smoother.setDestination(toggled ? 1.0f : 0.0f, 0.0f, inEditor && shiftDown ? 0 : level.transitionTime);
 }
 
 void Game::resetEditorView(int _) {
@@ -493,8 +493,6 @@ void Game::resetEditorView(int _) {
 
 
 // Physics
-
-const float PHYSICS_TIMESTEP = 0.001f;
 
 const float FORCE_LINE_MULTIPLIER = 0.02f;
 
@@ -728,33 +726,33 @@ void Game::physicsUpdate() {
 		for (Obstacle& g: obstacles) {
 			switch (g.getStateType()) {
 			case ST_POS:
-				g.setPos(lerp(g.getStateA(), g.getStateB(), smoother.X));
-				g.setVel((g.getStateB() - g.getStateA()) * smoother.V);
+				g.setPos(lerp(g.getStateA(), g.getStateB(), smoother.getCurrentPosition()));
+				g.setVel((g.getStateB() - g.getStateA()) * smoother.getCurrentVelocity());
 				break;
 			case ST_POS_OSC: {
-				g.setPos(g.getStateA() + (g.getStateB() - g.getStateA()) * (0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * PHYSICS_TIMESTEP + g.getExtra())));
-				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.X) * PHYSICS_TIMESTEP));
-				vec3 vel = (g.getStateB() - g.getStateA()) * sin(g.getExtra()) * lerp(g.getStateA().x, g.getStateB().x, smoother.X) * 0.5f;
-				g.setVel(vel);
+				float angularFrequency = lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition());
+				g.setExtra(wrapAngle(g.getExtra() + angularFrequency * PHYSICS_TIMESTEP));
+				g.setPos(lerp(g.getStateA(), g.getStateB(), 0.5f - 0.5f * cos(g.getExtra())));
+				g.setVel((g.getStateB() - g.getStateA()) * (0.5f * sin(g.getExtra()) * angularFrequency));
 			} break;
 			case ST_ANG:
-				g.setAngle(lerp(g.getStateA().x, g.getStateB().x, smoother.X));
-				g.setAngVel((g.getStateB().x - g.getStateA().x) * smoother.V);
+				g.setAngle(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
+				g.setAngVel((g.getStateB().x - g.getStateA().x) * smoother.getCurrentVelocity());
 				break;
 			case ST_ANG_VEL:
-				g.setAngVel(lerp(g.getStateA().x, g.getStateB().x, smoother.X));
+				g.setAngVel(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
 				g.setAngle(wrapAngle(g.getAngle() + g.getAngVel().x * PHYSICS_TIMESTEP));
 				break;
 			case ST_ANG_OSC: {
-				g.setAngle(lerp(g.getStateA().y, g.getStateB().y, 0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * PHYSICS_TIMESTEP + g.getExtra())));
-				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.X) * PHYSICS_TIMESTEP));
-				float angVel = (g.getStateB().y - g.getStateA().y) * sin(g.getExtra()) * lerp(g.getStateA().x, g.getStateB().x, smoother.X) * 0.5f;
-				g.setAngVel(angVel);
+				float angularFrequency = lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition());
+				g.setExtra(wrapAngle(g.getExtra() + angularFrequency * PHYSICS_TIMESTEP));
+				g.setAngle(lerp(g.getStateA().y, g.getStateB().y, 0.5f - 0.5f * cos(g.getExtra())));
+				g.setAngVel((g.getStateB().y - g.getStateA().y) * (0.5f * sin(g.getExtra()) * angularFrequency));
 			} break;
 			}
 		}
 
-		smoother.Update(PHYSICS_TIMESTEP);
+		smoother.update(PHYSICS_TIMESTEP);
 
 		ball.force.set(0, 0, GRAVITY * ball.mass); // Reset forces
 		ball.torque.set(0);                        // Reset torques
@@ -874,39 +872,39 @@ void Game::updateEditorObstacles() {
 
 		switch (g.getStateType()) {
 		case ST_POS:
-			g.setPos(lerp(g.getStateA(), g.getStateB(), smoother.X));
+			g.setPos(lerp(g.getStateA(), g.getStateB(), smoother.getCurrentPosition()));
 			break;
 		case ST_POS_OSC:
 			if (selection[i] && TextBoxManager::getCurrentProperty() == PROPERTY_OPM) {
-				g.setPos(lerp(g.getStateA(), g.getStateB(), 0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * step + g.getExtra())));
-				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.X) * step));
+				g.setPos(lerp(g.getStateA(), g.getStateB(), 0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step + g.getExtra())));
+				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step));
 			} else {
-				g.setPos(smoother.X < 0.5f ? g.getStateA() : g.getStateB());
+				g.setPos(smoother.getCurrentPosition() < 0.5f ? g.getStateA() : g.getStateB());
 				g.setExtra(toggled ? PI : 0);
 			}
 			break;
 		case ST_ANG:
-			g.setAngle(lerp(g.getStateA().x, g.getStateB().x, smoother.X));
+			g.setAngle(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
 			break;
 		case ST_ANG_VEL:
 			if (selection[i] && TextBoxManager::getCurrentProperty() == PROPERTY_RPM) {
-				g.setAngVel(lerp(g.getStateA().x, g.getStateB().x, smoother.X));
+				g.setAngVel(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
 				g.setAngle(wrapAngle(g.getAngle() + g.getAngVel().x * step));
 			} else
 				g.setAngle(g.getInitAngle());
 			break;
 		case ST_ANG_OSC:
 			if (selection[i] && TextBoxManager::getCurrentProperty() == PROPERTY_OPM) {
-				g.setAngle(g.getStateA().y + (g.getStateB().y - g.getStateA().y) * (0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.X) * step + g.getExtra())));
-				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.X) * step));
+				g.setAngle(g.getStateA().y + (g.getStateB().y - g.getStateA().y) * (0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step + g.getExtra())));
+				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step));
 			} else {
-				g.setAngle(smoother.X < 0.5f ? g.getStateA().y : g.getStateB().y);
+				g.setAngle(smoother.getCurrentPosition() < 0.5f ? g.getStateA().y : g.getStateB().y);
 				g.setExtra(toggled ? PI : 0);
 			}
 		}
 	}
 
-	smoother.Update(step);
+	smoother.update(step);
 }
 
 
@@ -916,7 +914,7 @@ void Game::drawInventoryPanel() {
 	ButtonManager::addButton(LEFT, LEFT + 0.5f, 1, -1,
 	                         nullptr, 0, BS_PANEL, "", false, false, false);
 
-	ButtonManager::addToggleButton(LEFT + 0.3f, 1 - 0.05f, smoother.X, toggle);
+	ButtonManager::addToggleButton(LEFT + 0.3f, 1 - 0.05f, smoother.getCurrentPosition(), toggle);
 
 	Text::addText(LEFT + 0.05f, 0.8f, "Straight obstacle", BAHNSCHRIFT, 0.1f * 0.6f, TEXT_INACTIVE);
 
@@ -994,7 +992,7 @@ void Game::drawInventoryPanel() {
 	                         BS_BASIC,
 	                         "GOAL");
 
-	std::string resetViewText = "Reset view";
+	std::string resetViewText = "reset view";
 	ButtonManager::addButton(LEFT + 0.05f, LEFT + 0.05f + Text::calculateWidth(resetViewText, BAHNSCHRIFT, 0.1f * 0.6f) + 0.07f, -0.85f, -0.95f,
 	                         resetEditorView,
 	                         0,
@@ -1133,13 +1131,13 @@ void Game::drawPropertiesPanel() {
 		switch (obstacles[focus].getStateType()) {
 		case ST_POS_OSC:
 		case ST_ANG_OSC: {
-			const float angFreq = lerp(obstacles[focus].getStateA().x, obstacles[focus].getStateB().x, smoother.X);
+			const float angFreq = lerp(obstacles[focus].getStateA().x, obstacles[focus].getStateB().x, smoother.getCurrentPosition());
 			const float opm = angFreq * 30 / PI;
 			ss.str("");
 			ss.clear();
 			ss << opm;
 			for (short i = 0; i < (short)obstacles.size(); i++) {
-				if (selection[i] && (obstacles[i].getStateType() == ST_POS_OSC || obstacles[i].getStateType() == ST_ANG_OSC) && lerp(obstacles[i].getStateA().x, obstacles[i].getStateB().x, smoother.X) != angFreq) {
+				if (selection[i] && (obstacles[i].getStateType() == ST_POS_OSC || obstacles[i].getStateType() == ST_ANG_OSC) && lerp(obstacles[i].getStateA().x, obstacles[i].getStateB().x, smoother.getCurrentPosition()) != angFreq) {
 					ss.str("");
 					break;
 				}
@@ -1149,13 +1147,13 @@ void Game::drawPropertiesPanel() {
 			                           ss.str(), TR_FLOAT, PROPERTY_OPM, changePropertyInput, updatePropertyInput, true);
 		} break;
 		case ST_ANG_VEL: {
-			const float angVel = lerp(obstacles[focus].getStateA().x, obstacles[focus].getStateB().x, smoother.X);
+			const float angVel = lerp(obstacles[focus].getStateA().x, obstacles[focus].getStateB().x, smoother.getCurrentPosition());
 			const float rpm = angVel * 30 / PI;
 			ss.str("");
 			ss.clear();
 			ss << rpm;
 			for (short i = 0; i < (short)obstacles.size(); i++) {
-				if (selection[i] && obstacles[i].getStateType() == ST_ANG_VEL && lerp(obstacles[i].getStateA().x, obstacles[i].getStateB().x, smoother.X) != angVel) {
+				if (selection[i] && obstacles[i].getStateType() == ST_ANG_VEL && lerp(obstacles[i].getStateA().x, obstacles[i].getStateB().x, smoother.getCurrentPosition()) != angVel) {
 					ss.str("");
 					break;
 				}
@@ -1304,10 +1302,10 @@ void Game::drawDialogue() {
 }
 
 void Game::render() {
-	STATE = lerp(STATE_A, STATE_B, smoother.X);
+	STATE = lerp(STATE_A, STATE_B, smoother.getCurrentPosition());
 	STATE_HOVER = STATE * 0.8f;
 	STATE_ACTIVE = STATE * 0.6f;
-	STATE_INSTANT = smoother.X < 0.5f ? STATE_A : STATE_B;
+	STATE_INSTANT = smoother.getCurrentPosition() < 0.5f ? STATE_A : STATE_B;
 
 	// Check to see if the surface has changed size. This is _necessary_ to do every frame when
 	// using immersive mode as you'll get no other notification that your renderable area has
@@ -1349,7 +1347,7 @@ void Game::render() {
 
 		Shaders::outline->use();
 
-		if (smoother.X == 0 || smoother.X == 1) {
+		if (smoother.getCurrentPosition() == 0 || smoother.getCurrentPosition() == 1) {
 			glEnable(GL_DEPTH_TEST);
 			glDepthFunc(GL_LEQUAL);
 
@@ -1420,7 +1418,7 @@ void Game::render() {
 			ButtonManager::addButton(tl.x, br.x, tl.y, br.y, nullptr, 0, BS_SELECT, "", false, false, false);
 		}
 
-		if (smoother.X == 0 || smoother.X == 1) {
+		if (smoother.getCurrentPosition() == 0 || smoother.getCurrentPosition() == 1) {
 			for (short i = 0; i < (short)obstacles.size(); i++) {
 				if (selection[i]) {
 					Obstacle* g = &obstacles[i];
@@ -1578,7 +1576,7 @@ void Game::drawObstacles() {
 		if (inEditor) {
 			if (g.getStateType() == ST_POS_OSC || g.getStateType() == ST_ANG_OSC) {
 				glEnable(GL_BLEND);
-				alpha = 2.5f * abs(0.5f - smoother.X) - 0.2f; // Includes a small period where the obstacle is completely invisible
+				alpha = 2.5f * abs(0.5f - smoother.getCurrentPosition()) - 0.2f; // Includes a small period where the obstacle is completely invisible
 			}
 		}
 		Shaders::object->setFloat("uAlpha", alpha);
@@ -1618,7 +1616,7 @@ void Game::drawObstacleDomains() {
 				vec3 posYZ;
 				mat3 rot;
 
-				if (smoother.X != 0) {
+				if (smoother.getCurrentPosition() != 0) {
 					if (g.getStateType() == ST_POS) {
 						posYZ = g.getStateA();
 						rot.R_VecAndAngle(OBSTACLE_ROTATION_AXIS, g.getAngle());
@@ -1635,7 +1633,7 @@ void Game::drawObstacleDomains() {
 					g.obstacle.draw();
 				}
 
-				if (smoother.X != 1) {
+				if (smoother.getCurrentPosition() != 1) {
 					if (g.getStateType() == ST_POS) {
 						posYZ = g.getStateB();
 						rot.R_VecAndAngle(OBSTACLE_ROTATION_AXIS, g.getAngle());
@@ -1775,9 +1773,9 @@ void Game::loadLevel(const Level& newLevel, bool resetView) {
 	}
 
 	if (toggled)
-		smoother.SetPosition(1, 0);
+		smoother.setPosition(1, 0);
 	else
-		smoother.SetPosition(0, 0);
+		smoother.setPosition(0, 0);
 
 	updateEditorObstacles();
 }

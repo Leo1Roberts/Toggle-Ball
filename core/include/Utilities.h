@@ -13,7 +13,7 @@ constexpr inline float lerp(float a, float b, float t) noexcept {
 	return a * (1-t) + b * t;
 }
 
-float wrapAngle(float angle);
+float wrapAngle(float radians);
 float angleToDisplay(float angle);
 float wrapDisplayAngle(float displayAngle);
 float displayToAngle(float displayAngle);
@@ -34,17 +34,9 @@ vec2 pixelsToYNorm(vec2 pixels, float width, float height);
 #ifdef WINDOWS_VERSION
 std::string importTextFile(const std::string& path);
 #else
-
 std::string importTextFile(AAssetManager* assetManager, const std::string& path);
-
 #endif
 
-/*!
- * Helper function to load a shader of a given type
- * @param shaderType The OpenGL shader type. Should either be GL_VERTEX_SHADER or GL_FRAGMENT_SHADER
- * @param shaderSource The full source of the shader
- * @return the id of the shader, as returned by glCreateShader, or 0 in the case of an error
- */
 GLuint loadShader(GLenum shaderType, const std::string& shaderSource);
 
 #endif // UTILITIES_H

@@ -12,34 +12,34 @@
 // SetDestination	(value, vel, time)	- set the dest value / vel and the amount of time to get there
 // Update			(float_time_inc)	- update function
 
-struct Smoother {
-	float X;    // current value
-	float D;    // destination value
-	float DestV;// destination vel
+class Smoother {
+public:
+	void reset();
+	void update(float dt);
 
-	float V;// current speed
-	float A;// acceleration
+	void setPosition(float pos, float vel);
+	void setDestination(float destPos, float destVel, float time);
 
-	float Elapsed;
-	float Arrive;
+	float getCurrentPosition() const { return x; }
+	float getCurrentVelocity() const { return x; }
+	float getDestination() const { return d; }
 
-	float S;// start value
-	float U;// initial speed
-	float I;// initial acceleration
-	float R;// d3x/dx3
-	float K;// d4x/dx4
+private:
+	float x;     // current value
+	float d;     // destination value
+	float destV; // destination vel
 
-	void Reset();
+	float v; // current speed
+	float a; // acceleration
 
-	void SetPosition(float x, float v);
+	float elapsed;
+	float arrive;
 
-	void SetDestination(float dest, float dest_v, float time);
-
-	float GetCurrentValue() const { return X; }
-
-	float GetDestination() const { return D; }
-
-	void Update(float f_t_inc);
+	float s; // start value
+	float u; // initial speed
+	float i; // initial acceleration
+	float r; // d3x/dx3
+	float k; // d4x/dx4
 };
 
 #endif// SMOOTHER_H
