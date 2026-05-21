@@ -4,10 +4,74 @@
 #include "Obstacle.h"
 #include <algorithm>
 #include <iterator>
+#include <iomanip>
+#include <sstream>
 
 static void angleToRotation(float radians, mat3* rotation) {
 	rotation->R_VecAndAngle(OBSTACLE_ROTATION_AXIS, radians);
 }
+
+
+std::string AbstractShapeSpec::serialize() const {
+	std::ostringstream ss;
+	ss << std::fixed << std::setprecision(6);
+
+	ss << getMinorRadius() << "," << getTypeString() << ":" << serializeData();
+
+	return ss.str();
+}
+std::unique_ptr<AbstractShapeSpec> AbstractShapeSpec::deserialize(const std::string& data) {
+	std::istringstream ss(data);
+
+	std::string shapeType, shapeData;
+	float minorRadius;
+
+	char c;
+	if (!((ss >> minorRadius >> c) && std::getline(ss, shapeType, ':') && std::getline(ss, shapeData)))
+		throw std::invalid_argument("Invalid obstacle shape data format");
+
+	if (SegmentSpec::getTypeStringStatic() == shapeType)
+		return std::make_unique<SegmentSpec>(minorRadius, shapeData);
+	else if (ArcSpec::getTypeStringStatic() == shapeType)
+		return std::make_unique<ArcSpec>(minorRadius, shapeData);
+	else
+		throw std::invalid_argument("Unrecognised obstacle shape type");
+}
+
+std::string SegmentSpec::serializeData() const {
+	std::ostringstream ss;
+	ss << std::fixed << std::setprecision(6);
+
+	ss << leftLength << "," << rightLength;
+
+	return ss.str();
+}
+SegmentSpec::SegmentSpec(float minorRadius, const std::string& data) :
+    AbstractShapeSpec(minorRadius) {
+	std::istringstream ss(data);
+
+	char c;
+	if (!(ss >> leftLength >> c >> rightLength))
+		throw std::invalid_argument("Invalid segment shape data format");
+}
+
+std::string ArcSpec::serializeData() const {
+	std::ostringstream ss;
+	ss << std::fixed << std::setprecision(6);
+
+	ss << arcAngle << "," << arcRadius;
+
+	return ss.str();
+}
+ArcSpec::ArcSpec(float minorRadius, const std::string& data) :
+    AbstractShapeSpec(minorRadius) {
+	std::istringstream ss(data);
+
+	char c;
+	if (!(ss >> arcAngle >> c >> arcRadius))
+		throw std::invalid_argument("Invalid arc shape data format");
+}
+
 
 void SegmentSpec::setLeftLength(float l) {
 	leftLength = l;
@@ -425,6 +489,134 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 		is.push_back(i + 6);
 		is.push_back(i + 7);
 	}
+}
+
+
+std::string IMotionSpec::serialize() const {
+	std::ostringstream ss;
+
+	ss << getTypeString() << ":" << serializeData();
+
+	return ss.str();
+}
+std::unique_ptr<IMotionSpec> IMotionSpec::deserialize(const std::string& data) {
+	std::istringstream ss(data);
+
+	std::string motionType, motionData;
+
+	if (!(std::getline(ss, motionType, ':') && std::getline(ss, motionData)))
+		throw std::invalid_argument("Invalid obstacle motion data format");
+
+	if (StaticSpec::getTypeStringStatic() == motionType)
+		return std::make_unique<StaticSpec>(motionData);
+	else if (TogglingPositionSpec::getTypeStringStatic() == motionType)
+		return std::make_unique<TogglingPositionSpec>(motionData);
+	else if (TogglingAngleSpec::getTypeStringStatic() == motionType)
+		return std::make_unique<TogglingAngleSpec>(motionData);
+	else if (SpinningSpec::getTypeStringStatic() == motionType)
+		return std::make_unique<SpinningSpec>(motionData);
+	else if (OscillatingPositionSpec::getTypeStringStatic() == motionType)
+		return std::make_unique<OscillatingPositionSpec>(motionData);
+	else if (OscillatingAngleSpec::getTypeStringStatic() == motionType)
+		return std::make_unique<OscillatingAngleSpec>(motionData);
+	else
+		throw std::invalid_argument("Unrecognised obstacle motion type");
+}
+
+std::string StaticSpec::serializeData() const {
+	std::ostringstream ss;
+	ss << std::fixed << std::setprecision(6);
+
+	ss << position.y << "," << position.z << "," << angle;
+
+	return ss.str();
+}
+StaticSpec::StaticSpec(const std::string& data) {
+	std::istringstream ss(data);
+
+	char c;
+	if (!(ss >> position.y >> c >> position.z >> c >> angle))
+		throw std::invalid_argument("Invalid static motion data format");
+}
+
+std::string TogglingPositionSpec::serializeData() const {
+	std::ostringstream ss;
+	ss << std::fixed << std::setprecision(6);
+
+	ss << angle << "," << positionA.y << "," << positionA.z << "," << positionB.y << "," << positionB.z;
+
+	return ss.str();
+}
+TogglingPositionSpec::TogglingPositionSpec(const std::string& data) {
+	std::istringstream ss(data);
+
+	char c;
+	if (!(ss >> angle >> c >> positionA.y >> c >> positionA.z >> c >> positionB.y >> c >> positionB.z))
+		throw std::invalid_argument("Invalid toggling position motion data format");
+}
+
+std::string TogglingAngleSpec::serializeData() const {
+	std::ostringstream ss;
+	ss << std::fixed << std::setprecision(6);
+
+	ss << position.y << "," << position.z << "," << angleA << "," << angleB;
+
+	return ss.str();
+}
+TogglingAngleSpec::TogglingAngleSpec(const std::string& data) {
+	std::istringstream ss(data);
+
+	char c;
+	if (!(ss >> position.y >> c >> position.z >> c >> angleA >> c >> angleB))
+		throw std::invalid_argument("Invalid toggling angle motion data format");
+}
+
+std::string SpinningSpec::serializeData() const {
+	std::ostringstream ss;
+	ss << std::fixed << std::setprecision(6);
+
+	ss << position.y << "," << position.z << "," << initialAngle << "," << angularVelocityA << "," << angularVelocityB;
+
+	return ss.str();
+}
+SpinningSpec::SpinningSpec(const std::string& data) {
+	std::istringstream ss(data);
+
+	char c;
+	if (!(ss >> position.y >> c >> position.z >> c >> initialAngle >> c >> angularVelocityA >> c >> angularVelocityB))
+		throw std::invalid_argument("Invalid spinning motion data format");
+}
+
+std::string OscillatingPositionSpec::serializeData() const {
+	std::ostringstream ss;
+	ss << std::fixed << std::setprecision(6);
+
+	ss << position1.y << "," << position1.z << "," << position2.y << "," << position2.z << "," << angle << "," << angularFrequencyA << "," << angularFrequencyB;
+
+	return ss.str();
+}
+OscillatingPositionSpec::OscillatingPositionSpec(const std::string& data) {
+	std::istringstream ss(data);
+
+	char c;
+	if (!(ss >> position1.y >> c >> position1.z >> c >> position2.y >> c >> position2.z >> c >> angle >> c >> angularFrequencyA >> c >> angularFrequencyB))
+		throw std::invalid_argument("Invalid oscillating position motion data format");
+}
+
+std::string OscillatingAngleSpec::serializeData() const {
+	std::ostringstream ss;
+	ss << std::fixed << std::setprecision(6);
+
+	ss << position.y << "," << position.z << "," << angle1 << "," << angle2 << "," << angularFrequencyA << "," << angularFrequencyB;
+
+	return ss.str();
+}
+OscillatingAngleSpec::OscillatingAngleSpec(const std::string& data) {
+	std::istringstream ss(data);
+
+	char c;
+	if (!(ss >> position.y >> c >> position.z >> c >> angle1 >> c >> angle2 >> c >> angularFrequencyA >> c >> angularFrequencyB))
+		throw std::invalid_argument("Invalid oscillating angle motion data format");
 }
 
 
@@ -1113,4 +1305,26 @@ void EditorObstacle::updateKinematicState(const Smoother& smoother, int numSteps
 			descriptor->getMotion()->stepKinematicState(kinematicState, smoother);
 	else // Just set 'stationary' attributes
 		descriptor->getMotion()->updateEditorKinematicState(kinematicState, smoother);
+}
+
+
+ObstacleDescriptor::ObstacleDescriptor(const std::string& data) {
+	std::istringstream ss(data);
+
+	std::string shapeString, motionString;
+
+	if (!(std::getline(ss, shapeString, '|') && std::getline(ss, motionString, '|') && ss >> goal))
+		throw std::invalid_argument("Invalid obstacle data format");
+
+	shape = std::move(AbstractShapeSpec::deserialize(shapeString));
+	motion = std::move(IMotionSpec::deserialize(motionString));
+}
+
+
+std::string ObstacleDescriptor::serialize() const {
+	std::ostringstream ss;
+
+	ss << shape->serialize() << "|" << motion->serialize() << "|" << isGoal();
+
+	return ss.str();
 }

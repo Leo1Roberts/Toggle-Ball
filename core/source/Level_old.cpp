@@ -26,7 +26,7 @@ std::string Level::exportLevel() {
 	std::string ballTypeString;
 	switch (ballType) {
 	case BASKETBALL:
-		ballTypeString = "Basketball";
+		ballTypeString = "basketball";
 		break;
 	default:
 		ballTypeString = "[Unknown]";

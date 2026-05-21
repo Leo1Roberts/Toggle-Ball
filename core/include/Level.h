@@ -5,16 +5,27 @@
 
 class LevelDescriptor {
 public:
-	LevelDescriptor() = default;
-	LevelDescriptor(const std::string& levelData);
+	LevelDescriptor() :
+	    name(""),
+	    arenaWidth(20),
+	    arenaHeight(20),
+	    ballType(BASKETBALL),
+	    ballPos(0, arenaWidth / 2, arenaHeight / 2),
+	    transitionTime(1.0f) {}
+
+	LevelDescriptor(const std::string& data);
+
+	std::string serialize();
+
+	void setName(const std::string& n) { name = n; }
 
 private:
-	std::string name = "";
-	float arenaWidth = 20;
-	float arenaHeight = 20;
-	byte ballType = BASKETBALL;
-	vec3 ballPos = vec3(0, arenaWidth / 2, arenaHeight / 2);
-	float transitionTime = 1.0f;
+	std::string name;
+	float arenaWidth;
+	float arenaHeight;
+	byte ballType;
+	vec3 ballPos;
+	float transitionTime;
 	std::vector<std::unique_ptr<ObstacleDescriptor>> obstacleDescriptors;
 };
 

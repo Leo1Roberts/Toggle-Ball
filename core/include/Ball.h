@@ -8,4 +8,6 @@ enum {
 	MARBLE
 };
 
+const std::string ballString[] = {"basketball", "football", "ping-pong", "marble"};
+
 #endif // BALL_H

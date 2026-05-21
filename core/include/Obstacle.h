@@ -63,12 +63,14 @@ class AbstractShapeSpec {
 public:
 	virtual ~AbstractShapeSpec() = default;
 
+	[[nodiscard]] std::string serialize() const;
+	static std::unique_ptr<AbstractShapeSpec> deserialize(const std::string& data);
+
 	void generateObstacleMesh(Mesh<ObjectVertex>& obstacleMesh, col color) const;
 	void generateOutlineMesh(Mesh<ObjectVertex>& outlineMesh) const;
 	virtual void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
 
 	[[nodiscard]] float getMinorRadius() const { return minorRadius; }
-
 	[[nodiscard]] vec3 getLeftCap() const { return leftCap; }
 	[[nodiscard]] vec3 getRightCap() const { return rightCap; }
 
@@ -88,7 +90,10 @@ protected:
 	[[nodiscard]] float getOutlineRadius() const { return getMinorRadius() + OUTLINE_WIDTH_WORLD; }
 
 private:
-	float minorRadius;
+	float minorRadius; // SSOT
+
+	[[nodiscard]] virtual std::string serializeData() const = 0;
+	[[nodiscard]] virtual std::string getTypeString() const = 0;
 
 	virtual void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const = 0;
 	virtual void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
@@ -101,6 +106,7 @@ public:
 		setLeftLength(leftLength);
 		setRightLength(rightLength);
 	}
+	SegmentSpec(float minorRadius, const std::string& data);
 
 	~SegmentSpec() override = default;
 
@@ -113,8 +119,13 @@ public:
 	[[nodiscard]] float getRightLength() const { return rightLength; }
 
 private:
-	float leftLength;
-	float rightLength;
+	float leftLength; // SSOT
+	float rightLength; // SSOT
+
+	[[nodiscard]] std::string serializeData() const override;
+	friend class AbstractShapeSpec;
+	[[nodiscard]] static std::string getTypeStringStatic() { return "segment"; }
+	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
@@ -128,6 +139,7 @@ public:
 	    arcRadius(arcRadius) {
 		setCaps();
 	}
+	ArcSpec(float minorRadius, const std::string& data);
 
 	~ArcSpec() override = default;
 
@@ -141,8 +153,13 @@ public:
 	[[nodiscard]] float getArcRadius() const { return arcRadius; }
 
 private:
-	float arcAngle;
-	float arcRadius;
+	float arcAngle; // SSOT
+	float arcRadius; // SSOT
+
+	[[nodiscard]] std::string serializeData() const override;
+	friend class AbstractShapeSpec;
+	[[nodiscard]] static std::string getTypeStringStatic() { return "arc"; }
+	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
@@ -191,6 +208,9 @@ public:
 	IMotionSpec(IMotionSpec&&) = delete;
 	IMotionSpec& operator=(IMotionSpec&&) = delete;
 
+	[[nodiscard]] std::string serialize() const;
+	static std::unique_ptr<IMotionSpec> deserialize(const std::string& data);
+
 	void generateDomainMesh(Mesh<ObjectVertex>& domainMesh, const AbstractShapeSpec* shapeSpec) const;
 
 	// Updates KinematicState by one physics frame. Purely incremental - KinematicState must be initialised separately.
@@ -202,14 +222,19 @@ protected:
 	IMotionSpec() = default;
 
 private:
+	[[nodiscard]] virtual std::string serializeData() const = 0;
+	[[nodiscard]] virtual std::string getTypeString() const = 0;
+
 	virtual void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const = 0;
 };
 
 class StaticSpec : public IMotionSpec {
 public:
-	explicit StaticSpec(vec2 position, float angle) :
+	StaticSpec(vec2 position, float angle) :
 	    position(planarToWorld(position)),
 	    angle(angle) {}
+
+	StaticSpec(const std::string& data);
 
 	~StaticSpec() override = default;
 
@@ -220,21 +245,32 @@ public:
 	void updateEditorKinematicState(KinematicState&, const Smoother&) const override {}
 
 private:
-	vec3 position;
-	float angle;
+	vec3 position; // SSOT
+	float angle; // SSOT
 	mat3 rotation;
 
+	[[nodiscard]] std::string serializeData() const override;
+	friend class IMotionSpec;
+	[[nodiscard]] static std::string getTypeStringStatic() { return "static"; }
+	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
+
 	void buildDomainMesh(std::vector<ObjectVertex>&, std::vector<Index>&, const AbstractShapeSpec*) const override {}
+
+	[[nodiscard]] vec3 getPosition() const { return position; }
+	[[nodiscard]] float getAngle() const { return angle; }
+	[[nodiscard]] mat3 getRotation() const { return rotation; }
 };
 
 class TogglingPositionSpec : public IMotionSpec {
 public:
-	explicit TogglingPositionSpec(float angle, vec2 positionA, vec2 positionB) :
+	TogglingPositionSpec(float angle, vec2 positionA, vec2 positionB) :
 	    angle(angle),
 	    positionA(planarToWorld(positionA)),
 	    positionB(planarToWorld(positionB)) {
 		setAngle(angle);
 	}
+
+	TogglingPositionSpec(const std::string& data);
 
 	~TogglingPositionSpec() override = default;
 
@@ -245,10 +281,15 @@ public:
 	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	float angle;
+	float angle; // SSOT
 	mat3 rotation;
-	vec3 positionA;
-	vec3 positionB;
+	vec3 positionA; // SSOT
+	vec3 positionB; // SSOT
+
+	[[nodiscard]] std::string serializeData() const override;
+	friend class IMotionSpec;
+	[[nodiscard]] static std::string getTypeStringStatic() { return "t_position"; }
+	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
 
@@ -260,10 +301,12 @@ private:
 
 class TogglingAngleSpec : public IMotionSpec {
 public:
-	explicit TogglingAngleSpec(vec2 position, float angleA, float angleB) :
+	TogglingAngleSpec(vec2 position, float angleA, float angleB) :
 	    position(planarToWorld(position)),
 	    angleA(angleA),
 	    angleB(angleB) {}
+
+	TogglingAngleSpec(const std::string& data);
 
 	~TogglingAngleSpec() override = default;
 
@@ -272,9 +315,14 @@ public:
 	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	vec3 position;
-	float angleA;
-	float angleB;
+	vec3 position; // SSOT
+	float angleA; // SSOT
+	float angleB; // SSOT
+
+	[[nodiscard]] std::string serializeData() const override;
+	friend class IMotionSpec;
+	[[nodiscard]] static std::string getTypeStringStatic() { return "t_angle"; }
+	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
 
@@ -285,11 +333,13 @@ private:
 
 class SpinningSpec : public IMotionSpec {
 public:
-	explicit SpinningSpec(vec2 position, float initialAngle, float angularVelocityA, float angularVelocityB) :
+	SpinningSpec(vec2 position, float initialAngle, float angularVelocityA, float angularVelocityB) :
 	    position(planarToWorld(position)),
 	    initialAngle(initialAngle),
 	    angularVelocityA(angularVelocityA),
 	    angularVelocityB(angularVelocityB) {}
+
+	SpinningSpec(const std::string& data);
 
 	~SpinningSpec() override = default;
 
@@ -298,10 +348,15 @@ public:
 	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother&) const override;
 
 private:
-	vec3 position;
-	float initialAngle;
-	float angularVelocityA;
-	float angularVelocityB;
+	vec3 position; // SSOT
+	float initialAngle; // SSOT
+	float angularVelocityA; // SSOT
+	float angularVelocityB; // SSOT
+
+	[[nodiscard]] std::string serializeData() const override;
+	friend class IMotionSpec;
+	[[nodiscard]] static std::string getTypeStringStatic() { return "spinning"; }
+	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
 
@@ -313,12 +368,14 @@ private:
 
 class OscillatingPositionSpec : public IMotionSpec {
 public:
-	explicit OscillatingPositionSpec(float angle, vec2 position1, vec2 position2, float angularFrequencyA, float angularFrequencyB) :
+	OscillatingPositionSpec(float angle, vec2 position1, vec2 position2, float angularFrequencyA, float angularFrequencyB) :
 		angle(angle),
 		position1(planarToWorld(position1)),
 		position2(planarToWorld(position2)),
 		angularFrequencyA(angularFrequencyA),
 		angularFrequencyB(angularFrequencyB) {}
+
+	OscillatingPositionSpec(const std::string& data);
 
 	~OscillatingPositionSpec() override = default;
 
@@ -329,12 +386,17 @@ public:
 	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	vec3 position1;
-	vec3 position2;
-	float angle;
+	vec3 position1; // SSOT
+	vec3 position2; // SSOT
+	float angle; // SSOT
 	mat3 rotation;
-	float angularFrequencyA;
-	float angularFrequencyB;
+	float angularFrequencyA; // SSOT
+	float angularFrequencyB; // SSOT
+
+	[[nodiscard]] std::string serializeData() const override;
+	friend class IMotionSpec;
+	[[nodiscard]] static std::string getTypeStringStatic() { return "o_position"; }
+	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
 
@@ -348,12 +410,14 @@ private:
 
 class OscillatingAngleSpec : public IMotionSpec {
 public:
-	explicit OscillatingAngleSpec(vec2 position, float angle1, float angle2, float angularFrequencyA, float angularFrequencyB) :
+	OscillatingAngleSpec(vec2 position, float angle1, float angle2, float angularFrequencyA, float angularFrequencyB) :
 		position(planarToWorld(position)),
 		angle1(angle1),
 		angle2(angle2),
 		angularFrequencyA(angularFrequencyA),
 		angularFrequencyB(angularFrequencyB) {}
+
+	OscillatingAngleSpec(const std::string& data);
 	
 	~OscillatingAngleSpec() override = default;
 
@@ -362,11 +426,16 @@ public:
 	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	vec3 position;
-	float angle1;
-	float angle2;
-	float angularFrequencyA;
-	float angularFrequencyB;
+	vec3 position; // SSOT
+	float angle1; // SSOT
+	float angle2; // SSOT
+	float angularFrequencyA; // SSOT
+	float angularFrequencyB; // SSOT
+
+	[[nodiscard]] std::string serializeData() const override;
+	friend class IMotionSpec;
+	[[nodiscard]] static std::string getTypeStringStatic() { return "o_angle"; }
+	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
 
@@ -380,18 +449,21 @@ private:
 
 class ObstacleDescriptor {
 public:
-	ObstacleDescriptor(std::unique_ptr<IMotionSpec> motion, std::unique_ptr<AbstractShapeSpec> shape, bool goal = false) :
-	    motion(std::move(motion)),
+	ObstacleDescriptor(std::unique_ptr<AbstractShapeSpec> shape, std::unique_ptr<IMotionSpec> motion, bool goal = false) :
 	    shape(std::move(shape)),
+	    motion(std::move(motion)),
 	    goal(goal) {}
+
+	ObstacleDescriptor(const std::string& data);
+	[[nodiscard]] std::string serialize() const;
 
 	[[nodiscard]] IMotionSpec* getMotion() const { return motion.get(); }
 	[[nodiscard]] AbstractShapeSpec* getShape() const { return shape.get(); }
 	[[nodiscard]] bool isGoal() const { return goal; }
 
 private:
-	std::unique_ptr<IMotionSpec> motion;
 	std::unique_ptr<AbstractShapeSpec> shape;
+	std::unique_ptr<IMotionSpec> motion;
 	bool goal;
 };
 
