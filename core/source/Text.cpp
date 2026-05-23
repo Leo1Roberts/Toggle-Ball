@@ -84,8 +84,8 @@ int Text::loadFace(const std::string& folder, const std::string& name) {
 
 		float charWidth = info[i].bounds.right - info[i].bounds.left;
 		if (info[i].c >= '0' && info[i].c <= '9')
-			digitWidth = fmaxf(digitWidth, charWidth);
-		maxCharWidth = fmaxf(maxCharWidth, charWidth);
+			digitWidth = std::max(digitWidth, charWidth);
+		maxCharWidth = std::max(maxCharWidth, charWidth);
 	}
 
 	fontFaces[numFonts] = {std::move(tex), charLocations, info[0].bounds.bottom - info[0].bounds.top, digitWidth, maxCharWidth};

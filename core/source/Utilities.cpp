@@ -29,7 +29,8 @@ float randomFloatBeyondValue(float val) {
 
 float wrapAngle(float radians) {
 	radians = fmodf(radians, PI * 2);
-	if (radians <= -PI) radians += PI * 2;
+	if (radians <= -PI)
+		radians += PI * 2;
 	else if (radians > PI)
 		radians -= PI * 2;
 	return radians;

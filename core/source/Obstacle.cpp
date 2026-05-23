@@ -7,8 +7,14 @@
 #include <iomanip>
 #include <sstream>
 
-static void angleToRotation(float radians, mat3* rotation) {
-	rotation->R_VecAndAngle(OBSTACLE_ROTATION_AXIS, radians);
+static void angleToRotation(float radians, mat3& rotation) {
+	rotation.R_VecAndAngle(OBSTACLE_ROTATION_AXIS, radians);
+}
+
+
+void KinematicState::setAngle(float radians) {
+	angle = wrapAngle(radians);
+	angleToRotation(radians, rotation);
 }
 
 
@@ -492,6 +498,113 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 }
 
 
+std::array<float, 2> quadraticFormula(float a, float b, float c) {
+	float d = b*b - 4 * a * c;
+	if (d < 0) return { NAN, NAN };
+	float sqrtD = sqrt(d);
+	float mul = 0.5f / a;
+	return { mul * (-b + sqrtD), mul * (-b - sqrtD) };
+}
+
+bool AbstractShapeSpec::isInSelectBox(const KinematicState& s, const SelectBox& box) const {
+	// Check if caps are in the box
+
+	const vec3 leftCapPos = s.getPosition() + s.getRotation() * getLeftCap();
+	const vec3 rightCapPos = s.getPosition() + s.getRotation() * getRightCap();
+
+	for (const vec3& capPos : {leftCapPos, rightCapPos})
+		if (box.left < capPos.y && capPos.y < box.right &&
+		    box.bottom < capPos.z && capPos.z < box.top)
+			return true; // Quick check - centre of a cap is inside the box
+
+	float rSq = getMinorRadius() * getMinorRadius();
+
+	for (const vec3& capPos : {leftCapPos, rightCapPos})
+		for (auto [side, sideStart, sideEnd, perp, para] :
+		     {std::tuple{box.left, box.bottom, box.top, capPos.y, capPos.z},
+		      std::tuple{box.right, box.bottom, box.top, capPos.y, capPos.z},
+		      std::tuple{box.bottom, box.left, box.right, capPos.z, capPos.y},
+		      std::tuple{box.top, box.left, box.right, capPos.z, capPos.y}}) {
+
+			float dist = perp - side;
+			float distSq = dist * dist;
+			if (rSq - distSq > 0) { // Cap intersects with the line on which the side lies
+				auto roots = quadraticFormula(1, -2 * para, para * para - rSq + distSq);
+				for (float root : roots)
+					if (sideStart < root && root < sideEnd)
+						return true; // Cap intersects with the side of the box
+			}
+		}
+
+	// Check if the cap-connecting midsection is in the box
+	return midsectionIsInSelectBox(s, box);
+}
+
+bool SegmentSpec::midsectionIsInSelectBox(const KinematicState& s, const SelectBox& box) const {
+	const vec3 leftCapPos = s.getPosition() + s.getRotation() * getLeftCap();
+	const vec3 rightCapPos = s.getPosition() + s.getRotation() * getRightCap();
+	vec3 upOffset = s.getRotation() * vec3(0, 0, getMinorRadius());
+
+	for (vec3 offset : {upOffset, -upOffset}) {
+		vec3 segmentLeft = leftCapPos + upOffset;
+		vec3 segmentRight = rightCapPos + upOffset;
+
+		for (auto [side, sideStart, sideEnd, leftPerp, rightPerp, leftPara, rightPara] :
+		     {std::tuple{box.left, box.bottom, box.top, segmentLeft.y, segmentRight.y, segmentLeft.z, segmentRight.z},
+		      std::tuple{box.right, box.bottom, box.top, segmentLeft.y, segmentRight.y, segmentLeft.z, segmentRight.z},
+		      std::tuple{box.bottom, box.left, box.right, segmentLeft.z, segmentRight.z, segmentLeft.y, segmentRight.y},
+		      std::tuple{box.top, box.left, box.right, segmentLeft.z, segmentRight.z, segmentLeft.y, segmentRight.y}}) {
+
+			float perpendicularDiff = leftPerp - rightPerp;
+			if (perpendicularDiff == 0) continue;
+			float perpendicularDiffInv = 1 / perpendicularDiff;
+			if (std::min(leftPerp, rightPerp) < side && side < std::max(leftPerp, rightPerp)) {
+				float root = perpendicularDiffInv * ((leftPara - rightPara) * side + leftPerp * rightPara - rightPerp * leftPara);
+				if (sideStart < root && root < sideEnd)
+					return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool ArcSpec::midsectionIsInSelectBox(const KinematicState& s, const SelectBox& box) const {
+	float centerAngle = s.getAngle() + PI * 0.5f;
+	bool fullCircle = getArcAngle() >= 2 * PI;
+
+	for (float radiusOffset : {getMinorRadius(), -getMinorRadius()}) {
+		float r = getArcRadius() + radiusOffset;
+		float rSq = r * r;
+
+		for (auto [side, sideStart, sideEnd, centerPerp, centerPara, vertical] :
+		     {std::tuple{box.left, box.bottom, box.top, s.getPosition().y, s.getPosition().z, true},
+		      std::tuple{box.right, box.bottom, box.top, s.getPosition().y, s.getPosition().z, true},
+		      std::tuple{box.bottom, box.left, box.right, s.getPosition().z, s.getPosition().y, false},
+		      std::tuple{box.top, box.left, box.right, s.getPosition().z, s.getPosition().y, false}}) {
+
+			float dist = centerPerp - side;
+			float distSq = dist * dist;
+			if (rSq - distSq > 0) {
+				auto roots = quadraticFormula(1, -2 * centerPara, centerPara * centerPara - rSq + distSq);
+				for (float root : roots)
+					if (sideStart < root && root < sideEnd) {
+						if (fullCircle)
+							return true;
+						float y = vertical ? side : root;
+						float z = vertical ? root : side;
+						float relativeAngle = wrapAngle(atan2(z - s.getPosition().z, y - s.getPosition().y) - centerAngle);
+						if (abs(relativeAngle) < getHalfArcAngle())
+							return true;
+					}
+			}
+		}
+	}
+
+	return false;
+}
+
+
 std::string IMotionSpec::serialize() const {
 	std::ostringstream ss;
 
@@ -622,17 +735,17 @@ OscillatingAngleSpec::OscillatingAngleSpec(const std::string& data) {
 
 void StaticSpec::setAngle(float radians) {
 	angle = radians;
-	angleToRotation(radians, &rotation);
+	angleToRotation(radians, rotation);
 }
 
 void TogglingPositionSpec::setAngle(float radians) {
 	angle = radians;
-	angleToRotation(radians, &rotation);
+	angleToRotation(radians, rotation);
 }
 
 void OscillatingPositionSpec::setAngle(float radians) {
 	angle = radians;
-	angleToRotation(radians, &rotation);
+	angleToRotation(radians, rotation);
 }
 
 
@@ -875,7 +988,7 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 		Index offset = (Index)vs.size();
 
 		mat3 rot;
-		angleToRotation(angle, &rot);
+		angleToRotation(angle, rot);
 		std::transform(vs_shadow.begin(), vs_shadow.end(), std::back_inserter(vs), [rot](const ObjectVertex& v) {
 			return ObjectVertex(rot * v.position, v.uv, v.normal, v.color);
 		});
@@ -1118,7 +1231,7 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		if (!fullCircle) {
 			for (float currentAngle : {domainStartAngle, domainEndAngle}) {
 				mat3 currentRot;
-				angleToRotation(currentAngle, &currentRot);
+				angleToRotation(currentAngle, currentRot);
 				vec3 start = currentRot * segment->getRightCap();
 				vec3 end = currentRot * segment->getLeftCap();
 

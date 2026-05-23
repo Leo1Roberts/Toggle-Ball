@@ -13,7 +13,7 @@ constexpr inline float lerp(float a, float b, float t) noexcept {
 	return a * (1-t) + b * t;
 }
 
-float wrapAngle(float radians);
+float wrapAngle(float radians); // Wraps angle to range (-PI, PI]
 float angleToDisplay(float angle);
 float wrapDisplayAngle(float displayAngle);
 float displayToAngle(float displayAngle);

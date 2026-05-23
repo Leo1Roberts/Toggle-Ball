@@ -4,6 +4,7 @@
 #include "Mesh.h"
 #include "Sizes.h"
 #include "Smoother.h"
+#include "Editor.h"
 
 enum {
 	MAT_BASKETBALL,
@@ -59,6 +60,40 @@ inline vec3 planarToWorld(vec2 planarVec) {
 	return vec3(0, planarVec.x, planarVec.y);
 }
 
+
+class KinematicState {
+public:
+	KinematicState() = default;
+	KinematicState(vec3 position, float angle, vec3 velocity, float angularVelocity) :
+	    position(position),
+	    velocity(velocity),
+	    angularVelocity(angularVelocity) {
+		setAngle(angle);
+	}
+
+	void setPosition(vec3 pos) { position = pos; }
+	void setAngle(float radians);
+	void setVelocity(vec3 vel) { velocity = vel; }
+	void setAngularVelocity(float angVel) { angularVelocity = angVel; }
+	void setPhase(float radians) { phase = wrapAngle(radians); }
+
+	[[nodiscard]] vec3 getPosition() const { return position; }
+	[[nodiscard]] float getAngle() const { return angle; }
+	[[nodiscard]] mat3 getRotation() const { return rotation; }
+	[[nodiscard]] vec3 getVelocity() const { return velocity; }
+	[[nodiscard]] float getAngularVelocity() const { return angularVelocity; }
+	[[nodiscard]] float getPhase() const { return phase; }
+
+private:
+	vec3 position = vec3();
+	float angle = 0;
+	mat3 rotation = mat3::I;
+	vec3 velocity = vec3();
+	float angularVelocity = 0;
+	float phase = 0;
+};
+
+
 class AbstractShapeSpec {
 public:
 	virtual ~AbstractShapeSpec() = default;
@@ -69,6 +104,8 @@ public:
 	void generateObstacleMesh(Mesh<ObjectVertex>& obstacleMesh, col color) const;
 	void generateOutlineMesh(Mesh<ObjectVertex>& outlineMesh) const;
 	virtual void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
+
+	[[nodiscard]] bool isInSelectBox(const KinematicState& s, const SelectBox& box) const;
 
 	[[nodiscard]] float getMinorRadius() const { return minorRadius; }
 	[[nodiscard]] vec3 getLeftCap() const { return leftCap; }
@@ -97,6 +134,8 @@ private:
 
 	virtual void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const = 0;
 	virtual void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
+
+	[[nodiscard]] virtual bool midsectionIsInSelectBox(const KinematicState& s, const SelectBox& box) const = 0;
 };
 
 class SegmentSpec : public AbstractShapeSpec {
@@ -129,6 +168,8 @@ private:
 
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
+
+	[[nodiscard]] bool midsectionIsInSelectBox(const KinematicState& s, const SelectBox& box) const override;
 };
 
 class ArcSpec : public AbstractShapeSpec {
@@ -164,38 +205,9 @@ private:
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 
+	[[nodiscard]] bool midsectionIsInSelectBox(const KinematicState& s, const SelectBox& box) const override;
+
 	void setCaps();
-};
-
-
-class KinematicState {
-public:
-	KinematicState() = default;
-	KinematicState(vec3 position, float angle, vec3 velocity, float angularVelocity) :
-	    position(position),
-	    velocity(velocity),
-	    angularVelocity(angularVelocity) {
-		setAngle(angle);
-	}
-
-	void setPosition(vec3 pos) { position = pos; }
-	void setAngle(float radians) { angle = wrapAngle(radians); }
-	void setVelocity(vec3 vel) { velocity = vel; }
-	void setAngularVelocity(float angVel) { angularVelocity = angVel; }
-	void setPhase(float radians) { phase = wrapAngle(radians); }
-
-	[[nodiscard]] vec3 getPosition() const { return position; }
-	[[nodiscard]] float getAngle() const { return angle; }
-	[[nodiscard]] vec3 getVelocity() const { return velocity; }
-	[[nodiscard]] float getAngularVelocity() const { return angularVelocity; }
-	[[nodiscard]] float getPhase() const { return phase; }
-
-private:
-	vec3 position = vec3();
-	float angle = 0;
-	vec3 velocity = vec3();
-	float angularVelocity = 0;
-	float phase = 0;
 };
 
 

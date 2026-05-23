@@ -1192,7 +1192,7 @@ void Game::drawDialogue() {
 	switch (dialogue) {
 #ifdef WINDOWS_VERSION
 	case DLG_CONFIRM_EXIT:
-		ButtonManager::addButton(fmaxf(LEFT + 0.05f, -0.5f), fminf(RIGHT - 0.05f, 0.5f), 0.3f, -0.3f,
+		ButtonManager::addButton(std::max(LEFT + 0.05f, -0.5f), std::min(RIGHT - 0.05f, 0.5f), 0.3f, -0.3f,
 		                         nullptr, 0,
 		                         BS_GREY_BACKING,
 		                         "",
@@ -1200,19 +1200,19 @@ void Game::drawDialogue() {
 
 		Text::addText(-Text::calculateWidth("Unsaved changes will be lost", BAHNSCHRIFT, 0.08f) * 0.5f, 0.2f, "Unsaved changes will be lost", BAHNSCHRIFT, 0.08f, BLACK);
 
-		ButtonManager::addButton(fmaxf(LEFT + 0.05f, -0.5f) + 0.05f, fmaxf(LEFT + 0.05f, -0.5f) + 0.12f + Text::calculateWidth("Exit anyway", BAHNSCHRIFT, 0.1f * 0.6f), -0.15f, -0.25f,
+		ButtonManager::addButton(std::max(LEFT + 0.05f, -0.5f) + 0.05f, std::max(LEFT + 0.05f, -0.5f) + 0.12f + Text::calculateWidth("Exit anyway", BAHNSCHRIFT, 0.1f * 0.6f), -0.15f, -0.25f,
 		                         confirmExit, 0,
 		                         BS_RED,
 		                         "Exit anyway");
 
-		ButtonManager::addButton(fminf(RIGHT - 0.05f, 0.5f) - 0.12f - Text::calculateWidth("Cancel", BAHNSCHRIFT, 0.1f * 0.6f), fminf(RIGHT - 0.05f, 0.5f) - 0.05f, -0.15f, -0.25f,
+		ButtonManager::addButton(std::min(RIGHT - 0.05f, 0.5f) - 0.12f - Text::calculateWidth("Cancel", BAHNSCHRIFT, 0.1f * 0.6f), std::min(RIGHT - 0.05f, 0.5f) - 0.05f, -0.15f, -0.25f,
 		                         requestDialogue, DLG_NONE,
 		                         BS_GREEN,
 		                         "Cancel");
 		break;
 #endif
 	case DLG_CONFIRM_SWITCH:
-		ButtonManager::addButton(fmaxf(LEFT + 0.05f, -0.5f), fminf(RIGHT - 0.05f, 0.5f), 0.3f, -0.3f,
+		ButtonManager::addButton(std::max(LEFT + 0.05f, -0.5f), std::min(RIGHT - 0.05f, 0.5f), 0.3f, -0.3f,
 		                         nullptr, 0,
 		                         BS_GREY_BACKING,
 		                         "",
@@ -1220,25 +1220,25 @@ void Game::drawDialogue() {
 
 		Text::addText(-Text::calculateWidth("Unsaved changes will be lost", BAHNSCHRIFT, 0.08f) * 0.5f, 0.2f, "Unsaved changes will be lost", BAHNSCHRIFT, 0.08f, BLACK);
 
-		ButtonManager::addButton(fmaxf(LEFT + 0.05f, -0.5f) + 0.05f, fmaxf(LEFT + 0.05f, -0.5f) + 0.12f + Text::calculateWidth("Change level anyway", BAHNSCHRIFT, 0.1f * 0.6f), -0.15f, -0.25f,
+		ButtonManager::addButton(std::max(LEFT + 0.05f, -0.5f) + 0.05f, std::max(LEFT + 0.05f, -0.5f) + 0.12f + Text::calculateWidth("Change level anyway", BAHNSCHRIFT, 0.1f * 0.6f), -0.15f, -0.25f,
 		                         selectPendingLevel, 0,
 		                         BS_RED,
 		                         "Change level anyway");
 
-		ButtonManager::addButton(fminf(RIGHT - 0.05f, 0.5f) - 0.12f - Text::calculateWidth("Cancel", BAHNSCHRIFT, 0.1f * 0.6f), fminf(RIGHT - 0.05f, 0.5f) - 0.05f, -0.15f, -0.25f,
+		ButtonManager::addButton(std::min(RIGHT - 0.05f, 0.5f) - 0.12f - Text::calculateWidth("Cancel", BAHNSCHRIFT, 0.1f * 0.6f), std::min(RIGHT - 0.05f, 0.5f) - 0.05f, -0.15f, -0.25f,
 		                         requestDialogue, DLG_NONE,
 		                         BS_GREEN,
 		                         "Cancel");
 
 		break;
 	case DLG_CHOOSE_LEVEL: {
-		ButtonManager::addButton(fmaxf(LEFT + 0.05f, -0.85f), fminf(RIGHT - 0.05f, 0.85f), 0.8f, -0.8f,
+		ButtonManager::addButton(std::max(LEFT + 0.05f, -0.85f), std::min(RIGHT - 0.05f, 0.85f), 0.8f, -0.8f,
 		                         nullptr, 0,
 		                         BS_GREY_BACKING,
 		                         "",
 		                         false, false, false);
 
-		ButtonManager::addButton(fmaxf(LEFT + 0.05f, -0.85f) + 0.05f, fmaxf(LEFT + 0.05f, -0.85f) + 0.12f + Text::calculateWidth("Cancel", BAHNSCHRIFT, 0.1f * 0.6f), -0.65f, -0.75f,
+		ButtonManager::addButton(std::max(LEFT + 0.05f, -0.85f) + 0.05f, std::max(LEFT + 0.05f, -0.85f) + 0.12f + Text::calculateWidth("Cancel", BAHNSCHRIFT, 0.1f * 0.6f), -0.65f, -0.75f,
 		                         requestDialogue, DLG_NONE,
 		                         BS_RED,
 		                         "Cancel");
@@ -1247,29 +1247,29 @@ void Game::drawDialogue() {
 		std::string* name;
 		for (int i = 0; i < levelList.size(); i++) {
 			name = &levelList[i];
-			ButtonManager::addButton(fmaxf(LEFT + 0.05f, -0.85f) + 0.05f, fminf(RIGHT - 0.05f, 0.85f) - 0.05f, 0.75f - 0.12f * (float)i, 0.75f - 0.12f * (float)i - 0.1f,
+			ButtonManager::addButton(std::max(LEFT + 0.05f, -0.85f) + 0.05f, std::min(RIGHT - 0.05f, 0.85f) - 0.05f, 0.75f - 0.12f * (float)i, 0.75f - 0.12f * (float)i - 0.1f,
 			                         selectLevelCallback, i,
 			                         BS_GREY,
 			                         *name);
 		}
 	} break;
 	case DLG_SAVE_AS:
-		ButtonManager::addButton(fmaxf(LEFT + 0.05f, -0.5f), fminf(RIGHT - 0.05f, 0.5f), 0.3f, -0.3f,
+		ButtonManager::addButton(std::max(LEFT + 0.05f, -0.5f), std::min(RIGHT - 0.05f, 0.5f), 0.3f, -0.3f,
 		                         nullptr, 0,
 		                         BS_GREY_BACKING,
 		                         "",
 		                         false, false, false);
 
 		Text::addText(-Text::calculateWidth("Save as", BAHNSCHRIFT, 0.1f) * 0.5f, 0.2f, "Save as", BAHNSCHRIFT, 0.1f, BLACK);
-		TextBoxManager::addTextBox(fmaxf(LEFT + 0.05f, -0.4f), fminf(RIGHT - 0.05f, 0.4f), 0.05f, -0.05f,
+		TextBoxManager::addTextBox(std::max(LEFT + 0.05f, -0.4f), std::min(RIGHT - 0.05f, 0.4f), 0.05f, -0.05f,
 		                           saveAsName, TR_FILE_NAME, PROPERTY_LEVEL_NAME, changePropertyInput, updatePropertyInput);
 
-		ButtonManager::addButton(fmaxf(LEFT + 0.05f, -0.5f) + 0.05f, fmaxf(LEFT + 0.05f, -0.5f) + 0.12f + Text::calculateWidth("Cancel", BAHNSCHRIFT, 0.1f * 0.6f), -0.15f, -0.25f,
+		ButtonManager::addButton(std::max(LEFT + 0.05f, -0.5f) + 0.05f, std::max(LEFT + 0.05f, -0.5f) + 0.12f + Text::calculateWidth("Cancel", BAHNSCHRIFT, 0.1f * 0.6f), -0.15f, -0.25f,
 		                         requestDialogue, DLG_NONE,
 		                         BS_RED,
 		                         "Cancel");
 
-		ButtonManager::addButton(fminf(RIGHT - 0.05f, 0.5f) - 0.12f - Text::calculateWidth("Save", BAHNSCHRIFT, 0.1f * 0.6f), fminf(RIGHT - 0.05f, 0.5f) - 0.05f, -0.15f, -0.25f,
+		ButtonManager::addButton(std::min(RIGHT - 0.05f, 0.5f) - 0.12f - Text::calculateWidth("Save", BAHNSCHRIFT, 0.1f * 0.6f), std::min(RIGHT - 0.05f, 0.5f) - 0.05f, -0.15f, -0.25f,
 		                         requestDialogue, DLG_CONFIRM_OVERWRITE,
 		                         BS_GREEN,
 		                         "Save");
@@ -1280,7 +1280,7 @@ void Game::drawDialogue() {
 		}
 		break;
 	case DLG_CONFIRM_OVERWRITE:
-		ButtonManager::addButton(fmaxf(LEFT + 0.05f, -0.5f), fminf(RIGHT - 0.05f, 0.5f), 0.3f, -0.3f,
+		ButtonManager::addButton(std::max(LEFT + 0.05f, -0.5f), std::min(RIGHT - 0.05f, 0.5f), 0.3f, -0.3f,
 		                         nullptr, 0,
 		                         BS_GREY_BACKING,
 		                         "",
@@ -1288,12 +1288,12 @@ void Game::drawDialogue() {
 
 		Text::addText(-Text::calculateWidth("Overwrite existing level?", BAHNSCHRIFT, 0.08f) * 0.5f, 0.2f, "Overwrite existing level?", BAHNSCHRIFT, 0.08f, BLACK);
 
-		ButtonManager::addButton(fmaxf(LEFT + 0.05f, -0.5f) + 0.05f, fmaxf(LEFT + 0.05f, -0.5f) + 0.12f + Text::calculateWidth("Overwrite", BAHNSCHRIFT, 0.1f * 0.6f), -0.15f, -0.25f,
+		ButtonManager::addButton(std::max(LEFT + 0.05f, -0.5f) + 0.05f, std::max(LEFT + 0.05f, -0.5f) + 0.12f + Text::calculateWidth("Overwrite", BAHNSCHRIFT, 0.1f * 0.6f), -0.15f, -0.25f,
 		                         saveAs, 0,
 		                         BS_RED,
 		                         "Overwrite");
 
-		ButtonManager::addButton(fminf(RIGHT - 0.05f, 0.5f) - 0.12f - Text::calculateWidth("Cancel", BAHNSCHRIFT, 0.1f * 0.6f), fminf(RIGHT - 0.05f, 0.5f) - 0.05f, -0.15f, -0.25f,
+		ButtonManager::addButton(std::min(RIGHT - 0.05f, 0.5f) - 0.12f - Text::calculateWidth("Cancel", BAHNSCHRIFT, 0.1f * 0.6f), std::min(RIGHT - 0.05f, 0.5f) - 0.05f, -0.15f, -0.25f,
 		                         requestDialogue, DLG_SAVE_AS,
 		                         BS_GREEN,
 		                         "Cancel");
@@ -1760,7 +1760,7 @@ void Game::loadLevel(const Level& newLevel, bool resetView) {
 	updateArena();
 
 	if (resetView) {
-		baseViewDist = fmaxf(arenaWidth, arenaHeight) * 2.0f;
+		baseViewDist = std::max(arenaWidth, arenaHeight) * 2.0f;
 		resetEditorView();
 	} else
 		updateHalfHeight();
@@ -2615,7 +2615,7 @@ void Game::handleInput() {
 					prevPos = {GameActivityPointerAxes_getX(&motionEvent.pointers[1]), GameActivityPointerAxes_getY(&motionEvent.pointers[1])};
 			} else {
 				ButtonManager::released();
-				float minDim = fminf(WINDOW_WIDTH, WINDOW_HEIGHT);
+				float minDim = std::min(WINDOW_WIDTH, WINDOW_HEIGHT);
 				if (!downOnButton && (pos - tapPos).lengthSq() < minDim * minDim * 0.000025) toggle(); // Counts as a tap if finger has moved less than 5% of smallest window dimension
 			}
 			break;
@@ -2942,7 +2942,7 @@ float limitScaleFactorByPos(float scaleFactor, const vec3& centre, const vec3& p
 
 	float xLimit = posOffset.y < 0 ? minX : maxX;
 	float yLimit = posOffset.z < 0 ? minY : maxY;
-	float scaleFactorLimit = fminf((xLimit - centre.y) / posOffset.y, (yLimit - centre.z) / posOffset.z);
+	float scaleFactorLimit = std::min((xLimit - centre.y) / posOffset.y, (yLimit - centre.z) / posOffset.z);
 
 	if (scaleFactor == scaleFactorLimit) {
 		*valPos = VP_BOUNDARY;
@@ -3036,10 +3036,10 @@ void Game::updateAction() {
 
 				float minDX, maxDX, minDY, maxDY;
 				if (actionIsStateless && (obstacles[i].getStateType() == ST_POS || obstacles[i].getStateType() == ST_POS_OSC)) { // Find limits for both positions
-					minDX = MINIMUM_POS_X - fminf(undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateA.y, undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateB.y);
-					maxDX = MAXIMUM_POS_X - fmaxf(undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateA.y, undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateB.y);
-					minDY = MINIMUM_POS_Y - fminf(undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateA.z, undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateB.z);
-					maxDY = MAXIMUM_POS_Y - fmaxf(undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateA.z, undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateB.z);
+					minDX = MINIMUM_POS_X - std::min(undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateA.y, undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateB.y);
+					maxDX = MAXIMUM_POS_X - std::max(undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateA.y, undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateB.y);
+					minDY = MINIMUM_POS_Y - std::min(undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateA.z, undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateB.z);
+					maxDY = MAXIMUM_POS_Y - std::max(undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateA.z, undoBuffer[bufferIndex].level.obstacleDefinitions[i].stateB.z);
 				} else { // Find limits for the only position
 					float xPos, yPos;
 					if (obstacles[i].getStateType() == ST_POS || obstacles[i].getStateType() == ST_POS_OSC) {
@@ -3074,8 +3074,8 @@ void Game::updateAction() {
 				case ACTION_MOD_LOCAL_X:
 					[[fallthrough]];
 				case ACTION_MOD_LOCAL_Y:
-					float minFactor = fmaxf((dir.y < 0 ? maxDX : minDX) / dir.y, (dir.z < 0 ? maxDY : minDY) / dir.z);
-					float maxFactor = fminf((dir.y < 0 ? minDX : maxDX) / dir.y, (dir.z < 0 ? minDY : maxDY) / dir.z);
+					float minFactor = std::max((dir.y < 0 ? maxDX : minDX) / dir.y, (dir.z < 0 ? maxDY : minDY) / dir.z);
+					float maxFactor = std::min((dir.y < 0 ? minDX : maxDX) / dir.y, (dir.z < 0 ? minDY : maxDY) / dir.z);
 					limitedTranslationFactor = clamp(limitedTranslationFactor, minFactor, maxFactor, &valPos);
 					break;
 				}
@@ -3262,7 +3262,7 @@ void Game::updateAction() {
 				} break;
 				case ACTION_MOD_MINOR: {
 					float minorRadius = undoBuffer[bufferIndex].level.obstacleDefinitions[i].minorRadius;
-					float maxMinorRadius = obstacles[i].getIsStraight() ? MAXIMUM_MINOR_RADIUS : fminf(MAXIMUM_MINOR_RADIUS, obstacles[i].getMajorRadius());
+					float maxMinorRadius = obstacles[i].getIsStraight() ? MAXIMUM_MINOR_RADIUS : std::min(MAXIMUM_MINOR_RADIUS, obstacles[i].getMajorRadius());
 					limitedScaleFactor = clamp(limitedScaleFactor * minorRadius, MINIMUM_MINOR_RADIUS, maxMinorRadius, &valPos) / minorRadius;
 				} break;
 				case ACTION_MOD_MAJOR: {
@@ -3340,7 +3340,7 @@ void Game::updateAction() {
 					if (obstacles[i].getIsStraight())
 						rawExtension = clamp(minorRadius + rawExtension, MINIMUM_MINOR_RADIUS, MAXIMUM_MINOR_RADIUS, &valPos) - minorRadius;
 					else
-						rawExtension = clamp(minorRadius + rawExtension, MINIMUM_MINOR_RADIUS, fminf(obstacles[i].getMajorRadius(), MAXIMUM_MINOR_RADIUS), &valPos) - minorRadius;
+						rawExtension = clamp(minorRadius + rawExtension, MINIMUM_MINOR_RADIUS, std::min(obstacles[i].getMajorRadius(), MAXIMUM_MINOR_RADIUS), &valPos) - minorRadius;
 
 					if (valPos > VP_INSIDE) {
 						if (valPos == VP_OUTSIDE)
@@ -3352,7 +3352,7 @@ void Game::updateAction() {
 
 			for (short i = 0; i < (short)obstacles.size(); i++) {
 				if (selection[i]) {
-					obstacles[i].setMinorRadius(fmaxf(MINIMUM_MINOR_RADIUS, undoBuffer[bufferIndex].level.obstacleDefinitions[i].minorRadius + rawExtension));
+					obstacles[i].setMinorRadius(std::max(MINIMUM_MINOR_RADIUS, undoBuffer[bufferIndex].level.obstacleDefinitions[i].minorRadius + rawExtension));
 
 					obstacles[i].createAllModels();
 				}
@@ -3440,7 +3440,7 @@ void Game::updateAction() {
 						obstacles[i].setEndY(oldEndY + limitedExtension);
 					}
 
-					obstacles[i].setMajorRadius(sqrtf(fmaxf(obstacles[i].getStart().lengthSq(), obstacles[i].getEnd().lengthSq())));
+					obstacles[i].setMajorRadius(sqrtf(std::max(obstacles[i].getStart().lengthSq(), obstacles[i].getEnd().lengthSq())));
 
 					obstacles[i].createAllModels();
 				}
@@ -3754,13 +3754,13 @@ void Game::boxSelect() {
 			if (d.normal.z != 0) {
 				float xDiffInv = 1 / (lineStart.y - lineEnd.y);
 
-				if (!obSelected && tl.y > fminf(lineStart.y, lineEnd.y) && tl.y < fmaxf(lineStart.y, lineEnd.y)) {
+				if (!obSelected && tl.y > std::min(lineStart.y, lineEnd.y) && tl.y < std::max(lineStart.y, lineEnd.y)) {
 					roots.y = xDiffInv * ((lineStart.z - lineEnd.z) * tl.y + lineStart.y * lineEnd.z - lineEnd.y * lineStart.z);
 					if (roots.y < tl.z && roots.y > br.z)
 						obSelected = true;
 				}
 
-				if (!obSelected && br.y > fminf(lineStart.y, lineEnd.y) && br.y < fmaxf(lineStart.y, lineEnd.y)) {
+				if (!obSelected && br.y > std::min(lineStart.y, lineEnd.y) && br.y < std::max(lineStart.y, lineEnd.y)) {
 					roots.y = xDiffInv * ((lineStart.z - lineEnd.z) * br.y + lineStart.y * lineEnd.z - lineEnd.y * lineStart.z);
 					if (roots.y < tl.z && roots.y > br.z)
 						obSelected = true;
@@ -3770,13 +3770,13 @@ void Game::boxSelect() {
 			if (d.normal.y != 0) {
 				float yDiffInv = 1 / (lineStart.z - lineEnd.z);
 
-				if (!obSelected && tl.z > fminf(lineStart.z, lineEnd.z) && tl.z < fmaxf(lineStart.z, lineEnd.z)) {
+				if (!obSelected && tl.z > std::min(lineStart.z, lineEnd.z) && tl.z < std::max(lineStart.z, lineEnd.z)) {
 					roots.x = yDiffInv * ((lineStart.y - lineEnd.y) * tl.z + lineStart.z * lineEnd.y - lineEnd.z * lineStart.y);
 					if (roots.x < br.y && roots.x > tl.y)
 						obSelected = true;
 				}
 
-				if (!obSelected && br.z > fminf(lineStart.z, lineEnd.z) && br.z < fmaxf(lineStart.z, lineEnd.z)) {
+				if (!obSelected && br.z > std::min(lineStart.z, lineEnd.z) && br.z < std::max(lineStart.z, lineEnd.z)) {
 					roots.x = yDiffInv * ((lineStart.y - lineEnd.y) * br.z + lineStart.z * lineEnd.y - lineEnd.z * lineStart.y);
 					if (roots.x < br.y && roots.x > tl.y)
 						obSelected = true;
@@ -4295,10 +4295,10 @@ void Game::pasteObstacles() {
 		float maxY = MAXIMUM_POS_Y;
 
 		for (short i = newObstaclesStartIndex; i < obstacles.size(); i++) {
-			minX = fmaxf(minX, obstacles[i].getPos().y);
-			maxX = fminf(maxX, obstacles[i].getPos().y);
-			minY = fmaxf(minY, obstacles[i].getPos().z);
-			maxY = fminf(maxY, obstacles[i].getPos().z);
+			minX = std::max(minX, obstacles[i].getPos().y);
+			maxX = std::min(maxX, obstacles[i].getPos().y);
+			minY = std::max(minY, obstacles[i].getPos().z);
+			maxY = std::min(maxY, obstacles[i].getPos().z);
 		}
 		// Override the actual pointer position, so the obstacles 'teleport' to the mouse position
 		pointerBall.pos = vec3(0, (minX + maxX) * 0.5f, (minY + maxY) * 0.5f);
