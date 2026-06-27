@@ -6,6 +6,7 @@
 #include <iterator>
 #include <iomanip>
 #include <sstream>
+#include <array>
 
 static void angleToRotation(float radians, mat3& rotation) {
 	rotation.R_VecAndAngle(OBSTACLE_ROTATION_AXIS, radians);
@@ -498,7 +499,7 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 }
 
 
-std::array<float, 2> quadraticFormula(float a, float b, float c) {
+static std::array<float, 2> quadraticFormula(float a, float b, float c) {
 	float d = b*b - 4 * a * c;
 	if (d < 0) return { NAN, NAN };
 	float sqrtD = sqrt(d);
@@ -520,7 +521,7 @@ bool AbstractShapeSpec::isInSelectBox(const KinematicState& s, const SelectBox& 
 	float rSq = getMinorRadius() * getMinorRadius();
 
 	for (const vec3& capPos : {leftCapPos, rightCapPos})
-		for (auto [side, sideStart, sideEnd, perp, para] :
+		for (auto& [side, sideStart, sideEnd, perp, para] :
 		     {std::tuple{box.left, box.bottom, box.top, capPos.y, capPos.z},
 		      std::tuple{box.right, box.bottom, box.top, capPos.y, capPos.z},
 		      std::tuple{box.bottom, box.left, box.right, capPos.z, capPos.y},
@@ -549,7 +550,7 @@ bool SegmentSpec::midsectionIsInSelectBox(const KinematicState& s, const SelectB
 		vec3 segmentLeft = leftCapPos + upOffset;
 		vec3 segmentRight = rightCapPos + upOffset;
 
-		for (auto [side, sideStart, sideEnd, leftPerp, rightPerp, leftPara, rightPara] :
+		for (auto& [side, sideStart, sideEnd, leftPerp, rightPerp, leftPara, rightPara] :
 		     {std::tuple{box.left, box.bottom, box.top, segmentLeft.y, segmentRight.y, segmentLeft.z, segmentRight.z},
 		      std::tuple{box.right, box.bottom, box.top, segmentLeft.y, segmentRight.y, segmentLeft.z, segmentRight.z},
 		      std::tuple{box.bottom, box.left, box.right, segmentLeft.z, segmentRight.z, segmentLeft.y, segmentRight.y},
@@ -577,7 +578,7 @@ bool ArcSpec::midsectionIsInSelectBox(const KinematicState& s, const SelectBox& 
 		float r = getArcRadius() + radiusOffset;
 		float rSq = r * r;
 
-		for (auto [side, sideStart, sideEnd, centerPerp, centerPara, vertical] :
+		for (auto& [side, sideStart, sideEnd, centerPerp, centerPara, vertical] :
 		     {std::tuple{box.left, box.bottom, box.top, s.getPosition().y, s.getPosition().z, true},
 		      std::tuple{box.right, box.bottom, box.top, s.getPosition().y, s.getPosition().z, true},
 		      std::tuple{box.bottom, box.left, box.right, s.getPosition().z, s.getPosition().y, false},
@@ -594,7 +595,7 @@ bool ArcSpec::midsectionIsInSelectBox(const KinematicState& s, const SelectBox& 
 						float y = vertical ? side : root;
 						float z = vertical ? root : side;
 						float relativeAngle = wrapAngle(atan2(z - s.getPosition().z, y - s.getPosition().y) - centerAngle);
-						if (abs(relativeAngle) < getHalfArcAngle())
+						if (std::abs(relativeAngle) < getHalfArcAngle())
 							return true;
 					}
 			}
@@ -783,9 +784,9 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		if (ang > -arc->getHalfArcAngle() && ang < arc->getHalfArcAngle()) {
 			topPointA = getPositionA() + diffPerpUnit * (arc->getArcRadius() + arc->getMinorRadius());
 		} else {
-			float startAng = abs(wrapAngle(diffAngle - getAngle() + arc->getHalfArcAngle()));
-			float endAng = abs(wrapAngle(diffAngle - getAngle() - arc->getHalfArcAngle()));
-			if (abs(startAng - endAng) < 0.001f) { // Equal
+			float startAng = std::abs(wrapAngle(diffAngle - getAngle() + arc->getHalfArcAngle()));
+			float endAng = std::abs(wrapAngle(diffAngle - getAngle() - arc->getHalfArcAngle()));
+			if (std::abs(startAng - endAng) < 0.001f) { // Equal
 				topPointA = getPositionA() + getRotation() * arc->getRightCap() + diffPerpUnit * arc->getMinorRadius();
 				line1Length += arc->getRightCap().y - arc->getLeftCap().y;
 			} else if (startAng < endAng)
@@ -798,9 +799,9 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		if (ang > -arc->getHalfArcAngle() && ang < arc->getHalfArcAngle()) {
 			bottomPointA = getPositionA() - diffPerpUnit * (arc->getArcRadius() + arc->getMinorRadius());
 		} else {
-			float startAng = abs(wrapAngle(diffAngle - getAngle() + arc->getHalfArcAngle() + PI));
-			float endAng = abs(wrapAngle(diffAngle - getAngle() - arc->getHalfArcAngle() + PI));
-			if (abs(startAng - endAng) < 0.001f) { // Equal
+			float startAng = std::abs(wrapAngle(diffAngle - getAngle() + arc->getHalfArcAngle() + PI));
+			float endAng = std::abs(wrapAngle(diffAngle - getAngle() - arc->getHalfArcAngle() + PI));
+			if (std::abs(startAng - endAng) < 0.001f) { // Equal
 				bottomPointA = getPositionA() + getRotation() * arc->getLeftCap() - diffPerpUnit * arc->getMinorRadius();
 				line2Length += arc->getRightCap().y - arc->getLeftCap().y;
 			} else if (startAng < endAng)
@@ -915,7 +916,7 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 		dotsArc2Radius = arc->getArcRadius() - arc->getMinorRadius() + OUTLINE_WIDTH_WORLD / 2;
 	} else return;
 
-	float absArcAngle = abs(dotsArcAngle);
+	float absArcAngle = std::abs(dotsArcAngle);
 	float sign = dotsArcAngle < 0 ? -1.0f : 1.0f;
 
 	float arc1Length = dotsArc1Radius * absArcAngle;
@@ -1206,7 +1207,7 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 
 void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const {
 	if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
-		bool fullCircle = abs(getAngle2() - getAngle1()) >= 2 * PI;
+		bool fullCircle = std::abs(getAngle2() - getAngle1()) >= 2 * PI;
 		float domainStartAngle, domainEndAngle;
 		if (fullCircle) {
 			domainStartAngle = 0;
@@ -1288,7 +1289,7 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			is.push_back(i + 3);
 		}
 	} else if (auto* arc = dynamic_cast<const ArcSpec*>(shapeSpec)) {
-		bool fullCircle = abs(getAngle2() - getAngle1()) + arc->getArcAngle() >= 2 * PI;
+		bool fullCircle = std::abs(getAngle2() - getAngle1()) + arc->getArcAngle() >= 2 * PI;
 		float startAngle, endAngle;
 		vec3 start, end;
 		if (fullCircle) {
@@ -1363,26 +1364,26 @@ void TogglingPositionSpec::stepKinematicState(KinematicState& kinematicState, co
 }
 
 void TogglingAngleSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setAngle(lerp(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
+	kinematicState.setAngle(std::lerp(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
 	kinematicState.setAngularVelocity((getAngleB() - getAngleA()) * smoother.getCurrentVelocity());
 }
 
 void SpinningSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setAngularVelocity(lerp(getAngularVelocityA(), getAngularVelocityB(), smoother.getCurrentPosition()));
+	kinematicState.setAngularVelocity(std::lerp(getAngularVelocityA(), getAngularVelocityB(), smoother.getCurrentPosition()));
 	kinematicState.setAngle(kinematicState.getAngle() + kinematicState.getAngularVelocity() * PHYSICS_TIMESTEP);
 }
 
 void OscillatingPositionSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
-	float angularFrequency = lerp(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
+	float angularFrequency = std::lerp(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
 	kinematicState.setPhase(kinematicState.getPhase() + angularFrequency * PHYSICS_TIMESTEP);
 	kinematicState.setPosition(lerp(getPosition1(), getPosition2(), 0.5f - 0.5f * cos(kinematicState.getPhase())));
 	kinematicState.setVelocity((getPosition2() - getPosition1()) * (0.5f * sin(kinematicState.getPhase()) * angularFrequency));
 }
 
 void OscillatingAngleSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
-	float angularFrequency = lerp(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
+	float angularFrequency = std::lerp(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
 	kinematicState.setPhase(kinematicState.getPhase() + angularFrequency * PHYSICS_TIMESTEP);
-	kinematicState.setAngle(lerp(getAngle1(), getAngle2(), 0.5f - 0.5f * cos(kinematicState.getPhase())));
+	kinematicState.setAngle(std::lerp(getAngle1(), getAngle2(), 0.5f - 0.5f * cos(kinematicState.getPhase())));
 	kinematicState.setAngularVelocity((getAngle2() - getAngle1()) * (0.5f * sin(kinematicState.getPhase()) * angularFrequency));
 }
 
@@ -1392,7 +1393,7 @@ void TogglingPositionSpec::updateEditorKinematicState(KinematicState& kinematicS
 }
 
 void TogglingAngleSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setAngle(lerp(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
+	kinematicState.setAngle(std::lerp(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
 }
 
 void SpinningSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother&) const {

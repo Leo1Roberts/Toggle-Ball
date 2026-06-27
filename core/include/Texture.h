@@ -5,18 +5,14 @@
 
 class Texture {
 public:
-#ifdef WINDOWS_VERSION
-	Texture(const std::string& path, bool monochrome);
-#else
-	Texture(AAssetManager* assetManager, const std::string& path, bool monochrome);
-#endif
+	Texture(const std::string& fileName, bool monochrome = false);
 
 	void bind(unsigned int i) const {
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, texture);
 	}
 
-	void unbind() const {
+	static void unbind() {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
@@ -34,11 +30,7 @@ namespace Textures {
 		extern std::unique_ptr<Texture> resize;
 	}
 
-#ifdef WINDOWS_VERSION
 	void load();
-#else
-	void load(AAssetManager* assetManager);
-#endif
 }
 
 #endif // TEXTURE_H

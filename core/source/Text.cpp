@@ -3,30 +3,31 @@
 #include "main.h"
 #include "Colors.h"
 #include "Sizes.h"
-#include "ImageUtils.h"
 #include "MatrixUtilities.h"
 #include "Text.h"
 
-const int MAX_FONTS = 16;
-const int MAX_CHARS = 0x10000;// WARNING: changing this may require changing the type of batchSize
-const int MAX_BATCHES = 5;
+#include "AssetManager.h"
+
+constexpr int MAX_FONTS = 16;
+constexpr int MAX_CHARS = 0x10000; // WARNING: changing this may require changing the type of batchSize
+constexpr int MAX_BATCHES = 5;
 
 void CharVertex::setupLayout() {
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(CharVertex), (void*)offsetof(CharVertex, pos));
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(CharVertex), reinterpret_cast<void*>(offsetof(CharVertex, pos)));
 	glEnableVertexAttribArray(0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(CharVertex), (void*)offsetof(CharVertex, uv));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(CharVertex), reinterpret_cast<void*>(offsetof(CharVertex, uv)));
 	glEnableVertexAttribArray(1);
 
-	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(CharVertex), (void*)offsetof(CharVertex, color));
+	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(CharVertex), reinterpret_cast<void*>(offsetof(CharVertex, color)));
 	glEnableVertexAttribArray(2);
 }
 
 struct charInfo {
 	char c;
-	char _spacer1_;
-	char _spacer2_;
-	char _spacer3_;
+	[[maybe_unused]] char _spacer1_;
+	[[maybe_unused]] char _spacer2_;
+	[[maybe_unused]] char _spacer3_;
 	CharBounds bounds;
 };
 
@@ -51,36 +52,25 @@ void Text::init() {
 	indices.reserve(MAX_CHARS * 6);
 }
 
-#ifdef WINDOWS_VERSION
-int Text::loadFace(const std::string& folder, const std::string& name) {
-	std::string texturePath = folder + name + ".png";
+int Text::loadFace(const std::string& name) {
+	std::string path = "fonts/" + name;
+	std::string texturePath = path + ".png";
+	std::string infoPath = path + ".bin";
 
 	auto tex = std::make_unique<Texture>(texturePath, true);
 
-	std::string infoPath = folder + name + ".bin";
+	FontFace* ff = &fontFaces[numFonts];
 
-	FILE* infoFile;
-	fopen_s(&infoFile, infoPath.c_str(), "rb");
-	if (infoFile == nullptr) {
-		return -1;
-	}
+	ff->texture = std::move(tex);
 
-	fseek(infoFile, 0, SEEK_END);
-	int length = ftell(infoFile) / sizeof(charInfo);
-	fseek(infoFile, 0, SEEK_SET);
-
-	charInfo* info = new charInfo[length];
-
-	size_t read = fread(info, sizeof(charInfo), length, infoFile);
-
-	fclose(infoFile);
-
-	CharBounds* charLocations = new CharBounds[CHAR_MAX];
+	std::vector<byte> buffer = AssetManager::loadAssetToBuffer(infoPath);
+	const auto* info = reinterpret_cast<const charInfo*>(buffer.data());
+	size_t length = buffer.size() / sizeof(charInfo);
 
 	float digitWidth = 0;
 	float maxCharWidth = 0;
 	for (int i = 0; i < length; i++) {
-		charLocations[info[i].c] = info[i].bounds;
+		ff->charLocations[info[i].c] = info[i].bounds;
 
 		float charWidth = info[i].bounds.right - info[i].bounds.left;
 		if (info[i].c >= '0' && info[i].c <= '9')
@@ -88,63 +78,16 @@ int Text::loadFace(const std::string& folder, const std::string& name) {
 		maxCharWidth = std::max(maxCharWidth, charWidth);
 	}
 
-	fontFaces[numFonts] = {std::move(tex), charLocations, info[0].bounds.bottom - info[0].bounds.top, digitWidth, maxCharWidth};
-
-	delete[] info;
-
-	return numFonts++;
-}
-#else
-
-byte Text::loadFace(AAssetManager* assetManager, const std::string& folder, const std::string& name) {
-	std::string texturePath = folder + name + ".png";
-
-	auto tex = std::make_unique<Texture>(assetManager, texturePath, true);
-
-	std::string infoPath = folder + name + ".bin";
-
-	AAsset* infoFile = AAssetManager_open(
-	        assetManager,
-	        infoPath.c_str(),
-	        AASSET_MODE_BUFFER);
-	if (infoFile == nullptr) {
-		return false;
-	}
-
-	unsigned int length = AAsset_getLength(infoFile) / sizeof(charInfo);
-
-	charInfo* info = (charInfo*)AAsset_getBuffer(infoFile);
-
-	CharBounds* charLocations = new CharBounds[CHAR_MAX];
-
-	float digitWidth = 0;
-	float maxCharWidth = 0;
-	for (int i = 0; i < length; i++) {
-		charLocations[info[i].c] = info[i].bounds;
-
-		float charWidth = info[i].bounds.right - info[i].bounds.left;
-		if (info[i].c >= '0' && info[i].c <= '9')
-			digitWidth = fmax(digitWidth, charWidth);
-		maxCharWidth = fmax(maxCharWidth, charWidth);
-	}
-
-	fontFaces[numFonts] = {std::move(tex), charLocations, info[0].bounds.bottom - info[0].bounds.top, digitWidth, maxCharWidth};
-
-	AAsset_close(infoFile);
+	ff->size = info[0].bounds.bottom - info[0].bounds.top;
+	ff->digitWidth = digitWidth;
+	ff->maxCharWidth = maxCharWidth;
 
 	return numFonts++;
 }
 
-#endif
-
-void Text::deleteFonts() {
-	for (int i = 0; i < numFonts; i++)
-		delete[] fontFaces[i].charLocations;
-}
-
-int Text::addText(float x, float y, std::string text, const Font& font, float size, const col& textColor) {
+int Text::addText(float x, float y, const std::string& text, const Font& font, float size, const col& textColor) {
 	const FontFace& fontFace = fontFaces[font.fontFaceId];
-	int length = (int)text.length();
+	int length = static_cast<int>(text.length());
 	float xPos = x;
 	for (int i = 0; i < length; i++) {
 		if (numChars == MAX_CHARS) return i;
@@ -176,9 +119,9 @@ int Text::addText(float x, float y, std::string text, const Font& font, float si
 	return length;
 }
 
-float Text::calculateWidth(std::string text, const Font& font, float size) {
+float Text::calculateWidth(const std::string& text, const Font& font, float size) {
 	const FontFace& fontFace = fontFaces[font.fontFaceId];
-	int length = (int)text.length();
+	int length = static_cast<int>(text.length());
 	float width = 0;
 	for (int i = 0; i < length; i++) {
 		char c = text.at(i);
@@ -257,7 +200,7 @@ void Text::drawText(byte batch) {
 }
 
 void Text::updateProjectionMatrix() {
-	mat4 projMat;
+	mat4 projMat{};
 	buildOrthographicMatrix(&projMat, 1.0f, RATIO, -1.0f, 1.0f);
 	Shaders::text->setMat4("uProjection2D", projMat);
 }

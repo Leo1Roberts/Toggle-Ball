@@ -389,9 +389,9 @@ void Obstacle::createDomainModel() {
 			if (ang > -getHalfArcAngle() && ang < getHalfArcAngle()) {
 				topPointA = getStateA() + diffPerpUnit * (getMajorRadius() + getMinorRadius());
 			} else {
-				float startAng = abs(wrapAngle(diffAngle - getAngle() + getHalfArcAngle()));
-				float endAng = abs(wrapAngle(diffAngle - getAngle() - getHalfArcAngle()));
-				if (abs(startAng - endAng) < 0.001f) { // Equal
+				float startAng = std::abs(wrapAngle(diffAngle - getAngle() + getHalfArcAngle()));
+				float endAng = std::abs(wrapAngle(diffAngle - getAngle() - getHalfArcAngle()));
+				if (std::abs(startAng - endAng) < 0.001f) { // Equal
 					topPointA = getStateA() + getRot() * getStart() + diffPerpUnit * getMinorRadius();
 					line1Length += getStart().y - getEnd().y;
 				} else if (startAng < endAng)
@@ -404,9 +404,9 @@ void Obstacle::createDomainModel() {
 			if (ang > -getHalfArcAngle() && ang < getHalfArcAngle()) {
 				bottomPointA = getStateA() - diffPerpUnit * (getMajorRadius() + getMinorRadius());
 			} else {
-				float startAng = abs(wrapAngle(diffAngle - getAngle() + getHalfArcAngle() + PI));
-				float endAng = abs(wrapAngle(diffAngle - getAngle() - getHalfArcAngle() + PI));
-				if (abs(startAng - endAng) < 0.001f) { // Equal
+				float startAng = std::abs(wrapAngle(diffAngle - getAngle() + getHalfArcAngle() + PI));
+				float endAng = std::abs(wrapAngle(diffAngle - getAngle() - getHalfArcAngle() + PI));
+				if (std::abs(startAng - endAng) < 0.001f) { // Equal
 					bottomPointA = getStateA() + getRot() * getEnd() - diffPerpUnit * getMinorRadius();
 					line2Length += getStart().y - getEnd().y;
 				} else if (startAng < endAng)
@@ -658,7 +658,7 @@ void Obstacle::createDomainModel() {
 			arc2Radius = getMajorRadius() - getMinorRadius() + 0.5f * OUTLINE_WIDTH_WORLD;
 		}
 
-		float absArcAngle = abs(arcAngle);
+		float absArcAngle = std::abs(arcAngle);
 		float sign = arcAngle < 0 ? -1.0f : 1.0f;
 
 		float arc1Length = arc1Radius * absArcAngle;
@@ -756,7 +756,7 @@ void Obstacle::createDomainModel() {
 			float domainStartAngle, domainEndAngle;
 			short START_INDEX = 0;
 
-			if (abs(getStateB().y - getStateA().y) >= 2 * PI) {
+			if (std::abs(getStateB().y - getStateA().y) >= 2 * PI) {
 				domainStartAngle = 0;
 				domainEndAngle = 2 * PI;
 			} else {
@@ -833,7 +833,7 @@ void Obstacle::createDomainModel() {
 			vec3 start, end;
 			short START_INDEX;
 
-			if (abs(getStateB().y - getStateA().y) + 2 * getHalfArcAngle() >= 2 * PI) {
+			if (std::abs(getStateB().y - getStateA().y) + 2 * getHalfArcAngle() >= 2 * PI) {
 				startAngle = 0;
 				endAngle = 2 * PI;
 				start = end = {0, 0, getMajorRadius()};

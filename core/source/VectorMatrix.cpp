@@ -16,9 +16,9 @@ inline vec3 cross(const vec3& v1, const vec3& v2) {
 
 vec3 lerp(const vec3& a, const vec3& b, float t) {
 	return {
-			lerp(a.x, b.x, t),
-			lerp(a.y, b.y, t),
-			lerp(a.z, b.z, t)
+			std::lerp(a.x, b.x, t),
+			std::lerp(a.y, b.y, t),
+			std::lerp(a.z, b.z, t)
 	};
 }
 
@@ -26,10 +26,10 @@ vec3 lerp(const vec3& a, const vec3& b, float t) {
 
 vec4 lerp(const vec4& a, const vec4& b, float t) {
 	return {
-	lerp(a.r, b.r, t),
-	lerp(a.g, b.g, t),
-	lerp(a.b, b.b, t),
-	lerp(a.a, b.a, t)
+	std::lerp(a.r, b.r, t),
+	std::lerp(a.g, b.g, t),
+	std::lerp(a.b, b.b, t),
+	std::lerp(a.a, b.a, t)
 	};
 }
 

@@ -1,6 +1,7 @@
 #include "Shader.h"
+#include "AssetManager.h"
 
-GLShader Shader::compileShader(GLenum type, const std::string& source) const {
+GLShader Shader::compileShader(GLenum type, const std::string& source) {
 	GLuint id = glCreateShader(type);
 	const char* src = source.c_str();
 	glShaderSource(id, 1, &src, nullptr);
@@ -16,20 +17,11 @@ namespace Shaders {
 	std::unique_ptr<Shader> text;
 	std::unique_ptr<Shader> cursor;
 // TODO: prefix shader code with OpenGL version
-#ifdef WINDOWS_VERSION
 	void load() {
-		object = std::make_unique<Shader>(importTextFile(ASSETS_PATH + "shaders/object.vert"), importTextFile(ASSETS_PATH + "shaders/object.frag"));
-		outline = std::make_unique<Shader>(importTextFile(ASSETS_PATH + "shaders/objectOutline.vert"), importTextFile(ASSETS_PATH + "shaders/objectOutline.frag"));
-		button = std::make_unique<Shader>(importTextFile(ASSETS_PATH + "shaders/button.vert"), importTextFile(ASSETS_PATH + "shaders/button.frag"));
-		text = std::make_unique<Shader>(importTextFile(ASSETS_PATH + "shaders/text.vert"), importTextFile(ASSETS_PATH + "shaders/text.frag"));
-		cursor = std::make_unique<Shader>(importTextFile(ASSETS_PATH + "shaders/cursor.vert"), importTextFile(ASSETS_PATH + "shaders/cursor.frag"));
+		object = std::make_unique<Shader>(AssetManager::loadTextFile("shaders/object.vert"), AssetManager::loadTextFile("shaders/object.frag"));
+		outline = std::make_unique<Shader>(AssetManager::loadTextFile("shaders/objectOutline.vert"), AssetManager::loadTextFile("shaders/objectOutline.frag"));
+		button = std::make_unique<Shader>(AssetManager::loadTextFile("shaders/button.vert"), AssetManager::loadTextFile("shaders/button.frag"));
+		text = std::make_unique<Shader>(AssetManager::loadTextFile("shaders/text.vert"), AssetManager::loadTextFile("shaders/text.frag"));
+		cursor = std::make_unique<Shader>(AssetManager::loadTextFile("shaders/cursor.vert"), AssetManager::loadTextFile("shaders/cursor.frag"));
 	}
-#else
-	void load(AAssetManager* assetManager) {
-		object = std::make_unique<Shader>(importTextFile(assetManager, "shaders/object.vert"), importTextFile(assetManager, "shaders/object.frag"));
-		outline = std::make_unique<Shader>(importTextFile(assetManager, "shaders/objectOutline.vert"), importTextFile(assetManager, "shaders/objectOutline.frag"));
-		button = std::make_unique<Shader>(importTextFile(assetManager, "shaders/button.vert"), importTextFile(assetManager, "shaders/button.frag"));
-		text = std::make_unique<Shader>(importTextFile(assetManager, "shaders/text.vert"), importTextFile(assetManager, "shaders/text.frag"));
-	}
-#endif
 }

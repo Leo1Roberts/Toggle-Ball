@@ -8,7 +8,9 @@
 #include <vector>
 #include "VectorMatrix.h"
 
+#if defined(PLATFORM_ANDROID)
 struct android_app;
+#endif
 
 
 struct SelectionState {
@@ -50,7 +52,7 @@ struct UndoNode {
 
 class Game {
 public:
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 	static void createGame(GLFWwindow* win) {
 		window = win;
 		initGame();
@@ -67,8 +69,7 @@ public:
 	static void moveObjectsWithArrowKey(int key, int keyAction);
 
 	static void updateCursor();
-#else
-
+#elif defined(PLATFORM_ANDROID)
 	static void createGame(android_app* pApp) {
 		androidApp = pApp;
 		initGame();
@@ -80,7 +81,6 @@ public:
 	 * Note: this will clear the input queue
 	 */
 	static void handleInput();
-
 #endif
 
 	static void deleteGame();
@@ -88,7 +88,7 @@ public:
 	static void update();
 
 private:
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 	static GLFWwindow* window;
 #else
 	static android_app* androidApp;
@@ -158,7 +158,7 @@ private:
 	};
 	static void requestDialogue(int d);
 
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 	static void confirmExit(int _ = 0);
 #endif
 

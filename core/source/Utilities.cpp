@@ -1,4 +1,6 @@
 #include "main.h"
+#include <chrono>
+#include <cmath>
 
 void colorToLinear(vec3* srgb) {
 	srgb->x = (float) pow(srgb->x, 2.2);
@@ -7,13 +9,9 @@ void colorToLinear(vec3* srgb) {
 }
 
 long now_ms() {
-#ifdef WINDOWS_VERSION
-	return timeGetTime();
-#else
-	struct timespec res;
-	clock_gettime(CLOCK_MONOTONIC, &res);
-	return (long) (1000.0 * (double) res.tv_sec + (double) res.tv_nsec / 1e6);
-#endif
+	auto now = std::chrono::steady_clock::now();
+	auto duration = now.time_since_epoch();
+	return static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::milliseconds>(duration).count());
 }
 
 float randomFloat() { // Returns random number between -1 and 1
@@ -23,7 +21,7 @@ float randomFloat() { // Returns random number between -1 and 1
 float randomFloatBeyondValue(float val) {
 	float result;
 	do result = randomFloat();
-	while (abs(result) < val);
+	while (std::abs(result) < val);
 	return result;
 }
 
@@ -39,7 +37,7 @@ float wrapAngle(float radians) {
 float angleToDisplay(float angle) {
 	angle *= -180 / PI;
 	if (angle == 0) angle = 0; // Remove -0
-	return round(angle * 100) * 0.01f;
+	return std::round(angle * 100) * 0.01f;
 }
 
 float wrapDisplayAngle(float displayAngle) {
@@ -94,52 +92,11 @@ vec2 pixelsToYNorm(vec2 pixels, float width, float height) {
 	                     width, height);
 }
 
-#ifdef WINDOWS_VERSION
-std::string importTextFile(const std::string& path) {
-	FILE* file;
-	fopen_s(&file, path.c_str(), "rt");
-	if (!file) throw std::runtime_error("Failed to open file: " + path);
-
-	fseek(file, 0, SEEK_END);
-	int length = ftell(file);
-	std::string result(length, 0);
-
-	fseek(file, 0, SEEK_SET);
-
-	fread_s(&result[0], length, 1, length, file);
-
-	fclose(file);
-
-	return result;
-}
-#else
-std::string importTextFile(AAssetManager* assetManager, const std::string& path) {
-	AAsset* file = AAssetManager_open(assetManager, path.c_str(), AASSET_MODE_BUFFER);
-	if (!file) throw std::runtime_error("Failed to open asset: " + path);
-
-	const char* buffer = (const char*) AAsset_getBuffer(file);
-
-	int length = AAsset_getLength(file);
-	std::string result(length, 0);
-
-	int current = 0;
-	for (int i = 0; i < length; i++) {
-		if (buffer[i] != '\r') {
-			result[current++] = buffer[i];
-		}
-	}
-
-	AAsset_close(file);
-
-	return result;
-}
-#endif
-
 GLuint loadShader(GLenum shaderType, const std::string& shaderSource) {
 	GLuint shader = glCreateShader(shaderType);
 	if (shader) {
-		auto* shaderRawString = (GLchar*) shaderSource.c_str();
-		GLint shaderLength = (GLint) shaderSource.length();
+		auto* shaderRawString = const_cast<GLchar*>(shaderSource.c_str());
+		auto shaderLength = static_cast<GLint>(shaderSource.length());
 		glShaderSource(shader, 1, &shaderRawString, &shaderLength);
 		glCompileShader(shader);
 

@@ -16,12 +16,15 @@
 #include "TextBoxManager.h"
 #include "GLUtilities.h"
 #include "Game.h"
-#include <Texture.h>
-#include <Shader.h>
+
+#include "AssetManager.h"
+#include "Texture.h"
+#include "Shader.h"
+
+#include <iostream>
 
 
-#ifndef WINDOWS_VERSION
-
+#if defined(PLATFORM_ANDROID)
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 #include <sys/param.h>
 #endif
@@ -52,11 +55,7 @@ mat4 worldMat, viewMat, projMat;
 mat3 viewRotMat;
 
 void Game::setupObjShaders() {
-#ifdef WINDOWS_VERSION
 	Shaders::load();
-#else
-	Shaders::load(androidApp->activity->assetManager);
-#endif
 
 	vec3 groundColor = {0.3f, 0.3f, 0.3f};
 	colorToLinear(&groundColor);
@@ -160,7 +159,7 @@ struct WindowInfo {
 float baseViewDist = 0;
 const float FOV = 0.3f * PI;
 
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 GLFWwindow* Game::window;
 
 bool forceExit;
@@ -195,8 +194,7 @@ void Game::deleteGame() {
 
 	obstacles.clear();
 
-	Text::deleteFonts();
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 	glfwTerminate();    // Destroys all remaining windows and cursors, restores modified gamma ramps, and frees resources.
 	exit(EXIT_SUCCESS); // Function call: exit() is a C/C++ function that performs various tasks to help clean up resources.
 #endif
@@ -223,7 +221,7 @@ void Game::updateHalfHeight() {
 }
 
 void Game::updateRenderArea() {
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 	int width, height;
 	glfwGetFramebufferSize(window, &width, &height);
 #else
@@ -248,7 +246,9 @@ void Game::updateRenderArea() {
 // General game logic
 
 void Game::initGame() {
-#ifndef WINDOWS_VERSION
+#if defined(PLATFORM_ANDROID)
+	AssetManager::init(androidApp->activity->assetManager);
+
 	// Choose your render attributes
 	constexpr EGLint attribs[] = {
 	EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
@@ -326,7 +326,7 @@ void Game::initGame() {
 	Text::init();
 	ButtonManager::init();
 
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 	Cursor::init();
 #endif
 
@@ -338,13 +338,9 @@ void Game::initGame() {
 }
 
 void Game::initFonts() {
-#ifdef WINDOWS_VERSION
-	byte BAHNSCHRIFT_FACE = Text::loadFace(ASSETS_PATH + "fonts/", "Bahnschrift");
-	byte COURIER_NEW_FACE = Text::loadFace(ASSETS_PATH + "fonts/", "Courier New");
-#else
-	byte BAHNSCHRIFT_FACE = Text::loadFace(androidApp->activity->assetManager, "fonts/", "Bahnschrift");
-	byte COURIER_NEW_FACE = Text::loadFace(androidApp->activity->assetManager, "fonts/", "Courier New");
-#endif
+	byte BAHNSCHRIFT_FACE = Text::loadFace("Bahnschrift");
+	byte COURIER_NEW_FACE = Text::loadFace("Courier New");
+
 	BAHNSCHRIFT = {
 	BAHNSCHRIFT_FACE,
 	false,
@@ -419,7 +415,7 @@ void Game::requestDialogue(int d) {
 	}
 }
 
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 void Game::confirmExit(int _) {
 	forceExit = true;
 	glfwSetWindowShouldClose(window, GLFW_TRUE);
@@ -442,13 +438,8 @@ void Game::saveAs(int _) {
 
 
 void Game::createObjects() {
-#ifdef WINDOWS_VERSION
 	Textures::load();
 	Meshes::load();
-#else
-	Textures::load(androidApp->activity->assetManager);
-	Meshes::load(androidApp->activity->assetManager);
-#endif
 
 	arenaBounds[0] = Plane(Textures::white.get(), BOUNDARY, MAT_CONCRETE, {0, 0, 1});
 	arenaBounds[1] = Plane(Textures::white.get(), BOUNDARY, MAT_CONCRETE, {0, 0, -1});
@@ -577,7 +568,7 @@ short Game::checkBallObstacleCollision(Ball_OLD* pBall, bool getIndex, bool only
 
 					if (separation < pBall->radius) {
 						if (getIndex) {
-							if ((!onlyRim || onlyRim && abs(separation) < pBall->radius) && g->getMinorRadius() >= obMinorRadius) {
+							if ((!onlyRim || onlyRim && std::abs(separation) < pBall->radius) && g->getMinorRadius() >= obMinorRadius) {
 								obMinorRadius = g->getMinorRadius();
 								obIndex = i;
 							}
@@ -731,23 +722,23 @@ void Game::physicsUpdate() {
 				g.setVel((g.getStateB() - g.getStateA()) * smoother.getCurrentVelocity());
 				break;
 			case ST_POS_OSC: {
-				float angularFrequency = lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition());
+				float angularFrequency = std::lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition());
 				g.setExtra(wrapAngle(g.getExtra() + angularFrequency * PHYSICS_TIMESTEP));
 				g.setPos(lerp(g.getStateA(), g.getStateB(), 0.5f - 0.5f * cos(g.getExtra())));
 				g.setVel((g.getStateB() - g.getStateA()) * (0.5f * sin(g.getExtra()) * angularFrequency));
 			} break;
 			case ST_ANG:
-				g.setAngle(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
+				g.setAngle(std::lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
 				g.setAngVel((g.getStateB().x - g.getStateA().x) * smoother.getCurrentVelocity());
 				break;
 			case ST_ANG_VEL:
-				g.setAngVel(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
+				g.setAngVel(std::lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
 				g.setAngle(wrapAngle(g.getAngle() + g.getAngVel().x * PHYSICS_TIMESTEP));
 				break;
 			case ST_ANG_OSC: {
-				float angularFrequency = lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition());
+				float angularFrequency = std::lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition());
 				g.setExtra(wrapAngle(g.getExtra() + angularFrequency * PHYSICS_TIMESTEP));
-				g.setAngle(lerp(g.getStateA().y, g.getStateB().y, 0.5f - 0.5f * cos(g.getExtra())));
+				g.setAngle(std::lerp(g.getStateA().y, g.getStateB().y, 0.5f - 0.5f * cos(g.getExtra())));
 				g.setAngVel((g.getStateB().y - g.getStateA().y) * (0.5f * sin(g.getExtra()) * angularFrequency));
 			} break;
 			}
@@ -877,27 +868,27 @@ void Game::updateEditorObstacles() {
 			break;
 		case ST_POS_OSC:
 			if (selection[i] && TextBoxManager::getCurrentProperty() == PROPERTY_OPM) {
-				g.setPos(lerp(g.getStateA(), g.getStateB(), 0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step + g.getExtra())));
-				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step));
+				g.setPos(lerp(g.getStateA(), g.getStateB(), 0.5f - 0.5f * cos(std::lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step + g.getExtra())));
+				g.setExtra(wrapAngle(g.getExtra() + std::lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step));
 			} else {
 				g.setPos(smoother.getCurrentPosition() < 0.5f ? g.getStateA() : g.getStateB());
 				g.setExtra(toggled ? PI : 0);
 			}
 			break;
 		case ST_ANG:
-			g.setAngle(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
+			g.setAngle(std::lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
 			break;
 		case ST_ANG_VEL:
 			if (selection[i] && TextBoxManager::getCurrentProperty() == PROPERTY_RPM) {
-				g.setAngVel(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
+				g.setAngVel(std::lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()));
 				g.setAngle(wrapAngle(g.getAngle() + g.getAngVel().x * step));
 			} else
 				g.setAngle(g.getInitAngle());
 			break;
 		case ST_ANG_OSC:
 			if (selection[i] && TextBoxManager::getCurrentProperty() == PROPERTY_OPM) {
-				g.setAngle(g.getStateA().y + (g.getStateB().y - g.getStateA().y) * (0.5f - 0.5f * cos(lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step + g.getExtra())));
-				g.setExtra(wrapAngle(g.getExtra() + lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step));
+				g.setAngle(g.getStateA().y + (g.getStateB().y - g.getStateA().y) * (0.5f - 0.5f * cos(std::lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step + g.getExtra())));
+				g.setExtra(wrapAngle(g.getExtra() + std::lerp(g.getStateA().x, g.getStateB().x, smoother.getCurrentPosition()) * step));
 			} else {
 				g.setAngle(smoother.getCurrentPosition() < 0.5f ? g.getStateA().y : g.getStateB().y);
 				g.setExtra(toggled ? PI : 0);
@@ -1132,13 +1123,13 @@ void Game::drawPropertiesPanel() {
 		switch (obstacles[focus].getStateType()) {
 		case ST_POS_OSC:
 		case ST_ANG_OSC: {
-			const float angFreq = lerp(obstacles[focus].getStateA().x, obstacles[focus].getStateB().x, smoother.getCurrentPosition());
+			const float angFreq = std::lerp(obstacles[focus].getStateA().x, obstacles[focus].getStateB().x, smoother.getCurrentPosition());
 			const float opm = angFreq * 30 / PI;
 			ss.str("");
 			ss.clear();
 			ss << opm;
 			for (short i = 0; i < (short)obstacles.size(); i++) {
-				if (selection[i] && (obstacles[i].getStateType() == ST_POS_OSC || obstacles[i].getStateType() == ST_ANG_OSC) && lerp(obstacles[i].getStateA().x, obstacles[i].getStateB().x, smoother.getCurrentPosition()) != angFreq) {
+				if (selection[i] && (obstacles[i].getStateType() == ST_POS_OSC || obstacles[i].getStateType() == ST_ANG_OSC) && std::lerp(obstacles[i].getStateA().x, obstacles[i].getStateB().x, smoother.getCurrentPosition()) != angFreq) {
 					ss.str("");
 					break;
 				}
@@ -1148,13 +1139,13 @@ void Game::drawPropertiesPanel() {
 			                           ss.str(), TR_FLOAT, PROPERTY_OPM, changePropertyInput, updatePropertyInput, true);
 		} break;
 		case ST_ANG_VEL: {
-			const float angVel = lerp(obstacles[focus].getStateA().x, obstacles[focus].getStateB().x, smoother.getCurrentPosition());
+			const float angVel = std::lerp(obstacles[focus].getStateA().x, obstacles[focus].getStateB().x, smoother.getCurrentPosition());
 			const float rpm = angVel * 30 / PI;
 			ss.str("");
 			ss.clear();
 			ss << rpm;
 			for (short i = 0; i < (short)obstacles.size(); i++) {
-				if (selection[i] && obstacles[i].getStateType() == ST_ANG_VEL && lerp(obstacles[i].getStateA().x, obstacles[i].getStateB().x, smoother.getCurrentPosition()) != angVel) {
+				if (selection[i] && obstacles[i].getStateType() == ST_ANG_VEL && std::lerp(obstacles[i].getStateA().x, obstacles[i].getStateB().x, smoother.getCurrentPosition()) != angVel) {
 					ss.str("");
 					break;
 				}
@@ -1190,7 +1181,7 @@ void Game::drawDialogue() {
 	                         true, false, false);
 
 	switch (dialogue) {
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 	case DLG_CONFIRM_EXIT:
 		ButtonManager::addButton(std::max(LEFT + 0.05f, -0.5f), std::min(RIGHT - 0.05f, 0.5f), 0.3f, -0.3f,
 		                         nullptr, 0,
@@ -1518,7 +1509,7 @@ void Game::render() {
 	//glLineWidth(10.0f);
 	Line::drawLines();
 
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 	Cursor::pos = pixelsToYNorm(pointerPos, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	glEnable(GL_BLEND);
@@ -1530,7 +1521,7 @@ void Game::render() {
 	glUseProgram(0);
 
 	// Present the rendered image. This is an implicit glFlush.
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 	glfwSwapBuffers(window);
 #else
 	eglSwapBuffers(eglDisplay, eglSurface);
@@ -1577,7 +1568,7 @@ void Game::drawObstacles() {
 		if (inEditor) {
 			if (g.getStateType() == ST_POS_OSC || g.getStateType() == ST_ANG_OSC) {
 				glEnable(GL_BLEND);
-				alpha = 2.5f * abs(0.5f - smoother.getCurrentPosition()) - 0.2f; // Includes a small period where the obstacle is completely invisible
+				alpha = 2.5f * std::abs(0.5f - smoother.getCurrentPosition()) - 0.2f; // Includes a small period where the obstacle is completely invisible
 			}
 		}
 		Shaders::object->setFloat("uAlpha", alpha);
@@ -1699,33 +1690,7 @@ vec3 Game::getPointerWorldPos(float x, float y) {
 vec3 Game::getPointerWorldPos(const vec2& pos) { return getPointerWorldPos(pos.x, pos.y); }
 
 std::vector<std::string> Game::getLevelList() {
-	std::vector<std::string> levelList;
-#ifdef WINDOWS_VERSION
-	WIN32_FIND_DATAA findFileData;
-	HANDLE hFind = FindFirstFileA((ASSETS_PATH + "levels/*.lvl").c_str(), &findFileData);
-	if (hFind != INVALID_HANDLE_VALUE) {
-		do {
-			std::string fileName = findFileData.cFileName;
-			if (fileName.length() > 4 && fileName.substr(fileName.length() - 4) == ".lvl") {
-				levelList.push_back(fileName.substr(0, fileName.length() - 4));
-			}
-		} while (FindNextFileA(hFind, &findFileData) != 0);
-		FindClose(hFind);
-	}
-#else
-	AAssetDir* dir = AAssetManager_openDir(androidApp->activity->assetManager, "levels");
-	if (dir != nullptr) {
-		const char* fName = AAssetDir_getNextFileName(dir);
-		while (fName != nullptr) {
-			std::string fileName = fName;
-			if (fileName.length() > 4 && fileName.substr(fileName.length() - 4) == ".lvl")
-				levelList.push_back(fileName.substr(0, fileName.length() - 4));
-			fName = AAssetDir_getNextFileName(dir);
-		}
-		AAssetDir_close(dir);
-	}
-#endif
-	return levelList;
+	return AssetManager::getFileList("levels", ".lvl");
 }
 
 void Game::updateArena() {
@@ -1791,29 +1756,10 @@ void Game::selectLevel(const std::string& name) {
 	if (name.empty())
 		loaded = Level::importLevel(&newLevel, levelString, level.name);
 	else {
-#ifdef WINDOWS_VERSION
-		std::ifstream ifs((ASSETS_PATH + "levels/" + name + ".lvl").c_str());
-		if (ifs.is_open()) {
-			std::string str(std::istreambuf_iterator<char>{ifs}, {});
-			ifs.close();
-			loaded = Level::importLevel(&newLevel, str, name);
-			levelString = str;
-		} else
-			return;
-#else
-		AAsset* file = AAssetManager_open(
-		androidApp->activity->assetManager,
-		("levels/" + name + ".lvl").c_str(),
-		AASSET_MODE_BUFFER);
-		if (file) {
-			const off_t fileLength = AAsset_getLength(file);
-			std::string str;
-			str.resize(fileLength);
-			AAsset_read(file, (void*)str.c_str(), fileLength);
-			AAsset_close(file);
-			loaded = Level::importLevel(&newLevel, str, name);
-		} else
-			return;
+		std::string str = AssetManager::loadTextFile("levels/" + name + ".lvl");
+		loaded = Level::importLevel(&newLevel, str, name);
+#if defined(PLATFORM_DESKTOP)
+		levelString = str;
 #endif
 	}
 
@@ -1858,19 +1804,13 @@ void Game::selectLevelCallback(int levelIndex) {
 
 short Game::savedIndex;
 void Game::saveLevel(int _) {
-#ifdef WINDOWS_VERSION
-	std::string data = std::move(level.exportLevel());
-
-	std::ofstream ofs((ASSETS_PATH + "levels/" + level.name + ".lvl").c_str());
-	if (ofs.is_open()) {
-		ofs << data;
-		ofs.close();
+#if defined(PLATFORM_DESKTOP)
+	if (AssetManager::saveTextFile("levels/" + level.name + ".lvl", level.exportLevel()))
 		savedIndex = bufferIndex;
-	}
 #endif
 }
 
-#ifdef WINDOWS_VERSION
+#if defined(PLATFORM_DESKTOP)
 
 WindowInfo windowInfo;
 
@@ -2400,6 +2340,11 @@ void Game::handleCharInput(GLFWwindow* window, unsigned int c) {
 }
 
 void Game::handleCursorPosInput(GLFWwindow* window, double xpos, double ypos) {
+	float xscale, yscale;
+	glfwGetWindowContentScale(window, &xscale, &yscale);
+	xpos *= xscale;
+	ypos *= yscale;
+
 	if (inEditor && middleMouseDown)
 		moveViewOrigin((float)xpos - pointerPos.x, (float)ypos - pointerPos.y);
 
@@ -2560,7 +2505,7 @@ void Game::updateCursor() {
 	}
 }
 
-#else
+#elif defined(PLATFORM_ANDROID)
 
 vec2 prevPos;
 vec2 tapPos;
@@ -2715,22 +2660,25 @@ short Game::pressedObIndex;
 float Game::initialPointerObDist;
 
 static float getPointerObDist(const Obstacle* g, const vec3& pointerPos, byte section) { // Section: 0 = middle, 1 = start, 2 = end
-	if (section == 1) {                                                                  // Start
+	if (section == 1) { // Start
 		vec3 absStart = g->getPos() + g->getRot() * g->getStart();
 		return (pointerPos - absStart).length();
-	} else if (section == 2) { // End
+	}
+
+	if (section == 2) { // End
 		vec3 absEnd = g->getPos() + g->getRot() * g->getEnd();
 		return (pointerPos - absEnd).length();
-	} else { // Middle
-		if (g->getIsStraight()) {
-			PlaneDefinition plane = g->getTopPlane();
-			float dist = dot(plane.normal, pointerPos) - plane.dotProduct + g->getMinorRadius();
-			return abs(dist);
-		} else {
-			float toCentre = (pointerPos - g->getPos()).length();
-			return abs(toCentre - g->getMajorRadius());
-		}
 	}
+
+	// Middle (straight obstacle)
+	if (g->getIsStraight()) {
+		PlaneDefinition plane = g->getTopPlane();
+		float dist = dot(plane.normal, pointerPos) - plane.dotProduct + g->getMinorRadius();
+		return std::abs(dist);
+	}
+	// Middle (curved obstacle)
+		float toCentre = (pointerPos - g->getPos()).length();
+		return std::abs(toCentre - g->getMajorRadius());
 }
 
 void Game::startAction() {
@@ -2751,7 +2699,7 @@ void Game::startAction() {
 			if (rimIndex >= 0) {
 				pressedObIndex = (short)(rimIndex % obstacles.size());
 				pressedOnRim = true;
-				initialPointerObDist = getPointerObDist(&obstacles[pressedObIndex], actionStartPointerWorldPos, rimIndex / (int)obstacles.size());
+				initialPointerObDist = getPointerObDist(&obstacles[pressedObIndex], actionStartPointerWorldPos, rimIndex / static_cast<short>(obstacles.size()));
 			} else
 				pressedObIndex = checkBallObstacleCollision(&pointerBall, true);
 		}

@@ -8,20 +8,20 @@
 #include "TextBoxManager.h"
 #include "ButtonManager.h"
 
-const float BUTTON_TEXTURE_INSET = 0.0625f;
-const int MAX_BUTTONS = 1000; // WARNING: changing this may require changing the type of batchSize
-const int MAX_BATCHES = 5;
+constexpr float BUTTON_TEXTURE_INSET = 0.0625f;
+constexpr int MAX_BUTTONS = 1000; // WARNING: changing this may require changing the type of batchSize
+constexpr int MAX_BATCHES = 5;
 
 void ButtonVertex::setupLayout() {
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, position));
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), reinterpret_cast<void*>(offsetof(ButtonVertex, position)));
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, uv));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), reinterpret_cast<void*>(offsetof(ButtonVertex, uv)));
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, fillColor));
+	glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ButtonVertex), reinterpret_cast<void*>(offsetof(ButtonVertex, fillColor)));
 	glEnableVertexAttribArray(2);
-	glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, outlineColor));
+	glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ButtonVertex), reinterpret_cast<void*>(offsetof(ButtonVertex, outlineColor)));
 	glEnableVertexAttribArray(3);
-	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), (void*)offsetof(ButtonVertex, outlineRadius));
+	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, sizeof(ButtonVertex), reinterpret_cast<void*>(offsetof(ButtonVertex, outlineRadius)));
 	glEnableVertexAttribArray(4);
 }
 
@@ -193,7 +193,7 @@ void ButtonManager::drawButtons(byte batch) {
 }
 
 void ButtonManager::updateProjectionMatrix() {
-	mat4 projMat;
+	mat4 projMat{};
 	buildOrthographicMatrix(&projMat, 1.0f, RATIO, -1.0f, 1.0f);
 	Shaders::button->setMat4("uProjection2D", projMat);
 }
@@ -235,7 +235,7 @@ bool ButtonManager::released() {
 				}
 			}
 		}
-#ifndef WINDOWS_VERSION
+#if defined(PLATFORM_ANDROID)
 		pointerPos = { NAN, NAN };
 #endif
 	} else {
@@ -272,7 +272,7 @@ void ButtonManager::addButton(float l, float r, float t, float b,
 		float fontSize = (t - b) * style.fontSize;
 
 		size_t dotIndex = text.find('.');
-		float x, y;
+		float x;
 		if (dotIndex == std::string::npos) { // No decimal point
 			float textWidth = Text::calculateWidth(text, style.font, fontSize);
 			x = (l + r - textWidth) * 0.5f;
@@ -280,7 +280,7 @@ void ButtonManager::addButton(float l, float r, float t, float b,
 			float leftWidth = Text::calculateWidth(text.substr(0, dotIndex), style.font, fontSize) + 0.5f * Text::calculateWidth(".", style.font, fontSize);
 			x = (l + r) * 0.5f - leftWidth;
 		}
-		y = t - (t - b - fontSize) * 0.5f;
+		float y = t - (t - b - fontSize) * 0.5f;
 		Text::addText(x, y, text, style.font, fontSize, style.fontColor);
 	}
 }

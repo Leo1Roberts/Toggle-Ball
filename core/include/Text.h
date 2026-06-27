@@ -14,7 +14,7 @@ struct CharBounds {
 
 struct FontFace {
 	std::unique_ptr<Texture> texture;
-	CharBounds* charLocations;
+	std::array<CharBounds, CHAR_MAX> charLocations;
 	float size; // Size (height) of font as a proportion of the texture height
 	float digitWidth;
 	float maxCharWidth;
@@ -29,10 +29,10 @@ struct Font {
 
 struct CharToDraw {
 	vec2 pos;
-	Texture* texture;
-	CharBounds bounds;
+	Texture* texture{};
+	CharBounds bounds{};
 	col color;
-	float scaleFactor;
+	float scaleFactor{};
 };
 
 struct CharVertex {
@@ -50,15 +50,8 @@ class Text {
 public:
 	static void init();
 
-#ifdef WINDOWS_VERSION
-	static int loadFace(const std::string& folder, const std::string& name);// Returns index (font ID) of font face for fontFaces array, or -1 on fail
-#else
-
-	static byte loadFace(AAssetManager* assetManager, const std::string& folder,
-	                     const std::string& name);// Returns index (font ID) of font face for fontFaces array, or -1 on fail
-#endif
-
-	static void deleteFonts();
+	// Returns index (font ID) of font face for fontFaces array, or -1 on fail
+	static int loadFace(const std::string& name);
 
 	static void clearText() { // MUST be called each frame before adding text
 		numChars = 0;
@@ -68,11 +61,11 @@ public:
 	// Returns number of characters added (matches text.length() if successful)
 	// [pos] is the position of the text in NDC
 	// [size] is the height of the text in UI coordinates (height of screen is 2)
-	static int addText(float x, float y, std::string text, const Font& font, float size, const col& textColor = BLACK);
+	static int addText(float x, float y, const std::string& text, const Font& font, float size, const col& textColor = BLACK);
 
-	static float calculateWidth(std::string text, const Font& font, float size);
+	static float calculateWidth(const std::string& text, const Font& font, float size);
 
-	static inline void markEndOfBatch() { batchToFill++; }
+	static void markEndOfBatch() { batchToFill++; }
 
 	static void drawText(byte batch);
 
@@ -94,4 +87,4 @@ private:
 	static std::vector<Index> indices;
 };
 
-#endif// TEXT_H
+#endif // TEXT_H

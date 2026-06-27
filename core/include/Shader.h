@@ -47,7 +47,7 @@ public:
 private:
 	GLProgram program;
 
-	GLShader compileShader(GLenum type, const std::string& source) const;
+	[[nodiscard]] static GLShader compileShader(GLenum type, const std::string& source) ;
 };
 
 namespace Shaders {
@@ -57,11 +57,7 @@ namespace Shaders {
 	extern std::unique_ptr<Shader> text;
 	extern std::unique_ptr<Shader> cursor;
 
-#ifdef WINDOWS_VERSION
 	void load();
-#else
-	void load(AAssetManager* assetManager);
-#endif
 }
 
 #endif // SHADER_H
