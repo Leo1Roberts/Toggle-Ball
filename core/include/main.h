@@ -4,25 +4,20 @@
 #include <string>
 
 #if defined(PLATFORM_DESKTOP)
-    #include <glad/glad.h>
-    #include <GLFW/glfw3.h>
-    #define USE_MATH_DEFINES
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#define USE_MATH_DEFINES
 
-    #if defined(PLATFORM_WINDOWS)
-        #define NOMINMAX
-        #include <windows.h>
-    #elif defined(PLATFORM_LINUX)
-        #include <cstring>
-		#include <climits>
-    #endif
+#include <cstring>
+#include <climits>
 
 #elif defined(PLATFORM_ANDROID)
 
-    #include <jni.h>
-    #include <android/asset_manager.h>
-    #include <android/imagedecoder.h>
-    #include <GLES3/gl3.h>
-    #include <EGL/egl.h>
+#include <jni.h>
+#include <android/asset_manager.h>
+#include <android/imagedecoder.h>
+#include <GLES3/gl3.h>
+#include <EGL/egl.h>
 
 #endif
 
