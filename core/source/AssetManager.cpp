@@ -47,7 +47,7 @@ namespace AssetManager {
 #endif
 
 		if (buffer.empty())
-			throw std::runtime_error("Could not load asset: " + fullPath);
+			throw std::runtime_error("Could not load asset: " + path);
 
 		return buffer;
 	}
@@ -59,12 +59,14 @@ namespace AssetManager {
 
 
 	bool saveTextFile(const std::string& path, const std::string& text) {
+#if defined(PLATFORM_DESKTOP)
 		std::ofstream ofs(std::string(ASSETS_PATH) + path);
 		if (ofs.is_open()) {
 			ofs << text;
 			ofs.close();
 			return true;
 		}
+#endif
 		return false;
 	}
 

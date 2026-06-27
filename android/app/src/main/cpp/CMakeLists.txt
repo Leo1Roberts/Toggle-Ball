@@ -5,6 +5,9 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project("toggleball")
 
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # compute repo root relative to this CMakeLists
 get_filename_component(REPO_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../../../.." ABSOLUTE)
 message(STATUS "Repo root: ${REPO_ROOT}")
