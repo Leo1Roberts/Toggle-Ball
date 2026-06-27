@@ -1,36 +1,31 @@
-# For more information about using CMake with Android Studio, read the
-# documentation: https://d.android.com/studio/projects/add-native-code.html
-
 cmake_minimum_required(VERSION 3.22.1)
+project(toggleball_android LANGUAGES CXX C)
 
-project("toggleball")
-
+# --- COMPILER SETTINGS ---
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# compute repo root relative to this CMakeLists
+# --- PATH RESOLUTION & DEPENDENCIES ---
 get_filename_component(REPO_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../../../.." ABSOLUTE)
-message(STATUS "Repo root: ${REPO_ROOT}")
+message(STATUS "Engine Repository Root resolved to: ${REPO_ROOT}")
 
-# add core as a subproject
+find_package(game-activity REQUIRED CONFIG)
+
+# --- SUBDIRECTORIES ---
 add_subdirectory(${REPO_ROOT}/core ${CMAKE_BINARY_DIR}/core_build)
 
-# Creates your game shared library. The name must be the same as the
-# one used for loading in your Kotlin/Java or AndroidManifest.txt files.
-add_library(toggleball SHARED
-        main.cpp)
+# --- SOURCES & TARGET DEFINITION ---
+# The target name 'toggleball' must match the library loaded in Kotlin/Java
+set(ANDROID_SOURCES main.cpp)
+add_library(toggleball SHARED ${ANDROID_SOURCES})
 
-# your existing target (toggleball) remains; link core
-target_link_libraries(toggleball PRIVATE core
-		game-activity::game-activity
-
-        # EGL and other dependent libraries required for drawing
-        # and interacting with Android system
+# --- INCLUDES & LINKING ---
+target_link_libraries(toggleball PRIVATE
+        core
+        game-activity::game-activity
         EGL
         GLESv3
         jnigraphics
         android
-        log)
-
-# Searches for a package provided by the game activity dependency
-find_package(game-activity REQUIRED CONFIG)
+        log
+)

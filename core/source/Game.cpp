@@ -2340,10 +2340,12 @@ void Game::handleCharInput(GLFWwindow* window, unsigned int c) {
 }
 
 void Game::handleCursorPosInput(GLFWwindow* window, double xpos, double ypos) {
+#if defined(PLATFORM_LINUX)
 	float xscale, yscale;
 	glfwGetWindowContentScale(window, &xscale, &yscale);
 	xpos *= xscale;
 	ypos *= yscale;
+#endif
 
 	if (inEditor && middleMouseDown)
 		moveViewOrigin((float)xpos - pointerPos.x, (float)ypos - pointerPos.y);
