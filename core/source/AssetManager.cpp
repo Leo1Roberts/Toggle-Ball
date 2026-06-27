@@ -12,11 +12,7 @@ namespace AssetManager {
 		androidAssetManager = mgr;
 	}
 #elif defined(PLATFORM_DESKTOP)
-#if defined(PLATFORM_LINUX)
-	constexpr std::string_view ASSETS_PATH = "/home/leo/Toggle Ball/core/assets/";
-#elif defined(PLATFORM_WINDOWS)
-	constexpr std::string_view ASSETS_PATH = "C:/Users/leo/Toggle Ball/core/assets/";
-#endif
+	constexpr std::string_view ASSETS_PATH = ASSETS_PATH_MACRO;
 #endif
 
 	std::vector<byte> loadAssetToBuffer(const std::string& path) {

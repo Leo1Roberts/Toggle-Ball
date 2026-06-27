@@ -26,6 +26,9 @@ add_subdirectory(${REPO_ROOT}/core ${CMAKE_BINARY_DIR}/core_build)
 set(DESKTOP_SOURCES main.cpp)
 add_executable(toggleball_desktop ${DESKTOP_SOURCES})
 
+# --- ASSETS PATH MACRO ---
+target_compile_definitions(core PUBLIC ASSETS_PATH_MACRO=\"${REPO_ROOT}/core/assets/\")
+
 # --- INCLUDES & LINKING ---
 target_link_libraries(toggleball_desktop PRIVATE core)
 
