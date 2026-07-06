@@ -7,11 +7,10 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # --- PATH RESOLUTION & DEPENDENCIES ---
 get_filename_component(REPO_ROOT "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
-message(STATUS "Engine Repository Root resolved to: ${REPO_ROOT}")
 
 if(WIN32)
     if(NOT DEFINED GLFW_DIR)
-        set(GLFW_DIR "${REPO_ROOT}/third-party")
+        set(GLFW_DIR "${REPO_ROOT}/third-party/GLFW")
     endif()
     message(STATUS "GLFW Include Path resolved to: ${GLFW_DIR}/include")
 else()

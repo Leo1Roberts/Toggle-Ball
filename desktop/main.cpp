@@ -72,15 +72,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_DEBUG, GL_TRUE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
-	const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-	int monitor_width = mode->width; // Monitor's width.
-	int monitor_height = mode->height;
-
-	int window_width = (int)(monitor_width * 0.8f);
-	int window_height = (int)(monitor_height * 0.8f);
-
-	GLFWwindow* window = glfwCreateWindow(window_width, window_height, "Toggle Ball", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(1000, 1000, "Toggle Ball", nullptr, nullptr);
 
 	if (!window)
 	{
@@ -88,8 +80,7 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 
-	glfwMakeContextCurrent(window); // Set the window to be used and then centre that window on the monitor. 
-	glfwSetWindowPos(window, (monitor_width - window_width) / 2, (monitor_height - window_height) / 2);
+	glfwMakeContextCurrent(window); // Set the window to be used and then centre that window on the monitor.
 
 	glfwSwapInterval(1); // Set VSync rate 1:1 with monitor's refresh rate.
 
@@ -120,7 +111,7 @@ int main()
 	// (3) Enter the Main-Loop
 	// --------------------------------	
 
-	while (true) // Putting glfwWindowShouldClose inside allows loop to continue if need to confirm exit
+	while (true)
 	{
 		glfwPollEvents();
 		Game::update();
