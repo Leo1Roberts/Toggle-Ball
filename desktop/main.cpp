@@ -72,7 +72,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_DEBUG, GL_TRUE);
 	glfwWindowHint(GLFW_SAMPLES, 4);
 
-	GLFWwindow* window = glfwCreateWindow(1000, 1000, "Toggle Ball", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(1600, 1000, "Toggle Ball", nullptr, nullptr);
 
 	if (!window)
 	{

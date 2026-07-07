@@ -77,8 +77,8 @@ void Obstacle::createObstacleModel() {
 		vs.emplace_back(vec3(HALF_DEPTH, getEnd().y, getEnd().z), vec2(), vec3(1, 0, 0), getColor());
 		for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 			float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
-			float y = sin(ang);
-			float z = cos(ang);
+			float y = std::sin(ang);
+			float z = std::cos(ang);
 			float yrv = y * (getMinorRadius() - bevel);
 			float zrv = z * (getMinorRadius() - bevel);
 			float yrh = y * getMinorRadius();
@@ -146,8 +146,8 @@ void Obstacle::createObstacleModel() {
 		vs.emplace_back(vec3(HALF_DEPTH, getEnd().y, getEnd().z), vec2(), vec3(1, 0, 0), getColor());
 		for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 			float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI + getHalfArcAngle();
-			float y = sin(ang);
-			float z = cos(ang);
+			float y = std::sin(ang);
+			float z = std::cos(ang);
 			float yrv = y * (getMinorRadius() - bevel);
 			float zrv = z * (getMinorRadius() - bevel);
 			float yrh = y * getMinorRadius();
@@ -188,11 +188,11 @@ void Obstacle::createObstacleModel() {
 
 		// Banana
 
-		const byte NUM_SECTORS = (byte)ceil((float)SECTORS_PER_SEMICIRCLE * 2.0f * getHalfArcAngle() / PI);
+		const byte NUM_SECTORS = (byte)std::ceil((float)SECTORS_PER_SEMICIRCLE * 2.0f * getHalfArcAngle() / PI);
 		for (int i = 0; i <= NUM_SECTORS; i++) {
 			float ang = (float)i / (float)NUM_SECTORS * 2.0f * getHalfArcAngle() - getHalfArcAngle();
-			float y = sin(ang);
-			float z = cos(ang);
+			float y = std::sin(ang);
+			float z = std::cos(ang);
 			float yrov = y * (getMajorRadius() + getMinorRadius() - bevel);
 			float zrov = z * (getMajorRadius() + getMinorRadius() - bevel);
 			float yriv = y * (getMajorRadius() - getMinorRadius() + bevel);
@@ -247,8 +247,8 @@ void Obstacle::createOutlineModel() {
 
 		for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 			float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
-			float y = sin(ang);
-			float z = cos(ang);
+			float y = std::sin(ang);
+			float z = std::cos(ang);
 			float yrh = y * getMinorRadius();
 			float zrh = z * getMinorRadius();
 			float yrv = y * outlineRadius;
@@ -294,8 +294,8 @@ void Obstacle::createOutlineModel() {
 
 		for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 			float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI + getHalfArcAngle();
-			float y = sin(ang);
-			float z = cos(ang);
+			float y = std::sin(ang);
+			float z = std::cos(ang);
 			float yrh = y * getMinorRadius();
 			float zrh = z * getMinorRadius();
 			float yrv = y * outlineRadius;
@@ -323,11 +323,11 @@ void Obstacle::createOutlineModel() {
 
 		// Banana
 
-		const byte NUM_SECTORS = (byte)ceil((float)SECTORS_PER_SEMICIRCLE * 2.0f * getHalfArcAngle() / PI);
+		const byte NUM_SECTORS = (byte)std::ceil((float)SECTORS_PER_SEMICIRCLE * 2.0f * getHalfArcAngle() / PI);
 		for (int i = 0; i <= NUM_SECTORS; i++) {
 			float ang = (float)i / (float)NUM_SECTORS * 2.0f * getHalfArcAngle() - getHalfArcAngle();
-			float y = sin(ang);
-			float z = cos(ang);
+			float y = std::sin(ang);
+			float z = std::cos(ang);
 			float yroh = y * (getMajorRadius() + getMinorRadius());
 			float zroh = z * (getMajorRadius() + getMinorRadius());
 			float yrih = y * (getMajorRadius() - getMinorRadius());
@@ -371,7 +371,7 @@ void Obstacle::createDomainModel() {
 		float line1Length, line2Length;
 		line1Length = line2Length = diff.length();
 		vec3 diffUnit = diff / line1Length;
-		float diffAngle = atan2(diff.z, diff.y);
+		float diffAngle = std::atan2(diff.z, diff.y);
 		vec3 topPointA, bottomPointA;
 		vec3 diffPerpUnit = vec3(0, -diff.z, diff.y) / line1Length;
 
@@ -432,7 +432,7 @@ void Obstacle::createDomainModel() {
 			vs.emplace_back(dotCentre, vec2(), vec3(), WHITE);
 			for (byte i = 0; i < SECTORS_PER_DOT; i++) {
 				float ang = (float)i / (float)SECTORS_PER_DOT * 2 * PI;
-				vs.emplace_back(dotCentre + vec3(0, cos(ang), sin(ang)) * OUTLINE_WIDTH_WORLD * 0.5f, vec2(), vec3(), WHITE);
+				vs.emplace_back(dotCentre + vec3(0, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD * 0.5f, vec2(), vec3(), WHITE);
 			}
 
 			int CENTRE_INDEX = d * (SECTORS_PER_DOT + 1);
@@ -453,7 +453,7 @@ void Obstacle::createDomainModel() {
 			vs.emplace_back(dotCentre, vec2(), vec3(), WHITE);
 			for (byte i = 0; i < SECTORS_PER_DOT; i++) {
 				float ang = (float)i / (float)SECTORS_PER_DOT * 2 * PI;
-				vs.emplace_back(dotCentre + vec3(0, cos(ang), sin(ang)) * OUTLINE_WIDTH_WORLD * 0.5f, vec2(), vec3(), WHITE);
+				vs.emplace_back(dotCentre + vec3(0, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD * 0.5f, vec2(), vec3(), WHITE);
 			}
 
 			int CENTRE_INDEX = numDots1 * (SECTORS_PER_DOT + 1) + d * (SECTORS_PER_DOT + 1);
@@ -478,8 +478,8 @@ void Obstacle::createDomainModel() {
 
 			for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 				float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
-				float y = sin(ang);
-				float z = cos(ang);
+				float y = std::sin(ang);
+				float z = std::cos(ang);
 				float yrh = y * getMinorRadius();
 				float zrh = z * getMinorRadius();
 				vec3 rotatedStart = getRot() * vec3(0, getStart().y + yrh, getStart().z + zrh);
@@ -547,8 +547,8 @@ void Obstacle::createDomainModel() {
 
 			for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 				float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI + getHalfArcAngle();
-				float y = sin(ang);
-				float z = cos(ang);
+				float y = std::sin(ang);
+				float z = std::cos(ang);
 				float yrh = y * getMinorRadius();
 				float zrh = z * getMinorRadius();
 				vec3 rotatedStart = getRot() * vec3(0, getStart().y + yrh, getStart().z + zrh);
@@ -591,11 +591,11 @@ void Obstacle::createDomainModel() {
 
 			// Banana
 
-			const byte NUM_SECTORS = (byte)ceil((float)SECTORS_PER_SEMICIRCLE * 2.0f * getHalfArcAngle() / PI);
+			const byte NUM_SECTORS = (byte)std::ceil((float)SECTORS_PER_SEMICIRCLE * 2.0f * getHalfArcAngle() / PI);
 			for (int i = 0; i <= NUM_SECTORS; i++) {
 				float ang = (float)i / (float)NUM_SECTORS * 2.0f * getHalfArcAngle() - getHalfArcAngle();
-				float y = sin(ang);
-				float z = cos(ang);
+				float y = std::sin(ang);
+				float z = std::cos(ang);
 				float yroh = y * (getMajorRadius() + getMinorRadius());
 				float zroh = z * (getMajorRadius() + getMinorRadius());
 				float yrih = y * (getMajorRadius() - getMinorRadius());
@@ -607,7 +607,7 @@ void Obstacle::createDomainModel() {
 				vs.emplace_back(rotatedOuter + pos1, vec2(), vec3(), WHITE);
 				vs.emplace_back(rotatedOuter + pos2, vec2(), vec3(), WHITE);
 			}
-			const int START_INDEX = 4 * (SECTORS_PER_SEMICIRCLE + 1) + 2;
+			constexpr int START_INDEX = 4 * (SECTORS_PER_SEMICIRCLE + 1) + 2;
 			for (int i = START_INDEX; i < START_INDEX + NUM_SECTORS * 4; i += 4) {
 				// Join bananas
 				// Inside
@@ -678,11 +678,11 @@ void Obstacle::createDomainModel() {
 
 		float dotAngle = start1;
 		for (int d = 0; d < numDots1; d++) {
-			vec3 dotCentre = vec3(0, cos(dotAngle), sin(dotAngle)) * arc1Radius;
+			vec3 dotCentre = vec3(0, std::cos(dotAngle), std::sin(dotAngle)) * arc1Radius;
 			vs.emplace_back(dotCentre, vec2(), vec3(), WHITE);
 			for (byte i = 0; i < SECTORS_PER_DOT; i++) {
 				float ang = (float)i / (float)SECTORS_PER_DOT * 2 * PI;
-				vs.emplace_back(dotCentre + vec3(0, cos(ang), sin(ang)) * OUTLINE_WIDTH_WORLD * 0.5f, vec2(), vec3(), WHITE);
+				vs.emplace_back(dotCentre + vec3(0, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD * 0.5f, vec2(), vec3(), WHITE);
 			}
 
 			int CENTRE_INDEX = d * (SECTORS_PER_DOT + 1);
@@ -700,11 +700,11 @@ void Obstacle::createDomainModel() {
 
 		dotAngle = start2;
 		for (int d = 0; d < numDots2; d++) {
-			vec3 dotCentre = vec3(0, cos(dotAngle), sin(dotAngle)) * arc2Radius;
+			vec3 dotCentre = vec3(0, std::cos(dotAngle), std::sin(dotAngle)) * arc2Radius;
 			vs.emplace_back(dotCentre, vec2(), vec3(), WHITE);
 			for (byte i = 0; i < SECTORS_PER_DOT; i++) {
 				float ang = (float)i / (float)SECTORS_PER_DOT * 2 * PI;
-				vs.emplace_back(dotCentre + vec3(0, cos(ang), sin(ang)) * OUTLINE_WIDTH_WORLD * 0.5f, vec2(), vec3(), WHITE);
+				vs.emplace_back(dotCentre + vec3(0, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD * 0.5f, vec2(), vec3(), WHITE);
 			}
 
 			int CENTRE_INDEX = numDots1 * (SECTORS_PER_DOT + 1) + d * (SECTORS_PER_DOT + 1);
@@ -725,8 +725,8 @@ void Obstacle::createDomainModel() {
 			vs.emplace_back(vec3(), vec2(), vec3(), WHITE);
 			for (int i = 0; i < SECTORS_PER_CIRCLE; i++) {
 				float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
-				float y = sin(ang);
-				float z = cos(ang);
+				float y = std::sin(ang);
+				float z = std::cos(ang);
 				float radius = getMajorRadius() + getMinorRadius();
 				vs.emplace_back(vec3(0, y * radius, z * radius), vec2(), vec3(), WHITE);
 				is.push_back(0);
@@ -736,8 +736,8 @@ void Obstacle::createDomainModel() {
 		} else {
 			for (int i = 0; i < SECTORS_PER_CIRCLE; i++) {
 				float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
-				float y = sin(ang);
-				float z = cos(ang);
+				float y = std::sin(ang);
+				float z = std::cos(ang);
 				float innerRadius = getMajorRadius() - getMinorRadius();
 				float outerRadius = getMajorRadius() + getMinorRadius();
 				vs.emplace_back(vec3(0, y * innerRadius, z * innerRadius), vec2(), vec3(), WHITE);
@@ -780,8 +780,8 @@ void Obstacle::createDomainModel() {
 					for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 						float angStartCap = currentAngle - (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
 						float angEndCap = currentAngle + (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
-						vs.emplace_back(vec3(0, start.y - sin(angStartCap) * getMinorRadius(), start.z + cos(angStartCap) * getMinorRadius()), vec2(), vec3(), WHITE);
-						vs.emplace_back(vec3(0, end.y - sin(angEndCap) * getMinorRadius(), end.z + cos(angEndCap) * getMinorRadius()), vec2(), vec3(), WHITE);
+						vs.emplace_back(vec3(0, start.y - std::sin(angStartCap) * getMinorRadius(), start.z + std::cos(angStartCap) * getMinorRadius()), vec2(), vec3(), WHITE);
+						vs.emplace_back(vec3(0, end.y - std::sin(angEndCap) * getMinorRadius(), end.z + std::cos(angEndCap) * getMinorRadius()), vec2(), vec3(), WHITE);
 					}
 					for (int i = START_INDEX + 2; i < START_INDEX + 2 + SECTORS_PER_SEMICIRCLE * 2; i += 2) {
 						// Caps
@@ -812,10 +812,10 @@ void Obstacle::createDomainModel() {
 
 			const float startRadius = getStart().length() + getMinorRadius();
 			const float endRadius = getEnd().length() + getMinorRadius();
-			const byte NUM_SECTORS = (byte)ceil((float)SECTORS_PER_SEMICIRCLE * (domainEndAngle - domainStartAngle) / PI);
+			const byte NUM_SECTORS = (byte)std::ceil((float)SECTORS_PER_SEMICIRCLE * (domainEndAngle - domainStartAngle) / PI);
 			for (int i = 0; i <= NUM_SECTORS; i++) {
 				float ang = domainStartAngle + (float)i / (float)NUM_SECTORS * (domainEndAngle - domainStartAngle);
-				vec3 dir = vec3(0, cos(ang), sin(ang));
+				vec3 dir = vec3(0, std::cos(ang), std::sin(ang));
 				vs.emplace_back(dir * startRadius, vec2(), vec3(), WHITE);
 				vs.emplace_back(dir * -endRadius, vec2(), vec3(), WHITE);
 			}
@@ -846,16 +846,16 @@ void Obstacle::createDomainModel() {
 					startAngle = getStateB().y - getHalfArcAngle();
 					endAngle = getStateA().y + getHalfArcAngle();
 				}
-				start = vec3(0, -sin(startAngle), cos(startAngle)) * getMajorRadius();
-				end = vec3(0, -sin(endAngle), cos(endAngle)) * getMajorRadius();
+				start = vec3(0, -std::sin(startAngle), std::cos(startAngle)) * getMajorRadius();
+				end = vec3(0, -std::sin(endAngle), std::cos(endAngle)) * getMajorRadius();
 
 				vs.emplace_back(start, vec2(), vec3(), getColor());
 				vs.emplace_back(end, vec2(), vec3(), getColor());
 				for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 					float angStartCap = startAngle - (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
 					float angEndCap = endAngle + (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
-					vs.emplace_back(vec3(0, start.y - sin(angStartCap) * getMinorRadius(), start.z + cos(angStartCap) * getMinorRadius()), vec2(), vec3(), WHITE);
-					vs.emplace_back(vec3(0, end.y - sin(angEndCap) * getMinorRadius(), end.z + cos(angEndCap) * getMinorRadius()), vec2(), vec3(), WHITE);
+					vs.emplace_back(vec3(0, start.y - std::sin(angStartCap) * getMinorRadius(), start.z + std::cos(angStartCap) * getMinorRadius()), vec2(), vec3(), WHITE);
+					vs.emplace_back(vec3(0, end.y - std::sin(angEndCap) * getMinorRadius(), end.z + std::cos(angEndCap) * getMinorRadius()), vec2(), vec3(), WHITE);
 				}
 				for (int i = 2; i < 2 + SECTORS_PER_SEMICIRCLE * 2; i += 2) {
 					// Caps
@@ -874,10 +874,10 @@ void Obstacle::createDomainModel() {
 
 			// Banana
 
-			const byte NUM_SECTORS = (byte)ceil((float)SECTORS_PER_SEMICIRCLE * (endAngle - startAngle) / PI);
+			const byte NUM_SECTORS = (byte)std::ceil((float)SECTORS_PER_SEMICIRCLE * (endAngle - startAngle) / PI);
 			for (int i = 0; i <= NUM_SECTORS; i++) {
 				float ang = startAngle + (float)i / (float)NUM_SECTORS * (endAngle - startAngle);
-				vec3 dir = vec3(0, -sin(ang), cos(ang));
+				vec3 dir = vec3(0, -std::sin(ang), std::cos(ang));
 				vs.emplace_back(dir * (getMajorRadius() - getMinorRadius()), vec2(), vec3(), WHITE);
 				vs.emplace_back(dir * (getMajorRadius() + getMinorRadius()), vec2(), vec3(), WHITE);
 			}
@@ -910,15 +910,15 @@ void Obstacle::createAllModels(bool inEditor) {
 
 PlaneDefinition Obstacle::getDividingPlane(bool startCap) const {
 	float ang = startCap ? getAngle() - getHalfArcAngle() + PI : getAngle() + getHalfArcAngle();
-	float y = cos(ang);
-	float z = sin(ang);
+	float y = std::cos(ang);
+	float z = std::sin(ang);
 	vec3 normal = {0, y, z};
 	return {normal, dot(normal, startCap ? getPos() + getRot() * getStart() : getPos() + getRot() * getEnd())};
 }
 
 PlaneDefinition Obstacle::getTopPlane() const {
-	float y = -sin(getAngle());
-	float z = cos(getAngle());
+	float y = -std::sin(getAngle());
+	float z = std::cos(getAngle());
 	vec3 normal = {0, y, z};
 	return {normal, dot(normal, getPos() + getRot() * (getStart() + vec3(0, 0, getMinorRadius())))};
 }

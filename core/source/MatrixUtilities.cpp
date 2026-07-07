@@ -67,7 +67,7 @@ void buildPerspectiveMatrix(mat4* res, float width, float height, float zNear, f
 }
 
 // o_fov is width of view plane at 1m distance - e.g. 2.0 for 90 degree fov
-// o_fov = 2.0f * tan(0.5 * fov)   (where fov is horizontal fov in radians)
+// o_fov = 2.0f * std::tan(0.5 * fov)   (where fov is horizontal fov in radians)
 void buildProjectionMatrix(mat4* projMat, float o_fov, float zNear, float zFar, vec2 offset, int width,
                            int height) {
 	float w = o_fov * zNear; // width at zNear view plane

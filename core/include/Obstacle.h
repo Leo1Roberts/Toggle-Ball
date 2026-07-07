@@ -4,7 +4,17 @@
 #include "Mesh.h"
 #include "Sizes.h"
 #include "Smoother.h"
-#include "Editor.h"
+
+enum class SelectionType {
+	Replace,
+	Add,
+	Subtract
+};
+
+struct SelectBox {
+	float top, bottom, left, right;
+	SelectionType selectionType;
+};
 
 enum {
 	MAT_BASKETBALL,
@@ -12,52 +22,52 @@ enum {
 	MAT_NUM
 };
 
-const float FRICTION_COEFFICIENTS[MAT_NUM][MAT_NUM] = {
+constexpr float FRICTION_COEFFICIENTS[MAT_NUM][MAT_NUM] = {
 0.5f, 0.58f,
 0.58f, 0.4f};
 
-const float ROLLING_RESISTANCE_COEFFICIENTS[MAT_NUM][MAT_NUM] = {
+constexpr float ROLLING_RESISTANCE_COEFFICIENTS[MAT_NUM][MAT_NUM] = {
 0.02f, 0.015f,
 0.015f, 0.01f};
 
-const float GRAVITY = -9.81f;
-const float AIR_DENSITY = 1.225f;
+constexpr float GRAVITY = -9.81f;
+constexpr float AIR_DENSITY = 1.225f;
 //const float DYNAMIC_VISCOSITY = 0.000018f;
 
-const vec3 OBSTACLE_ROTATION_AXIS = {1, 0, 0};
+constexpr vec3 OBSTACLE_ROTATION_AXIS = {1, 0, 0};
 
-const float MINIMUM_ARENA_SIZE = 5;
-const float MAXIMUM_ARENA_SIZE = 200;
+constexpr float MINIMUM_ARENA_SIZE = 5;
+constexpr float MAXIMUM_ARENA_SIZE = 200;
 
-const float MINIMUM_POS_X = -MAXIMUM_ARENA_SIZE * 0.7f;
-const float MAXIMUM_POS_X = MAXIMUM_ARENA_SIZE * 0.7f;
-const float MINIMUM_POS_Y = -MAXIMUM_ARENA_SIZE * 0.2f;
-const float MAXIMUM_POS_Y = MAXIMUM_ARENA_SIZE * 1.2f;
+constexpr float MINIMUM_POS_X = -MAXIMUM_ARENA_SIZE * 0.7f;
+constexpr float MAXIMUM_POS_X = MAXIMUM_ARENA_SIZE * 0.7f;
+constexpr float MINIMUM_POS_Y = -MAXIMUM_ARENA_SIZE * 0.2f;
+constexpr float MAXIMUM_POS_Y = MAXIMUM_ARENA_SIZE * 1.2f;
 
-const float MINIMUM_TRANSITION_TIME = 0.1f;
-const float MAXIMUM_TRANSITION_TIME = 20;
+constexpr float MINIMUM_TRANSITION_TIME = 0.1f;
+constexpr float MAXIMUM_TRANSITION_TIME = 20;
 
-const float MINIMUM_MINOR_RADIUS = 0.25f;
-const float MAXIMUM_MINOR_RADIUS = 50;
+constexpr float MINIMUM_MINOR_RADIUS = 0.25f;
+constexpr float MAXIMUM_MINOR_RADIUS = 50;
 
-const float MAXIMUM_MAJOR_RADIUS = 200;
+constexpr float MAXIMUM_MAJOR_RADIUS = 200;
 
-const float MINIMUM_ANGLE = -5 * PI; // -900°
-const float MAXIMUM_ANGLE = 5 * PI; // 900°
+constexpr float MINIMUM_ANGLE = -5 * PI; // -900°
+constexpr float MAXIMUM_ANGLE = 5 * PI; // 900°
 
-const float MINIMUM_RPM = -120;
-const float MAXIMUM_RPM = 120;
+constexpr float MINIMUM_RPM = -120;
+constexpr float MAXIMUM_RPM = 120;
 
-const float MINIMUM_OPM = MINIMUM_RPM * 0.5f;
-const float MAXIMUM_OPM = MAXIMUM_RPM * 0.5f;
+constexpr float MINIMUM_OPM = MINIMUM_RPM * 0.5f;
+constexpr float MAXIMUM_OPM = MAXIMUM_RPM * 0.5f;
 
-const int SECTORS_PER_SEMICIRCLE = 64;
-const int SECTORS_PER_CIRCLE = SECTORS_PER_SEMICIRCLE * 2;
-const int SECTORS_PER_DOT = 8;
-const float BEVEL_AMOUNT = 0.1f;
+constexpr int SECTORS_PER_SEMICIRCLE = 64;
+constexpr int SECTORS_PER_CIRCLE = SECTORS_PER_SEMICIRCLE * 2;
+constexpr int SECTORS_PER_DOT = 8;
+constexpr float BEVEL_AMOUNT = 0.1f;
 
 inline vec3 planarToWorld(vec2 planarVec) {
-	return vec3(0, planarVec.x, planarVec.y);
+	return {0, planarVec.x, planarVec.y};
 }
 
 
@@ -93,10 +103,11 @@ private:
 	float phase = 0;
 };
 
-
 class AbstractShapeSpec {
 public:
 	virtual ~AbstractShapeSpec() = default;
+
+	virtual std::unique_ptr<AbstractShapeSpec> clone() const = 0;
 
 	[[nodiscard]] std::string serialize() const;
 	static std::unique_ptr<AbstractShapeSpec> deserialize(const std::string& data);
@@ -149,6 +160,10 @@ public:
 
 	~SegmentSpec() override = default;
 
+	std::unique_ptr<AbstractShapeSpec> clone() const override {
+		return std::make_unique<SegmentSpec>(*this);
+	}
+
 	void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 
 	void setLeftLength(float l);
@@ -158,8 +173,8 @@ public:
 	[[nodiscard]] float getRightLength() const { return rightLength; }
 
 private:
-	float leftLength; // SSOT
-	float rightLength; // SSOT
+	float leftLength{}; // SSOT
+	float rightLength{}; // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class AbstractShapeSpec;
@@ -184,6 +199,10 @@ public:
 
 	~ArcSpec() override = default;
 
+	std::unique_ptr<AbstractShapeSpec> clone() const override {
+		return std::make_unique<ArcSpec>(*this);
+	}
+
 	void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 
 	void setArcAngle(float radians);
@@ -194,8 +213,8 @@ public:
 	[[nodiscard]] float getArcRadius() const { return arcRadius; }
 
 private:
-	float arcAngle; // SSOT
-	float arcRadius; // SSOT
+	float arcAngle{}; // SSOT
+	float arcRadius{}; // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class AbstractShapeSpec;
@@ -215,10 +234,12 @@ class IMotionSpec {
 public:
 	virtual ~IMotionSpec() = default;
 
-	IMotionSpec(const IMotionSpec&) = delete;
-	IMotionSpec& operator=(const IMotionSpec&) = delete;
-	IMotionSpec(IMotionSpec&&) = delete;
-	IMotionSpec& operator=(IMotionSpec&&) = delete;
+	IMotionSpec(const IMotionSpec&) = default;
+	IMotionSpec& operator=(const IMotionSpec&) = default;
+	IMotionSpec(IMotionSpec&&) = default;
+	IMotionSpec& operator=(IMotionSpec&&) = default;
+
+	virtual std::unique_ptr<IMotionSpec> clone() const = 0;
 
 	[[nodiscard]] std::string serialize() const;
 	static std::unique_ptr<IMotionSpec> deserialize(const std::string& data);
@@ -250,6 +271,10 @@ public:
 
 	~StaticSpec() override = default;
 
+	std::unique_ptr<IMotionSpec> clone() const override {
+		return std::make_unique<StaticSpec>(*this);
+	}
+
 	void setAngle(float radians);
 
 	void stepKinematicState(KinematicState&, const Smoother&) const override {}
@@ -258,7 +283,7 @@ public:
 
 private:
 	vec3 position; // SSOT
-	float angle; // SSOT
+	float angle{}; // SSOT
 	mat3 rotation;
 
 	[[nodiscard]] std::string serializeData() const override;
@@ -286,6 +311,10 @@ public:
 
 	~TogglingPositionSpec() override = default;
 
+	std::unique_ptr<IMotionSpec> clone() const override {
+		return std::make_unique<TogglingPositionSpec>(*this);
+	}
+
 	void setAngle(float radians);
 
 	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
@@ -293,7 +322,7 @@ public:
 	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	float angle; // SSOT
+	float angle{}; // SSOT
 	mat3 rotation;
 	vec3 positionA; // SSOT
 	vec3 positionB; // SSOT
@@ -322,14 +351,18 @@ public:
 
 	~TogglingAngleSpec() override = default;
 
+	std::unique_ptr<IMotionSpec> clone() const override {
+		return std::make_unique<TogglingAngleSpec>(*this);
+	}
+
 	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
 
 	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
 	vec3 position; // SSOT
-	float angleA; // SSOT
-	float angleB; // SSOT
+	float angleA{}; // SSOT
+	float angleB{}; // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class IMotionSpec;
@@ -355,15 +388,19 @@ public:
 
 	~SpinningSpec() override = default;
 
+	std::unique_ptr<IMotionSpec> clone() const override {
+		return std::make_unique<SpinningSpec>(*this);
+	}
+
 	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
 
 	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother&) const override;
 
 private:
 	vec3 position; // SSOT
-	float initialAngle; // SSOT
-	float angularVelocityA; // SSOT
-	float angularVelocityB; // SSOT
+	float initialAngle{}; // SSOT
+	float angularVelocityA{}; // SSOT
+	float angularVelocityB{}; // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class IMotionSpec;
@@ -381,15 +418,19 @@ private:
 class OscillatingPositionSpec : public IMotionSpec {
 public:
 	OscillatingPositionSpec(float angle, vec2 position1, vec2 position2, float angularFrequencyA, float angularFrequencyB) :
-		angle(angle),
 		position1(planarToWorld(position1)),
 		position2(planarToWorld(position2)),
+		angle(angle),
 		angularFrequencyA(angularFrequencyA),
 		angularFrequencyB(angularFrequencyB) {}
 
 	OscillatingPositionSpec(const std::string& data);
 
 	~OscillatingPositionSpec() override = default;
+
+	std::unique_ptr<IMotionSpec> clone() const override {
+		return std::make_unique<OscillatingPositionSpec>(*this);
+	}
 
 	void setAngle(float radians);
 
@@ -400,10 +441,10 @@ public:
 private:
 	vec3 position1; // SSOT
 	vec3 position2; // SSOT
-	float angle; // SSOT
+	float angle{}; // SSOT
 	mat3 rotation;
-	float angularFrequencyA; // SSOT
-	float angularFrequencyB; // SSOT
+	float angularFrequencyA{}; // SSOT
+	float angularFrequencyB{}; // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class IMotionSpec;
@@ -433,16 +474,20 @@ public:
 	
 	~OscillatingAngleSpec() override = default;
 
+	std::unique_ptr<IMotionSpec> clone() const override {
+		return std::make_unique<OscillatingAngleSpec>(*this);
+	}
+
 	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
 
 	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
 	vec3 position; // SSOT
-	float angle1; // SSOT
-	float angle2; // SSOT
-	float angularFrequencyA; // SSOT
-	float angularFrequencyB; // SSOT
+	float angle1{}; // SSOT
+	float angle2{}; // SSOT
+	float angularFrequencyA{}; // SSOT
+	float angularFrequencyB{}; // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class IMotionSpec;
@@ -466,6 +511,9 @@ public:
 	    motion(std::move(motion)),
 	    goal(goal) {}
 
+	ObstacleDescriptor(const ObstacleDescriptor& other);
+	ObstacleDescriptor& operator=(const ObstacleDescriptor& other);
+
 	ObstacleDescriptor(const std::string& data);
 	[[nodiscard]] std::string serialize() const;
 
@@ -476,7 +524,7 @@ public:
 private:
 	std::unique_ptr<AbstractShapeSpec> shape;
 	std::unique_ptr<IMotionSpec> motion;
-	bool goal;
+	bool goal{};
 };
 
 
@@ -492,9 +540,10 @@ public:
 	EditorObstacle(EditorObstacle&&) = default;
 	EditorObstacle& operator=(EditorObstacle&&) = default;
 
-	bool isSelected() const { return selected; };
-	void select() { selected = true; };
-	void deselect() { selected = false; };
+	[[nodiscard]] bool isSelected() const { return selected; }
+	void select() { selected = true; }
+	void deselect() { selected = false; }
+	void setSelected(bool isSelected) { selected = isSelected; }
 
 	// Only provide numSteps if demonstrating the continuous motion of an obstacle
 	void updateKinematicState(const Smoother& smoother, int numSteps = -1);

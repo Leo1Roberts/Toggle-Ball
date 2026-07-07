@@ -31,14 +31,14 @@ struct SelectionState {
 	}
 };
 
-const byte MAX_SELECTIONS = 100;
+constexpr byte MAX_SELECTIONS = 100;
 
-struct UndoNode {
+struct UndoNode_old {
 	Level level;
 	SelectionState selectionStates[MAX_SELECTIONS];
 	short lastSelectionBufferIndex;
 
-	UndoNode() : level(Level()), lastSelectionBufferIndex(0) {
+	UndoNode_old() : level(Level()), lastSelectionBufferIndex(0) {
 		for (SelectionState& s: selectionStates)
 			s = SelectionState();
 	}
@@ -199,7 +199,7 @@ private:
 	static void selectLevelCallback(int levelIndex);
 	static short savedIndex;
 	static void saveLevel(int _ = 0);
-	static inline bool changesAreSaved() { return savedIndex == bufferIndex; }
+	static bool changesAreSaved() { return savedIndex == bufferIndex; }
 
 	static short focus;
 	static void findNewFocus();
@@ -310,11 +310,11 @@ private:
 	static Ball_OLD pointerBall;
 	static Ball_OLD pointerBallWide;
 
-	static const byte MAX_UNDO = 50;
+	static constexpr byte MAX_UNDO = 50;
 	static short bufferIndex;
 	static short lastBufferIndex;
 	static short selectionBufferIndex;
-	static UndoNode undoBuffer[];
+	static UndoNode_old undoBuffer[];
 
 	static void undo();
 	static void redo();

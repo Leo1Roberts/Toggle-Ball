@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22.1)
 project(toggleball_android LANGUAGES CXX C)
 
 # --- COMPILER SETTINGS ---
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # --- PATH RESOLUTION & DEPENDENCIES ---

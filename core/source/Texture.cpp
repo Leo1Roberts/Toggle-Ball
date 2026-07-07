@@ -44,7 +44,7 @@ namespace Textures {
 
 	void load() {
 		white = std::make_unique<Texture>("textures/white.png");
-		basketball = std::make_unique<Texture>("textures/Ball.png");
+		basketball = std::make_unique<Texture>("textures/basketball.png");
 #if defined(PLATFORM_DESKTOP)
 		Cursors::arrow = std::make_unique<Texture>("cursors/arrow.png");
 		Cursors::hand = std::make_unique<Texture>("cursors/hand.png");

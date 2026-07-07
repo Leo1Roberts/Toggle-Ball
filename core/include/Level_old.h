@@ -3,7 +3,7 @@
 
 #include "Object.h"
 
-const int MAX_OBSTACLES = 200;
+constexpr int MAX_OBSTACLES = 200;
 
 struct Level {
 	std::string name;

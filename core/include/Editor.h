@@ -1,19 +1,49 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
-enum class SelectionType {
-	Replace,
-	Add,
-	Subtract
+#include "Obstacle.h"
+#include "Level.h"
+
+struct SelectionUndoNode {
+	short focus;
+	bool ball;
+	std::vector<bool> obstacles;
+
+	std::shared_ptr<SelectionUndoNode> previous;
+	std::shared_ptr<SelectionUndoNode> next;
 };
 
-struct SelectBox {
-	float top, bottom, left, right;
-	SelectionType selectionType;
+struct UndoNode {
+	UndoNode(const LevelDescriptor* level, const std::shared_ptr<SelectionUndoNode>& selection, const std::shared_ptr<UndoNode>& previous = nullptr, const std::shared_ptr<UndoNode>& next = nullptr) :
+		level(*level), selection(selection), previous(previous), next(next) {}
+
+	LevelDescriptor level;
+	std::shared_ptr<SelectionUndoNode> selection;
+
+	std::shared_ptr<UndoNode> previous;
+	std::shared_ptr<UndoNode> next;
 };
 
 class Editor {
+public:
+	explicit Editor(LevelDescriptor* levelToEdit);
 
+private:
+
+	[[nodiscard]] std::shared_ptr<UndoNode> makeUndoNode() const;
+	[[nodiscard]] std::shared_ptr<SelectionUndoNode> makeSelectionUndoNode() const;
+	void syncLevel();
+	void syncSelection();
+	void undo();
+	void redo();
+
+	LevelDescriptor* level;
+	EditorBall ball;
+	std::vector<EditorObstacle> obstacles;
+	short focus; // TODO: decide how value is interpreted (no focus, ball focus, obstacle focus)
+	std::shared_ptr<UndoNode> currentNode;
+
+	Smoother togglePosition{};
 };
 
 #endif // EDITOR_H

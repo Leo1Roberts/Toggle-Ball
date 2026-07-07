@@ -186,7 +186,7 @@ struct ObstacleDefinition {
 		start(iStart),
 		end(iEnd),
 		minorRadius(iMinorRadius),
-		halfArcAngle(iIsStraight ? 0 : atan2(iStart.y, iStart.z)),
+		halfArcAngle(iIsStraight ? 0 : std::atan2(iStart.y, iStart.z)),
 		stateType(iStateType),
 		stateA(iStateA),
 		stateB(iStateB),

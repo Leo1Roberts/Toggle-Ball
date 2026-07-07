@@ -2,7 +2,7 @@
 #include "Colors.h"
 #include "Line.h"
 
-const int MAX_LINES = 100;
+constexpr int MAX_LINES = 100;
 
 LineVertex Line::vertices[MAX_LINES * 2];
 

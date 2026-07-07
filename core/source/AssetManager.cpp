@@ -3,7 +3,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 
 namespace AssetManager {
 #if defined(PLATFORM_ANDROID)

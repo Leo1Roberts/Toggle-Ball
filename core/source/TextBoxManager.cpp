@@ -4,7 +4,7 @@
 #include "ButtonManager.h"
 #include "Fonts.h"
 
-const int MAX_TEXT_BOXES = 100;
+constexpr int MAX_TEXT_BOXES = 100;
 
 int TextBoxManager::focusedBoxIndex = -1;
 bool TextBoxManager::anythingChanged = false;

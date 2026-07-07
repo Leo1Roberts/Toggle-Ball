@@ -6,7 +6,6 @@
 #if defined(PLATFORM_DESKTOP)
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#define USE_MATH_DEFINES
 
 #include <cstring>
 #include <climits>
@@ -29,6 +28,7 @@ using byte = unsigned char;
 #include <array>
 #include <vector>
 #include <map>
+#include <ranges>
 #include "VectorMatrix.h"
 #include "GLUtilities.h"
 #include "Utilities.h"
