@@ -2,8 +2,8 @@
 
 
 
-* Play on Windows and Android
-* Build levels in the editor and test instantly (Windows only)
+* Play on Linux, Windows and Android
+* Build levels in the editor and test instantly (desktop only)
 * Easily modify the two basic shapes - models are automatically generated
 * Choose from a variety of state types: static, spinners, oscillators and more
 * Utilise powerful editing tools to quickly realise your designs
