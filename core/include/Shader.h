@@ -7,8 +7,14 @@
 class Shader {
 public:
 	Shader(const std::string& vertexSource, const std::string& fragmentSource) {
-		GLShader vs = compileShader(GL_VERTEX_SHADER, vertexSource);
-		GLShader fs = compileShader(GL_FRAGMENT_SHADER, fragmentSource);
+		std::string version;
+#if defined(PLATFORM_DESKTOP)
+		version = "#version 420\n";
+#else
+		version = "#version 300 es\n";
+#endif
+		GLShader vs = compileShader(GL_VERTEX_SHADER, version + vertexSource);
+		GLShader fs = compileShader(GL_FRAGMENT_SHADER, version + fragmentSource);
 
 		program = GLProgram(glCreateProgram());
 

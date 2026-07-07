@@ -16,7 +16,7 @@ namespace Shaders {
 	std::unique_ptr<Shader> button;
 	std::unique_ptr<Shader> text;
 	std::unique_ptr<Shader> cursor;
-// TODO: prefix shader code with OpenGL version
+
 	void load() {
 		object = std::make_unique<Shader>(AssetManager::loadTextFile("shaders/object.vert"), AssetManager::loadTextFile("shaders/object.frag"));
 		outline = std::make_unique<Shader>(AssetManager::loadTextFile("shaders/objectOutline.vert"), AssetManager::loadTextFile("shaders/objectOutline.frag"));
