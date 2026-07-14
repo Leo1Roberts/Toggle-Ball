@@ -17,7 +17,6 @@ public:
 		framebuffer.bind();
 		glScissor(0, 0, getScreenWidth(), getScreenHeight());
 		doDraw();
-		Framebuffer::unbind();
 	}
 
 	void resize(int width, int height) {

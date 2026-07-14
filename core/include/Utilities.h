@@ -23,10 +23,10 @@ enum { // Order of these is important
 };
 float clamp(float val, float min, float max, byte* valPos);
 
-[[nodiscard]] inline vec3 planarToWorld(vec2 planarVec) {
+[[nodiscard]] constexpr vec3 planarToWorld(vec2 planarVec) {
 	return {0, planarVec.x, planarVec.y};
 }
-[[nodiscard]] inline vec2 worldToPlanar(vec3 worldVec) {
+[[nodiscard]] constexpr vec2 worldToPlanar(vec3 worldVec) {
 	return {worldVec.y, worldVec.z};
 }
 
