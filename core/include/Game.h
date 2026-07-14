@@ -3,6 +3,7 @@
 
 #include "Level.h"
 #include "Obstacle.h"
+#include "Plane.h"
 #include "Screen.h"
 
 
@@ -16,21 +17,28 @@ private:
 	void load(const LevelDescriptor* levelToLoad);
 	void start();
 
+	void toggle();
+
 	bool doProcessEvent(const Event&) override;
 
-	void doUpdate(float dt) override;
+	void doUpdate(microseconds dt) override;
+	void updatePhysics(microseconds dt);
 
-	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale = 1);
 	void doDraw() override;
+	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale = 1);
 
-	void resizeLevel();
 	void doResize(int, int) override;
+	void resizeLevel();
 
 	LevelDescriptor level;
+	PlaneDescriptor arenaBounds[4];
 	GameBall ball{};
 	std::vector<GameObstacle> obstacles;
 
+	bool toggled{false};
 	Smoother togglePosition{};
+
+	float accumulator{};
 
 
 	vec3 viewOrigin;

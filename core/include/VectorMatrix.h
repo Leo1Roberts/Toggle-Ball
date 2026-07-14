@@ -59,7 +59,7 @@ struct vec3 {
 		return x == v.x && y == v.y && z == v.z;
 	}
 
-	vec3 operator*(float s) const noexcept { return { x * s, y * s, z * s }; };
+	vec3 operator*(float s) const noexcept { return { x * s, y * s, z * s }; }
 	vec3 operator/(float s) const noexcept {
 		float r = 1.0f / s;
 		return { x * r, y * r, z * r };
@@ -116,6 +116,8 @@ struct vec3 {
 
 	[[nodiscard]] float length() const noexcept { return sqrtf(x * x + y * y + z * z); }
 };
+
+inline vec3 operator*(float s, const vec3& v) noexcept { return v * s; }
 
 float dot(const vec3& v1, const vec3& v2);
 vec3 cross(const vec3& v1, const vec3& v2);

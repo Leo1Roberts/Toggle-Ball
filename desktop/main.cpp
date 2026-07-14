@@ -54,18 +54,7 @@ void APIENTRY glDebugOutput(GLenum source,
 	std::cout << std::endl;
 }
 
-int main()
-{
-	// _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-	//_CrtSetBreakAlloc(31580);
-
-	// TIMECAPS tc;
-	// if (timeGetDevCaps(&tc, sizeof(TIMECAPS)) != TIMERR_NOERROR) return 0;
-	// unsigned timer_res = max_unsigned(tc.wPeriodMin, 1);
-	// if (timeBeginPeriod(timer_res) != TIMERR_NOERROR) return 0;
-
-	// (1) GLFW: Initialise & Configure
-	// -----------------------------------------
+int main() {
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
 
@@ -85,12 +74,10 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 
-	glfwMakeContextCurrent(window); // Set the window to be used and then centre that window on the monitor.
+	glfwMakeContextCurrent(window);
 
-	glfwSwapInterval(1); // Set VSync rate 1:1 with monitor's refresh rate.
+	glfwSwapInterval(1);
 
-	// (2) GLAD: Load OpenGL Function Pointers
-	// -------------------------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) // For GLAD 2 use the following instead: gladLoadGL(glfwGetProcAddress)
 	{
 		glfwTerminate();
@@ -113,27 +100,19 @@ int main()
 	glDebugMessageCallback(glDebugOutput, nullptr);
 	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
-	// (3) Enter the Main-Loop
-	// --------------------------------	
-
 	App app;
 	std::unique_ptr<Game> game = std::make_unique<Game>(width, height);
-	game->play(LevelDescriptor::load("Dev test").get());
+	game->play(LevelDescriptor::load("Level 1").get());
 	app.addScreen(std::move(game));
 
-	double t1 = glfwGetTime();
+	microseconds t1 = now();
 
 	do {
 		glfwPollEvents();
 
-		// Game::update();
-		//
-		// if (glfwWindowShouldClose(window))
-		// 	Game::deleteGame();
-
 		glfwGetFramebufferSize(window, &width, &height);
-		double t2 = glfwGetTime();
-		app.tick(float(t2 - t1), width, height);
+		microseconds t2 = now();
+		app.tick(t2 - t1, width, height);
 		t1 = t2;
 		glfwSwapBuffers(window);
 	} while (!glfwWindowShouldClose(window));

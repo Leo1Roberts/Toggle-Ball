@@ -26,7 +26,7 @@ public:
 
 	void processEvent(const Event& event);
 
-	void tick(float dt, int windowWidth, int windowHeight) const;
+	void tick(microseconds dt, int windowWidth, int windowHeight) const;
 
 private:
 	std::vector<std::unique_ptr<Screen>> screens;

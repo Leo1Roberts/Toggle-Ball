@@ -11,7 +11,7 @@ public:
 
 	bool processEvent(const Event& event) { return doProcessEvent(event); }
 
-	void update(float dt) { doUpdate(dt); }
+	void update(microseconds dt) { doUpdate(dt); }
 
 	void draw() {
 		framebuffer.bind();
@@ -21,9 +21,10 @@ public:
 	}
 
 	void resize(int width, int height) {
-		framebuffer.resize(width, height);
-		aspectRatio = (float) width / (float) height;
-		doResize(width, height);
+		if (framebuffer.resize(width, height)) {
+			aspectRatio = (float) width / (float) height;
+			doResize(width, height);
+		}
 	}
 
 	[[nodiscard]] int getScreenWidth() const { return framebuffer.getWidth(); }
@@ -35,7 +36,7 @@ public:
 
 private:
 	virtual bool doProcessEvent(const Event& event) = 0;
-	virtual void doUpdate(float dt) = 0;
+	virtual void doUpdate(microseconds dt) = 0;
 	virtual void doDraw() = 0;
 	virtual void doResize(int width, int height) {}
 };

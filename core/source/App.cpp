@@ -42,7 +42,7 @@ void App::processEvent(const Event& event) {
 		if (screen->processEvent(event)) break;
 }
 
-void App::tick(float dt, int windowWidth, int windowHeight) const {
+void App::tick(microseconds dt, int windowWidth, int windowHeight) const {
 	for (const auto& screen : screens)
 		screen->update(dt);
 

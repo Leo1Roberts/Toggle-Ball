@@ -21,6 +21,7 @@
 #endif
 
 using byte = unsigned char;
+using microseconds = unsigned long;
 
 #include <stdexcept>
 #include <cmath>

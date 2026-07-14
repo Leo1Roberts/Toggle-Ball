@@ -19,6 +19,12 @@ void Game::play(const LevelDescriptor* levelToPlay) {
 void Game::load(const LevelDescriptor* levelToLoad) {
 	level = *levelToLoad;
 	level.scale();
+
+	arenaBounds[0] = {{0, -level.getArenaWidth() * 0.5f, 0}, {0, 1, 0}}; // Left
+	arenaBounds[1] = {{0, level.getArenaWidth() * 0.5f, 0}, {0, -1, 0}}; // Right
+	arenaBounds[2] = {{0, 0, level.getArenaHeight()}, {0, 0, -1}}; // Top
+	arenaBounds[3] = {{0, 0, 0}, {0, 0, 1}}; // Bottom
+
 	ball = GameBall(level.getBallDescriptor().get());
 	obstacles.append_range(level.getObstacleDescriptors() | std::views::transform([](const auto& d) { return GameObstacle(d.get()); }));
 
@@ -34,27 +40,40 @@ void Game::start() {
 }
 
 
+void Game::toggle() {
+	toggled = !toggled;
+	togglePosition.setDestination(toggled, 0.f, level.getTransitionTime());
+}
+
+
 bool Game::doProcessEvent(const Event&) {
 	return false;
 }
 
 
-void Game::doUpdate(float dt) {
+void Game::doUpdate(microseconds dt) {
+	updatePhysics(dt);
 }
 
+void Game::updatePhysics(microseconds dt) {
+	accumulator += toSeconds(dt);
 
-void Game::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale) {
-	buildScaledWorldMatrix(&worldMatrix, rot, pos, scale);
+	while (accumulator >= PHYSICS_TIMESTEP) {
+		togglePosition.update(PHYSICS_TIMESTEP);
 
-	mat4 bodyToView = worldMatrix * viewMatrix;
-	mat3 bodyToViewRot = viewRotationMatrix * rot;
+		for (auto& obstacle: obstacles)
+			obstacle.stepKinematicState(togglePosition);
 
-	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRot, true);
-	Shaders::object->setMat4("uBodyToView", bodyToView);
+		ball.addNaturalForces();
 
-	texture->bind(0);
-	model->draw();
+		// for (const auto& bound : arenaBounds)
+
+		ball.applyForces();
+
+		accumulator -= PHYSICS_TIMESTEP;
+	}
 }
+
 
 constexpr mat3 backgroundRotation = {
 	 0, 0, 1,
@@ -94,6 +113,24 @@ void Game::doDraw() {
 	glDisable(GL_DEPTH_TEST);
 }
 
+void Game::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale) {
+	buildScaledWorldMatrix(&worldMatrix, rot, pos, scale);
+
+	mat4 bodyToView = worldMatrix * viewMatrix;
+	mat3 bodyToViewRot = viewRotationMatrix * rot;
+
+	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRot, true);
+	Shaders::object->setMat4("uBodyToView", bodyToView);
+
+	texture->bind(0);
+	model->draw();
+}
+
+
+void Game::doResize(int, int) {
+	resizeLevel();
+	updateView();
+}
 
 void Game::resizeLevel() {
 	float arenaWidth = level.getArenaWidth(), arenaHeight = level.getArenaHeight();
@@ -103,11 +140,6 @@ void Game::resizeLevel() {
 		halfHeight = arenaWidth * 0.5f / aspectRatio;
 	else
 		halfHeight = arenaHeight * 0.5f;
-}
-
-void Game::doResize(int, int) {
-	resizeLevel();
-	updateView();
 }
 
 

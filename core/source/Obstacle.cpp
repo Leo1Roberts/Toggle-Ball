@@ -1511,9 +1511,8 @@ void ObstacleDescriptor::scale(float factor) {
 
 
 
-void GameObstacle::updateKinematicState(const Smoother& smoother, int numSteps) {
-	while (numSteps--)
-		descriptor->getMotion()->stepKinematicState(kinematicState, smoother);
+void GameObstacle::stepKinematicState(const Smoother& smoother) {
+	descriptor->getMotion()->stepKinematicState(kinematicState, smoother);
 }
 
 

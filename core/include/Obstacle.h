@@ -582,7 +582,7 @@ public:
 	GameObstacle& operator=(GameObstacle&&) = default;
 
 	void reset() { descriptor->getMotion()->initKinematicState(kinematicState); }
-	void updateKinematicState(const Smoother& smoother, int numSteps);
+	void stepKinematicState(const Smoother& smoother);
 
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
 	[[nodiscard]] const Mesh<ObjectVertex>* getMesh() const { return &mesh; }

@@ -30,6 +30,7 @@ public:
 
 	[[nodiscard]] float getArenaWidth() const { return arenaWidth; }
 	[[nodiscard]] float getArenaHeight() const { return arenaHeight; }
+	[[nodiscard]] float getTransitionTime() const { return transitionTime; }
 	[[nodiscard]] const std::unique_ptr<BallDescriptor>& getBallDescriptor() const { return ballDescriptor; }
 	[[nodiscard]] const std::vector<std::unique_ptr<ObstacleDescriptor>>& getObstacleDescriptors() const { return obstacleDescriptors; }
 

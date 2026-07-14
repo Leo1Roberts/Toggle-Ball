@@ -52,6 +52,8 @@ struct BallKinematicState {
 	vec3 angularVelocity;
 	vec3 force;
 	vec3 torque;
+
+	void resetForces() { force = torque = 0; }
 };
 
 
@@ -119,6 +121,8 @@ public:
 		texture(getBallTexture(descriptor->getType())) {}
 
 	void reset() { descriptor->initKinematicState(kinematicState); }
+	void addNaturalForces();
+	void applyForces();
 
 	[[nodiscard]] const Texture* getTexture() const { return texture; }
 	[[nodiscard]] const BallKinematicState* getKinematicState() const { return &kinematicState; }

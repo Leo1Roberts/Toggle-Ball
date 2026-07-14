@@ -69,9 +69,12 @@ void Framebuffer::resolve() const {
 	}
 }
 
-void Framebuffer::resize(int width, int height) {
-	if (width == 0 || height == 0 || (config.width == width && config.height == height)) return;
+bool Framebuffer::resize(int width, int height) {
+	if (width == 0 || height == 0 || (config.width == width && config.height == height))
+		return false;
+
 	config.width = width;
 	config.height = height;
 	invalidate();
+	return true;
 }

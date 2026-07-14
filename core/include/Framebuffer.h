@@ -28,7 +28,7 @@ public:
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void resize(int width, int height);
+	bool resize(int width, int height);
 
 	void setConfig(const FramebufferConfig& cfg) {
 		config = cfg;

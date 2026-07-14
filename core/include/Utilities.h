@@ -3,16 +3,18 @@
 
 [[nodiscard]] vec3 colorToLinear(const vec3& srgb);
 
-long now_ms();
+[[nodiscard]] long now_ms();
+[[nodiscard]] microseconds now();
+[[nodiscard]] inline float toSeconds(microseconds t) { return (float)t / 1000000.f; }
 
-float randomFloat();
+[[nodiscard]] float randomFloat();
 
-float randomFloatBeyondValue(float val);
+[[nodiscard]] float randomFloatBeyondValue(float val);
 
-float wrapAngle(float radians); // Wraps angle to range (-PI, PI]
-float angleToDisplay(float angle);
-float wrapDisplayAngle(float displayAngle);
-float displayToAngle(float displayAngle);
+[[nodiscard]] float wrapAngle(float radians); // Wraps angle to range (-PI, PI]
+[[nodiscard]] float angleToDisplay(float angle);
+[[nodiscard]] float wrapDisplayAngle(float displayAngle);
+[[nodiscard]] float displayToAngle(float displayAngle);
 
 enum { // Order of these is important
 	VP_INSIDE,
@@ -21,19 +23,19 @@ enum { // Order of these is important
 };
 float clamp(float val, float min, float max, byte* valPos);
 
-inline vec3 planarToWorld(vec2 planarVec) {
+[[nodiscard]] inline vec3 planarToWorld(vec2 planarVec) {
 	return {0, planarVec.x, planarVec.y};
 }
-inline vec2 worldToPlanar(vec3 worldVec) {
+[[nodiscard]] inline vec2 worldToPlanar(vec3 worldVec) {
 	return {worldVec.y, worldVec.z};
 }
 
-vec2 pixelsToXNorm(float x, float y, float width, float height);
+[[nodiscard]] vec2 pixelsToXNorm(float x, float y, float width, float height);
 
-vec2 pixelsToYNorm(float x, float y, float width, float height);
+[[nodiscard]] vec2 pixelsToYNorm(float x, float y, float width, float height);
 
-vec2 pixelsToYNorm(vec2 pixels, float width, float height);
+[[nodiscard]] vec2 pixelsToYNorm(vec2 pixels, float width, float height);
 
-GLuint loadShader(GLenum shaderType, const std::string& shaderSource);
+[[nodiscard]] GLuint loadShader(GLenum shaderType, const std::string& shaderSource);
 
 #endif // UTILITIES_H

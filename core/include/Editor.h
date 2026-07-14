@@ -33,7 +33,7 @@ public:
 
 private:
 	bool doProcessEvent(const Event&) override;
-	void doUpdate(float dt) override;
+	void doUpdate(microseconds dt) override;
 	void doDraw() override;
 
 	[[nodiscard]] std::shared_ptr<UndoNode> makeUndoNode() const;

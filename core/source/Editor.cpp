@@ -30,7 +30,7 @@ bool Editor::doProcessEvent(const Event&) {
 	return false;
 }
 
-void Editor::doUpdate(float dt) {
+void Editor::doUpdate(microseconds dt) {
 
 }
 
