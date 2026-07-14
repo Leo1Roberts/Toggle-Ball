@@ -6,17 +6,23 @@
 struct BufferDeleter {
 	void operator()(GLsizei n, const GLuint* ids) const { glDeleteBuffers(n, ids); }
 };
-struct VertexArrayDeleter {
-	void operator()(GLsizei n, const GLuint* ids) const { glDeleteVertexArrays(n, ids); }
+struct FramebufferDeleter {
+	void operator()(GLsizei n, const GLuint* ids) const { glDeleteFramebuffers(n, ids); }
 };
 struct ProgramDeleter {
 	void operator()(GLsizei, const GLuint* id) const { glDeleteProgram(*id); }
+};
+struct RenderbufferDeleter {
+	void operator()(GLsizei n, const GLuint* ids) const { glDeleteRenderbuffers(n, ids); }
 };
 struct ShaderDeleter {
 	void operator()(GLsizei, const GLuint* id) const { glDeleteShader(*id); }
 };
 struct TextureDeleter {
 	void operator()(GLsizei n, const GLuint* ids) const { glDeleteTextures(n, ids); }
+};
+struct VertexArrayDeleter {
+	void operator()(GLsizei n, const GLuint* ids) const { glDeleteVertexArrays(n, ids); }
 };
 
 template <typename T, typename Deleter>
@@ -48,9 +54,11 @@ private:
 };
 
 using GLBuffer = GLHandle<GLuint, BufferDeleter>;
-using GLVertexArray = GLHandle<GLuint, VertexArrayDeleter>;
-using GLShader = GLHandle<GLuint, ShaderDeleter>;
+using GLFramebuffer = GLHandle<GLuint, FramebufferDeleter>;
 using GLProgram = GLHandle<GLuint, ProgramDeleter>;
+using GLRenderbuffer = GLHandle<GLuint, RenderbufferDeleter>;
+using GLShader = GLHandle<GLuint, ShaderDeleter>;
 using GLTexture = GLHandle<GLuint, TextureDeleter>;
+using GLVertexArray = GLHandle<GLuint, VertexArrayDeleter>;
 
 #endif // GL_UTILITIES_H

@@ -1,7 +1,10 @@
 #ifndef OBSTACLE_H
 #define OBSTACLE_H
 
+#include "ButtonManager.h"
 #include "Mesh.h"
+#include "Obstacle.h"
+#include "PhysicsConstants.h"
 #include "Sizes.h"
 #include "Smoother.h"
 
@@ -16,25 +19,7 @@ struct SelectBox {
 	SelectionType selectionType;
 };
 
-enum {
-	MAT_BASKETBALL,
-	MAT_CONCRETE,
-	MAT_NUM
-};
-
-constexpr float FRICTION_COEFFICIENTS[MAT_NUM][MAT_NUM] = {
-0.5f, 0.58f,
-0.58f, 0.4f};
-
-constexpr float ROLLING_RESISTANCE_COEFFICIENTS[MAT_NUM][MAT_NUM] = {
-0.02f, 0.015f,
-0.015f, 0.01f};
-
-constexpr float GRAVITY = -9.81f;
-constexpr float AIR_DENSITY = 1.225f;
-//const float DYNAMIC_VISCOSITY = 0.000018f;
-
-constexpr vec3 OBSTACLE_ROTATION_AXIS = {1, 0, 0};
+// TODO: move the following constants to somewhere better
 
 constexpr float MINIMUM_ARENA_SIZE = 5;
 constexpr float MAXIMUM_ARENA_SIZE = 200;
@@ -53,7 +38,7 @@ constexpr float MAXIMUM_MINOR_RADIUS = 50;
 constexpr float MAXIMUM_MAJOR_RADIUS = 200;
 
 constexpr float MINIMUM_ANGLE = -5 * PI; // -900°
-constexpr float MAXIMUM_ANGLE = 5 * PI; // 900°
+constexpr float MAXIMUM_ANGLE = 5 * PI;  // 900°
 
 constexpr float MINIMUM_RPM = -120;
 constexpr float MAXIMUM_RPM = 120;
@@ -66,15 +51,11 @@ constexpr int SECTORS_PER_CIRCLE = SECTORS_PER_SEMICIRCLE * 2;
 constexpr int SECTORS_PER_DOT = 8;
 constexpr float BEVEL_AMOUNT = 0.1f;
 
-inline vec3 planarToWorld(vec2 planarVec) {
-	return {0, planarVec.x, planarVec.y};
-}
 
-
-class KinematicState {
+class ObstacleKinematicState {
 public:
-	KinematicState() = default;
-	KinematicState(vec3 position, float angle, vec3 velocity, float angularVelocity) :
+	ObstacleKinematicState() = default;
+	ObstacleKinematicState(vec3 position, float angle, vec3 velocity, float angularVelocity) :
 	    position(position),
 	    velocity(velocity),
 	    angularVelocity(angularVelocity) {
@@ -95,28 +76,30 @@ public:
 	[[nodiscard]] float getPhase() const { return phase; }
 
 private:
-	vec3 position = vec3();
-	float angle = 0;
+	vec3 position;
+	float angle{};
 	mat3 rotation = mat3::I;
-	vec3 velocity = vec3();
-	float angularVelocity = 0;
-	float phase = 0;
+	vec3 velocity;
+	float angularVelocity{};
+	float phase{};
 };
 
 class AbstractShapeSpec {
 public:
 	virtual ~AbstractShapeSpec() = default;
 
-	virtual std::unique_ptr<AbstractShapeSpec> clone() const = 0;
+	[[nodiscard]] virtual std::unique_ptr<AbstractShapeSpec> clone() const = 0;
 
 	[[nodiscard]] std::string serialize() const;
 	static std::unique_ptr<AbstractShapeSpec> deserialize(const std::string& data);
+
+	virtual void scale(float factor) = 0;
 
 	void generateObstacleMesh(Mesh<ObjectVertex>& obstacleMesh, col color) const;
 	void generateOutlineMesh(Mesh<ObjectVertex>& outlineMesh) const;
 	virtual void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
 
-	[[nodiscard]] bool isInSelectBox(const KinematicState& s, const SelectBox& box) const;
+	[[nodiscard]] bool isInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const;
 
 	[[nodiscard]] float getMinorRadius() const { return minorRadius; }
 	[[nodiscard]] vec3 getLeftCap() const { return leftCap; }
@@ -146,7 +129,7 @@ private:
 	virtual void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const = 0;
 	virtual void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
 
-	[[nodiscard]] virtual bool midsectionIsInSelectBox(const KinematicState& s, const SelectBox& box) const = 0;
+	[[nodiscard]] virtual bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const = 0;
 };
 
 class SegmentSpec : public AbstractShapeSpec {
@@ -160,8 +143,12 @@ public:
 
 	~SegmentSpec() override = default;
 
-	std::unique_ptr<AbstractShapeSpec> clone() const override {
+	[[nodiscard]] std::unique_ptr<AbstractShapeSpec> clone() const override {
 		return std::make_unique<SegmentSpec>(*this);
+	}
+
+	void scale(float factor) override {
+		*this = SegmentSpec(getMinorRadius() * factor, leftLength * factor, rightLength * factor);
 	}
 
 	void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
@@ -173,7 +160,7 @@ public:
 	[[nodiscard]] float getRightLength() const { return rightLength; }
 
 private:
-	float leftLength{}; // SSOT
+	float leftLength{};  // SSOT
 	float rightLength{}; // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
@@ -184,7 +171,7 @@ private:
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 
-	[[nodiscard]] bool midsectionIsInSelectBox(const KinematicState& s, const SelectBox& box) const override;
+	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const override;
 };
 
 class ArcSpec : public AbstractShapeSpec {
@@ -199,8 +186,12 @@ public:
 
 	~ArcSpec() override = default;
 
-	std::unique_ptr<AbstractShapeSpec> clone() const override {
+	[[nodiscard]] std::unique_ptr<AbstractShapeSpec> clone() const override {
 		return std::make_unique<ArcSpec>(*this);
+	}
+
+	void scale(float factor) override {
+		*this = ArcSpec(getMinorRadius() * factor, arcAngle, arcRadius * factor);
 	}
 
 	void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
@@ -213,7 +204,7 @@ public:
 	[[nodiscard]] float getArcRadius() const { return arcRadius; }
 
 private:
-	float arcAngle{}; // SSOT
+	float arcAngle{};  // SSOT
 	float arcRadius{}; // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
@@ -224,7 +215,7 @@ private:
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 
-	[[nodiscard]] bool midsectionIsInSelectBox(const KinematicState& s, const SelectBox& box) const override;
+	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const override;
 
 	void setCaps();
 };
@@ -239,17 +230,23 @@ public:
 	IMotionSpec(IMotionSpec&&) = default;
 	IMotionSpec& operator=(IMotionSpec&&) = default;
 
-	virtual std::unique_ptr<IMotionSpec> clone() const = 0;
+	[[nodiscard]] virtual std::unique_ptr<IMotionSpec> clone() const = 0;
 
 	[[nodiscard]] std::string serialize() const;
 	static std::unique_ptr<IMotionSpec> deserialize(const std::string& data);
 
+	virtual void scale(float factor) = 0;
+
 	void generateDomainMesh(Mesh<ObjectVertex>& domainMesh, const AbstractShapeSpec* shapeSpec) const;
 
-	// Updates KinematicState by one physics frame. Purely incremental - KinematicState must be initialised separately.
-	virtual void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const = 0;
-	// Updates the (stationary) KinematicState for obstacles in the editor. Purely incremental - KinematicState must be initialised separately.
-	virtual void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const = 0;
+	// Initialises the kinematic state
+	virtual void initKinematicState(ObstacleKinematicState& kinematicState) const = 0;
+	// Updates the kinematic state by one physics frame. Purely incremental - kinematicState must be initialised separately.
+	virtual void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const = 0;
+	// Updates the (stationary) kinematic state for obstacles in the editor. Purely incremental - kinematicState must be initialised separately.
+	virtual void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const = 0;
+
+	[[nodiscard]] virtual const col& getColor() const = 0;
 
 protected:
 	IMotionSpec() = default;
@@ -271,15 +268,21 @@ public:
 
 	~StaticSpec() override = default;
 
-	std::unique_ptr<IMotionSpec> clone() const override {
+	[[nodiscard]] const col& getColor() const override { return WHITE; }
+
+	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<StaticSpec>(*this);
+	}
+
+	void scale(float factor) override {
+		*this = StaticSpec(worldToPlanar(position) * factor, angle);
 	}
 
 	void setAngle(float radians);
 
-	void stepKinematicState(KinematicState&, const Smoother&) const override {}
-
-	void updateEditorKinematicState(KinematicState&, const Smoother&) const override {}
+	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void stepKinematicState(ObstacleKinematicState&, const Smoother&) const override {}
+	void updateEditorKinematicState(ObstacleKinematicState&, const Smoother&) const override {}
 
 private:
 	vec3 position; // SSOT
@@ -311,15 +314,21 @@ public:
 
 	~TogglingPositionSpec() override = default;
 
-	std::unique_ptr<IMotionSpec> clone() const override {
+	[[nodiscard]] const col& getColor() const override { return SOFT_BLUE; }
+
+	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<TogglingPositionSpec>(*this);
+	}
+
+	void scale(float factor) override {
+		*this = TogglingPositionSpec(angle, worldToPlanar(positionA) * factor, worldToPlanar(positionB) * factor);
 	}
 
 	void setAngle(float radians);
 
-	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
-
-	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
+	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
 	float angle{}; // SSOT
@@ -351,16 +360,22 @@ public:
 
 	~TogglingAngleSpec() override = default;
 
-	std::unique_ptr<IMotionSpec> clone() const override {
+	[[nodiscard]] const col& getColor() const override { return SOFT_RED; }
+
+	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<TogglingAngleSpec>(*this);
 	}
 
-	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+	void scale(float factor) override {
+		*this = TogglingAngleSpec(worldToPlanar(position) * factor, angleA, angleB);
+	}
 
-	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
+	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	vec3 position; // SSOT
+	vec3 position;  // SSOT
 	float angleA{}; // SSOT
 	float angleB{}; // SSOT
 
@@ -388,17 +403,23 @@ public:
 
 	~SpinningSpec() override = default;
 
-	std::unique_ptr<IMotionSpec> clone() const override {
+	[[nodiscard]] const col& getColor() const override { return SOFT_MAGENTA; }
+
+	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<SpinningSpec>(*this);
 	}
 
-	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+	void scale(float factor) override {
+		*this = SpinningSpec(worldToPlanar(position) * factor, initialAngle, angularVelocityA, angularVelocityB);
+	}
 
-	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother&) const override;
+	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
+	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother&) const override;
 
 private:
-	vec3 position; // SSOT
-	float initialAngle{}; // SSOT
+	vec3 position;            // SSOT
+	float initialAngle{};     // SSOT
 	float angularVelocityA{}; // SSOT
 	float angularVelocityB{}; // SSOT
 
@@ -418,30 +439,36 @@ private:
 class OscillatingPositionSpec : public IMotionSpec {
 public:
 	OscillatingPositionSpec(float angle, vec2 position1, vec2 position2, float angularFrequencyA, float angularFrequencyB) :
-		position1(planarToWorld(position1)),
-		position2(planarToWorld(position2)),
-		angle(angle),
-		angularFrequencyA(angularFrequencyA),
-		angularFrequencyB(angularFrequencyB) {}
+	    position1(planarToWorld(position1)),
+	    position2(planarToWorld(position2)),
+	    angle(angle),
+	    angularFrequencyA(angularFrequencyA),
+	    angularFrequencyB(angularFrequencyB) {}
 
 	OscillatingPositionSpec(const std::string& data);
 
 	~OscillatingPositionSpec() override = default;
 
-	std::unique_ptr<IMotionSpec> clone() const override {
+	[[nodiscard]] const col& getColor() const override { return SOFT_CYAN; }
+
+	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<OscillatingPositionSpec>(*this);
+	}
+
+	void scale(float factor) override {
+		*this = OscillatingPositionSpec(angle, worldToPlanar(position1) * factor, worldToPlanar(position2) * factor, angularFrequencyA, angularFrequencyB);
 	}
 
 	void setAngle(float radians);
 
-	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
-
-	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
+	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
 	vec3 position1; // SSOT
 	vec3 position2; // SSOT
-	float angle{}; // SSOT
+	float angle{};  // SSOT
 	mat3 rotation;
 	float angularFrequencyA{}; // SSOT
 	float angularFrequencyB{}; // SSOT
@@ -464,28 +491,34 @@ private:
 class OscillatingAngleSpec : public IMotionSpec {
 public:
 	OscillatingAngleSpec(vec2 position, float angle1, float angle2, float angularFrequencyA, float angularFrequencyB) :
-		position(planarToWorld(position)),
-		angle1(angle1),
-		angle2(angle2),
-		angularFrequencyA(angularFrequencyA),
-		angularFrequencyB(angularFrequencyB) {}
+	    position(planarToWorld(position)),
+	    angle1(angle1),
+	    angle2(angle2),
+	    angularFrequencyA(angularFrequencyA),
+	    angularFrequencyB(angularFrequencyB) {}
 
 	OscillatingAngleSpec(const std::string& data);
-	
+
 	~OscillatingAngleSpec() override = default;
 
-	std::unique_ptr<IMotionSpec> clone() const override {
+	[[nodiscard]] const col& getColor() const override { return SOFT_YELLOW; }
+
+	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<OscillatingAngleSpec>(*this);
 	}
 
-	void stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+	void scale(float factor) override {
+		*this = OscillatingAngleSpec(worldToPlanar(position) * factor, angle1, angle2, angularFrequencyA, angularFrequencyB);
+	}
 
-	void updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const override;
+	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
+	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	vec3 position; // SSOT
-	float angle1{}; // SSOT
-	float angle2{}; // SSOT
+	vec3 position;             // SSOT
+	float angle1{};            // SSOT
+	float angle2{};            // SSOT
 	float angularFrequencyA{}; // SSOT
 	float angularFrequencyB{}; // SSOT
 
@@ -509,7 +542,8 @@ public:
 	ObstacleDescriptor(std::unique_ptr<AbstractShapeSpec> shape, std::unique_ptr<IMotionSpec> motion, bool goal = false) :
 	    shape(std::move(shape)),
 	    motion(std::move(motion)),
-	    goal(goal) {}
+	    goal(goal),
+		material(MAT_CONCRETE) {}
 
 	ObstacleDescriptor(const ObstacleDescriptor& other);
 	ObstacleDescriptor& operator=(const ObstacleDescriptor& other);
@@ -517,21 +551,57 @@ public:
 	ObstacleDescriptor(const std::string& data);
 	[[nodiscard]] std::string serialize() const;
 
+	void scale(float factor);
+
 	[[nodiscard]] IMotionSpec* getMotion() const { return motion.get(); }
 	[[nodiscard]] AbstractShapeSpec* getShape() const { return shape.get(); }
 	[[nodiscard]] bool isGoal() const { return goal; }
+	[[nodiscard]] byte getMaterial() const { return material; }
 
 private:
 	std::unique_ptr<AbstractShapeSpec> shape;
 	std::unique_ptr<IMotionSpec> motion;
 	bool goal{};
+	byte material;
+};
+
+
+class GameObstacle {
+public:
+	explicit GameObstacle(const ObstacleDescriptor* descriptor) :
+	    descriptor(descriptor) {
+		reset();
+		descriptor->getShape()->generateObstacleMesh(mesh, descriptor->getMotion()->getColor());
+	}
+
+	~GameObstacle() = default;
+
+	GameObstacle(const GameObstacle& other) = delete;
+	GameObstacle& operator=(const GameObstacle&) = delete;
+	GameObstacle(GameObstacle&&) = default;
+	GameObstacle& operator=(GameObstacle&&) = default;
+
+	void reset() { descriptor->getMotion()->initKinematicState(kinematicState); }
+	void updateKinematicState(const Smoother& smoother, int numSteps);
+
+	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
+	[[nodiscard]] const Mesh<ObjectVertex>* getMesh() const { return &mesh; }
+
+private:
+	const ObstacleDescriptor* descriptor;
+
+	ObstacleKinematicState kinematicState;
+
+	Mesh<ObjectVertex> mesh = Mesh<ObjectVertex>(GL_STATIC_DRAW);
 };
 
 
 class EditorObstacle {
 public:
 	explicit EditorObstacle(ObstacleDescriptor* descriptor) :
-	    descriptor(descriptor) {}
+	    descriptor(descriptor) {
+		descriptor->getMotion()->initKinematicState(kinematicState);
+	}
 
 	~EditorObstacle() = default;
 
@@ -551,7 +621,7 @@ public:
 private:
 	ObstacleDescriptor* descriptor;
 
-	KinematicState kinematicState;
+	ObstacleKinematicState kinematicState;
 
 	bool selected = false;
 

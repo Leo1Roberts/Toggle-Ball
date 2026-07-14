@@ -1,7 +1,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-void colorToLinear(vec3* srgb);
+[[nodiscard]] vec3 colorToLinear(const vec3& srgb);
 
 long now_ms();
 
@@ -20,6 +20,13 @@ enum { // Order of these is important
 	VP_OUTSIDE
 };
 float clamp(float val, float min, float max, byte* valPos);
+
+inline vec3 planarToWorld(vec2 planarVec) {
+	return {0, planarVec.x, planarVec.y};
+}
+inline vec2 worldToPlanar(vec3 worldVec) {
+	return {worldVec.y, worldVec.z};
+}
 
 vec2 pixelsToXNorm(float x, float y, float width, float height);
 

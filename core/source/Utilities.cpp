@@ -2,10 +2,12 @@
 #include <chrono>
 #include <cmath>
 
-void colorToLinear(vec3* srgb) {
-	srgb->x = (float) pow(srgb->x, 2.2);
-	srgb->y = (float) pow(srgb->y, 2.2);
-	srgb->z = (float) pow(srgb->z, 2.2);
+vec3 colorToLinear(const vec3& srgb) {
+	return {
+		std::pow(srgb.x, 2.2f),
+		std::pow(srgb.y, 2.2f),
+		std::pow(srgb.z, 2.2f)
+	};
 }
 
 long now_ms() {

@@ -14,15 +14,17 @@
 
 class Smoother {
 public:
+	Smoother() = default;
+
 	void reset();
 	void update(float dt);
 
-	void setPosition(float pos, float vel);
+	void setPosition(float pos, float vel = 0);
 	void setDestination(float destPos, float destVel, float time);
 
-	float getCurrentPosition() const { return x; }
-	float getCurrentVelocity() const { return v; }
-	float getDestination() const { return d; }
+	[[nodiscard]] float getCurrentPosition() const { return x; }
+	[[nodiscard]] float getCurrentVelocity() const { return v; }
+	[[nodiscard]] float getDestination() const { return d; }
 
 private:
 	float x;     // current value

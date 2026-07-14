@@ -42,13 +42,13 @@ void Smoother::setDestination(float destPos, float destVel, float time) {
 
 	inverse.SetInverseOf(&M);
 
-	vec3 vector, res;
+	vec3 vector;
 
 	vector.x = d - s - u * arrive;
 	vector.y = destVel - u;
 	vector.z = 0.0f;
 
-	res = inverse * vector;
+	vec3 res = inverse * vector;
 
 	k = res.x;
 	r = res.y;

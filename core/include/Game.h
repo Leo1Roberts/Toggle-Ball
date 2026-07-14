@@ -1,323 +1,53 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include "Object.h"
-#include "Level_old.h"
-#include "Smoother.h"
-#include <string>
-#include <vector>
-#include "VectorMatrix.h"
-
-#if defined(PLATFORM_ANDROID)
-struct android_app;
-#endif
+#include "Level.h"
+#include "Obstacle.h"
+#include "Screen.h"
 
 
-struct SelectionState {
-	bool selection[MAX_OBSTACLES + 1]{};
-	short focus;
-
-	SelectionState() : focus(0) {
-		memset(selection, 0, sizeof(selection));
-	}
-
-	SelectionState(const bool* s, short f) {
-		set(s, f);
-	}
-
-	void set(const bool* s, short f) {
-		memcpy(selection, s, sizeof(selection));
-		focus = f;
-	}
-};
-
-constexpr byte MAX_SELECTIONS = 100;
-
-struct UndoNode_old {
-	Level level;
-	SelectionState selectionStates[MAX_SELECTIONS];
-	short lastSelectionBufferIndex;
-
-	UndoNode_old() : level(Level()), lastSelectionBufferIndex(0) {
-		for (SelectionState& s: selectionStates)
-			s = SelectionState();
-	}
-
-	void set(const Level& l, const bool* s, short f) {
-		level = l;
-		selectionStates[0] = SelectionState(s, f);
-		lastSelectionBufferIndex = 0;
-	}
-};
-
-class Game {
+class Game : public Screen {
 public:
-#if defined(PLATFORM_DESKTOP)
-	static void createGame(GLFWwindow* win) {
-		window = win;
-		initGame();
-	}
+	Game(int width, int height) : Screen(width, height) {}
 
-	static void handleKeyInput(GLFWwindow* window, int key, int scancode, int keyAction, int mods);
-	static void handleCharInput(GLFWwindow* window, unsigned int c);
-	static void handleCursorPosInput(GLFWwindow* window, double xpos, double ypos);
-	static void handleCursorEnterEvent(GLFWwindow* window, int entered);
-	static void handleMouseButtonInput(GLFWwindow* window, int mouseButton, int mouseButtonAction, int mods);
-	static void handleScrollInput(GLFWwindow* window, double xoffset, double yoffset);
-
-	static bool allArrowKeysUp(int exceptKey = GLFW_KEY_UNKNOWN);
-	static void moveObjectsWithArrowKey(int key, int keyAction);
-
-	static void updateCursor();
-#elif defined(PLATFORM_ANDROID)
-	static void createGame(android_app* pApp) {
-		androidApp = pApp;
-		initGame();
-	}
-
-	/*!
-	 * Handles input from the android_app.
-	 *
-	 * Note: this will clear the input queue
-	 */
-	static void handleInput();
-#endif
-
-	static void deleteGame();
-
-	static void update();
+	void play(const LevelDescriptor* levelToPlay);
 
 private:
-#if defined(PLATFORM_DESKTOP)
-	static GLFWwindow* window;
-#else
-	static android_app* androidApp;
-	static EGLDisplay eglDisplay;
-	static EGLSurface eglSurface;
-	static EGLContext eglContext;
-#endif
+	void load(const LevelDescriptor* levelToLoad);
+	void start();
 
-	static bool inEditor;
-	static bool toggled;
-	static bool levelComplete;
-	static bool viewLocked;
+	bool doProcessEvent(const Event&) override;
 
-	static Smoother smoother;
+	void doUpdate(float dt) override;
 
-	static Level level;
-	static std::vector<Obstacle> obstacles;
-	static float arenaWidth, arenaHeight;
-	static Plane arenaBounds[4];
-	static Plane arenaBackground;
-	static Ball_OLD ball;
-	static Ball_OLD ballOutline;
-	static inline void setBallPos(const vec3& pos);
+	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale = 1);
+	void doDraw() override;
 
-	static std::vector<std::string> getLevelList();
+	void resizeLevel();
+	void doResize(int, int) override;
 
-	static void drawInventoryPanel();
-	static void drawPropertiesPanel();
-	static void drawDialogue();
+	LevelDescriptor level;
+	GameBall ball{};
+	std::vector<GameObstacle> obstacles;
 
-	static void render();
-
-	static void ballObstacleCollision(Ball_OLD* pBall, Obstacle* g, const vec3& normal, float separation);
-
-	static short checkBallObstacleCollision(Ball_OLD* pBall, bool getIndex, bool onlyRim = false, bool onlySection = false);
-
-	static void physicsUpdate();
-
-	static void updateEditorObstacles();
-
-	static void setupObjShaders();
-
-	static void reloadShaders();
-
-	static void initGame();
-
-	static void initFonts();
-
-	static void updateHalfHeight();
-
-	static void updateRenderArea();
-
-	static void resetBall();
-
-	static void restartLevel(int _);
+	Smoother togglePosition{};
 
 
-	static int dialogue;
-	enum {
-		DLG_NONE,
-		DLG_CONFIRM_EXIT,
-		DLG_CHOOSE_LEVEL,
-		DLG_CONFIRM_SWITCH,
-		DLG_SAVE_AS,
-		DLG_CONFIRM_OVERWRITE,
-		DLG_NUM
-	};
-	static void requestDialogue(int d);
+	vec3 viewOrigin;
+	float heading = 0, pitch = 0;
+	vec3 viewDirection;
+	float viewDistance{};
+	vec3 viewPosition;
+	void updateView();
 
-#if defined(PLATFORM_DESKTOP)
-	static void confirmExit(int _ = 0);
-#endif
+	vec3 viewUpDirection;
+	vec3 viewSunDirection;
 
-	static bool justOpenedSaveAsDialogue;
-	static std::string saveAsName;
-	static void saveAs(int _ = 0);
+	float halfHeight{};
 
-
-	static void createObjects();
-
-	static void drawBall(const Ball_OLD& b);
-	static void drawPlane(const Plane& p);
-	static void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale);
-	static void drawObstacles();
-	static void drawObstacleOutline(const Obstacle& g);
-	static void drawObstacleDomains();
-
-	static void toggle(int _ = 0);
-
-	static void resetEditorView(int _ = 0);
-
-	static void rotateView(const vec2& dxy);
-
-	static void rotateView(float dx, float dy);
-
-	static void moveViewOrigin(float dx, float dy);
-
-	static vec3 getPointerWorldPos(float x, float y);
-
-	static vec3 getPointerWorldPos(const vec2& pos);
-
-	static void updateArena();
-	static void loadLevel(const Level& newLevel, bool resetView = true);
-	static std::string levelString;
-	static void selectLevel(const std::string& name = "");
-	static std::string pendingLevel;
-	static void selectPendingLevel(int _ = 0);
-	static void selectLevelCallback(int levelIndex);
-	static short savedIndex;
-	static void saveLevel(int _ = 0);
-	static bool changesAreSaved() { return savedIndex == bufferIndex; }
-
-	static short focus;
-	static void findNewFocus();
-	static bool selection[MAX_OBSTACLES + 1]; // Ball selection state at end
-	static void selectObject(short index);
-	static void deselectObject(short index);
-
-	static bool limiting[MAX_OBSTACLES + 1]; // Objects which have reached a limit
-
-	static bool ctrlDown, shiftDown, altDown;
-	static bool leftMouseDown, middleMouseDown, rightMouseDown;
-
-	enum {
-		ACTION_NONE,
-		ACTION_SELECT,
-		ACTION_MOVE,
-		ACTION_ROTATE,
-		ACTION_SCALE,
-		ACTION_SHAPE,
-		ACTION_NUM
-	};
-	enum {
-		ACTION_MOD_NONE,
-
-		// Select
-		ACTION_MOD_REPLACE,
-		ACTION_MOD_ADD,
-		ACTION_MOD_SUBTRACT,
-
-		// Move
-		ACTION_MOD_FREE,
-		ACTION_MOD_GLOBAL_X,
-		ACTION_MOD_GLOBAL_Y,
-		ACTION_MOD_LOCAL_X,
-		ACTION_MOD_LOCAL_Y,
-		ACTION_MOD_UNIT,
-
-		// Rotate & scale
-		ACTION_MOD_INDIVIDUAL,
-		ACTION_MOD_GROUP,
-
-		// Scale & shape
-		ACTION_MOD_MAJOR,
-		ACTION_MOD_MINOR,
-
-		// Shape
-		ACTION_MOD_START,
-		ACTION_MOD_END,
-		ACTION_MOD_START_MIRRORED,
-		ACTION_MOD_END_MIRRORED,
-		ACTION_MOD_SLIDE, // Straight only
-
-		ACTION_MOD_NUM
-	};
-
-	static byte action;
-	static byte actionMod;
-	static bool actionIsStateless;
-	static vec2 actionStartPointerPos;
-	static vec3 actionStartPointerWorldPos;
-	static vec3 actionVector;
-	static short pressedObIndex;
-	static float initialPointerObDist; // Used for radius adjustments
-
-	static void startAction();
-
-	static void finishAction();
-
-	static void updateAction();
-
-	static void changeAction();
-
-	static void cancelAction();
-
-	static vec2 selectBoxTL, selectBoxBR;
-	static void boxSelect();
-
-	static bool blobWasPressed;
-	static void blobPressed(int blobActionMod);
-
-	static void changePropertyInput();
-	static void updatePropertyInput(byte property);
-
-	static void moveBallByFull(const vec3& vector);
-	static void moveBallBy(const vec3& vector);
-	static void moveBallTo(const vec3& pos);
-
-	static void moveObstacleByFull(short index, const vec3& vector);
-	static void moveObstacleTo(short index, const vec3& vector); // TODO: remove
-
-	static void rotateObstacleBy(short index, float angle);
-	static void rotateObstacleTo(short index, float angle); // TODO: remove
-
-	static void addObstacle(bool isStraight, bool isGoal, byte stateType);
-	static void addObstacleCallback(int data);
-	static void deleteObstacles();
-	static void duplicateObstacles();
-
-	static std::vector<ObstacleDefinition> clipboard;
-	static void copyObstacles();
-	static void cutObstacles();
-	static void pasteObstacles();
-
-	static inline void updateBallOutline();
-	static void updateAllOutlines();
-
-	static vec2 pointerPos;
-	static Ball_OLD pointerBall;
-	static Ball_OLD pointerBallWide;
-
-	static constexpr byte MAX_UNDO = 50;
-	static short bufferIndex;
-	static short lastBufferIndex;
-	static short selectionBufferIndex;
-	static UndoNode_old undoBuffer[];
-
-	static void undo();
-	static void redo();
+	mat4 worldMatrix{}, viewMatrix{}, projectionMatrix{};
+	mat3 viewRotationMatrix;
 };
+
 
 #endif // GAME_H

@@ -14,7 +14,7 @@ static void angleToRotation(float radians, mat3& rotation) {
 }
 
 
-void KinematicState::setAngle(float radians) {
+void ObstacleKinematicState::setAngle(float radians) {
 	angle = wrapAngle(radians);
 	angleToRotation(radians, rotation);
 }
@@ -508,7 +508,7 @@ static std::array<float, 2> quadraticFormula(float a, float b, float c) {
 	return { mul * (-b + sqrtD), mul * (-b - sqrtD) };
 }
 
-bool AbstractShapeSpec::isInSelectBox(const KinematicState& s, const SelectBox& box) const {
+bool AbstractShapeSpec::isInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const {
 	// Check if caps are in the box
 
 	const vec3 leftCapPos = s.getPosition() + s.getRotation() * getLeftCap();
@@ -542,7 +542,7 @@ bool AbstractShapeSpec::isInSelectBox(const KinematicState& s, const SelectBox& 
 	return midsectionIsInSelectBox(s, box);
 }
 
-bool SegmentSpec::midsectionIsInSelectBox(const KinematicState& s, const SelectBox& box) const {
+bool SegmentSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const {
 	const vec3 leftCapPos = s.getPosition() + s.getRotation() * getLeftCap();
 	const vec3 rightCapPos = s.getPosition() + s.getRotation() * getRightCap();
 	vec3 upOffset = s.getRotation() * vec3(0, 0, getMinorRadius());
@@ -571,7 +571,7 @@ bool SegmentSpec::midsectionIsInSelectBox(const KinematicState& s, const SelectB
 	return false;
 }
 
-bool ArcSpec::midsectionIsInSelectBox(const KinematicState& s, const SelectBox& box) const {
+bool ArcSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const {
 	float centerAngle = s.getAngle() + PI * 0.5f;
 	bool fullCircle = getArcAngle() >= 2 * PI;
 
@@ -877,7 +877,7 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 
 	mat3 rot = getRotation();
 	for (const vec3& pos : {getPositionA(), getPositionB()}) {
-		Index offset = (Index)vs.size();
+		auto offset = (Index)vs.size();
 
 		std::ranges::transform(vs_shadow, std::back_inserter(vs), [pos, rot](const ObjectVertex& v) {
 			return ObjectVertex(pos + rot * v.position, v.uv, v.normal, v.color);
@@ -987,7 +987,7 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 	}
 
 	for (float angle : {getAngleA(), getAngleB()}) {
-		Index offset = (Index)vs.size();
+		auto offset = (Index)vs.size();
 
 		mat3 rot;
 		angleToRotation(angle, rot);
@@ -1036,7 +1036,7 @@ void SpinningSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<In
 			is.push_back((i*2 + 3) % (SECTORS_PER_CIRCLE * 2));
 			is.push_back((i*2 + 2) % (SECTORS_PER_CIRCLE * 2));
 		}
-	} else return;
+	}
 }
 
 void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const {
@@ -1203,7 +1203,7 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 			is.push_back(i + 6);
 			is.push_back(i + 2);
 		}
-	} else return;
+	}
 }
 
 void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const {
@@ -1355,33 +1355,78 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			is.push_back(i + 3);
 			is.push_back(i + 2);
 		}
-	} else return;
+	}
 }
 
 
-void TogglingPositionSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+void StaticSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+	kinematicState.setPosition(getPosition());
+	kinematicState.setAngle(getAngle());
+	kinematicState.setVelocity(0);
+	kinematicState.setAngularVelocity(0);
+}
+
+void TogglingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+	kinematicState.setPosition(getPositionA());
+	kinematicState.setAngle(getAngle());
+	kinematicState.setVelocity(0);
+	kinematicState.setAngularVelocity(0);
+}
+
+void TogglingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+	kinematicState.setPosition(getPosition());
+	kinematicState.setAngle(getAngleA());
+	kinematicState.setVelocity(0);
+	kinematicState.setAngularVelocity(0);
+}
+
+void SpinningSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+	kinematicState.setPosition(getPosition());
+	kinematicState.setAngle(getInitialAngle());
+	kinematicState.setVelocity(0);
+	kinematicState.setAngularVelocity(getAngularVelocityA());
+}
+
+void OscillatingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+	kinematicState.setPosition(getPosition1());
+	kinematicState.setAngle(getAngle());
+	kinematicState.setVelocity(0);
+	kinematicState.setAngularVelocity(0);
+	kinematicState.setPhase(0);
+}
+
+void OscillatingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+	kinematicState.setPosition(getPosition());
+	kinematicState.setAngle(getAngle1());
+	kinematicState.setVelocity(0);
+	kinematicState.setAngularVelocity(0);
+	kinematicState.setPhase(0);
+}
+
+
+void TogglingPositionSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	kinematicState.setPosition(lerp(getPositionA(), getPositionB(), smoother.getCurrentPosition()));
 	kinematicState.setVelocity((getPositionB() - getPositionA()) * smoother.getCurrentVelocity());
 }
 
-void TogglingAngleSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+void TogglingAngleSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	kinematicState.setAngle(std::lerp(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
 	kinematicState.setAngularVelocity((getAngleB() - getAngleA()) * smoother.getCurrentVelocity());
 }
 
-void SpinningSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+void SpinningSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	kinematicState.setAngularVelocity(std::lerp(getAngularVelocityA(), getAngularVelocityB(), smoother.getCurrentPosition()));
 	kinematicState.setAngle(kinematicState.getAngle() + kinematicState.getAngularVelocity() * PHYSICS_TIMESTEP);
 }
 
-void OscillatingPositionSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+void OscillatingPositionSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	float angularFrequency = std::lerp(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
 	kinematicState.setPhase(kinematicState.getPhase() + angularFrequency * PHYSICS_TIMESTEP);
 	kinematicState.setPosition(lerp(getPosition1(), getPosition2(), 0.5f - 0.5f * std::cos(kinematicState.getPhase())));
 	kinematicState.setVelocity((getPosition2() - getPosition1()) * (0.5f * std::sin(kinematicState.getPhase()) * angularFrequency));
 }
 
-void OscillatingAngleSpec::stepKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+void OscillatingAngleSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	float angularFrequency = std::lerp(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
 	kinematicState.setPhase(kinematicState.getPhase() + angularFrequency * PHYSICS_TIMESTEP);
 	kinematicState.setAngle(std::lerp(getAngle1(), getAngle2(), 0.5f - 0.5f * std::cos(kinematicState.getPhase())));
@@ -1389,54 +1434,48 @@ void OscillatingAngleSpec::stepKinematicState(KinematicState& kinematicState, co
 }
 
 
-void TogglingPositionSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+void TogglingPositionSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	kinematicState.setPosition(lerp(getPositionA(), getPositionB(), smoother.getCurrentPosition()));
 }
 
-void TogglingAngleSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+void TogglingAngleSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	kinematicState.setAngle(std::lerp(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
 }
 
-void SpinningSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother&) const {
+void SpinningSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother&) const {
 	kinematicState.setAngle(getInitialAngle());
 }
 
-void OscillatingPositionSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+void OscillatingPositionSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	bool toggled = smoother.getCurrentPosition() > 0.5f;
 	kinematicState.setPhase(toggled ? PI : 0);
 	kinematicState.setPosition(toggled ? getPosition2() : getPosition1());
 }
 
-void OscillatingAngleSpec::updateEditorKinematicState(KinematicState& kinematicState, const Smoother& smoother) const {
+void OscillatingAngleSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	bool toggled = smoother.getCurrentPosition() > 0.5f;
 	kinematicState.setPhase(toggled ? PI : 0);
 	kinematicState.setAngle(toggled ? getAngle2() : getAngle1());
 }
 
 
-void EditorObstacle::updateKinematicState(const Smoother& smoother, int numSteps) {
-	if (numSteps >= 0) // Demonstrate motion
-		while (numSteps--)
-			descriptor->getMotion()->stepKinematicState(kinematicState, smoother);
-	else // Just set 'stationary' attributes
-		descriptor->getMotion()->updateEditorKinematicState(kinematicState, smoother);
-}
 
-
-
-ObstacleDescriptor::ObstacleDescriptor(const ObstacleDescriptor& other) {
-	if (other.getShape())
-		shape = other.getShape()->clone();
-	if (other.getMotion())
-		motion = other.getMotion()->clone();
+ObstacleDescriptor::ObstacleDescriptor(const ObstacleDescriptor& other) :
+	goal(other.goal), material(other.material) {
+	if (other.shape)
+		shape = other.shape->clone();
+	if (other.motion)
+		motion = other.motion->clone();
 }
 
 ObstacleDescriptor& ObstacleDescriptor::operator=(const ObstacleDescriptor& other) {
 	if (this != &other) {
-		if (other.getShape())
-			shape = other.getShape()->clone();
-		if (other.getMotion())
-			motion = other.getMotion()->clone();
+		if (other.shape)
+			shape = other.shape->clone();
+		if (other.motion)
+			motion = other.motion->clone();
+		goal = other.goal;
+		material = other.material;
 	}
 	return *this;
 }
@@ -1452,6 +1491,7 @@ ObstacleDescriptor::ObstacleDescriptor(const std::string& data) {
 
 	shape = std::move(AbstractShapeSpec::deserialize(shapeString));
 	motion = std::move(IMotionSpec::deserialize(motionString));
+	material = MAT_CONCRETE;
 }
 
 
@@ -1461,4 +1501,27 @@ std::string ObstacleDescriptor::serialize() const {
 	ss << shape->serialize() << "|" << motion->serialize() << "|" << isGoal();
 
 	return ss.str();
+}
+
+
+void ObstacleDescriptor::scale(float factor) {
+	shape->scale(factor);
+	motion->scale(factor);
+}
+
+
+
+void GameObstacle::updateKinematicState(const Smoother& smoother, int numSteps) {
+	while (numSteps--)
+		descriptor->getMotion()->stepKinematicState(kinematicState, smoother);
+}
+
+
+
+void EditorObstacle::updateKinematicState(const Smoother& smoother, int numSteps) {
+	if (numSteps < 0) // Just set 'stationary' attributes
+		descriptor->getMotion()->updateEditorKinematicState(kinematicState, smoother);
+	else // Demonstrate motion
+		while (numSteps--)
+			descriptor->getMotion()->stepKinematicState(kinematicState, smoother);
 }

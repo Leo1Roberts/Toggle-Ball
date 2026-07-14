@@ -1,5 +1,8 @@
 #include "main.h"
+
+#include "App.h"
 #include "Game.h"
+#include "Game_OLD.h"
 #include <iostream>
 
 inline unsigned max_unsigned(unsigned a, unsigned b) { return (a > b) ? a : b; }
@@ -70,9 +73,11 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_CONTEXT_DEBUG, GL_TRUE);
-	glfwWindowHint(GLFW_SAMPLES, 4);
+	// glfwWindowHint(GLFW_SAMPLES, 4);
 
-	GLFWwindow* window = glfwCreateWindow(1600, 1000, "Toggle Ball", nullptr, nullptr);
+	int width = 1600, height = 1000;
+
+	GLFWwindow* window = glfwCreateWindow(width, height, "Toggle Ball", nullptr, nullptr);
 
 	if (!window)
 	{
@@ -92,16 +97,16 @@ int main()
 		exit(EXIT_FAILURE);
 	}
 
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-	glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
-
-	Game::createGame(window);
-	glfwSetKeyCallback(window, &Game::handleKeyInput);
-	glfwSetCharCallback(window, &Game::handleCharInput);
-	glfwSetCursorPosCallback(window, &Game::handleCursorPosInput);
-	glfwSetCursorEnterCallback(window, &Game::handleCursorEnterEvent);
-	glfwSetMouseButtonCallback(window, &Game::handleMouseButtonInput);
-	glfwSetScrollCallback(window, &Game::handleScrollInput);
+	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	// glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
+	//
+	// Game::createGame(window);
+	// glfwSetKeyCallback(window, &Game::handleKeyInput);
+	// glfwSetCharCallback(window, &Game::handleCharInput);
+	// glfwSetCursorPosCallback(window, &Game::handleCursorPosInput);
+	// glfwSetCursorEnterCallback(window, &Game::handleCursorEnterEvent);
+	// glfwSetMouseButtonCallback(window, &Game::handleMouseButtonInput);
+	// glfwSetScrollCallback(window, &Game::handleScrollInput);
 
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -111,12 +116,25 @@ int main()
 	// (3) Enter the Main-Loop
 	// --------------------------------	
 
-	while (true)
-	{
-		glfwPollEvents();
-		Game::update();
+	App app;
+	std::unique_ptr<Game> game = std::make_unique<Game>(width, height);
+	game->play(LevelDescriptor::load("Dev test").get());
+	app.addScreen(std::move(game));
 
-		if (glfwWindowShouldClose(window))
-			Game::deleteGame();
-	}
+	double t1 = glfwGetTime();
+
+	do {
+		glfwPollEvents();
+
+		// Game::update();
+		//
+		// if (glfwWindowShouldClose(window))
+		// 	Game::deleteGame();
+
+		glfwGetFramebufferSize(window, &width, &height);
+		double t2 = glfwGetTime();
+		app.tick(float(t2 - t1), width, height);
+		t1 = t2;
+		glfwSwapBuffers(window);
+	} while (!glfwWindowShouldClose(window));
 }

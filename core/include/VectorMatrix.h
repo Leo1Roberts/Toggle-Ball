@@ -11,7 +11,7 @@ struct vec2 {
 		};
 	};
 
-	explicit constexpr vec2(float i = 0) noexcept : x(i), y(i) {}
+	constexpr vec2(float i = 0) noexcept : x(i), y(i) {}
 	constexpr vec2(float x, float y) noexcept : x(x), y(y) {}
 
 	bool operator==(const vec2& v) const noexcept { return x == v.x && y == v.y; }
@@ -37,9 +37,9 @@ struct vec2 {
 		y = iy;
 	}
 
-	float lengthSq() const noexcept { return x * x + y * y; }
+	[[nodiscard]] float lengthSq() const noexcept { return x * x + y * y; }
 
-	float length() const noexcept { return sqrtf(x * x + y * y); }
+	[[nodiscard]] float length() const noexcept { return sqrtf(x * x + y * y); }
 };
 
 struct vec3 {
@@ -52,7 +52,7 @@ struct vec3 {
 		};
 	};
 
-	explicit constexpr vec3(float i = 0) noexcept : x(i), y(i), z(i) {}
+	constexpr vec3(float i = 0) noexcept : x(i), y(i), z(i) {}
 	constexpr vec3(float x, float y, float z) noexcept : x(x), y(y), z(z) {}
 
 	bool operator==(const vec3& v) const noexcept {
@@ -112,9 +112,9 @@ struct vec3 {
 		z *= r;
 	}
 
-	float lengthSq() const noexcept { return x * x + y * y + z * z; }
+	[[nodiscard]] float lengthSq() const noexcept { return x * x + y * y + z * z; }
 
-	float length() const noexcept { return sqrtf(x * x + y * y + z * z); }
+	[[nodiscard]] float length() const noexcept { return sqrtf(x * x + y * y + z * z); }
 };
 
 float dot(const vec3& v1, const vec3& v2);
@@ -178,7 +178,7 @@ struct mat3 {
 
 	void SetInverseOf(const mat3* m);
 };
-inline constexpr mat3 mat3::I = mat3(
+constexpr mat3 mat3::I = mat3(
 	1, 0, 0,
 	0, 1, 0,
 	0, 0, 1

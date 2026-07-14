@@ -127,14 +127,14 @@ void mat3::SetInverseOf(const mat3* m) {
 typedef float mat44[4][4];
 
 mat4 mat4::operator*(const mat4& right) const {
-	mat4 res;
+	mat4 res{};
 	const mat44& m = right.m44;
 	const float* v = m16;
-	for (int i = 0; i < 4; i++) {
-		res.m44[i][0] = v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0] + v[3] * m[3][0];
-		res.m44[i][1] = v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1] + v[3] * m[3][1];
-		res.m44[i][2] = v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2] + v[3] * m[3][2];
-		res.m44[i][3] = v[0] * m[0][3] + v[1] * m[1][3] + v[2] * m[2][3] + v[3] * m[3][3];
+	for (auto & i : res.m44) {
+		i[0] = v[0] * m[0][0] + v[1] * m[1][0] + v[2] * m[2][0] + v[3] * m[3][0];
+		i[1] = v[0] * m[0][1] + v[1] * m[1][1] + v[2] * m[2][1] + v[3] * m[3][1];
+		i[2] = v[0] * m[0][2] + v[1] * m[1][2] + v[2] * m[2][2] + v[3] * m[3][2];
+		i[3] = v[0] * m[0][3] + v[1] * m[1][3] + v[2] * m[2][3] + v[3] * m[3][3];
 		v += 4;
 	}
 

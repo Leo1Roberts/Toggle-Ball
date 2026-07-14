@@ -7,6 +7,9 @@ class Texture {
 public:
 	Texture(const std::string& fileName, bool monochrome = false);
 
+	Texture(const Texture&) = delete;
+	Texture& operator=(const Texture&) = delete;
+
 	void bind(unsigned int i) const {
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, texture);

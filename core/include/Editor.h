@@ -3,6 +3,7 @@
 
 #include "Obstacle.h"
 #include "Level.h"
+#include "Screen.h"
 
 struct SelectionUndoNode {
 	short focus;
@@ -24,11 +25,16 @@ struct UndoNode {
 	std::shared_ptr<UndoNode> next;
 };
 
-class Editor {
+class Editor : public Screen {
 public:
-	explicit Editor(LevelDescriptor* levelToEdit);
+	Editor(int width, int height) : Screen(width, height) {}
+
+	void open(const std::shared_ptr<LevelDescriptor>& levelToEdit);
 
 private:
+	bool doProcessEvent(const Event&) override;
+	void doUpdate(float dt) override;
+	void doDraw() override;
 
 	[[nodiscard]] std::shared_ptr<UndoNode> makeUndoNode() const;
 	[[nodiscard]] std::shared_ptr<SelectionUndoNode> makeSelectionUndoNode() const;
@@ -37,10 +43,11 @@ private:
 	void undo();
 	void redo();
 
-	LevelDescriptor* level;
-	EditorBall ball;
+	std::shared_ptr<LevelDescriptor> level{};
+
+	EditorBall ball{};
 	std::vector<EditorObstacle> obstacles;
-	short focus; // TODO: decide how value is interpreted (no focus, ball focus, obstacle focus)
+	short focus{}; // TODO: decide how value is interpreted (no focus, ball focus, obstacle focus)
 	std::shared_ptr<UndoNode> currentNode;
 
 	Smoother togglePosition{};

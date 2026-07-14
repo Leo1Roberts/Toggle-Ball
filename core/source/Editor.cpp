@@ -1,18 +1,18 @@
 #include "main.h"
 #include "Editor.h"
 
-Editor::Editor(LevelDescriptor* levelToEdit) :
-	level(levelToEdit),
-	ball(levelToEdit->getBallType()) {
+
+void Editor::open(const std::shared_ptr<LevelDescriptor>& levelToEdit) {
+	level = levelToEdit;
+	ball = EditorBall(level->getBallDescriptor().get());
 	obstacles.append_range(levelToEdit->getObstacleDescriptors()
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
 
 	currentNode = makeUndoNode();
 }
 
-
 std::shared_ptr<UndoNode> Editor::makeUndoNode() const {
-	return std::make_shared<UndoNode>(level, makeSelectionUndoNode());
+	return std::make_shared<UndoNode>(level.get(), makeSelectionUndoNode());
 }
 
 std::shared_ptr<SelectionUndoNode> Editor::makeSelectionUndoNode() const {
@@ -25,10 +25,25 @@ std::shared_ptr<SelectionUndoNode> Editor::makeSelectionUndoNode() const {
 	);
 }
 
+
+bool Editor::doProcessEvent(const Event&) {
+	return false;
+}
+
+void Editor::doUpdate(float dt) {
+
+}
+
+void Editor::doDraw() {
+	glClearColor(0.5, 0.5, 0.5, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+
 void Editor::syncLevel() {
 	*level = currentNode->level;
 
-	ball = EditorBall(level->getBallType());
+	ball = EditorBall(level->getBallDescriptor().get());
 
 	obstacles.assign_range(level->getObstacleDescriptors()
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));

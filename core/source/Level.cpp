@@ -10,9 +10,8 @@
 LevelDescriptor::LevelDescriptor(const LevelDescriptor& other) :
 	arenaWidth(other.arenaWidth),
 	arenaHeight(other.arenaHeight),
-	ballType(other.ballType),
-	ballPos(other.ballPos),
-	transitionTime(other.transitionTime) {
+	transitionTime(other.transitionTime),
+	ballDescriptor(std::make_unique<BallDescriptor>(*other.ballDescriptor)) {
 	obstacleDescriptors.reserve(other.obstacleDescriptors.size());
 	for (const auto& d : other.obstacleDescriptors)
 		if (d)
@@ -25,9 +24,8 @@ LevelDescriptor& LevelDescriptor::operator=(const LevelDescriptor& other) {
 	if (this != &other) {
 		arenaWidth = other.arenaWidth;
 		arenaHeight = other.arenaHeight;
-		ballType = other.ballType;
-		ballPos = other.ballPos;
 		transitionTime = other.transitionTime;
+		ballDescriptor = std::make_unique<BallDescriptor>(*other.ballDescriptor);
 
 		obstacleDescriptors.clear();
 		obstacleDescriptors.reserve(other.obstacleDescriptors.size());
@@ -61,15 +59,9 @@ LevelDescriptor::LevelDescriptor(const std::string& data) {
 		if (!(ss >> header)) break;
 
 		if (header == 'b') {
-			std::string ballTypeString;
-			if (version == 0.1f && !(ss >> ballTypeString >> c >> ballPos.y >> c >> ballPos.z >> c) ||
-			    version == 0.2f && !(ss >> ballTypeString >> ballPos.y >> c >> ballPos.z))
-				throw std::invalid_argument("Invalid ball data format");
-
-			for (ballType = 0; ballType < static_cast<byte>(std::size(ballString)); ballType++)
-				if (ballTypeString == ballString[ballType]) break;
-			if (ballType == std::size(ballString))
-				throw std::invalid_argument("Unrecognised ball type");
+			std::string ballData;
+			std::getline(ss, ballData);
+			ballDescriptor = std::make_unique<BallDescriptor>(ballData, version);
 		} else if (header == 'a') {
 			if (version == 0.1f && !(ss >> c >> arenaWidth >> c >> arenaHeight >> c) ||
 			    version == 0.2f && !(ss >> arenaWidth >> c >> arenaHeight))
@@ -102,7 +94,7 @@ LevelDescriptor::LevelDescriptor(const std::string& data) {
 				} else
 					throw std::invalid_argument("Invalid obstacle data format");
 
-				std::ranges::transform(isGoalString, isGoalString.begin(), ::tolower);
+				std::ranges::transform(isGoalString, isGoalString.begin(), tolower);
 				bool isGoal;
 				if (isGoalString == "true")
 					isGoal = true;
@@ -111,7 +103,7 @@ LevelDescriptor::LevelDescriptor(const std::string& data) {
 				else
 					throw std::invalid_argument("Invalid obstacle data format");
 
-				std::ranges::transform(stateTypeString, stateTypeString.begin(), ::tolower);
+				std::ranges::transform(stateTypeString, stateTypeString.begin(), tolower);
 				std::unique_ptr<IMotionSpec> motionSpec;
 				if (stateTypeString == "static")
 					motionSpec = std::make_unique<StaticSpec>(pos, angle);
@@ -140,6 +132,16 @@ LevelDescriptor::LevelDescriptor(const std::string& data) {
 }
 
 
+void LevelDescriptor::scale() {
+	ballDescriptor->scale();
+	float factor = ballDescriptor->getRadius();
+	arenaWidth *= factor;
+	arenaHeight *= factor;
+	for (const auto& d : obstacleDescriptors)
+		d->scale(factor);
+}
+
+
 std::string LevelDescriptor::serialize() const {
 	std::ostringstream ss;
 	ss << std::fixed << std::setprecision(6);
@@ -147,9 +149,9 @@ std::string LevelDescriptor::serialize() const {
 	ss
 	<< "Toggle Ball v0.2\n"
 	<< name
-	<< "\nb " << ballString[ballType] << " " << ballPos.y << "," << ballPos.z
 	<< "\na " << arenaWidth << "," << arenaHeight
-	<< "\nt " << transitionTime;
+	<< "\nt " << transitionTime
+	<< "\nb " << ballDescriptor->serialize();
 
 	for (const auto& d : obstacleDescriptors)
 		ss << "\no " << d->serialize();
