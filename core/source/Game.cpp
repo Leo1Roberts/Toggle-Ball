@@ -69,8 +69,9 @@ void Game::updatePhysics(microseconds dt) {
 		for (const auto& plane : arenaBounds)
 			ball.collideWithPlane(plane);
 
+		bool levelComplete = false; // For demonstration. Eventually will do something with this.
 		for (auto& obstacle: obstacles)
-			ball.collideWithObstacle(obstacle);
+			levelComplete |= ball.collideWithObstacle(obstacle);
 
 		ball.applyForces();
 

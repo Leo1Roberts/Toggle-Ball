@@ -144,7 +144,7 @@ public:
 	}
 
 	void collideWithPlane(const PlaneDescriptor& plane);
-	void collideWithObstacle(GameObstacle& obstacle);
+	bool collideWithObstacle(GameObstacle& obstacle);
 	// normal & separation are polar coordinates for the point on the obstacle (centred on the obstacle, in world space)
 	void collideWithPointOnObstacle(const GameObstacle& obstacle, vec3 normal, float separation);
 

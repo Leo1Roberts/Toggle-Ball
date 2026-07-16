@@ -108,16 +108,17 @@ void GameBall::collideWithPlane(const PlaneDescriptor& plane) { // SIMILAR TO co
 	}
 }
 
-void GameBall::collideWithObstacle(GameObstacle& obstacle) {
+bool GameBall::collideWithObstacle(GameObstacle& obstacle) {
+	bool colliding = false;
+
 	float outerSeparationSq = (kinematicState.position - obstacle.getKinematicState()->getPosition()).lengthSq();
 	float outerRadii = properties->radius + obstacle.getDescriptor()->getShape()->getBoundingRadius();
+
 	if (outerSeparationSq < outerRadii * outerRadii) { // Within bounding circle
 		PlaneDescriptor leftPlane = obstacle.getLeftCapDividingPlane();
 		PlaneDescriptor rightPlane = obstacle.getRightCapDividingPlane();
 		float leftPlaneDistance = dot(leftPlane.normal, kinematicState.position) - leftPlane.dotProduct;
 		float rightPlaneDistance = dot(rightPlane.normal, kinematicState.position) - rightPlane.dotProduct;
-
-		bool colliding = false;
 
 		if (obstacle.getDescriptor()->getShape()->pointIsBetweenCaps(leftPlaneDistance, rightPlaneDistance))
 			colliding |= obstacle.collideWithMidsection(*this);
@@ -127,10 +128,8 @@ void GameBall::collideWithObstacle(GameObstacle& obstacle) {
 			if (rightPlaneDistance > 0)
 				colliding |= obstacle.collideWithRightCap(*this);
 		}
-
-		if (colliding)
-			obstacle.notifyOfContactWithBall(*this);
 	}
+	return colliding && obstacle.notifyOfContactWithBall(*this);
 }
 
 void GameBall::collideWithPointOnObstacle(const GameObstacle& obstacle, vec3 normal, float separation) { // SIMILAR TO collideWithPlane
