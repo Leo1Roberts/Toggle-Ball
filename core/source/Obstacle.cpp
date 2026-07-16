@@ -514,14 +514,14 @@ bool AbstractShapeSpec::isInSelectBox(const ObstacleKinematicState& s, const Sel
 	const vec3 leftCapPos = s.getPosition() + s.getRotation() * getLeftCap();
 	const vec3 rightCapPos = s.getPosition() + s.getRotation() * getRightCap();
 
-	for (const vec3& capPos : {leftCapPos, rightCapPos})
+	for (vec3 capPos : {leftCapPos, rightCapPos})
 		if (box.left < capPos.y && capPos.y < box.right &&
 		    box.bottom < capPos.z && capPos.z < box.top)
 			return true; // Quick check - centre of a cap is inside the box
 
 	float rSq = getMinorRadius() * getMinorRadius();
 
-	for (const vec3& capPos : {leftCapPos, rightCapPos})
+	for (vec3 capPos : {leftCapPos, rightCapPos})
 		for (auto& [side, sideStart, sideEnd, perp, para] :
 		     {std::tuple{box.left, box.bottom, box.top, capPos.y, capPos.z},
 		      std::tuple{box.right, box.bottom, box.top, capPos.y, capPos.z},
@@ -605,6 +605,7 @@ bool ArcSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, const Sel
 
 	return false;
 }
+
 
 
 std::string IMotionSpec::serialize() const {
@@ -876,7 +877,7 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 	}
 
 	mat3 rot = getRotation();
-	for (const vec3& pos : {getPositionA(), getPositionB()}) {
+	for (vec3 pos : {getPositionA(), getPositionB()}) {
 		auto offset = (Index)vs.size();
 
 		std::ranges::transform(vs_shadow, std::back_inserter(vs), [pos, rot](const ObjectVertex& v) {
@@ -1362,35 +1363,35 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 void StaticSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPosition());
 	kinematicState.setAngle(getAngle());
-	kinematicState.setVelocity(0);
+	kinematicState.setVelocity(vec3(0));
 	kinematicState.setAngularVelocity(0);
 }
 
 void TogglingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPositionA());
 	kinematicState.setAngle(getAngle());
-	kinematicState.setVelocity(0);
+	kinematicState.setVelocity(vec3(0));
 	kinematicState.setAngularVelocity(0);
 }
 
 void TogglingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPosition());
 	kinematicState.setAngle(getAngleA());
-	kinematicState.setVelocity(0);
+	kinematicState.setVelocity(vec3(0));
 	kinematicState.setAngularVelocity(0);
 }
 
 void SpinningSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPosition());
 	kinematicState.setAngle(getInitialAngle());
-	kinematicState.setVelocity(0);
+	kinematicState.setVelocity(vec3(0));
 	kinematicState.setAngularVelocity(getAngularVelocityA());
 }
 
 void OscillatingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPosition1());
 	kinematicState.setAngle(getAngle());
-	kinematicState.setVelocity(0);
+	kinematicState.setVelocity(vec3(0));
 	kinematicState.setAngularVelocity(0);
 	kinematicState.setPhase(0);
 }
@@ -1398,7 +1399,7 @@ void OscillatingPositionSpec::initKinematicState(ObstacleKinematicState& kinemat
 void OscillatingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPosition());
 	kinematicState.setAngle(getAngle1());
-	kinematicState.setVelocity(0);
+	kinematicState.setVelocity(vec3(0));
 	kinematicState.setAngularVelocity(0);
 	kinematicState.setPhase(0);
 }
@@ -1510,9 +1511,89 @@ void ObstacleDescriptor::scale(float factor) {
 }
 
 
+PlaneDescriptor SegmentSpec::getTopPlane(const ObstacleKinematicState& kinematicState) const {
+	vec3 normal = { 0, -std::sin(kinematicState.getAngle()), std::cos(kinematicState.getAngle()) };
+	return { normal, kinematicState.getPosition() + kinematicState.getRotation() * vec3(0, 0, getMinorRadius()) };
+}
+
+
+BallCollisionInfo SegmentSpec::getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) {
+	PlaneDescriptor plane = getTopPlane(kinematicState);
+	float separation = dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
+	if (separation < -getMinorRadius()) {
+		plane.normal.y = -plane.normal.y;
+		plane.normal.z = -plane.normal.z;
+		plane.dotProduct = getMinorRadius() * 2.f - plane.dotProduct;
+		separation = dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
+	}
+
+	if (separation > 0 && separation < ball.getProperties()->radius)
+		return { true, plane.normal, separation };
+	
+	return {.colliding = false};
+}
+
+BallCollisionInfo ArcSpec::getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) {
+	vec3 centreToBall = ball.getKinematicState()->position - kinematicState.getPosition();
+	float
+	distanceToBallSq = centreToBall.lengthSq(),
+	innerRadius = getMajorRadius() - getMinorRadius(),
+	outerRadius = getMajorRadius() + getMinorRadius(),
+	innerRadii = innerRadius - ball.getProperties()->radius,
+	outerRadii = outerRadius + ball.getProperties()->radius;
+
+	if (distanceToBallSq < outerRadii * outerRadii && distanceToBallSq > innerRadii * innerRadii) { // In contact with banana
+		if (distanceToBallSq > outerRadius * outerRadius) { // Beyond banana
+			float distanceToBall = std::sqrt(distanceToBallSq);
+			return { true, centreToBall / distanceToBall, distanceToBall - getMajorRadius() - getMinorRadius() };
+		} if (distanceToBallSq < innerRadius * innerRadius) { // Within banana
+			float distanceToBall = std::sqrt(distanceToBallSq);
+			return { true, centreToBall / -distanceToBall, getMajorRadius() - distanceToBall - getMinorRadius() };
+		}
+	}
+
+	return {.colliding = false};
+}
+
+
 
 void GameObstacle::stepKinematicState(const Smoother& smoother) {
 	descriptor->getMotion()->stepKinematicState(kinematicState, smoother);
+}
+
+
+bool GameObstacle::collideWithCap(GameBall& ball, vec3 cap) const {
+	vec3 capPosition = kinematicState.getPosition() + kinematicState.getRotation() * cap;
+	vec3 capToBall = ball.getKinematicState()->position - capPosition;
+	float distanceToBallSq = capToBall.lengthSq();
+
+	float radii = ball.getProperties()->radius + descriptor->getShape()->getMinorRadius();
+	if (distanceToBallSq < radii * radii && distanceToBallSq > 0.000001f) {
+		float distanceToBall = std::sqrt(distanceToBallSq);
+		ball.collideWithPointOnObstacle(*this, capToBall / distanceToBall, distanceToBall - descriptor->getShape()->getMinorRadius());
+		return true;
+	}
+	return false;
+}
+
+bool GameObstacle::collideWithMidsection(GameBall& ball) const {
+	BallCollisionInfo collision = descriptor->getShape()->getMidsectionCollision(kinematicState, ball);
+	if (collision.colliding)
+		ball.collideWithPointOnObstacle(*this, collision.normal, collision.separation);
+	return collision.colliding;
+}
+
+constexpr float SUCCEED_TIME = 0.5f;
+bool GameObstacle::notifyOfContactWithBall(const GameBall& ball) {
+	goalContactTimer += PHYSICS_TIMESTEP;
+	return goalContactTimer >= SUCCEED_TIME && ball.getKinematicState()->velocity.lengthSq() < 0.000001f;
+}
+
+
+PlaneDescriptor GameObstacle::getCapDividingPlane(vec3 cap, float capAngle) const {
+	float angle = kinematicState.getAngle() + capAngle;
+	vec3 normal = { 0, std::cos(angle), std::sin(angle) };
+	return { normal, kinematicState.getPosition() + kinematicState.getRotation() * cap };
 }
 
 

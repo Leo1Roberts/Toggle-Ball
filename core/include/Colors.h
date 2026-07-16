@@ -19,7 +19,7 @@ struct col {
 	[[nodiscard]] constexpr vec3 toVec3() const { return {(float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f}; }
 	[[nodiscard]] constexpr vec4 toVec4() const { return {(float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f, (float)a / 255.0f}; }
 
-	static col fromVec(const vec4& v) { return {(byte)(v.r * 255.0f), (byte)(v.g * 255.0f), (byte)(v.b * 255.0f), (byte)(v.a * 255.0f)}; }
+	static col fromVec(vec4 v) { return {(byte)(v.r * 255.0f), (byte)(v.g * 255.0f), (byte)(v.b * 255.0f), (byte)(v.a * 255.0f)}; }
 };
 
 inline col lerp(const col& a, const col& b, float t) { return col::fromVec(lerp(a.toVec4(), b.toVec4(), t)); }

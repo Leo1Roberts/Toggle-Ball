@@ -11,7 +11,7 @@ struct vec2 {
 		};
 	};
 
-	constexpr vec2(float i = 0) noexcept : x(i), y(i) {}
+	explicit constexpr vec2(float i = 0) noexcept : x(i), y(i) {}
 	constexpr vec2(float x, float y) noexcept : x(x), y(y) {}
 
 	bool operator==(const vec2& v) const noexcept { return x == v.x && y == v.y; }
@@ -39,7 +39,7 @@ struct vec2 {
 
 	[[nodiscard]] float lengthSq() const noexcept { return x * x + y * y; }
 
-	[[nodiscard]] float length() const noexcept { return sqrtf(x * x + y * y); }
+	[[nodiscard]] float length() const noexcept { return std::sqrt(x * x + y * y); }
 };
 
 struct vec3 {
@@ -52,7 +52,7 @@ struct vec3 {
 		};
 	};
 
-	constexpr vec3(float i = 0) noexcept : x(i), y(i), z(i) {}
+	explicit constexpr vec3(float i = 0) noexcept : x(i), y(i), z(i) {}
 	constexpr vec3(float x, float y, float z) noexcept : x(x), y(y), z(z) {}
 
 	bool operator==(const vec3& v) const noexcept {
@@ -114,7 +114,7 @@ struct vec3 {
 
 	[[nodiscard]] float lengthSq() const noexcept { return x * x + y * y + z * z; }
 
-	[[nodiscard]] float length() const noexcept { return sqrtf(x * x + y * y + z * z); }
+	[[nodiscard]] float length() const noexcept { return std::sqrt(x * x + y * y + z * z); }
 };
 
 inline vec3 operator*(float s, const vec3& v) noexcept { return v * s; }

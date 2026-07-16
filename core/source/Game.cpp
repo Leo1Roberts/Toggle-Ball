@@ -20,10 +20,10 @@ void Game::load(const LevelDescriptor* levelToLoad) {
 	level = *levelToLoad;
 	level.scale();
 
-	arenaBounds[0] = {{0, -level.getArenaWidth() * 0.5f, 0}, {0, 1, 0}}; // Left
-	arenaBounds[1] = {{0, level.getArenaWidth() * 0.5f, 0}, {0, -1, 0}}; // Right
-	arenaBounds[2] = {{0, 0, level.getArenaHeight()}, {0, 0, -1}}; // Top
-	arenaBounds[3] = {{0, 0, 0}, {0, 0, 1}}; // Bottom
+	arenaBounds[0] = {{0, 1, 0}, {0, -level.getArenaWidth() * 0.5f, 0}}; // Left
+	arenaBounds[1] = {{0, -1, 0}, {0, level.getArenaWidth() * 0.5f, 0}}; // Right
+	arenaBounds[2] = {{0, 0, -1}, {0, 0, level.getArenaHeight()}}; // Top
+	arenaBounds[3] = {{0, 0, 1}, {0, 0, 0}}; // Bottom
 
 	ball = GameBall(level.getBallDescriptor().get());
 	obstacles.append_range(level.getObstacleDescriptors() | std::views::transform([](const auto& d) { return GameObstacle(d.get()); }));
@@ -66,7 +66,11 @@ void Game::updatePhysics(microseconds dt) {
 
 		ball.addNaturalForces();
 
-		// for (const auto& bound : arenaBounds)
+		for (const auto& plane : arenaBounds)
+			ball.collideWithPlane(plane);
+
+		for (auto& obstacle: obstacles)
+			ball.collideWithObstacle(obstacle);
 
 		ball.applyForces();
 
@@ -102,7 +106,7 @@ void Game::doDraw() {
 	drawObject(Meshes::ball.get(), ball.getTexture(),
 		ball.getKinematicState()->position,
 		ball.getKinematicState()->rotation,
-		ball.getProperties()->radius);
+		vec3(ball.getProperties()->radius));
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -113,7 +117,7 @@ void Game::doDraw() {
 	glDisable(GL_DEPTH_TEST);
 }
 
-void Game::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale) {
+void Game::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, vec3 pos, const mat3& rot, vec3 scale) {
 	buildScaledWorldMatrix(&worldMatrix, rot, pos, scale);
 
 	mat4 bodyToView = worldMatrix * viewMatrix;

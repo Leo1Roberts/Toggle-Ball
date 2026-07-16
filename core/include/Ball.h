@@ -3,7 +3,11 @@
 
 #include "Texture.h"
 #include "Mesh.h"
+#include "Obstacle.h"
 #include "PhysicsConstants.h"
+#include "Plane.h"
+
+class GameObstacle;
 
 enum {
 	BASKETBALL,
@@ -50,10 +54,19 @@ struct BallKinematicState {
 	mat3 rotation = mat3::I;
 	vec3 velocity;
 	vec3 angularVelocity;
+};
+
+struct BallForces {
 	vec3 force;
 	vec3 torque;
 
-	void resetForces() { force = torque = 0; }
+	void reset() { force = torque = vec3(0); }
+};
+
+struct BallCollisionInfo {
+	bool colliding{};
+	vec3 normal{};
+	float separation{};
 };
 
 
@@ -89,7 +102,7 @@ static Texture* getBallTexture(byte ballType) {
 
 class BallDescriptor {
 public:
-	constexpr BallDescriptor(byte type, const vec2 initialPosition) :
+	constexpr BallDescriptor(byte type, vec2 initialPosition) :
 		type(type),
 		initialPosition(planarToWorld(initialPosition)) {}
 
@@ -124,6 +137,17 @@ public:
 	void addNaturalForces();
 	void applyForces();
 
+	[[nodiscard]] float springForce(float compression) const {
+		constexpr float power = 4;            // Quartic curve...
+		constexpr float forceMultiplier = 10; // ...which ends up with a 10x higher force at c = r
+		return compression * properties->springConstant + powf(compression, power) * (forceMultiplier - 1) * properties->springConstant * powf(properties->radius, 1 - power);
+	}
+
+	void collideWithPlane(const PlaneDescriptor& plane);
+	void collideWithObstacle(GameObstacle& obstacle);
+	// normal & separation are polar coordinates for the point on the obstacle (centred on the obstacle, in world space)
+	void collideWithPointOnObstacle(const GameObstacle& obstacle, vec3 normal, float separation);
+
 	[[nodiscard]] const Texture* getTexture() const { return texture; }
 	[[nodiscard]] const BallKinematicState* getKinematicState() const { return &kinematicState; }
 	[[nodiscard]] const BallProperties* getProperties() const { return properties; }
@@ -135,6 +159,7 @@ private:
 	Texture* texture{};
 
 	BallKinematicState kinematicState;
+	BallForces forces;
 };
 
 class EditorBall {

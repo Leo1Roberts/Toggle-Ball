@@ -813,10 +813,10 @@ void Game_OLD::physicsUpdate() {
 					ball.force += friction;
 					ball.torque += cross(centreToPoint, friction);
 				} else {
-					// No spin in 2D
-					/*vec3 spin = d.normal * dot(d.normal, ball->angVel);
-					spin.unit();
-					ball->torque -= spin * FRICTION_COEFFICIENTS[ball->material][p.material] * totalForce * std::cos(std::asin(separation / ball->radius)) * ball->radius * 0.5f; // Spin friction*/
+					// Spin friction (none in 2D)
+					// vec3 spin = d.normal * dot(d.normal, ball->angVel);
+					// spin.unit();
+					// ball->torque -= spin * FRICTION_COEFFICIENTS[ball->material][p.material] * totalForce * std::cos(std::asin(separation / ball->radius)) * ball->radius * 0.5f;
 					if (ballVelLength > 0.0001f) {
 						vec3 rollingResistance = ball.vel / -ballVelLength * force.length() * ROLLING_RESISTANCE_COEFFICIENTS[ball.material][p.material];
 						vec3 maxRollingResistance = ball.vel * -ball.mass / PHYSICS_TIMESTEP;

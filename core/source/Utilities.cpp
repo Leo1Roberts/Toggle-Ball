@@ -3,7 +3,7 @@
 #include <chrono>
 #include <cmath>
 
-vec3 colorToLinear(const vec3& srgb) {
+vec3 colorToLinear(vec3 srgb) {
 	return {
 		std::pow(srgb.x, 2.2f),
 		std::pow(srgb.y, 2.2f),

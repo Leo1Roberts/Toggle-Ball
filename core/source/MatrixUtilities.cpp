@@ -13,7 +13,7 @@ void fillRotation(mat4* mat, const mat3& src) {
 	mat->m44[2][2] = src.i;
 }
 
-void fillRotationScaled(mat4* mat, const mat3& src, const vec3& scale) {
+void fillRotationScaled(mat4* mat, const mat3& src, vec3 scale) {
 	mat->m44[0][0] = src.a * scale.x;
 	mat->m44[1][0] = src.b * scale.x;
 	mat->m44[2][0] = src.c * scale.x;
@@ -78,12 +78,12 @@ void buildProjectionMatrix(mat4* projMat, float o_fov, float zNear, float zFar, 
 	projMat->m44[2][1] = offset.y;
 }
 
-void buildViewRotationMatrix(mat3* viewRotMat, const vec3& viewDir) {
+void buildViewRotationMatrix(mat3* viewRotMat, vec3 viewDir) {
 	float
 			a = viewDir.x,
 			b = viewDir.y,
 			c = viewDir.z,
-			h = sqrtf(a * a + b * b);
+			h = std::sqrt(a * a + b * b);
 
 	float st, ct, sp, cp;
 
@@ -112,7 +112,7 @@ void buildViewRotationMatrix(mat3* viewRotMat, const vec3& viewDir) {
 	viewRotMat->i = -cp;
 }
 
-void buildViewMatrix(mat4* viewMat, const mat3& viewRotMat, const vec3& viewPos) {
+void buildViewMatrix(mat4* viewMat, const mat3& viewRotMat, vec3 viewPos) {
 	mat4 rotMat, transMat;
 
 	rotMat.identity();
@@ -127,7 +127,7 @@ void buildViewMatrix(mat4* viewMat, const mat3& viewRotMat, const vec3& viewPos)
 	*viewMat = transMat * rotMat; // set viewMat
 }
 
-void buildScaledWorldMatrix(mat4* worldMat, const mat3& rot, const vec3& pos, const vec3& scale) {
+void buildScaledWorldMatrix(mat4* worldMat, const mat3& rot, vec3 pos, vec3 scale) {
 	fillRotationScaled(worldMat, rot, scale);
 
 	worldMat->m44[0][3] = worldMat->m44[1][3] = worldMat->m44[2][3] = 0.0f;

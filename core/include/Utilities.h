@@ -1,7 +1,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-[[nodiscard]] vec3 colorToLinear(const vec3& srgb);
+[[nodiscard]] vec3 colorToLinear(vec3 srgb);
 
 [[nodiscard]] long now_ms();
 [[nodiscard]] microseconds now();

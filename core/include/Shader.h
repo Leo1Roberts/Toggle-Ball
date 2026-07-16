@@ -54,13 +54,13 @@ public:
 	void setFloat(const std::string& name, float value) const {
 		glUniform1f(glGetUniformLocation(program, name.c_str()), value);
 	}
-	void setVec2(const std::string& name, const vec2& value) const {
+	void setVec2(const std::string& name, vec2 value) const {
 		glUniform2fv(glGetUniformLocation(program, name.c_str()), 1, &value.x);
 	}
-	void setVec3(const std::string& name, const vec3& value) const {
+	void setVec3(const std::string& name, vec3 value) const {
 		glUniform3fv(glGetUniformLocation(program, name.c_str()), 1, &value.x);
 	}
-	void setVec4(const std::string& name, const vec4& value) const {
+	void setVec4(const std::string& name, vec4 value) const {
 		glUniform4fv(glGetUniformLocation(program, name.c_str()), 1, &value.r);
 	}
 	void setMat3(const std::string& name, const mat3& mat, bool transpose = false) const {

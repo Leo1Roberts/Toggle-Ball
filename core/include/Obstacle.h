@@ -1,12 +1,17 @@
 #ifndef OBSTACLE_H
 #define OBSTACLE_H
 
+#include "Ball.h"
 #include "ButtonManager.h"
 #include "Mesh.h"
 #include "Obstacle.h"
 #include "PhysicsConstants.h"
+#include "Plane.h"
 #include "Sizes.h"
 #include "Smoother.h"
+
+struct BallCollisionInfo;
+class GameBall;
 
 enum class SelectionType {
 	Replace,
@@ -101,9 +106,16 @@ public:
 
 	[[nodiscard]] bool isInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const;
 
+	[[nodiscard]] virtual bool pointIsBetweenCaps(float leftPlaneDistance, float rightPlaneDistance) const = 0;
+	// Only sets all members if .collision == true
+	[[nodiscard]] virtual BallCollisionInfo getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) = 0;
+
 	[[nodiscard]] float getMinorRadius() const { return minorRadius; }
+	[[nodiscard]] float getBoundingRadius() const { return getMajorRadius() + getMinorRadius(); }
 	[[nodiscard]] vec3 getLeftCap() const { return leftCap; }
 	[[nodiscard]] vec3 getRightCap() const { return rightCap; }
+	[[nodiscard]] virtual float getLeftCapAngle() const = 0;
+	[[nodiscard]] virtual float getRightCapAngle() const = 0;
 
 protected:
 	vec3 leftCap, rightCap;
@@ -130,6 +142,8 @@ private:
 	virtual void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
 
 	[[nodiscard]] virtual bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const = 0;
+
+	[[nodiscard]] virtual float getMajorRadius() const = 0;
 };
 
 class SegmentSpec : public AbstractShapeSpec {
@@ -153,9 +167,16 @@ public:
 
 	void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 
+	[[nodiscard]] bool pointIsBetweenCaps(float leftPlaneDistance, float rightPlaneDistance) const override {
+		return leftPlaneDistance <= 0 && rightPlaneDistance <= 0;
+	}
+	[[nodiscard]] BallCollisionInfo getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) override;
+
 	void setLeftLength(float l);
 	void setRightLength(float l);
 
+	[[nodiscard]] float getLeftCapAngle() const override { return PI; }
+	[[nodiscard]] float getRightCapAngle() const override { return 0; }
 	[[nodiscard]] float getLeftLength() const { return leftLength; }
 	[[nodiscard]] float getRightLength() const { return rightLength; }
 
@@ -172,6 +193,8 @@ private:
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 
 	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const override;
+	[[nodiscard]] float getMajorRadius() const override { return std::max(leftLength, rightLength); }
+	[[nodiscard]] PlaneDescriptor getTopPlane(const ObstacleKinematicState& kinematicState) const;
 };
 
 class ArcSpec : public AbstractShapeSpec {
@@ -196,9 +219,17 @@ public:
 
 	void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 
+	[[nodiscard]] bool pointIsBetweenCaps(float leftPlaneDistance, float rightPlaneDistance) const override {
+		return getArcAngle() <= PI && (leftPlaneDistance <= 0 && rightPlaneDistance <= 0) ||
+			   getArcAngle() >  PI && (leftPlaneDistance <= 0 || rightPlaneDistance <= 0);
+	}
+	[[nodiscard]] BallCollisionInfo getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) override;
+
 	void setArcAngle(float radians);
 	void setArcRadius(float r);
 
+	[[nodiscard]] float getLeftCapAngle() const override { return getHalfArcAngle() + PI; }
+	[[nodiscard]] float getRightCapAngle() const override { return -getHalfArcAngle(); }
 	[[nodiscard]] float getArcAngle() const { return arcAngle; }
 	[[nodiscard]] float getHalfArcAngle() const { return arcAngle / 2; }
 	[[nodiscard]] float getArcRadius() const { return arcRadius; }
@@ -218,6 +249,8 @@ private:
 	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const override;
 
 	void setCaps();
+
+	[[nodiscard]] float getMajorRadius() const override { return arcRadius; }
 };
 
 
@@ -581,18 +614,38 @@ public:
 	GameObstacle(GameObstacle&&) = default;
 	GameObstacle& operator=(GameObstacle&&) = default;
 
-	void reset() { descriptor->getMotion()->initKinematicState(kinematicState); }
+	void reset() {
+		descriptor->getMotion()->initKinematicState(kinematicState);
+		goalContactTimer = 0;
+	}
 	void stepKinematicState(const Smoother& smoother);
 
+	bool collideWithLeftCap(GameBall& ball) const { return collideWithCap(ball, descriptor->getShape()->getLeftCap()); }
+	bool collideWithRightCap(GameBall& ball) const { return collideWithCap(ball, descriptor->getShape()->getRightCap()); }
+	bool collideWithMidsection(GameBall& ball) const;
+	bool notifyOfContactWithBall(const GameBall& ball);
+
+	[[nodiscard]] const ObstacleDescriptor* getDescriptor() const { return descriptor; }
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
 	[[nodiscard]] const Mesh<ObjectVertex>* getMesh() const { return &mesh; }
+	[[nodiscard]] PlaneDescriptor getLeftCapDividingPlane() const {
+		return getCapDividingPlane(descriptor->getShape()->getLeftCap(), descriptor->getShape()->getLeftCapAngle());
+	}
+	[[nodiscard]] PlaneDescriptor getRightCapDividingPlane() const {
+		return getCapDividingPlane(descriptor->getShape()->getRightCap(), descriptor->getShape()->getRightCapAngle());
+	}
 
 private:
 	const ObstacleDescriptor* descriptor;
 
 	ObstacleKinematicState kinematicState;
+	float goalContactTimer{};
 
 	Mesh<ObjectVertex> mesh = Mesh<ObjectVertex>(GL_STATIC_DRAW);
+
+	bool collideWithCap(GameBall& ball, vec3 cap) const;
+
+	[[nodiscard]] PlaneDescriptor getCapDividingPlane(vec3 cap, float capAngle) const;
 };
 
 

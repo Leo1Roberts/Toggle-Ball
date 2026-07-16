@@ -25,7 +25,7 @@ private:
 	void updatePhysics(microseconds dt);
 
 	void doDraw() override;
-	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, const vec3& pos, const mat3& rot, const vec3& scale = 1);
+	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, vec3 pos, const mat3& rot, vec3 scale = vec3(1));
 
 	void doResize(int, int) override;
 	void resizeLevel();
