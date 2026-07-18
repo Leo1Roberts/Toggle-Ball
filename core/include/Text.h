@@ -5,6 +5,8 @@
 #include "Mesh.h"
 #include "Texture.h"
 
+#include <array>
+
 struct CharBounds {
 	float left;
 	float top;

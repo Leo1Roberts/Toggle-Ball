@@ -1,6 +1,8 @@
 #include "main.h"
 #include "Editor.h"
 
+#include <ranges>
+
 
 Editor::Editor(int width, int height) : Screen(width, height) {
 	keyBindings = KeyBindings::editor.get();

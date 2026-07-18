@@ -1,6 +1,7 @@
 #ifndef COLORS_H
 #define COLORS_H
 
+#include "VectorMatrix.h"
 #include "main.h"
 
 struct col {

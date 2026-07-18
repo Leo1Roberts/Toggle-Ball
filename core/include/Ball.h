@@ -6,6 +6,7 @@
 #include "Obstacle.h"
 #include "PhysicsConstants.h"
 #include "Plane.h"
+#include "Utilities.h"
 
 class GameObstacle;
 

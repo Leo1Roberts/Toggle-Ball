@@ -1,15 +1,18 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
+#include "main.h"
+#include "VectorMatrix.h"
+
+#include <string_view>
+
 [[nodiscard]] vec3 colorToLinear(vec3 srgb);
+
+[[nodiscard]] bool iequals(std::string_view a, std::string_view b);
 
 [[nodiscard]] long now_ms();
 [[nodiscard]] microseconds now();
 [[nodiscard]] inline float toSeconds(microseconds t) { return (float)t / 1000000.f; }
-
-[[nodiscard]] float randomFloat();
-
-[[nodiscard]] float randomFloatBeyondValue(float val);
 
 [[nodiscard]] float wrapAngle(float radians); // Wraps angle to range (-PI, PI]
 [[nodiscard]] float angleToDisplay(float angle);

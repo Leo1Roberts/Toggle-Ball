@@ -23,17 +23,6 @@
 using byte = unsigned char;
 using microseconds = unsigned long;
 
-#include <stdexcept>
-#include <cmath>
-#include <memory>
-#include <array>
-#include <vector>
-#include <map>
-#include <ranges>
-#include "VectorMatrix.h"
-#include "GLUtilities.h"
-#include "Utilities.h"
-
 constexpr float PI = 3.14159265359f;
 constexpr float PHYSICS_TIMESTEP = 0.001f;
 

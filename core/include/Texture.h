@@ -3,6 +3,8 @@
 
 #include "GLUtilities.h"
 
+#include <memory>
+
 class Texture {
 public:
 	Texture(const std::string& fileName, bool monochrome = false);

@@ -1,5 +1,8 @@
 #include "main.h"
 #include "Smoother.h"
+
+#include "VectorMatrix.h"
+
 #include <algorithm>
 
 void Smoother::reset() {

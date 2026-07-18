@@ -9,6 +9,7 @@
 #include "Plane.h"
 #include "Sizes.h"
 #include "Smoother.h"
+#include "Utilities.h"
 
 struct BallCollisionInfo;
 class GameBall;

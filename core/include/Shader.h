@@ -3,6 +3,9 @@
 
 #include "main.h"
 #include "GLUtilities.h"
+#include "VectorMatrix.h"
+
+#include <memory>
 
 class Shader {
 public:

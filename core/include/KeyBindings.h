@@ -1,6 +1,8 @@
 #ifndef KEY_BINDINGS_H
 #define KEY_BINDINGS_H
 
+#include "Utilities.h"
+
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -25,14 +27,14 @@ public:
 
 	static std::optional<ActionCode> fromString(std::string_view str) {
 		auto it = std::ranges::find_if(entries,
-			[str](const Entry& e) { return e.name == str; });
-		return (it != std::end(entries)) ? std::make_optional(it->code) : std::nullopt;
+			[str](const Entry& e) { return iequals(e.name, str); });
+		return (it != std::ranges::end(entries)) ? std::make_optional(it->code) : std::nullopt;
 	}
 
 	static std::string_view toString(ActionCode code) {
 		auto it = std::ranges::find_if(entries,
 			[code](const Entry& e) { return e.code == code; });
-		return (it != std::end(entries)) ? it->name : UNKNOWN_ACTION;
+		return (it != std::ranges::end(entries)) ? it->name : UNKNOWN_ACTION;
 	}
 
 private:
@@ -50,14 +52,14 @@ public:
 
 	static std::optional<KeyCode> fromString(std::string_view str) {
 		auto it = std::ranges::find_if(entries,
-			[str](const Entry& e) { return e.name == str; });
-		return (it != std::end(entries)) ? std::make_optional(it->code) : std::nullopt;
+			[str](const Entry& e) { return iequals(e.name, str); });
+		return (it != std::ranges::end(entries)) ? std::make_optional(it->code) : std::nullopt;
 	}
 
 	static std::string_view toString(KeyCode code) {
 		auto it = std::ranges::find_if(entries,
 			[code](const Entry& e) { return e.code == code; });
-		return (it != std::end(entries)) ? it->name : UNKNOWN_KEY;
+		return (it != std::ranges::end(entries)) ? it->name : UNKNOWN_KEY;
 	}
 
 private:

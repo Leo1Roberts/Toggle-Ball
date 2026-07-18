@@ -3,6 +3,8 @@
 
 #include "main.h"
 
+#include <vector>
+
 namespace AssetManager {
 #if defined(PLATFORM_ANDROID)
 	void init(AAssetManager* mgr);

@@ -4,6 +4,8 @@
 #include "MatrixUtilities.h"
 #include "Shader.h"
 
+#include <ranges>
+
 const vec3 groundColor = colorToLinear({0.3f, 0.3f, 0.3f});
 const vec3 skyColor = colorToLinear({85.0f / 255.0f, 110.0f / 255.0f, 128.0f / 255.0f});
 const vec3 sunColor = colorToLinear({1.0f, 1.0f, 0.9f});

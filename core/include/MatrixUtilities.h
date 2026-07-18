@@ -1,6 +1,8 @@
 #ifndef MATRIX_UTILITIES_H
 #define MATRIX_UTILITIES_H
 
+#include "VectorMatrix.h"
+
 void buildOrthographicMatrix(mat4* res, float halfHeight, float aspect, float zNear, float zFar);
 
 void buildPerspectiveMatrix(mat4* res, float width, float height, float zNear, float zFar);

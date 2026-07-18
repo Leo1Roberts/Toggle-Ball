@@ -3,6 +3,7 @@
 #include "TextBoxManager.h"
 #include "ButtonManager.h"
 #include "Fonts.h"
+#include "Utilities.h"
 
 constexpr int MAX_TEXT_BOXES = 100;
 

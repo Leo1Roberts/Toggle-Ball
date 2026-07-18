@@ -1,7 +1,9 @@
 #include "main.h"
+#include "Utilities.h"
 
 #include <chrono>
 #include <cmath>
+#include <algorithm>
 
 vec3 colorToLinear(vec3 srgb) {
 	return {
@@ -9,6 +11,17 @@ vec3 colorToLinear(vec3 srgb) {
 		std::pow(srgb.y, 2.2f),
 		std::pow(srgb.z, 2.2f)
 	};
+}
+
+bool iequals(std::string_view a, std::string_view b) {
+	if (a.length() != b.length())
+		return false;
+
+	return std::ranges::equal(a, b,
+		[](char charA, char charB) {
+			return std::tolower((byte)charA) == std::tolower((byte)charB);
+		}
+	);
 }
 
 long now_ms() {
@@ -20,17 +33,6 @@ microseconds now() {
 	auto now = std::chrono::steady_clock::now();
 	auto duration = now.time_since_epoch();
 	return std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
-}
-
-float randomFloat() { // Returns random number between -1 and 1
-	return ((float) rand() / (float) RAND_MAX) * 2.0f - 1.0f;
-}
-
-float randomFloatBeyondValue(float val) {
-	float result;
-	do result = randomFloat();
-	while (std::abs(result) < val);
-	return result;
 }
 
 float wrapAngle(float radians) {

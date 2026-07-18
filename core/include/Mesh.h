@@ -3,6 +3,10 @@
 
 #include "main.h"
 #include "Colors.h"
+#include "GLUtilities.h"
+
+#include <memory>
+#include <vector>
 
 using Index = unsigned short; // Needs to match glDrawElements 'type' argument
 
