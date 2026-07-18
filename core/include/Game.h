@@ -20,7 +20,7 @@ private:
 
 	void toggle();
 
-	bool doProcessEvent(const Event&) override;
+	void doProcessEvent(const Event& event) override;
 
 	void doUpdate(microseconds dt) override;
 	void updatePhysics(microseconds dt);

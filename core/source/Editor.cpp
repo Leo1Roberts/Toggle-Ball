@@ -2,6 +2,14 @@
 #include "Editor.h"
 
 
+Editor::Editor(int width, int height) : Screen(width, height) {
+	keyBindings = KeyBindings::editor.get();
+
+	// Create UI here
+	uiManager.resize(width, height);
+}
+
+
 void Editor::open(const std::shared_ptr<LevelDescriptor>& levelToEdit) {
 	level = levelToEdit;
 	ball = EditorBall(level->getBallDescriptor().get());
@@ -10,6 +18,7 @@ void Editor::open(const std::shared_ptr<LevelDescriptor>& levelToEdit) {
 
 	currentNode = makeUndoNode();
 }
+
 
 std::shared_ptr<UndoNode> Editor::makeUndoNode() const {
 	return std::make_shared<UndoNode>(level.get(), makeSelectionUndoNode());
@@ -26,8 +35,19 @@ std::shared_ptr<SelectionUndoNode> Editor::makeSelectionUndoNode() const {
 }
 
 
-bool Editor::doProcessEvent(const Event&) {
-	return false;
+void Editor::doProcessEvent(const Event& event) {
+	if (uiManager.processEvent(event))
+		return;
+
+	if (auto* key = std::get_if<KeyEvent>(&event)) {
+		if (auto actionCode = keyBindings->translate(key->code)) {
+			if (key->action == KeyAction::Down) {
+				switch (*actionCode) {
+				default:;
+				}
+			}
+		}
+	}
 }
 
 void Editor::doUpdate(microseconds dt) {

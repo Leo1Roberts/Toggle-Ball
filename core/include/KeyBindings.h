@@ -5,14 +5,17 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
+#include <algorithm>
 
 
 enum class KeyCode {
 	Space,
+	F11,
 	Unknown
 };
 enum class ActionCode {
-	Toggle
+	Toggle,
+	Fullscreen
 };
 
 
@@ -36,7 +39,8 @@ private:
 	struct Entry { ActionCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
-		{ ActionCode::Toggle, "Toggle" }
+		{ ActionCode::Toggle,		"Toggle" },
+		{ ActionCode::Fullscreen,	"Fullscreen" }
 	};
 };
 
@@ -60,7 +64,8 @@ private:
 	struct Entry { KeyCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
-		{ KeyCode::Space,  "SPACE" }
+		{ KeyCode::Space,	"SPACE" },
+		{ KeyCode::F11,		"F11" }
 	};
 };
 
@@ -77,10 +82,9 @@ private:
 };
 
 namespace KeyBindings {
+	extern std::unique_ptr<KeyBindingsContext> app;
 	extern std::unique_ptr<KeyBindingsContext> game;
-#if defined(PLATFORM_DESKTOP)
 	extern std::unique_ptr<KeyBindingsContext> editor;
-#endif
 
 	void load();
 }

@@ -4,6 +4,7 @@
 #include "Obstacle.h"
 #include "Level.h"
 #include "Screen.h"
+#include "UIManager.h"
 
 struct SelectionUndoNode {
 	short focus;
@@ -27,13 +28,15 @@ struct UndoNode {
 
 class Editor : public Screen {
 public:
-	Editor(int width, int height) : Screen(width, height) {}
+	Editor(int width, int height);
 
 	void open(const std::shared_ptr<LevelDescriptor>& levelToEdit);
 
 private:
-	bool doProcessEvent(const Event&) override;
+	void doProcessEvent(const Event& event) override;
+
 	void doUpdate(microseconds dt) override;
+
 	void doDraw() override;
 
 	[[nodiscard]] std::shared_ptr<UndoNode> makeUndoNode() const;
@@ -43,14 +46,19 @@ private:
 	void undo();
 	void redo();
 
-	std::shared_ptr<LevelDescriptor> level{};
 
+	UIManager uiManager{};
+
+
+	std::shared_ptr<LevelDescriptor> level{};
 	EditorBall ball{};
 	std::vector<EditorObstacle> obstacles;
+
+	bool toggled{false};
+	Smoother togglePosition{};
+
 	short focus{}; // TODO: decide how value is interpreted (no focus, ball focus, obstacle focus)
 	std::shared_ptr<UndoNode> currentNode;
-
-	Smoother togglePosition{};
 };
 
 #endif // EDITOR_H

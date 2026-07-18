@@ -10,7 +10,7 @@ public:
 	Screen(int width, int height) : framebuffer({width, height}) {}
 	virtual ~Screen() = default;
 
-	bool processEvent(const Event& event) { return doProcessEvent(event); }
+	void processEvent(const Event& event) { doProcessEvent(event); }
 
 	void update(microseconds dt) { doUpdate(dt); }
 
@@ -38,7 +38,7 @@ protected:
 	KeyBindingsContext* keyBindings{};
 
 private:
-	virtual bool doProcessEvent(const Event& event) = 0;
+	virtual void doProcessEvent(const Event& event) = 0;
 	virtual void doUpdate(microseconds dt) = 0;
 	virtual void doDraw() = 0;
 	virtual void doResize(int width, int height) {}

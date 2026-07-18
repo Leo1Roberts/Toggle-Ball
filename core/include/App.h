@@ -3,6 +3,7 @@
 
 #include "Screen.h"
 #include "Event.h"
+#include "IWindow.h"
 #include "Mesh.h"
 
 struct ScreenVertex {
@@ -17,7 +18,7 @@ struct ScreenVertex {
 
 class App {
 public:
-	App();
+	App(IWindow* window);
 
 	App(const App&) = delete;
 	App& operator=(const App&) = delete;
@@ -29,6 +30,9 @@ public:
 	void tick(microseconds dt, int windowWidth, int windowHeight) const;
 
 private:
+	IWindow* window;
+
+	KeyBindingsContext* keyBindings{};
 	std::vector<std::unique_ptr<Screen>> screens;
 
 	std::unique_ptr<Mesh<ScreenVertex>> quadMesh;

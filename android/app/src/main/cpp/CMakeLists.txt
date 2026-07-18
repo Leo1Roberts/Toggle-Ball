@@ -16,8 +16,9 @@ add_subdirectory(${REPO_ROOT}/core ${CMAKE_BINARY_DIR}/core_build)
 
 # --- SOURCES & TARGET DEFINITION ---
 # The target name 'toggleball' must match the library loaded in Kotlin/Java
-set(ANDROID_SOURCES main.cpp)
-add_library(toggleball SHARED ${ANDROID_SOURCES})
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "source/*.cpp")
+add_library(toggleball SHARED ${SOURCES})
+target_include_directories(toggleball PRIVATE include)
 
 # --- INCLUDES & LINKING ---
 target_link_libraries(toggleball PRIVATE

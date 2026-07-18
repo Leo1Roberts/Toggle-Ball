@@ -1,5 +1,6 @@
 #include "main.h"
 #include "Game_OLD.h"
+#include "AndroidWindow.h"
 
 #include <game-activity/GameActivity.cpp>
 #include <game-text-input/gametextinput.cpp>
@@ -66,8 +67,10 @@ void handle_cmd(android_app *pApp, int32_t cmd) {
             eglQuerySurface(eglDisplay, eglSurface, EGL_WIDTH, &width);
             eglQuerySurface(eglDisplay, eglSurface, EGL_HEIGHT, &height);
 
+            AndroidWindow window(pApp);
+
             AssetManager::init(pApp->activity->assetManager);
-            auto app = std::make_unique<App>();
+            auto app = std::make_unique<App>(&window);
             auto game = std::make_unique<Game>(width, height);
             game->play(LevelDescriptor::load("Level 1").get());
             app->addScreen(std::move(game));

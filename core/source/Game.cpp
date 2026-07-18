@@ -55,9 +55,9 @@ void Game::toggle() {
 }
 
 
-bool Game::doProcessEvent(const Event& event) {
+void Game::doProcessEvent(const Event& event) {
 	if (uiManager.processEvent(event))
-		return true;
+		return;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = keyBindings->translate(key->code)) {
@@ -66,12 +66,11 @@ bool Game::doProcessEvent(const Event& event) {
 				case ActionCode::Toggle:
 					toggle();
 					break;
+				default:;
 				}
 			}
 		}
 	}
-
-	return false;
 }
 
 

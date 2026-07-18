@@ -14,8 +14,10 @@ void ScreenVertex::setupLayout() {
 	glEnableVertexAttribArray(1);
 }
 
-App::App() {
+App::App(IWindow* window) : window(window) {
 	KeyBindings::load();
+	keyBindings = KeyBindings::app.get();
+
 	Meshes::load();
 	Shaders::load();
 	Textures::load();
@@ -41,8 +43,19 @@ App::App() {
 }
 
 void App::processEvent(const Event& event) {
-	for (const auto& screen: std::views::reverse(screens))
-		if (screen->processEvent(event)) break;
+	if (auto* key = std::get_if<KeyEvent>(&event)) {
+		if (auto actionCode = keyBindings->translate(key->code)) {
+			if (key->action == KeyAction::Down) {
+				switch (*actionCode) {
+				case ActionCode::Fullscreen:
+					window->toggleFullscreen();
+				default:;
+				}
+			}
+		}
+	}
+
+	screens.back()->processEvent(event);
 }
 
 void App::tick(microseconds dt, int windowWidth, int windowHeight) const {

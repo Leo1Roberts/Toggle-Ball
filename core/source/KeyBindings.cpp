@@ -27,7 +27,7 @@ KeyBindingsContext::KeyBindingsContext(const std::string& data) {
 		if (key.has_value() && action.has_value())
 			bindings[key.value()] = action.value();
 		else
-			throw std::invalid_argument("Unknown action/key: " + keyString + "=" + actionString);
+			throw std::invalid_argument("Unknown action/key: " + keyString + "=" += actionString);
 	}
 }
 
@@ -53,12 +53,14 @@ std::optional<ActionCode> KeyBindingsContext::translate(KeyCode key) const {
 }
 
 namespace KeyBindings {
+	std::unique_ptr<KeyBindingsContext> app;
 	std::unique_ptr<KeyBindingsContext> game;
 #if defined(PLATFORM_DESKTOP)
 	std::unique_ptr<KeyBindingsContext> editor;
 #endif
 
 	void load() {
+		app = std::make_unique<KeyBindingsContext>(AssetManager::loadTextFile("bindings/app.txt"));
 		game = std::make_unique<KeyBindingsContext>(AssetManager::loadTextFile("bindings/game.txt"));
 #if defined(PLATFORM_DESKTOP)
 		editor = std::make_unique<KeyBindingsContext>(AssetManager::loadTextFile("bindings/editor.txt"));

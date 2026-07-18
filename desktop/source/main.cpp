@@ -3,6 +3,8 @@
 #include "App.h"
 #include "Game.h"
 #include "Game_OLD.h"
+#include "GlfwWindow.h"
+
 #include <iostream>
 
 inline unsigned max_unsigned(unsigned a, unsigned b) { return (a > b) ? a : b; }
@@ -55,14 +57,15 @@ void APIENTRY glDebugOutput(GLenum source,
 }
 
 
-[[nodiscard]] KeyCode translateKey(int glfwKey) {
+[[nodiscard]] static KeyCode translateKey(int glfwKey) {
 	switch (glfwKey) {
 	case GLFW_KEY_SPACE:	return KeyCode::Space;
+	case GLFW_KEY_F11:		return KeyCode::F11;
 	default:				return KeyCode::Unknown;
 	}
 }
 
-[[nodiscard]] KeyAction translateKeyAction(int glfwKeyAction) {
+[[nodiscard]] static KeyAction translateKeyAction(int glfwKeyAction) {
 	switch (glfwKeyAction) {
 	case GLFW_PRESS:	return KeyAction::Down;
 	case GLFW_REPEAT:	return KeyAction::Repeat;
@@ -71,7 +74,7 @@ void APIENTRY glDebugOutput(GLenum source,
 	}
 }
 
-void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
 	app->processEvent(KeyEvent(translateKey(key), translateKeyAction(action)));
@@ -89,15 +92,15 @@ int main() {
 
 	int width = 1600, height = 1000;
 
-	GLFWwindow* window = glfwCreateWindow(width, height, "Toggle Ball", nullptr, nullptr);
+	GLFWwindow* rawWindow = glfwCreateWindow(width, height, "Toggle Ball", nullptr, nullptr);
 
-	if (!window)
+	if (!rawWindow)
 	{
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
 
-	glfwMakeContextCurrent(window);
+	glfwMakeContextCurrent(rawWindow);
 
 	glfwSwapInterval(1);
 
@@ -118,29 +121,31 @@ int main() {
 	// glfwSetMouseButtonCallback(window, &Game::handleMouseButtonInput);
 	// glfwSetScrollCallback(window, &Game::handleScrollInput);
 
-	glfwSetKeyCallback(window, keyCallback);
+	glfwSetKeyCallback(rawWindow, keyCallback);
 
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(glDebugOutput, nullptr);
 	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
-	App app;
+	GlfwWindow window(rawWindow);
+
+	App app(&window);
 	std::unique_ptr<Game> game = std::make_unique<Game>(width, height);
 	game->play(LevelDescriptor::load("Level 1").get());
 	app.addScreen(std::move(game));
 
-	glfwSetWindowUserPointer(window, &app);
+	glfwSetWindowUserPointer(rawWindow, &app);
 
 	microseconds t1 = now();
 
 	do {
 		glfwPollEvents();
 
-		glfwGetFramebufferSize(window, &width, &height);
+		glfwGetFramebufferSize(rawWindow, &width, &height);
 		microseconds t2 = now();
 		app.tick(t2 - t1, width, height);
 		t1 = t2;
-		glfwSwapBuffers(window);
-	} while (!glfwWindowShouldClose(window));
+		glfwSwapBuffers(rawWindow);
+	} while (!glfwWindowShouldClose(rawWindow));
 }

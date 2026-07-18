@@ -22,8 +22,9 @@ endif()
 add_subdirectory(${REPO_ROOT}/core ${CMAKE_BINARY_DIR}/core_build)
 
 # --- SOURCES & TARGET DEFINITION ---
-set(DESKTOP_SOURCES main.cpp)
-add_executable(toggleball_desktop ${DESKTOP_SOURCES})
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "source/*.cpp")
+add_executable(toggleball_desktop ${SOURCES})
+target_include_directories(toggleball_desktop PRIVATE include)
 
 # --- ASSETS PATH MACRO ---
 target_compile_definitions(core PUBLIC ASSETS_PATH_MACRO=\"${REPO_ROOT}/core/assets/\")
@@ -41,7 +42,7 @@ if(WIN32)
     target_link_libraries(toggleball_desktop PRIVATE glfw3 opengl32)
 else()
     target_link_libraries(toggleball_desktop PRIVATE
-            glfw
-            OpenGL::GL
+        glfw
+        OpenGL::GL
     )
 endif()
