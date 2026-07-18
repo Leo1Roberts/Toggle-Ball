@@ -5,11 +5,12 @@
 #include "Obstacle.h"
 #include "Plane.h"
 #include "Screen.h"
+#include "UIManager.h"
 
 
 class Game : public Screen {
 public:
-	Game(int width, int height) : Screen(width, height) {}
+	Game(int width, int height);
 
 	void play(const LevelDescriptor* levelToPlay);
 
@@ -27,8 +28,12 @@ private:
 	void doDraw() override;
 	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, vec3 pos, const mat3& rot, vec3 scale = vec3(1));
 
-	void doResize(int, int) override;
+	void doResize(int width, int height) override;
 	void resizeLevel();
+
+
+	UIManager uiManager{};
+
 
 	LevelDescriptor level;
 	PlaneDescriptor arenaBounds[4];

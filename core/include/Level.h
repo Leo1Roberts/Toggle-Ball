@@ -16,7 +16,7 @@ public:
 	LevelDescriptor(const LevelDescriptor& other);
 	LevelDescriptor& operator=(const LevelDescriptor& other);
 
-	LevelDescriptor(const std::string& data);
+	explicit LevelDescriptor(const std::string& data);
 
 	static std::unique_ptr<LevelDescriptor> load(const std::string& name) {
 		return std::make_unique<LevelDescriptor>(AssetManager::loadTextFile("levels/" + name + ".lvl"));

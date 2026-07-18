@@ -604,7 +604,7 @@ public:
 	explicit GameObstacle(const ObstacleDescriptor* descriptor) :
 	    descriptor(descriptor) {
 		reset();
-		descriptor->getShape()->generateObstacleMesh(mesh, descriptor->getMotion()->getColor());
+		descriptor->getShape()->generateObstacleMesh(mesh, descriptor->isGoal() ? SOFT_GREEN : descriptor->getMotion()->getColor());
 	}
 
 	~GameObstacle() = default;

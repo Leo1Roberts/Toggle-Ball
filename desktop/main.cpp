@@ -54,6 +54,29 @@ void APIENTRY glDebugOutput(GLenum source,
 	std::cout << std::endl;
 }
 
+
+[[nodiscard]] KeyCode translateKey(int glfwKey) {
+	switch (glfwKey) {
+	case GLFW_KEY_SPACE:	return KeyCode::Space;
+	default:				return KeyCode::Unknown;
+	}
+}
+
+[[nodiscard]] KeyAction translateKeyAction(int glfwKeyAction) {
+	switch (glfwKeyAction) {
+	case GLFW_PRESS:	return KeyAction::Down;
+	case GLFW_REPEAT:	return KeyAction::Repeat;
+	case GLFW_RELEASE:	return KeyAction::Up;
+	default:			return KeyAction::Unknown;
+	}
+}
+
+void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	auto* app = (App*)glfwGetWindowUserPointer(window);
+	if (!app) return;
+	app->processEvent(KeyEvent(translateKey(key), translateKeyAction(action)));
+}
+
 int main() {
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
@@ -95,6 +118,8 @@ int main() {
 	// glfwSetMouseButtonCallback(window, &Game::handleMouseButtonInput);
 	// glfwSetScrollCallback(window, &Game::handleScrollInput);
 
+	glfwSetKeyCallback(window, keyCallback);
+
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(glDebugOutput, nullptr);
@@ -104,6 +129,8 @@ int main() {
 	std::unique_ptr<Game> game = std::make_unique<Game>(width, height);
 	game->play(LevelDescriptor::load("Level 1").get());
 	app.addScreen(std::move(game));
+
+	glfwSetWindowUserPointer(window, &app);
 
 	microseconds t1 = now();
 

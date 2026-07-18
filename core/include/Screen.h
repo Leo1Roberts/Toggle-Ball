@@ -3,6 +3,7 @@
 
 #include "Event.h"
 #include "Framebuffer.h"
+#include "KeyBindings.h"
 
 class Screen {
 public:
@@ -32,6 +33,9 @@ public:
 
 	Framebuffer framebuffer;
 	float aspectRatio{};
+
+protected:
+	KeyBindingsContext* keyBindings{};
 
 private:
 	virtual bool doProcessEvent(const Event& event) = 0;

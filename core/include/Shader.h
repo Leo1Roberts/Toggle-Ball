@@ -3,48 +3,10 @@
 
 #include "main.h"
 #include "GLUtilities.h"
-#if defined(PLATFORM_ANDROID)
-#include <android/log.h>
-#endif
 
 class Shader {
 public:
-	Shader(const std::string& vertexSource, const std::string& fragmentSource) {
-		std::string version;
-#if defined(PLATFORM_DESKTOP)
-		version = "#version 420 core\n";
-#else
-		version = "#version 300 es\n";
-#endif
-		GLShader vs = compileShader(GL_VERTEX_SHADER, version + vertexSource);
-		GLShader fs = compileShader(GL_FRAGMENT_SHADER, version + fragmentSource);
-
-		program = GLProgram(glCreateProgram());
-
-		glAttachShader(program, vs);
-		glAttachShader(program, fs);
-		glLinkProgram(program);
-
-        GLint success;
-        glGetProgramiv(program, GL_LINK_STATUS, &success);
-        if (!success) {
-			GLint logLength = 0;
-			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
-			if (logLength > 0) {
-				std::vector<char> log(logLength);
-				glGetProgramInfoLog(program, logLength, nullptr, log.data());
-#if defined(PLATFORM_ANDROID)
-				__android_log_print(ANDROID_LOG_ERROR, "Shader", "Link Error: %s", log.data());
-#endif
-			} else {
-#if defined(PLATFORM_ANDROID)
-				__android_log_print(ANDROID_LOG_ERROR, "Shader", "Link failed with no log.");
-#endif
-			}
-            char infoLog[512];
-            glGetProgramInfoLog(program, 512, NULL, infoLog);
-        }
-	}
+	Shader(const std::string& vertexSource, const std::string& fragmentSource);
 
 	Shader(const Shader&) = delete;
 	Shader& operator=(const Shader&) = delete;

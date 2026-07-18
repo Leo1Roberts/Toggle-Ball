@@ -1,5 +1,6 @@
 #include "Game.h"
 
+#include "KeyBindings.h"
 #include "MatrixUtilities.h"
 #include "Shader.h"
 
@@ -9,6 +10,14 @@ const vec3 sunColor = colorToLinear({1.0f, 1.0f, 0.9f});
 
 constexpr vec3 upDirection{0, 0, 1};
 constexpr vec3 sunDirection{0.4850712500726659, 0.4850712500726659, 0.7276068751089989};
+
+
+Game::Game(int width, int height) : Screen(width, height) {
+	keyBindings = KeyBindings::game.get();
+
+	// Create UI here
+	uiManager.resize(width, height);
+}
 
 
 void Game::play(const LevelDescriptor* levelToPlay) {
@@ -22,8 +31,8 @@ void Game::load(const LevelDescriptor* levelToLoad) {
 
 	arenaBounds[0] = {{0, 1, 0}, {0, -level.getArenaWidth() * 0.5f, 0}}; // Left
 	arenaBounds[1] = {{0, -1, 0}, {0, level.getArenaWidth() * 0.5f, 0}}; // Right
-	arenaBounds[2] = {{0, 0, -1}, {0, 0, level.getArenaHeight()}}; // Top
-	arenaBounds[3] = {{0, 0, 1}, {0, 0, 0}}; // Bottom
+	arenaBounds[2] = {{0, 0, -1}, {0, 0, level.getArenaHeight()}};       // Top
+	arenaBounds[3] = {{0, 0, 1}, {0, 0, 0}};                             // Bottom
 
 	ball = GameBall(level.getBallDescriptor().get());
 	obstacles.append_range(level.getObstacleDescriptors() | std::views::transform([](const auto& d) { return GameObstacle(d.get()); }));
@@ -46,7 +55,22 @@ void Game::toggle() {
 }
 
 
-bool Game::doProcessEvent(const Event&) {
+bool Game::doProcessEvent(const Event& event) {
+	if (uiManager.processEvent(event))
+		return true;
+
+	if (auto* key = std::get_if<KeyEvent>(&event)) {
+		if (auto actionCode = keyBindings->translate(key->code)) {
+			if (key->action == KeyAction::Down) {
+				switch (*actionCode) {
+				case ActionCode::Toggle:
+					toggle();
+					break;
+				}
+			}
+		}
+	}
+
 	return false;
 }
 
@@ -66,7 +90,7 @@ void Game::updatePhysics(microseconds dt) {
 
 		ball.addNaturalForces();
 
-		for (const auto& plane : arenaBounds)
+		for (auto& plane: arenaBounds)
 			ball.collideWithPlane(plane);
 
 		bool levelComplete = false; // For demonstration. Eventually will do something with this.
@@ -81,10 +105,9 @@ void Game::updatePhysics(microseconds dt) {
 
 
 constexpr mat3 backgroundRotation = {
-	 0, 0, 1,
-	 0, 1, 0,
-	-1, 0, 0
-};
+0, 0, 1,
+0, 1, 0,
+-1, 0, 0};
 
 void Game::doDraw() {
 	glClearColor(0, 0, 0, 1);
@@ -100,21 +123,21 @@ void Game::doDraw() {
 	Shaders::object->setVec3("uSunDirection", viewSunDirection);
 
 	drawObject(Meshes::plane.get(), Textures::white.get(),
-		{-level.getArenaWidth() / 2.f, 0, level.getArenaHeight() / 2.f},
-		backgroundRotation,
-		{1, level.getArenaWidth(), level.getArenaHeight()});
+	           {-level.getArenaWidth() / 2.f, 0, level.getArenaHeight() / 2.f},
+	           backgroundRotation,
+	           {1, level.getArenaWidth(), level.getArenaHeight()});
 
 	drawObject(Meshes::ball.get(), ball.getTexture(),
-		ball.getKinematicState()->position,
-		ball.getKinematicState()->rotation,
-		vec3(ball.getProperties()->radius));
+	           ball.getKinematicState()->position,
+	           ball.getKinematicState()->rotation,
+	           vec3(ball.getProperties()->radius));
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	for (auto& o: obstacles)
 		drawObject(o.getMesh(), Textures::white.get(),
-			o.getKinematicState()->getPosition(),
-			o.getKinematicState()->getRotation());
+		           o.getKinematicState()->getPosition(),
+		           o.getKinematicState()->getRotation());
 	glDisable(GL_DEPTH_TEST);
 }
 
@@ -132,7 +155,8 @@ void Game::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, v
 }
 
 
-void Game::doResize(int, int) {
+void Game::doResize(int width, int height) {
+	uiManager.resize(width, height);
 	resizeLevel();
 	updateView();
 }

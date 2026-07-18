@@ -1,6 +1,9 @@
 #ifndef VECTOR_MATRIX_H
 #define VECTOR_MATRIX_H
 
+#include <cmath>
+
+
 struct vec2 {
 	union {
 		struct {
@@ -30,6 +33,7 @@ struct vec2 {
 
 	vec2 operator+(const vec2& v) const noexcept { return { x + v.x, y + v.y }; }
 	vec2 operator-(const vec2& v) const noexcept { return { x - v.x, y - v.y }; }
+	vec2 operator*(const vec2& v) const noexcept { return { x * v.x, y * v.y }; }
 
 	void set(float i) { x = y = i; }
 	void set(float ix, float iy) {

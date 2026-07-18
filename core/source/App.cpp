@@ -1,4 +1,6 @@
 #include "App.h"
+
+#include "AssetManager.h"
 #include "Shader.h"
 #include "Texture.h"
 
@@ -13,6 +15,7 @@ void ScreenVertex::setupLayout() {
 }
 
 App::App() {
+	KeyBindings::load();
 	Meshes::load();
 	Shaders::load();
 	Textures::load();
