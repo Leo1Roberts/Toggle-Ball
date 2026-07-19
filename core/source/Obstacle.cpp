@@ -2,6 +2,13 @@
 #include "Colors.h"
 #include "Mesh.h"
 #include "Obstacle.h"
+
+#include "glm/detail/type_quat.hpp"
+#include "glm/gtc/quaternion.hpp"
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/norm.hpp"
+
+#include <glm/glm.hpp>
 #include <algorithm>
 #include <cmath>
 #include <iterator>
@@ -9,14 +16,14 @@
 #include <sstream>
 #include <array>
 
-static void angleToRotation(float radians, mat3& rotation) {
-	rotation.R_VecAndAngle(OBSTACLE_ROTATION_AXIS, radians);
+static glm::mat3 angleToRotation(float radians) {
+	return glm::mat3_cast(glm::angleAxis(radians, OBSTACLE_ROTATION_AXIS));
 }
 
 
 void ObstacleKinematicState::setAngle(float radians) {
 	angle = wrapAngle(radians);
-	angleToRotation(radians, rotation);
+	rotation = angleToRotation(radians);
 }
 
 
@@ -61,6 +68,9 @@ SegmentSpec::SegmentSpec(float minorRadius, const std::string& data) :
 	char c;
 	if (!(ss >> leftLength >> c >> rightLength))
 		throw std::invalid_argument("Invalid segment shape data format");
+
+	setLeftLength(leftLength);
+	setRightLength(rightLength);
 }
 
 std::string ArcSpec::serializeData() const {
@@ -83,11 +93,11 @@ ArcSpec::ArcSpec(float minorRadius, const std::string& data) :
 
 void SegmentSpec::setLeftLength(float l) {
 	leftLength = l;
-	leftCap.y = -l;
+	leftCap = {0.f, -l, 0.f};
 }
 void SegmentSpec::setRightLength(float l) {
 	rightLength = l;
-	rightCap.y = l;
+	rightCap = {0.f, l, 0.f};
 }
 
 void ArcSpec::setArcAngle(float radians) {
@@ -101,8 +111,8 @@ void ArcSpec::setArcRadius(float r) {
 void ArcSpec::setCaps() {
 	float y = std::sin(getHalfArcAngle()) * getArcRadius();
 	float z = std::cos(getHalfArcAngle()) * getArcRadius();
-	leftCap.set(0, -y, z);
-	rightCap.set(0, y, z);
+	leftCap = {0, -y, z};
+	rightCap = {0, y, z};
 }
 
 
@@ -118,8 +128,8 @@ void SegmentSpec::buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<I
 	is.reserve(18 * (SECTORS_PER_SEMICIRCLE + 1));
 
 	// Caps
-	vs.emplace_back(vec3(getHalfDepth(), getRightCap().y, 0), vec2(), vec3(1, 0, 0), color);
-	vs.emplace_back(vec3(getHalfDepth(), getLeftCap().y, 0), vec2(), vec3(1, 0, 0), color);
+	vs.emplace_back(glm::vec3(getHalfDepth(), getRightCap().y, 0), glm::vec2(), glm::vec3(1, 0, 0), color);
+	vs.emplace_back(glm::vec3(getHalfDepth(), getLeftCap().y, 0), glm::vec2(), glm::vec3(1, 0, 0), color);
 	for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 		float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
 		float y = std::sin(ang);
@@ -128,10 +138,10 @@ void SegmentSpec::buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<I
 		float zrv = z * (getMinorRadius() - getBevel());
 		float yrh = y * getMinorRadius();
 		float zrh = z * getMinorRadius();
-		vs.emplace_back(vec3(getHalfDepth(), getRightCap().y + yrv, zrv), vec2(), vec3(1, 0, 0), color);
-		vs.emplace_back(vec3(getHalfDepth() - getBevel(), getRightCap().y + yrh, zrh), vec2(), vec3(0, y, z), color);
-		vs.emplace_back(vec3(getHalfDepth(), getLeftCap().y - yrv, zrv), vec2(), vec3(1, 0, 0), color);
-		vs.emplace_back(vec3(getHalfDepth() - getBevel(), getLeftCap().y - yrh, zrh), vec2(), vec3(0, -y, z), color);
+		vs.emplace_back(glm::vec3(getHalfDepth(), getRightCap().y + yrv, zrv), glm::vec2(), glm::vec3(1, 0, 0), color);
+		vs.emplace_back(glm::vec3(getHalfDepth() - getBevel(), getRightCap().y + yrh, zrh), glm::vec2(), glm::vec3(0, y, z), color);
+		vs.emplace_back(glm::vec3(getHalfDepth(), getLeftCap().y - yrv, zrv), glm::vec2(), glm::vec3(1, 0, 0), color);
+		vs.emplace_back(glm::vec3(getHalfDepth() - getBevel(), getLeftCap().y - yrh, zrh), glm::vec2(), glm::vec3(0, -y, z), color);
 	}
 	for (int i = 2; i < 2 + SECTORS_PER_SEMICIRCLE * 4; i += 4) {
 		// Semicircles
@@ -191,8 +201,8 @@ void ArcSpec::buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index
 	is.reserve(18 * SECTORS_PER_SEMICIRCLE + 18 * NUM_SECTORS);
 
 	// Caps
-	vs.emplace_back(vec3(getHalfDepth(), getRightCap().y, getRightCap().z), vec2(), vec3(1, 0, 0), color);
-	vs.emplace_back(vec3(getHalfDepth(), getLeftCap().y, getLeftCap().z), vec2(), vec3(1, 0, 0), color);
+	vs.emplace_back(glm::vec3(getHalfDepth(), getRightCap().y, getRightCap().z), glm::vec2(), glm::vec3(1, 0, 0), color);
+	vs.emplace_back(glm::vec3(getHalfDepth(), getLeftCap().y, getLeftCap().z), glm::vec2(), glm::vec3(1, 0, 0), color);
 	for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 		float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI + getHalfArcAngle();
 		float y = std::sin(ang);
@@ -201,10 +211,10 @@ void ArcSpec::buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index
 		float zrv = z * (getMinorRadius() - getBevel());
 		float yrh = y * getMinorRadius();
 		float zrh = z * getMinorRadius();
-		vs.emplace_back(vec3(getHalfDepth(), getRightCap().y + yrv, getRightCap().z + zrv), vec2(), vec3(1, 0, 0), color);
-		vs.emplace_back(vec3(getHalfDepth() - getBevel(), getRightCap().y + yrh, getRightCap().z + zrh), vec2(), vec3(0, y, z), color);
-		vs.emplace_back(vec3(getHalfDepth(), getLeftCap().y - yrv, getLeftCap().z + zrv), vec2(), vec3(1, 0, 0), color);
-		vs.emplace_back(vec3(getHalfDepth() - getBevel(), getLeftCap().y - yrh, getLeftCap().z + zrh), vec2(), vec3(0, -y, z), color);
+		vs.emplace_back(glm::vec3(getHalfDepth(), getRightCap().y + yrv, getRightCap().z + zrv), glm::vec2(), glm::vec3(1, 0, 0), color);
+		vs.emplace_back(glm::vec3(getHalfDepth() - getBevel(), getRightCap().y + yrh, getRightCap().z + zrh), glm::vec2(), glm::vec3(0, y, z), color);
+		vs.emplace_back(glm::vec3(getHalfDepth(), getLeftCap().y - yrv, getLeftCap().z + zrv), glm::vec2(), glm::vec3(1, 0, 0), color);
+		vs.emplace_back(glm::vec3(getHalfDepth() - getBevel(), getLeftCap().y - yrh, getLeftCap().z + zrh), glm::vec2(), glm::vec3(0, -y, z), color);
 	}
 	for (int i = 2; i < 2 + SECTORS_PER_SEMICIRCLE * 4; i += 4) {
 		// Semicircles
@@ -247,10 +257,10 @@ void ArcSpec::buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index
 		float zroh = z * (getArcRadius() + getMinorRadius());
 		float yrih = y * (getArcRadius() - getMinorRadius());
 		float zrih = z * (getArcRadius() - getMinorRadius());
-		vs.emplace_back(vec3(getHalfDepth(), yriv, zriv), vec2(), vec3(1, 0, 0), color);
-		vs.emplace_back(vec3(getHalfDepth() - getBevel(), yrih, zrih), vec2(), vec3(0, -y, -z), color);
-		vs.emplace_back(vec3(getHalfDepth(), yrov, zrov), vec2(), vec3(1, 0, 0), color);
-		vs.emplace_back(vec3(getHalfDepth() - getBevel(), yroh, zroh), vec2(), vec3(0, y, z), color);
+		vs.emplace_back(glm::vec3(getHalfDepth(), yriv, zriv), glm::vec2(), glm::vec3(1, 0, 0), color);
+		vs.emplace_back(glm::vec3(getHalfDepth() - getBevel(), yrih, zrih), glm::vec2(), glm::vec3(0, -y, -z), color);
+		vs.emplace_back(glm::vec3(getHalfDepth(), yrov, zrov), glm::vec2(), glm::vec3(1, 0, 0), color);
+		vs.emplace_back(glm::vec3(getHalfDepth() - getBevel(), yroh, zroh), glm::vec2(), glm::vec3(0, y, z), color);
 	}
 	for (int i = 2 + 4 * (SECTORS_PER_SEMICIRCLE + 1); i < 2 + 4 * (SECTORS_PER_SEMICIRCLE + 1) + NUM_SECTORS * 4; i += 4) {
 		// Front
@@ -285,16 +295,16 @@ void SegmentSpec::buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Ind
 	is.reserve(6 * (SECTORS_PER_SEMICIRCLE + 1));
 
 	// Caps
-	vs.emplace_back(vec3(0, getRightCap().y, 0), vec2(), vec3());
-	vs.emplace_back(vec3(0, getLeftCap().y, 0), vec2(), vec3());
+	vs.emplace_back(glm::vec3(0, getRightCap().y, 0), glm::vec2(), glm::vec3());
+	vs.emplace_back(glm::vec3(0, getLeftCap().y, 0), glm::vec2(), glm::vec3());
 	for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 		float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
 		float y = std::sin(ang);
 		float z = std::cos(ang);
 		float yrh = y * getMinorRadius();
 		float zrh = z * getMinorRadius();
-		vs.emplace_back(vec3(0, getRightCap().y + yrh, zrh), vec2(), vec3());
-		vs.emplace_back(vec3(0, getLeftCap().y - yrh, zrh), vec2(), vec3());
+		vs.emplace_back(glm::vec3(0, getRightCap().y + yrh, zrh), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, getLeftCap().y - yrh, zrh), glm::vec2(), glm::vec3());
 	}
 	for (int i = 2; i < 2 + SECTORS_PER_SEMICIRCLE * 2; i += 2) {
 		// Semicircles
@@ -324,16 +334,16 @@ void ArcSpec::buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>&
 	is.reserve(6 * SECTORS_PER_SEMICIRCLE + 6 * NUM_SECTORS);
 
 	// Caps
-	vs.emplace_back(vec3(0, getRightCap().y, getRightCap().z), vec2(), vec3());
-	vs.emplace_back(vec3(0, getLeftCap().y, getLeftCap().z), vec2(), vec3());
+	vs.emplace_back(glm::vec3(0, getRightCap().y, getRightCap().z), glm::vec2(), glm::vec3());
+	vs.emplace_back(glm::vec3(0, getLeftCap().y, getLeftCap().z), glm::vec2(), glm::vec3());
 	for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 		float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI + getHalfArcAngle();
 		float y = std::sin(ang);
 		float z = std::cos(ang);
 		float yrh = y * getMinorRadius();
 		float zrh = z * getMinorRadius();
-		vs.emplace_back(vec3(0, getRightCap().y + yrh, getRightCap().z + zrh), vec2(), vec3());
-		vs.emplace_back(vec3(0, getLeftCap().y - yrh, getLeftCap().z + zrh), vec2(), vec3());
+		vs.emplace_back(glm::vec3(0, getRightCap().y + yrh, getRightCap().z + zrh), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, getLeftCap().y - yrh, getLeftCap().z + zrh), glm::vec2(), glm::vec3());
 	}
 	for (int i = 2; i < 2 + SECTORS_PER_SEMICIRCLE * 2; i += 2) {
 		// Semicircles
@@ -356,8 +366,8 @@ void ArcSpec::buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>&
 		float zroh = z * (getArcRadius() + getMinorRadius());
 		float yrih = y * (getArcRadius() - getMinorRadius());
 		float zrih = z * (getArcRadius() - getMinorRadius());
-		vs.emplace_back(vec3(0, yrih, zrih), vec2(), vec3());
-		vs.emplace_back(vec3(0, yroh, zroh), vec2(), vec3());
+		vs.emplace_back(glm::vec3(0, yrih, zrih), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, yroh, zroh), glm::vec2(), glm::vec3());
 	}
 	for (int i = 2 + 2 * (SECTORS_PER_SEMICIRCLE + 1); i < 2 + 2 * (SECTORS_PER_SEMICIRCLE + 1) + NUM_SECTORS * 2; i += 2) {
 		// Front
@@ -391,10 +401,10 @@ void SegmentSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<In
 		float zrh = z * getMinorRadius();
 		float yrv = y * getOutlineRadius();
 		float zrv = z * getOutlineRadius();
-		vs.emplace_back(vec3(0, getRightCap().y + yrh, getRightCap().z + zrh), vec2(), vec3());
-		vs.emplace_back(vec3(0, getRightCap().y + yrv, getRightCap().z + zrv), vec2(), vec3());
-		vs.emplace_back(vec3(0, getLeftCap().y - yrh, getLeftCap().z + zrh), vec2(), vec3());
-		vs.emplace_back(vec3(0, getLeftCap().y - yrv, getLeftCap().z + zrv), vec2(), vec3());
+		vs.emplace_back(glm::vec3(0, getRightCap().y + yrh, getRightCap().z + zrh), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, getRightCap().y + yrv, getRightCap().z + zrv), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, getLeftCap().y - yrh, getLeftCap().z + zrh), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, getLeftCap().y - yrv, getLeftCap().z + zrv), glm::vec2(), glm::vec3());
 	}
 	for (int i = 0; i < SECTORS_PER_SEMICIRCLE * 4; i += 4) {
 		is.push_back(i + 0);
@@ -443,10 +453,10 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 		float zrh = z * getMinorRadius();
 		float yrv = y * getOutlineRadius();
 		float zrv = z * getOutlineRadius();
-		vs.emplace_back(vec3(0, getRightCap().y + yrh, getRightCap().z + zrh), vec2(), vec3());
-		vs.emplace_back(vec3(0, getRightCap().y + yrv, getRightCap().z + zrv), vec2(), vec3());
-		vs.emplace_back(vec3(0, getLeftCap().y - yrh, getLeftCap().z + zrh), vec2(), vec3());
-		vs.emplace_back(vec3(0, getLeftCap().y - yrv, getLeftCap().z + zrv), vec2(), vec3());
+		vs.emplace_back(glm::vec3(0, getRightCap().y + yrh, getRightCap().z + zrh), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, getRightCap().y + yrv, getRightCap().z + zrv), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, getLeftCap().y - yrh, getLeftCap().z + zrh), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, getLeftCap().y - yrv, getLeftCap().z + zrv), glm::vec2(), glm::vec3());
 	}
 	for (int i = 0; i < SECTORS_PER_SEMICIRCLE * 4; i += 4) {
 		is.push_back(i + 0);
@@ -477,10 +487,10 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 		float zrov = z * (getArcRadius() + getOutlineRadius());
 		float yriv = y * (getArcRadius() - getOutlineRadius());
 		float zriv = z * (getArcRadius() - getOutlineRadius());
-		vs.emplace_back(vec3(0, yrih, zrih), vec2(), vec3());
-		vs.emplace_back(vec3(0, yriv, zriv), vec2(), vec3());
-		vs.emplace_back(vec3(0, yroh, zroh), vec2(), vec3());
-		vs.emplace_back(vec3(0, yrov, zrov), vec2(), vec3());
+		vs.emplace_back(glm::vec3(0, yrih, zrih), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, yriv, zriv), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, yroh, zroh), glm::vec2(), glm::vec3());
+		vs.emplace_back(glm::vec3(0, yrov, zrov), glm::vec2(), glm::vec3());
 	}
 	for (int i = 4 * (SECTORS_PER_SEMICIRCLE + 1); i < 4 * (SECTORS_PER_SEMICIRCLE + 1) + NUM_SECTORS * 4; i += 4) {
 		is.push_back(i + 0);
@@ -511,17 +521,17 @@ static std::array<float, 2> quadraticFormula(float a, float b, float c) {
 bool AbstractShapeSpec::isInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const {
 	// Check if caps are in the box
 
-	const vec3 leftCapPos = s.getPosition() + s.getRotation() * getLeftCap();
-	const vec3 rightCapPos = s.getPosition() + s.getRotation() * getRightCap();
+	const glm::vec3 leftCapPos = s.getPosition() + s.getRotation() * getLeftCap();
+	const glm::vec3 rightCapPos = s.getPosition() + s.getRotation() * getRightCap();
 
-	for (vec3 capPos : {leftCapPos, rightCapPos})
+	for (glm::vec3 capPos : {leftCapPos, rightCapPos})
 		if (box.left < capPos.y && capPos.y < box.right &&
 		    box.bottom < capPos.z && capPos.z < box.top)
 			return true; // Quick check - centre of a cap is inside the box
 
 	float rSq = getMinorRadius() * getMinorRadius();
 
-	for (vec3 capPos : {leftCapPos, rightCapPos})
+	for (glm::vec3 capPos : {leftCapPos, rightCapPos})
 		for (auto& [side, sideStart, sideEnd, perp, para] :
 		     {std::tuple{box.left, box.bottom, box.top, capPos.y, capPos.z},
 		      std::tuple{box.right, box.bottom, box.top, capPos.y, capPos.z},
@@ -543,13 +553,13 @@ bool AbstractShapeSpec::isInSelectBox(const ObstacleKinematicState& s, const Sel
 }
 
 bool SegmentSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const {
-	const vec3 leftCapPos = s.getPosition() + s.getRotation() * getLeftCap();
-	const vec3 rightCapPos = s.getPosition() + s.getRotation() * getRightCap();
-	vec3 upOffset = s.getRotation() * vec3(0, 0, getMinorRadius());
+	const glm::vec3 leftCapPos = s.getPosition() + s.getRotation() * getLeftCap();
+	const glm::vec3 rightCapPos = s.getPosition() + s.getRotation() * getRightCap();
+	glm::vec3 upOffset = s.getRotation() * glm::vec3(0, 0, getMinorRadius());
 
-	for (vec3 offset : {upOffset, -upOffset}) {
-		vec3 segmentLeft = leftCapPos + offset;
-		vec3 segmentRight = rightCapPos + offset;
+	for (glm::vec3 offset : {upOffset, -upOffset}) {
+		glm::vec3 segmentLeft = leftCapPos + offset;
+		glm::vec3 segmentRight = rightCapPos + offset;
 
 		for (auto& [side, sideStart, sideEnd, leftPerp, rightPerp, leftPara, rightPara] :
 		     {std::tuple{box.left, box.bottom, box.top, segmentLeft.y, segmentRight.y, segmentLeft.z, segmentRight.z},
@@ -738,17 +748,17 @@ OscillatingAngleSpec::OscillatingAngleSpec(const std::string& data) {
 
 void StaticSpec::setAngle(float radians) {
 	angle = radians;
-	angleToRotation(radians, rotation);
+	rotation = angleToRotation(radians);
 }
 
 void TogglingPositionSpec::setAngle(float radians) {
 	angle = radians;
-	angleToRotation(radians, rotation);
+	rotation = angleToRotation(radians);
 }
 
 void OscillatingPositionSpec::setAngle(float radians) {
 	angle = radians;
-	angleToRotation(radians, rotation);
+	rotation = angleToRotation(radians);
 }
 
 
@@ -764,17 +774,17 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 	std::vector<Index> is_shadow;
 	shapeSpec->buildShadowMesh(vs_shadow, is_shadow);
 
-	vec3 diff = getPositionA() - getPositionB();
+	glm::vec3 diff = getPositionA() - getPositionB();
 	float line1Length, line2Length;
-	line1Length = line2Length = diff.length();
-	vec3 diffUnit = diff / line1Length;
+	line1Length = line2Length = glm::length(diff);
+	glm::vec3 diffUnit = diff / line1Length;
 	float diffAngle = std::atan2(diff.z, diff.y);
-	vec3 topPointA, bottomPointA;
-	vec3 diffPerpUnit = vec3(0, -diff.z, diff.y) / line1Length;
+	glm::vec3 topPointA, bottomPointA;
+	glm::vec3 diffPerpUnit = glm::vec3(0.f, -diff.z, diff.y) / line1Length;
 
 	if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
-		vec3 diffPerp = diffPerpUnit * segment->getMinorRadius();
-		if (wrapAngle(getAngle() - diffAngle) > 0) {
+		glm::vec3 diffPerp = diffPerpUnit * segment->getMinorRadius();
+		if (wrapAngle(getAngle() - diffAngle) > 0.f) {
 			topPointA = getPositionA() + getRotation() * segment->getRightCap() + diffPerp;
 			bottomPointA = getPositionA() + getRotation() * segment->getLeftCap() - diffPerp;
 		} else {
@@ -826,19 +836,19 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 	vs.reserve(vsSize);
 	is.reserve(isSize);
 
-	float dotSpacing = OUTLINE_WIDTH_WORLD * 2;
-	vec3 dotShift = diffUnit * dotSpacing;
+	float dotSpacing = OUTLINE_WIDTH_WORLD * 2.f;
+	glm::vec3 dotShift = diffUnit * dotSpacing;
 
-	vec3 start1 = topPointA - diffPerpUnit / 2 * OUTLINE_WIDTH_WORLD + diffUnit * (line1Length - (dotSpacing * (float)(numDots1 - 1))) / 2;
-	vec3 start2 = bottomPointA + diffPerpUnit / 2 * OUTLINE_WIDTH_WORLD + diffUnit * (line2Length - (dotSpacing * (float)(numDots2 - 1))) / 2;
+	glm::vec3 start1 = topPointA - diffPerpUnit / 2.f * OUTLINE_WIDTH_WORLD + diffUnit * (line1Length - (dotSpacing * (float)(numDots1 - 1))) / 2.f;
+	glm::vec3 start2 = bottomPointA + diffPerpUnit / 2.f * OUTLINE_WIDTH_WORLD + diffUnit * (line2Length - (dotSpacing * (float)(numDots2 - 1))) / 2.f;
 
 	if (drawDots) {
-		vec3 dotCentre = start1;
+		glm::vec3 dotCentre = start1;
 		for (int d = 0; d < numDots1; d++) {
-			vs.emplace_back(dotCentre, vec2(), vec3());
+			vs.emplace_back(dotCentre, glm::vec2(), glm::vec3());
 			for (int i = 0; i < SECTORS_PER_DOT; i++) {
-				float ang = (float)i / (float)SECTORS_PER_DOT * 2 * PI;
-				vs.emplace_back(dotCentre + vec3(0, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2, vec2(), vec3());
+				float ang = (float)i / (float)SECTORS_PER_DOT * 2.f * PI;
+				vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2.f, glm::vec2(), glm::vec3());
 			}
 
 			int CENTRE_INDEX = d * (SECTORS_PER_DOT + 1);
@@ -856,10 +866,10 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 
 		dotCentre = start2;
 		for (int d = 0; d < numDots2; d++) {
-			vs.emplace_back(dotCentre, vec2(), vec3());
+			vs.emplace_back(dotCentre, glm::vec2(), glm::vec3());
 			for (int i = 0; i < SECTORS_PER_DOT; i++) {
-				float ang = (float)i / (float)SECTORS_PER_DOT * 2 * PI;
-				vs.emplace_back(dotCentre + vec3(0, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2, vec2(), vec3());
+				float ang = (float)i / (float)SECTORS_PER_DOT * 2.f * PI;
+				vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2.f, glm::vec2(), glm::vec3());
 			}
 
 			int CENTRE_INDEX = numDots1 * (SECTORS_PER_DOT + 1) + d * (SECTORS_PER_DOT + 1);
@@ -876,8 +886,8 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		}
 	}
 
-	mat3 rot = getRotation();
-	for (vec3 pos : {getPositionA(), getPositionB()}) {
+	glm::mat3 rot = getRotation();
+	for (glm::vec3 pos : {getPositionA(), getPositionB()}) {
 		auto offset = (Index)vs.size();
 
 		std::ranges::transform(vs_shadow, std::back_inserter(vs), [pos, rot](const ObjectVertex& v) {
@@ -900,26 +910,26 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 	float start1, start2;
 
 	if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
-		dotsArcAngle = std::clamp(getAngleB() - getAngleA(), -2 * PI, 2 * PI);
-		dotsArc1Radius = segment->getRightCap().length() + segment->getMinorRadius() - OUTLINE_WIDTH_WORLD / 2;
-		dotsArc2Radius = segment->getLeftCap().length() + segment->getMinorRadius() - OUTLINE_WIDTH_WORLD / 2;
+		dotsArcAngle = std::clamp(getAngleB() - getAngleA(), -2.f * PI, 2.f * PI);
+		dotsArc1Radius = glm::length(segment->getRightCap()) + segment->getMinorRadius() - OUTLINE_WIDTH_WORLD / 2.f;
+		dotsArc2Radius = glm::length(segment->getLeftCap()) + segment->getMinorRadius() - OUTLINE_WIDTH_WORLD / 2.f;
 		start1 = getAngleA();
 		start2 = getAngleA() + PI;
 	} else if (auto* arc = dynamic_cast<const ArcSpec*>(shapeSpec)) {
 		float angDiff = getAngleB() - getAngleA();
 		if (angDiff < 0) {
-			dotsArcAngle = std::clamp(angDiff + arc->getArcAngle(), -2 * PI + arc->getArcAngle(), 0.0f);
-			start1 = start2 = getAngleA() + PI / 2 - arc->getHalfArcAngle();
+			dotsArcAngle = std::clamp(angDiff + arc->getArcAngle(), -2.f * PI + arc->getArcAngle(), 0.f);
+			start1 = start2 = getAngleA() + PI / 2.f - arc->getHalfArcAngle();
 		} else {
-			dotsArcAngle = std::clamp(angDiff - arc->getArcAngle(), 0.0f, 2 * PI - arc->getArcAngle());
-			start1 = start2 = getAngleA() + PI / 2 + arc->getHalfArcAngle();
+			dotsArcAngle = std::clamp(angDiff - arc->getArcAngle(), 0.f, 2.f * PI - arc->getArcAngle());
+			start1 = start2 = getAngleA() + PI / 2.f + arc->getHalfArcAngle();
 		}
-		dotsArc1Radius = arc->getArcRadius() + arc->getMinorRadius() - OUTLINE_WIDTH_WORLD / 2;
-		dotsArc2Radius = arc->getArcRadius() - arc->getMinorRadius() + OUTLINE_WIDTH_WORLD / 2;
+		dotsArc1Radius = arc->getArcRadius() + arc->getMinorRadius() - OUTLINE_WIDTH_WORLD / 2.f;
+		dotsArc2Radius = arc->getArcRadius() - arc->getMinorRadius() + OUTLINE_WIDTH_WORLD / 2.f;
 	} else return;
 
 	float absArcAngle = std::abs(dotsArcAngle);
-	float sign = dotsArcAngle < 0 ? -1.0f : 1.0f;
+	float sign = dotsArcAngle < 0.f ? -1.f : 1.f;
 
 	float arc1Length = dotsArc1Radius * absArcAngle;
 	float arc2Length = dotsArc2Radius * absArcAngle;
@@ -945,11 +955,11 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 
 	float dotAngle = start1;
 	for (int d = 0; d < numDots1; d++) {
-		vec3 dotCentre = vec3(0, std::cos(dotAngle), std::sin(dotAngle)) * dotsArc1Radius;
-		vs.emplace_back(dotCentre, vec2(), vec3());
+		glm::vec3 dotCentre = glm::vec3(0.f, std::cos(dotAngle), std::sin(dotAngle)) * dotsArc1Radius;
+		vs.emplace_back(dotCentre, glm::vec2(), glm::vec3());
 		for (int i = 0; i < SECTORS_PER_DOT; i++) {
-			float ang = (float)i / (float)SECTORS_PER_DOT * 2 * PI;
-			vs.emplace_back(dotCentre + vec3(0, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2, vec2(), vec3());
+			float ang = (float)i / (float)SECTORS_PER_DOT * 2.f * PI;
+			vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2.f, glm::vec2(), glm::vec3());
 		}
 
 		int CENTRE_INDEX = d * (SECTORS_PER_DOT + 1);
@@ -967,11 +977,11 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 
 	dotAngle = start2;
 	for (int d = 0; d < numDots2; d++) {
-		vec3 dotCentre = vec3(0, std::cos(dotAngle), std::sin(dotAngle)) * dotsArc2Radius;
-		vs.emplace_back(dotCentre, vec2(), vec3());
+		glm::vec3 dotCentre = glm::vec3(0.f, std::cos(dotAngle), std::sin(dotAngle)) * dotsArc2Radius;
+		vs.emplace_back(dotCentre, glm::vec2(), glm::vec3());
 		for (int i = 0; i < SECTORS_PER_DOT; i++) {
-			float ang = (float)i / (float)SECTORS_PER_DOT * 2 * PI;
-			vs.emplace_back(dotCentre + vec3(0, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2, vec2(), vec3());
+			float ang = (float)i / (float)SECTORS_PER_DOT * 2.f * PI;
+			vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2.f, glm::vec2(), glm::vec3());
 		}
 
 		int CENTRE_INDEX = numDots1 * (SECTORS_PER_DOT + 1) + d * (SECTORS_PER_DOT + 1);
@@ -990,8 +1000,7 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 	for (float angle : {getAngleA(), getAngleB()}) {
 		auto offset = (Index)vs.size();
 
-		mat3 rot;
-		angleToRotation(angle, rot);
+		glm::mat3 rot = angleToRotation(angle);
 		std::ranges::transform(vs_shadow, std::back_inserter(vs), [rot](const ObjectVertex& v) {
 			return ObjectVertex(rot * v.position, v.uv, v.normal, v.color);
 		});
@@ -1007,13 +1016,13 @@ void SpinningSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<In
 		vs.reserve(1 + SECTORS_PER_CIRCLE);
 		is.reserve(SECTORS_PER_CIRCLE * 3);
 
-		vs.emplace_back(vec3(), vec2(), vec3());
+		vs.emplace_back(glm::vec3(), glm::vec2(), glm::vec3());
 		for (int i = 0; i < SECTORS_PER_CIRCLE; i++) {
 			float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
 			float y = std::sin(ang);
 			float z = std::cos(ang);
 			float radius = std::max(segment->getLeftLength(), segment->getRightLength()) + segment->getMinorRadius();
-			vs.emplace_back(vec3(0, y * radius, z * radius), vec2(), vec3());
+			vs.emplace_back(glm::vec3(0.f, y * radius, z * radius), glm::vec2(), glm::vec3());
 			is.push_back(0);
 			is.push_back(1 + (i + 1) % SECTORS_PER_CIRCLE);
 			is.push_back(1 + i);
@@ -1028,8 +1037,8 @@ void SpinningSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<In
 			float z = std::cos(ang);
 			float innerRadius = arc->getArcRadius() - arc->getMinorRadius();
 			float outerRadius = arc->getArcRadius() + arc->getMinorRadius();
-			vs.emplace_back(vec3(0, y * innerRadius, z * innerRadius), vec2(), vec3());
-			vs.emplace_back(vec3(0, y * outerRadius, z * outerRadius), vec2(), vec3());
+			vs.emplace_back(glm::vec3(0.f, y * innerRadius, z * innerRadius), glm::vec2(), glm::vec3());
+			vs.emplace_back(glm::vec3(0.f, y * outerRadius, z * outerRadius), glm::vec2(), glm::vec3());
 			is.push_back(i*2);
 			is.push_back(i*2 + 1);
 			is.push_back((i*2 + 3) % (SECTORS_PER_CIRCLE * 2));
@@ -1052,15 +1061,15 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 			float z = std::cos(ang);
 			float yrh = y * segment->getMinorRadius();
 			float zrh = z * segment->getMinorRadius();
-			vec3 rotatedRightCap = getRotation() * vec3(0, segment->getRightCap().y + yrh, segment->getRightCap().z + zrh);
-			vec3 rotatedLeftCap = getRotation() * vec3(0, segment->getLeftCap().y - yrh, segment->getLeftCap().z + zrh);
-			vs.emplace_back(rotatedRightCap + getPosition1(), vec2(), vec3());
-			vs.emplace_back(rotatedRightCap + getPosition2(), vec2(), vec3());
-			vs.emplace_back(rotatedLeftCap + getPosition1(), vec2(), vec3());
-			vs.emplace_back(rotatedLeftCap + getPosition2(), vec2(), vec3());
+			glm::vec3 rotatedRightCap = getRotation() * glm::vec3(0.f, segment->getRightCap().y + yrh, segment->getRightCap().z + zrh);
+			glm::vec3 rotatedLeftCap = getRotation() * glm::vec3(0.f, segment->getLeftCap().y - yrh, segment->getLeftCap().z + zrh);
+			vs.emplace_back(rotatedRightCap + getPosition1(), glm::vec2(), glm::vec3());
+			vs.emplace_back(rotatedRightCap + getPosition2(), glm::vec2(), glm::vec3());
+			vs.emplace_back(rotatedLeftCap + getPosition1(), glm::vec2(), glm::vec3());
+			vs.emplace_back(rotatedLeftCap + getPosition2(), glm::vec2(), glm::vec3());
 		}
-		vs.emplace_back(getRotation() * segment->getRightCap() + getPosition1(), vec2(), vec3());
-		vs.emplace_back(getRotation() * segment->getLeftCap() + getPosition1(), vec2(), vec3());
+		vs.emplace_back(getRotation() * segment->getRightCap() + getPosition1(), glm::vec2(), glm::vec3());
+		vs.emplace_back(getRotation() * segment->getLeftCap() + getPosition1(), glm::vec2(), glm::vec3());
 
 		for (int i = 0; i < SECTORS_PER_SEMICIRCLE * 4; i += 4) {
 			// Join caps
@@ -1125,15 +1134,15 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 			float z = std::cos(ang);
 			float yrh = y * arc->getMinorRadius();
 			float zrh = z * arc->getMinorRadius();
-			vec3 rotatedRightCap = getRotation() * vec3(0, arc->getRightCap().y + yrh, arc->getRightCap().z + zrh);
-			vec3 rotatedLeftCap = getRotation() * vec3(0, arc->getLeftCap().y - yrh, arc->getLeftCap().z + zrh);
-			vs.emplace_back(rotatedRightCap + getPosition1(), vec2(), vec3());
-			vs.emplace_back(rotatedRightCap + getPosition2(), vec2(), vec3());
-			vs.emplace_back(rotatedLeftCap + getPosition1(), vec2(), vec3());
-			vs.emplace_back(rotatedLeftCap + getPosition2(), vec2(), vec3());
+			glm::vec3 rotatedRightCap = getRotation() * glm::vec3(0.f, arc->getRightCap().y + yrh, arc->getRightCap().z + zrh);
+			glm::vec3 rotatedLeftCap = getRotation() * glm::vec3(0.f, arc->getLeftCap().y - yrh, arc->getLeftCap().z + zrh);
+			vs.emplace_back(rotatedRightCap + getPosition1(), glm::vec2(), glm::vec3());
+			vs.emplace_back(rotatedRightCap + getPosition2(), glm::vec2(), glm::vec3());
+			vs.emplace_back(rotatedLeftCap + getPosition1(), glm::vec2(), glm::vec3());
+			vs.emplace_back(rotatedLeftCap + getPosition2(), glm::vec2(), glm::vec3());
 		}
-		vs.emplace_back(getRotation() * arc->getRightCap() + getPosition1(), vec2(), vec3());
-		vs.emplace_back(getRotation() * arc->getLeftCap() + getPosition1(), vec2(), vec3());
+		vs.emplace_back(getRotation() * arc->getRightCap() + getPosition1(), glm::vec2(), glm::vec3());
+		vs.emplace_back(getRotation() * arc->getLeftCap() + getPosition1(), glm::vec2(), glm::vec3());
 
 		for (int i = 0; i < SECTORS_PER_SEMICIRCLE * 4; i += 4) {
 			// Join caps
@@ -1172,12 +1181,12 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 			float zroh = z * (arc->getArcRadius() + arc->getMinorRadius());
 			float yrih = y * (arc->getArcRadius() - arc->getMinorRadius());
 			float zrih = z * (arc->getArcRadius() - arc->getMinorRadius());
-			vec3 rotatedInner = getRotation() * vec3(0, yrih, zrih);
-			vec3 rotatedOuter = getRotation() * vec3(0, yroh, zroh);
-			vs.emplace_back(rotatedInner + getPosition1(), vec2(), vec3());
-			vs.emplace_back(rotatedInner + getPosition2(), vec2(), vec3());
-			vs.emplace_back(rotatedOuter + getPosition1(), vec2(), vec3());
-			vs.emplace_back(rotatedOuter + getPosition2(), vec2(), vec3());
+			glm::vec3 rotatedInner = getRotation() * glm::vec3(0.f, yrih, zrih);
+			glm::vec3 rotatedOuter = getRotation() * glm::vec3(0.f, yroh, zroh);
+			vs.emplace_back(rotatedInner + getPosition1(), glm::vec2(), glm::vec3());
+			vs.emplace_back(rotatedInner + getPosition2(), glm::vec2(), glm::vec3());
+			vs.emplace_back(rotatedOuter + getPosition1(), glm::vec2(), glm::vec3());
+			vs.emplace_back(rotatedOuter + getPosition2(), glm::vec2(), glm::vec3());
 		}
 		constexpr int START_INDEX = 4 * (SECTORS_PER_SEMICIRCLE + 1) + 2;
 		for (int i = START_INDEX; i < START_INDEX + NUM_SECTORS * 4; i += 4) {
@@ -1212,8 +1221,8 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		bool fullCircle = std::abs(getAngle2() - getAngle1()) >= 2 * PI;
 		float domainStartAngle, domainEndAngle;
 		if (fullCircle) {
-			domainStartAngle = 0;
-			domainEndAngle = 2 * PI;
+			domainStartAngle = 0.f;
+			domainEndAngle = 2.f * PI;
 		} else {
 			domainStartAngle = std::min(getAngle1(), getAngle2());
 			domainEndAngle = std::max(getAngle1(), getAngle2());
@@ -1233,18 +1242,17 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		int START_INDEX = 0;
 		if (!fullCircle) {
 			for (float currentAngle : {domainStartAngle, domainEndAngle}) {
-				mat3 currentRot;
-				angleToRotation(currentAngle, currentRot);
-				vec3 start = currentRot * segment->getRightCap();
-				vec3 end = currentRot * segment->getLeftCap();
+				glm::mat3 currentRot = angleToRotation(currentAngle);
+				glm::vec3 start = currentRot * segment->getRightCap();
+				glm::vec3 end = currentRot * segment->getLeftCap();
 
-				vs.emplace_back(start, vec2(), vec3());
-				vs.emplace_back(end, vec2(), vec3());
+				vs.emplace_back(start, glm::vec2(), glm::vec3());
+				vs.emplace_back(end, glm::vec2(), glm::vec3());
 				for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 					float angStartCap = currentAngle - (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
 					float angEndCap = currentAngle + (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
-					vs.emplace_back(vec3(0, start.y - std::sin(angStartCap) * segment->getMinorRadius(), start.z + std::cos(angStartCap) * segment->getMinorRadius()), vec2(), vec3());
-					vs.emplace_back(vec3(0, end.y - std::sin(angEndCap) * segment->getMinorRadius(), end.z + std::cos(angEndCap) * segment->getMinorRadius()), vec2(), vec3());
+					vs.emplace_back(glm::vec3(0.f, start.y - std::sin(angStartCap) * segment->getMinorRadius(), start.z + std::cos(angStartCap) * segment->getMinorRadius()), glm::vec2(), glm::vec3());
+					vs.emplace_back(glm::vec3(0.f, end.y - std::sin(angEndCap) * segment->getMinorRadius(), end.z + std::cos(angEndCap) * segment->getMinorRadius()), glm::vec2(), glm::vec3());
 				}
 				for (int i = START_INDEX + 2; i < START_INDEX + 2 + SECTORS_PER_SEMICIRCLE * 2; i += 2) {
 					// Caps
@@ -1271,15 +1279,15 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			}
 		}
 
-		vs.emplace_back(vec3(), vec2(), vec3());
+		vs.emplace_back(glm::vec3(), glm::vec2(), glm::vec3());
 
-		const float startRadius = segment->getRightCap().length() + segment->getMinorRadius();
-		const float endRadius = segment->getLeftCap().length() + segment->getMinorRadius();
+		const float startRadius = glm::length(segment->getRightCap()) + segment->getMinorRadius();
+		const float endRadius = glm::length(segment->getLeftCap()) + segment->getMinorRadius();
 		for (int i = 0; i <= NUM_SECTORS; i++) {
 			float ang = domainStartAngle + (float)i / (float)NUM_SECTORS * (domainEndAngle - domainStartAngle);
-			vec3 dir = vec3(0, std::cos(ang), std::sin(ang));
-			vs.emplace_back(dir * startRadius, vec2(), vec3());
-			vs.emplace_back(dir * -endRadius, vec2(), vec3());
+			glm::vec3 dir = glm::vec3(0.f, std::cos(ang), std::sin(ang));
+			vs.emplace_back(dir * startRadius, glm::vec2(), glm::vec3());
+			vs.emplace_back(dir * -endRadius, glm::vec2(), glm::vec3());
 		}
 
 		for (int i = START_INDEX + 1; i < START_INDEX + 1 + NUM_SECTORS * 2; i += 2) {
@@ -1293,16 +1301,16 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 	} else if (auto* arc = dynamic_cast<const ArcSpec*>(shapeSpec)) {
 		bool fullCircle = std::abs(getAngle2() - getAngle1()) + arc->getArcAngle() >= 2 * PI;
 		float startAngle, endAngle;
-		vec3 start, end;
+		glm::vec3 start, end;
 		if (fullCircle) {
-			startAngle = 0;
-			endAngle = 2 * PI;
-			start = end = {0, 0, arc->getArcRadius()};
+			startAngle = 0.f;
+			endAngle = 2.f * PI;
+			start = end = {0.f, 0.f, arc->getArcRadius()};
 		} else {
 			startAngle = std::min(getAngle1(), getAngle2()) - arc->getHalfArcAngle();
 			endAngle = std::max(getAngle1(), getAngle2()) + arc->getHalfArcAngle();
-			start = vec3(0, -std::sin(startAngle), std::cos(startAngle)) * arc->getArcRadius();
-			end = vec3(0, -std::sin(endAngle), std::cos(endAngle)) * arc->getArcRadius();
+			start = glm::vec3(0.f, -std::sin(startAngle), std::cos(startAngle)) * arc->getArcRadius();
+			end = glm::vec3(0.f, -std::sin(endAngle), std::cos(endAngle)) * arc->getArcRadius();
 		}
 
 		const int NUM_SECTORS = (int)std::ceil((float)SECTORS_PER_SEMICIRCLE * (endAngle - startAngle) / PI);
@@ -1318,13 +1326,13 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 
 		short START_INDEX = 0;
 		if (!fullCircle) {
-			vs.emplace_back(start, vec2(), vec3());
-			vs.emplace_back(end, vec2(), vec3());
+			vs.emplace_back(start, glm::vec2(), glm::vec3());
+			vs.emplace_back(end, glm::vec2(), glm::vec3());
 			for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 				float angStartCap = startAngle - (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
 				float angEndCap = endAngle + (float)i / (float)SECTORS_PER_SEMICIRCLE * PI;
-				vs.emplace_back(vec3(0, start.y - std::sin(angStartCap) * arc->getMinorRadius(), start.z + std::cos(angStartCap) * arc->getMinorRadius()), vec2(), vec3());
-				vs.emplace_back(vec3(0, end.y - std::sin(angEndCap) * arc->getMinorRadius(), end.z + std::cos(angEndCap) * arc->getMinorRadius()), vec2(), vec3());
+				vs.emplace_back(glm::vec3(0.f, start.y - std::sin(angStartCap) * arc->getMinorRadius(), start.z + std::cos(angStartCap) * arc->getMinorRadius()), glm::vec2(), glm::vec3());
+				vs.emplace_back(glm::vec3(0.f, end.y - std::sin(angEndCap) * arc->getMinorRadius(), end.z + std::cos(angEndCap) * arc->getMinorRadius()), glm::vec2(), glm::vec3());
 			}
 			for (int i = 2; i < 2 + SECTORS_PER_SEMICIRCLE * 2; i += 2) {
 				// Caps
@@ -1344,9 +1352,9 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		// Arc
 		for (int i = 0; i <= NUM_SECTORS; i++) {
 			float ang = startAngle + (float)i / (float)NUM_SECTORS * (endAngle - startAngle);
-			vec3 dir = vec3(0, -std::sin(ang), std::cos(ang));
-			vs.emplace_back(dir * (arc->getArcRadius() - arc->getMinorRadius()), vec2(), vec3());
-			vs.emplace_back(dir * (arc->getArcRadius() + arc->getMinorRadius()), vec2(), vec3());
+			glm::vec3 dir = glm::vec3(0.f, -std::sin(ang), std::cos(ang));
+			vs.emplace_back(dir * (arc->getArcRadius() - arc->getMinorRadius()), glm::vec2(), glm::vec3());
+			vs.emplace_back(dir * (arc->getArcRadius() + arc->getMinorRadius()), glm::vec2(), glm::vec3());
 		}
 		for (int i = START_INDEX; i < START_INDEX + NUM_SECTORS * 2; i += 2) {
 			is.push_back(i + 0);
@@ -1363,84 +1371,84 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 void StaticSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPosition());
 	kinematicState.setAngle(getAngle());
-	kinematicState.setVelocity(vec3(0));
-	kinematicState.setAngularVelocity(0);
+	kinematicState.setVelocity(glm::vec3(0.f));
+	kinematicState.setAngularVelocity(0.f);
 }
 
 void TogglingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPositionA());
 	kinematicState.setAngle(getAngle());
-	kinematicState.setVelocity(vec3(0));
-	kinematicState.setAngularVelocity(0);
+	kinematicState.setVelocity(glm::vec3(0.f));
+	kinematicState.setAngularVelocity(0.f);
 }
 
 void TogglingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPosition());
 	kinematicState.setAngle(getAngleA());
-	kinematicState.setVelocity(vec3(0));
-	kinematicState.setAngularVelocity(0);
+	kinematicState.setVelocity(glm::vec3(0.f));
+	kinematicState.setAngularVelocity(0.f);
 }
 
 void SpinningSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPosition());
 	kinematicState.setAngle(getInitialAngle());
-	kinematicState.setVelocity(vec3(0));
+	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularVelocity(getAngularVelocityA());
 }
 
 void OscillatingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPosition1());
 	kinematicState.setAngle(getAngle());
-	kinematicState.setVelocity(vec3(0));
-	kinematicState.setAngularVelocity(0);
-	kinematicState.setPhase(0);
+	kinematicState.setVelocity(glm::vec3(0.f));
+	kinematicState.setAngularVelocity(0.f);
+	kinematicState.setPhase(0.f);
 }
 
 void OscillatingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(getPosition());
 	kinematicState.setAngle(getAngle1());
-	kinematicState.setVelocity(vec3(0));
-	kinematicState.setAngularVelocity(0);
-	kinematicState.setPhase(0);
+	kinematicState.setVelocity(glm::vec3(0.f));
+	kinematicState.setAngularVelocity(0.f);
+	kinematicState.setPhase(0.f);
 }
 
 
 void TogglingPositionSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setPosition(lerp(getPositionA(), getPositionB(), smoother.getCurrentPosition()));
+	kinematicState.setPosition(glm::mix(getPositionA(), getPositionB(), smoother.getCurrentPosition()));
 	kinematicState.setVelocity((getPositionB() - getPositionA()) * smoother.getCurrentVelocity());
 }
 
 void TogglingAngleSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setAngle(std::lerp(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
+	kinematicState.setAngle(glm::mix(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
 	kinematicState.setAngularVelocity((getAngleB() - getAngleA()) * smoother.getCurrentVelocity());
 }
 
 void SpinningSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setAngularVelocity(std::lerp(getAngularVelocityA(), getAngularVelocityB(), smoother.getCurrentPosition()));
+	kinematicState.setAngularVelocity(glm::mix(getAngularVelocityA(), getAngularVelocityB(), smoother.getCurrentPosition()));
 	kinematicState.setAngle(kinematicState.getAngle() + kinematicState.getAngularVelocity() * PHYSICS_TIMESTEP);
 }
 
 void OscillatingPositionSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	float angularFrequency = std::lerp(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
+	float angularFrequency = glm::mix(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
 	kinematicState.setPhase(kinematicState.getPhase() + angularFrequency * PHYSICS_TIMESTEP);
-	kinematicState.setPosition(lerp(getPosition1(), getPosition2(), 0.5f - 0.5f * std::cos(kinematicState.getPhase())));
+	kinematicState.setPosition(glm::mix(getPosition1(), getPosition2(), 0.5f - 0.5f * std::cos(kinematicState.getPhase())));
 	kinematicState.setVelocity((getPosition2() - getPosition1()) * (0.5f * std::sin(kinematicState.getPhase()) * angularFrequency));
 }
 
 void OscillatingAngleSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	float angularFrequency = std::lerp(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
+	float angularFrequency = glm::mix(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
 	kinematicState.setPhase(kinematicState.getPhase() + angularFrequency * PHYSICS_TIMESTEP);
-	kinematicState.setAngle(std::lerp(getAngle1(), getAngle2(), 0.5f - 0.5f * std::cos(kinematicState.getPhase())));
+	kinematicState.setAngle(glm::mix(getAngle1(), getAngle2(), 0.5f - 0.5f * std::cos(kinematicState.getPhase())));
 	kinematicState.setAngularVelocity((getAngle2() - getAngle1()) * (0.5f * std::sin(kinematicState.getPhase()) * angularFrequency));
 }
 
 
 void TogglingPositionSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setPosition(lerp(getPositionA(), getPositionB(), smoother.getCurrentPosition()));
+	kinematicState.setPosition(glm::mix(getPositionA(), getPositionB(), smoother.getCurrentPosition()));
 }
 
 void TogglingAngleSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setAngle(std::lerp(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
+	kinematicState.setAngle(glm::mix(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
 }
 
 void SpinningSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother&) const {
@@ -1449,13 +1457,13 @@ void SpinningSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicS
 
 void OscillatingPositionSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	bool toggled = smoother.getCurrentPosition() > 0.5f;
-	kinematicState.setPhase(toggled ? PI : 0);
+	kinematicState.setPhase(toggled ? PI : 0.f);
 	kinematicState.setPosition(toggled ? getPosition2() : getPosition1());
 }
 
 void OscillatingAngleSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	bool toggled = smoother.getCurrentPosition() > 0.5f;
-	kinematicState.setPhase(toggled ? PI : 0);
+	kinematicState.setPhase(toggled ? PI : 0.f);
 	kinematicState.setAngle(toggled ? getAngle2() : getAngle1());
 }
 
@@ -1512,31 +1520,31 @@ void ObstacleDescriptor::scale(float factor) {
 
 
 PlaneDescriptor SegmentSpec::getTopPlane(const ObstacleKinematicState& kinematicState) const {
-	vec3 normal = { 0, -std::sin(kinematicState.getAngle()), std::cos(kinematicState.getAngle()) };
-	return { normal, kinematicState.getPosition() + kinematicState.getRotation() * vec3(0, 0, getMinorRadius()) };
+	glm::vec3 normal = { 0, -std::sin(kinematicState.getAngle()), std::cos(kinematicState.getAngle()) };
+	return { normal, kinematicState.getPosition() + kinematicState.getRotation() * glm::vec3(0.f, 0.f, getMinorRadius()) };
 }
 
 
 BallCollisionInfo SegmentSpec::getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) {
 	PlaneDescriptor plane = getTopPlane(kinematicState);
-	float separation = dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
+	float separation = glm::dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
 	if (separation < -getMinorRadius()) {
 		plane.normal.y = -plane.normal.y;
 		plane.normal.z = -plane.normal.z;
 		plane.dotProduct = getMinorRadius() * 2.f - plane.dotProduct;
-		separation = dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
+		separation = glm::dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
 	}
 
-	if (separation > 0 && separation < ball.getProperties()->radius)
+	if (separation > 0.f && separation < ball.getProperties()->radius)
 		return { true, plane.normal, separation };
 	
 	return {.colliding = false};
 }
 
 BallCollisionInfo ArcSpec::getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) {
-	vec3 centreToBall = ball.getKinematicState()->position - kinematicState.getPosition();
+	glm::vec3 centreToBall = ball.getKinematicState()->position - kinematicState.getPosition();
 	float
-	distanceToBallSq = centreToBall.lengthSq(),
+	distanceToBallSq = glm::length2(centreToBall),
 	innerRadius = getMajorRadius() - getMinorRadius(),
 	outerRadius = getMajorRadius() + getMinorRadius(),
 	innerRadii = innerRadius - ball.getProperties()->radius,
@@ -1562,10 +1570,10 @@ void GameObstacle::stepKinematicState(const Smoother& smoother) {
 }
 
 
-bool GameObstacle::collideWithCap(GameBall& ball, vec3 cap) const {
-	vec3 capPosition = kinematicState.getPosition() + kinematicState.getRotation() * cap;
-	vec3 capToBall = ball.getKinematicState()->position - capPosition;
-	float distanceToBallSq = capToBall.lengthSq();
+bool GameObstacle::collideWithCap(GameBall& ball, glm::vec3 cap) const {
+	glm::vec3 capPosition = kinematicState.getPosition() + kinematicState.getRotation() * cap;
+	glm::vec3 capToBall = ball.getKinematicState()->position - capPosition;
+	float distanceToBallSq = glm::length2(capToBall);
 
 	float radii = ball.getProperties()->radius + descriptor->getShape()->getMinorRadius();
 	if (distanceToBallSq < radii * radii && distanceToBallSq > 0.000001f) {
@@ -1586,13 +1594,13 @@ bool GameObstacle::collideWithMidsection(GameBall& ball) const {
 constexpr float SUCCEED_TIME = 0.5f;
 bool GameObstacle::notifyOfContactWithBall(const GameBall& ball) {
 	goalContactTimer += PHYSICS_TIMESTEP;
-	return goalContactTimer >= SUCCEED_TIME && ball.getKinematicState()->velocity.lengthSq() < 0.000001f;
+	return goalContactTimer >= SUCCEED_TIME && glm::length2(ball.getKinematicState()->velocity) < 0.000001f;
 }
 
 
-PlaneDescriptor GameObstacle::getCapDividingPlane(vec3 cap, float capAngle) const {
+PlaneDescriptor GameObstacle::getCapDividingPlane(glm::vec3 cap, float capAngle) const {
 	float angle = kinematicState.getAngle() + capAngle;
-	vec3 normal = { 0, std::cos(angle), std::sin(angle) };
+	glm::vec3 normal = { 0.f, std::cos(angle), std::sin(angle) };
 	return { normal, kinematicState.getPosition() + kinematicState.getRotation() * cap };
 }
 

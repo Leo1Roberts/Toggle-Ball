@@ -5,11 +5,12 @@
 #include <cmath>
 #include <algorithm>
 
-vec3 colorToLinear(vec3 srgb) {
+glm::vec3 colorToLinear(col srgb) {
+	glm::vec3 colorVec = srgb;
 	return {
-		std::pow(srgb.x, 2.2f),
-		std::pow(srgb.y, 2.2f),
-		std::pow(srgb.z, 2.2f)
+		std::pow(colorVec.r, 2.2f),
+		std::pow(colorVec.g, 2.2f),
+		std::pow(colorVec.b, 2.2f)
 	};
 }
 
@@ -36,29 +37,29 @@ microseconds now() {
 }
 
 float wrapAngle(float radians) {
-	radians = fmodf(radians, PI * 2);
+	radians = fmodf(radians, PI * 2.f);
 	if (radians <= -PI)
-		radians += PI * 2;
+		radians += PI * 2.f;
 	else if (radians > PI)
-		radians -= PI * 2;
+		radians -= PI * 2.f;
 	return radians;
 }
 
 float angleToDisplay(float angle) {
-	angle *= -180 / PI;
-	if (angle == 0) angle = 0; // Remove -0
-	return std::round(angle * 100) * 0.01f;
+	angle *= -180.f / PI;
+	if (angle == 0.f) angle = 0.f; // Remove -0
+	return std::round(angle * 100.f) * 0.01f;
 }
 
 float wrapDisplayAngle(float displayAngle) {
-	displayAngle = fmodf(displayAngle, 360.0f);
-	if (displayAngle <= -180) displayAngle += 360;
-	else if (displayAngle > 180) displayAngle -= 360;
+	displayAngle = fmodf(displayAngle, 360.f);
+	if (displayAngle <= -180.f) displayAngle += 360.f;
+	else if (displayAngle > 180.f) displayAngle -= 360.f;
 	return displayAngle;
 }
 
 float displayToAngle(float displayAngle) {
-	return displayAngle * PI / -180;
+	return displayAngle * PI / -180.f;
 }
 
 float clamp(float val, float min, float max, byte* valPos) {
@@ -80,23 +81,23 @@ float clamp(float val, float min, float max, byte* valPos) {
 }
 
 
-vec2 pixelsToXNorm(float x, float y, float width, float height) {
-	float widthInv = 1.0f / width;
+glm::vec2 pixelsToXNorm(float x, float y, float width, float height) {
+	float widthInv = 1.f / width;
 	return {
-			x * 2.0f * widthInv - 1.0f,
-			(-y * 2.0f + height) * widthInv
+			x * 2.f * widthInv - 1.f,
+			(-y * 2.f + height) * widthInv
 	};
 }
 
-vec2 pixelsToYNorm(float x, float y, float width, float height) {
-	float heightInv = 1.0f / height;
+glm::vec2 pixelsToYNorm(float x, float y, float width, float height) {
+	float heightInv = 1.f / height;
 	return {
-			(x * 2.0f - width) * heightInv,
-			-y * 2.0f * heightInv + 1.0f
+			(x * 2.f - width) * heightInv,
+			-y * 2.f * heightInv + 1.f
 	};
 }
 
-vec2 pixelsToYNorm(vec2 pixels, float width, float height) {
+glm::vec2 pixelsToYNorm(glm::vec2 pixels, float width, float height) {
 	return pixelsToYNorm(pixels.x,
 	                     pixels.y,
 	                     width, height);

@@ -1,29 +1,24 @@
 #ifndef COLORS_H
 #define COLORS_H
 
-#include "VectorMatrix.h"
-#include "main.h"
+#include <glm/glm.hpp>
 
 struct col {
-	byte r, g, b, a;
+	glm::uint8 r = 0, g = 0, b = 0, a = 0;
 
-	constexpr col() : r(0), g(0), b(0), a(0) {}
+	constexpr col() = default;
+	constexpr col(glm::uint8 r, glm::uint8 g, glm::uint8 b, glm::uint8 a = 255)
+		: r(r), g(g), b(b), a(a) {}
+	constexpr col(const glm::vec3& v)
+		: r((glm::uint8)(v.r * 255.f)), g((glm::uint8)(v.g * 255.f)), b((glm::uint8)(v.b * 255.f)), a(255) {}
+	constexpr col(const glm::vec4& v)
+		: r((glm::uint8)(v.r * 255.f)), g((glm::uint8)(v.g * 255.f)), b((glm::uint8)(v.b * 255.f)), a((glm::uint8)(v.a * 255.f)) {}
 
-	constexpr col(byte r, byte g, byte b) : r(r), g(g), b(b), a(255) {}
+	operator glm::vec3() const { return glm::vec3(r, g, b) / 255.f; }
+	operator glm::vec4() const { return glm::vec4(r, g, b, a) / 255.f; }
 
-	constexpr col(byte r, byte g, byte b, byte a) : r(r), g(g), b(b), a(a) {}
-
-	bool operator==(const col& c) const { return r == c.r && g == c.g && b == c.b && a == c.a; };
-
-	col operator*(float f) const { return {(byte)((float)r * f), (byte)((float)g * f), (byte)((float)b * f), a}; }
-
-	[[nodiscard]] constexpr vec3 toVec3() const { return {(float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f}; }
-	[[nodiscard]] constexpr vec4 toVec4() const { return {(float)r / 255.0f, (float)g / 255.0f, (float)b / 255.0f, (float)a / 255.0f}; }
-
-	static col fromVec(vec4 v) { return {(byte)(v.r * 255.0f), (byte)(v.g * 255.0f), (byte)(v.b * 255.0f), (byte)(v.a * 255.0f)}; }
+	bool operator==(const col& c) const { return r == c.r && g == c.g && b == c.b && a == c.a; }
 };
-
-inline col lerp(const col& a, const col& b, float t) { return col::fromVec(lerp(a.toVec4(), b.toVec4(), t)); }
 
 constexpr col INVISIBLE = col(0, 0, 0, 120);
 
@@ -48,12 +43,12 @@ constexpr col SOFT_YELLOW = col(240, 240, 10);
 constexpr col BOUNDARY = col(177, 220, 237);
 
 constexpr col SELECTED = col(255, 127, 0);
-constexpr vec4 SELECTED_VEC4 = SELECTED.toVec4();
+const glm::vec4 SELECTED_VEC4 = SELECTED;
 constexpr col SELECT_BOX = col(255, 127, 0, 63);
 constexpr col FOCUSED = col(255, 191, 0);
-constexpr vec4 FOCUSED_VEC4 = FOCUSED.toVec4();
+const glm::vec4 FOCUSED_VEC4 = FOCUSED;
 constexpr col WARNING = col(224, 0, 44);
-constexpr vec4 WARNING_VEC4 = WARNING.toVec4();
+const glm::vec4 WARNING_VEC4 = WARNING;
 
 constexpr col OB_BLOB_TERMINAL = col(0, 100, 255);
 constexpr col OB_BLOB_TERMINAL_HOVER = col(0, 90, 230);

@@ -1,20 +1,12 @@
 #ifndef MATRIX_UTILITIES_H
 #define MATRIX_UTILITIES_H
 
-#include "VectorMatrix.h"
+#include <glm/glm.hpp>
 
-void buildOrthographicMatrix(mat4* res, float halfHeight, float aspect, float zNear, float zFar);
+glm::mat3 buildViewRotationMatrix(glm::vec3 viewDirection);
 
-void buildPerspectiveMatrix(mat4* res, float width, float height, float zNear, float zFar);
+glm::mat4 buildViewMatrix(const glm::mat3& viewRotationMatrix, glm::vec3 viewPosition);
 
-void
-buildProjectionMatrix(mat4* projMat, float o_fov, float zNear, float zFar, vec2 offset, int width,
-                      int height);
-
-void buildViewRotationMatrix(mat3* viewRotMat, vec3 viewDir);
-
-void buildViewMatrix(mat4* viewMat, const mat3& viewRotMat, vec3 viewPos);
-
-void buildScaledWorldMatrix(mat4* worldMat, const mat3& rot, vec3 pos, vec3 scale);
+glm::mat4 buildScaledWorldMatrix(const glm::mat3& rotation, glm::vec3 position, glm::vec3 scale);
 
 #endif // MATRIX_UTILITIES_H

@@ -3,6 +3,7 @@
 
 #include "Input.h"
 #include "KeyBindings.h"
+#include <glm/glm.hpp>
 
 #include <variant>
 
@@ -14,10 +15,10 @@ struct KeyEvent { KeyChord chord; KeyAction action; };
 struct CharEvent { unsigned int character; };
 struct PointerEvent {
 	int id{};
-	vec2 position;
+	glm::vec2 position;
 	PointerAction action{};
 	PointerButton button{};
-	vec2 scroll;
+	glm::vec2 scroll;
 };
 
 using Event = std::variant<

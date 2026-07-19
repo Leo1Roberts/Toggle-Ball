@@ -3,8 +3,9 @@
 
 #include "main.h"
 #include "GLUtilities.h"
-#include "VectorMatrix.h"
+#include "glm/gtc/type_ptr.hpp"
 
+#include <glm/glm.hpp>
 #include <memory>
 
 class Shader {
@@ -19,20 +20,20 @@ public:
 	void setFloat(const std::string& name, float value) const {
 		glUniform1f(glGetUniformLocation(program, name.c_str()), value);
 	}
-	void setVec2(const std::string& name, vec2 value) const {
-		glUniform2fv(glGetUniformLocation(program, name.c_str()), 1, &value.x);
+	void setVec2(const std::string& name, glm::vec2 vec) const {
+		glUniform2fv(glGetUniformLocation(program, name.c_str()), 1, glm::value_ptr(vec));
 	}
-	void setVec3(const std::string& name, vec3 value) const {
-		glUniform3fv(glGetUniformLocation(program, name.c_str()), 1, &value.x);
+	void setVec3(const std::string& name, glm::vec3 vec) const {
+		glUniform3fv(glGetUniformLocation(program, name.c_str()), 1, glm::value_ptr(vec));
 	}
-	void setVec4(const std::string& name, vec4 value) const {
-		glUniform4fv(glGetUniformLocation(program, name.c_str()), 1, &value.r);
+	void setVec4(const std::string& name, glm::vec4 vec) const {
+		glUniform4fv(glGetUniformLocation(program, name.c_str()), 1, glm::value_ptr(vec));
 	}
-	void setMat3(const std::string& name, const mat3& mat, bool transpose = false) const {
-		glUniformMatrix3fv(glGetUniformLocation(program, name.c_str()), 1, transpose, &mat.a);
+	void setMat3(const std::string& name, const glm::mat3& mat, bool transpose = false) const {
+		glUniformMatrix3fv(glGetUniformLocation(program, name.c_str()), 1, transpose, glm::value_ptr(mat));
 	}
-	void setMat4(const std::string& name, const mat4& mat, bool transpose = false) const {
-		glUniformMatrix4fv(glGetUniformLocation(program, name.c_str()), 1, transpose, mat.m16);
+	void setMat4(const std::string& name, const glm::mat4& mat, bool transpose = false) const {
+		glUniformMatrix4fv(glGetUniformLocation(program, name.c_str()), 1, transpose, glm::value_ptr(mat));
 	}
 
 private:
@@ -42,10 +43,10 @@ private:
 };
 
 namespace Shaders {
-	extern std::unique_ptr<Shader> button;
 	extern std::unique_ptr<Shader> cursor;
 	extern std::unique_ptr<Shader> object;
 	extern std::unique_ptr<Shader> outline;
+	extern std::unique_ptr<Shader> panel;
 	extern std::unique_ptr<Shader> quad;
 	extern std::unique_ptr<Shader> text;
 

@@ -19,6 +19,16 @@ else()
     add_library(core STATIC ${CORE_SOURCES} ${GLAD_SOURCE})
 endif()
 
+include(FetchContent)
+FetchContent_Declare(
+        glm
+        GIT_REPOSITORY https://github.com/g-truc/glm.git
+        GIT_TAG        1.0.3
+)
+FetchContent_MakeAvailable(glm)
+
+target_link_libraries(core PUBLIC glm::glm)
+
 # --- INCLUDES & LINKING ---
 target_include_directories(core SYSTEM PUBLIC
     "${THIRD_PARTY_ROOT}/glad/include"

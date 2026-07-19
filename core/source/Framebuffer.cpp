@@ -3,7 +3,6 @@
 #include <utility>
 
 void Framebuffer::invalidate() {
-	// 1. Setup Resolved Single-Sample Target (Standard 2D Texture)
 	GLFramebuffer newResolveFBO;
 	glGenFramebuffers(1, newResolveFBO.ptr());
 	glBindFramebuffer(GL_FRAMEBUFFER, newResolveFBO);

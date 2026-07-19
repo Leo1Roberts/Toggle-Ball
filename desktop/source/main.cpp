@@ -2,7 +2,6 @@
 
 #include "App.h"
 #include "Game.h"
-#include "Game_OLD.h"
 #include "GlfwWindow.h"
 
 #include <iostream>
@@ -125,7 +124,6 @@ int main() {
 	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	// glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 	//
-	// Game::createGame(window);
 	// glfwSetKeyCallback(window, &Game::handleKeyInput);
 	// glfwSetCharCallback(window, &Game::handleCharInput);
 	// glfwSetCursorPosCallback(window, &Game::handleCursorPosInput);
@@ -143,7 +141,7 @@ int main() {
 	GlfwWindow window(rawWindow);
 
 	App app(&window);
-	std::unique_ptr<Game> game = std::make_unique<Game>(width, height);
+	auto game = std::make_unique<Game>(width, height);
 	game->play(LevelDescriptor::load("Level 1").get());
 	app.addScreen(std::move(game));
 

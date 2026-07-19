@@ -16,6 +16,8 @@ enum class UIResponse {
 };
 
 
+class UIManager;
+
 class UINode {
 public:
 	virtual ~UINode() = default;
@@ -27,27 +29,46 @@ public:
 
 	virtual void updateLayout(Rectangle parentBounds);
 
-	[[nodiscard]] bool contains(vec2 point) const;
+	[[nodiscard]] bool contains(glm::vec2 point) const;
 
 	virtual void onFocusGained() {}
 	virtual void onFocusLost(bool cancel) {}
 	virtual void onPointerEntered() {}
 	virtual void onPointerExited() {}
 
-	virtual UIResponse processEvent(const Event& event) = 0;
+	virtual UIResponse processEvent(const Event& event) { return UIResponse::Ignored; }
 
-	UINode* parent{nullptr};
-	std::vector<std::unique_ptr<UINode>> children;
+	[[nodiscard]] Rectangle getAbsoluteBounds() const { return absoluteBounds; }
 
-	bool isFocusable{false};
+	virtual void submitRender(UIManager& manager) {}
+
+	[[nodiscard]] const UINode* getParent() const { return parent; }
+	[[nodiscard]] const std::vector<std::unique_ptr<UINode>>& getChildren() const { return children; }
+	[[nodiscard]] bool isVisible() const { return visible; }
+	[[nodiscard]] bool isActive() const { return active; }
+	[[nodiscard]] bool isFocusable() const { return focusable; }
+
+	Layout layout;
 
 protected:
-	[[nodiscard]] virtual bool containsPrecise(vec2 point) const { return true; }
+	[[nodiscard]] virtual bool containsPrecise(glm::vec2 point) const { return true; }
 
 private:
-	Layout layout;
 	Rectangle absoluteBounds;
-	bool isVisible{true};
+
+	UINode* parent = nullptr;
+	std::vector<std::unique_ptr<UINode>> children;
+
+	bool visible = true;
+	bool active = true;
+	bool focusable = false;
+};
+
+
+class IUIRenderer {
+public:
+	virtual ~IUIRenderer() = default;
+	virtual void flush(const glm::mat4& projectionMatrix) = 0;
 };
 
 

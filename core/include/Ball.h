@@ -51,22 +51,22 @@ struct BallProperties {
 };
 
 struct BallKinematicState {
-	vec3 position;
-	mat3 rotation = mat3::I;
-	vec3 velocity;
-	vec3 angularVelocity;
+	glm::vec3 position{0.f};
+	glm::mat3 rotation{1.f};
+	glm::vec3 velocity{0.f};
+	glm::vec3 angularVelocity{0.f};
 };
 
 struct BallForces {
-	vec3 force;
-	vec3 torque;
+	glm::vec3 force{0.f};
+	glm::vec3 torque{0.f};
 
-	void reset() { force = torque = vec3(0); }
+	void reset() { force = torque = glm::vec3(0.f); }
 };
 
 struct BallCollisionInfo {
 	bool colliding{};
-	vec3 normal{};
+	glm::vec3 normal{};
 	float separation{};
 };
 
@@ -103,7 +103,7 @@ static Texture* getBallTexture(byte ballType) {
 
 class BallDescriptor {
 public:
-	constexpr BallDescriptor(byte type, vec2 initialPosition) :
+	constexpr BallDescriptor(byte type, glm::vec2 initialPosition) :
 		type(type),
 		initialPosition(planarToWorld(initialPosition)) {}
 
@@ -117,12 +117,12 @@ public:
 	void initKinematicState(BallKinematicState& kinematicState) const;
 
 	[[nodiscard]] byte getType() const { return type; }
-	[[nodiscard]] vec3 getInitialPosition() const { return initialPosition; }
+	[[nodiscard]] glm::vec3 getInitialPosition() const { return initialPosition; }
 	[[nodiscard]] float getRadius() const { return ballProperties[type].radius; }
 
 private:
-	byte type;
-	vec3 initialPosition;
+	byte type{};
+	glm::vec3 initialPosition{0.f};
 };
 
 class GameBall {
@@ -139,15 +139,15 @@ public:
 	void applyForces();
 
 	[[nodiscard]] float springForce(float compression) const {
-		constexpr float power = 4;            // Quartic curve...
-		constexpr float forceMultiplier = 10; // ...which ends up with a 10x higher force at c = r
-		return compression * properties->springConstant + powf(compression, power) * (forceMultiplier - 1) * properties->springConstant * powf(properties->radius, 1 - power);
+		constexpr float power = 4.f;            // Quartic curve...
+		constexpr float forceMultiplier = 10.f; // ...which ends up with a 10x higher force at c = r
+		return compression * properties->springConstant + powf(compression, power) * (forceMultiplier - 1.f) * properties->springConstant * powf(properties->radius, 1.f - power);
 	}
 
 	void collideWithPlane(const PlaneDescriptor& plane);
 	bool collideWithObstacle(GameObstacle& obstacle);
 	// normal & separation are polar coordinates for the point on the obstacle (centred on the obstacle, in world space)
-	void collideWithPointOnObstacle(const GameObstacle& obstacle, vec3 normal, float separation);
+	void collideWithPointOnObstacle(const GameObstacle& obstacle, glm::vec3 normal, float separation);
 
 	[[nodiscard]] const Texture* getTexture() const { return texture; }
 	[[nodiscard]] const BallKinematicState* getKinematicState() const { return &kinematicState; }

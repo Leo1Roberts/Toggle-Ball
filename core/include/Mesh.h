@@ -5,19 +5,20 @@
 #include "Colors.h"
 #include "GLUtilities.h"
 
+#include <glm/glm.hpp>
 #include <memory>
 #include <vector>
 
 using Index = unsigned short; // Needs to match glDrawElements 'type' argument
 
 struct ObjectVertex {
-	vec3 position;
-	vec2 uv;
-	vec3 normal;
+	glm::vec3 position;
+	glm::vec2 uv;
+	glm::vec3 normal;
 	col color;
 
 	ObjectVertex() = default;
-	ObjectVertex(vec3 position, vec2 uv, vec3 normal, col color = WHITE) : position(position), uv(uv), normal(normal), color(color) {}
+	ObjectVertex(glm::vec3 position, glm::vec2 uv, glm::vec3 normal, col color = WHITE) : position(position), uv(uv), normal(normal), color(color) {}
 
 	static void setupLayout();
 };

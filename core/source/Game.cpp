@@ -5,18 +5,60 @@
 #include "Settings.h"
 #include "Shader.h"
 
+#include <glm/glm.hpp>
 #include <ranges>
 
-const vec3 groundColor = colorToLinear({0.3f, 0.3f, 0.3f});
-const vec3 skyColor = colorToLinear({85.0f / 255.0f, 110.0f / 255.0f, 128.0f / 255.0f});
-const vec3 sunColor = colorToLinear({1.0f, 1.0f, 0.9f});
+const glm::vec3 groundColor = colorToLinear({76, 76, 76});
+const glm::vec3 skyColor = colorToLinear({85, 110, 128});
+const glm::vec3 sunColor = colorToLinear({255, 255, 230});
 
-constexpr vec3 upDirection{0, 0, 1};
-constexpr vec3 sunDirection{0.4850712500726659, 0.4850712500726659, 0.7276068751089989};
+constexpr glm::vec3 upDirection{0, 0, 1};
+constexpr glm::vec3 sunDirection{0.4850712500726659, 0.4850712500726659, 0.7276068751089989};
 
 
 Game::Game(int width, int height) : Screen(width, height) {
-	// Create UI here
+	auto rootNode = std::make_unique<UINode>();
+
+	auto panel1 = std::make_unique<UIPanel>();
+	panel1->layout = {
+		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Relative,
+		.width = 400.f, .height = 1.f,
+		.offset = { 20.f, 20.f }
+	};
+	panel1->fillColor = GREY_T;
+	panel1->strokeColor = WHITE;
+	panel1->cornerRadius = 16.f;
+	panel1->strokeWidth = 3.f;
+
+	auto panel2 = std::make_unique<UIPanel>();
+	panel2->layout = {
+		.anchor = Anchor::TopCentre,
+		.widthMode = SizingMode::Relative, .heightMode = SizingMode::Relative,
+		.width = 1.f, .height = 0.5f,
+		.offset = { 10.f, 10.f }
+	};
+	panel2->fillColor = GREEN_T;
+	panel2->strokeColor = BLACK;
+	panel2->cornerRadius = 10.f;
+	panel2->strokeWidth = 3.f;
+
+	auto panel3 = std::make_unique<UIPanel>();
+	panel3->layout = {
+		.anchor = Anchor::BottomCentre,
+		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
+		.width = 100.f, .height = 100.f,
+		.offset = { 0.f, -10.f }
+	};
+	panel3->fillColor = RED_T;
+	panel3->strokeColor = BLACK;
+	panel3->cornerRadius = 0.f;
+	panel3->strokeWidth = 10.f;
+
+	panel1->addChild(std::move(panel2));
+	panel1->addChild(std::move(panel3));
+	rootNode->addChild(std::move(panel1));
+	uiManager.setRootNode(std::move(rootNode));
+
 	uiManager.resize(width, height);
 }
 
@@ -104,10 +146,10 @@ void Game::updatePhysics(microseconds dt) {
 }
 
 
-constexpr mat3 backgroundRotation = {
-0, 0, 1,
+constexpr glm::mat3 backgroundRotation = {
+0, 0, -1,
 0, 1, 0,
--1, 0, 0};
+1, 0, 0};
 
 void Game::doDraw() {
 	glClearColor(0, 0, 0, 1);
@@ -123,14 +165,14 @@ void Game::doDraw() {
 	Shaders::object->setVec3("uSunDirection", viewSunDirection);
 
 	drawObject(Meshes::plane.get(), Textures::white.get(),
-	           {-level.getArenaWidth() / 2.f, 0, level.getArenaHeight() / 2.f},
+	           {-1.f, 0, level.getArenaHeight() / 2.f},
 	           backgroundRotation,
-	           {1, level.getArenaWidth(), level.getArenaHeight()});
+	           {level.getArenaHeight(), level.getArenaWidth(), 1});
 
 	drawObject(Meshes::ball.get(), ball.getTexture(),
 	           ball.getKinematicState()->position,
 	           ball.getKinematicState()->rotation,
-	           vec3(ball.getProperties()->radius));
+	           glm::vec3(ball.getProperties()->radius));
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -139,15 +181,17 @@ void Game::doDraw() {
 		           o.getKinematicState()->getPosition(),
 		           o.getKinematicState()->getRotation());
 	glDisable(GL_DEPTH_TEST);
+
+	uiManager.render();
 }
 
-void Game::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, vec3 pos, const mat3& rot, vec3 scale) {
-	buildScaledWorldMatrix(&worldMatrix, rot, pos, scale);
+void Game::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 pos, const glm::mat3& rot, glm::vec3 scale) {
+	worldMatrix = buildScaledWorldMatrix(rot, pos, scale);
 
-	mat4 bodyToView = worldMatrix * viewMatrix;
-	mat3 bodyToViewRot = viewRotationMatrix * rot;
+	glm::mat4 bodyToView = viewMatrix * worldMatrix;
+	glm::mat3 bodyToViewRot = glm::transpose(viewRotationMatrix) * rot;
 
-	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRot, true);
+	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRot, false);
 	Shaders::object->setMat4("uBodyToView", bodyToView);
 
 	texture->bind(0);
@@ -173,7 +217,7 @@ void Game::resizeLevel() {
 
 
 void Game::updateView() {
-	viewOrigin.set(0, 0, level.getArenaHeight() * 0.5f);
+	viewOrigin = {0, 0, level.getArenaHeight() * 0.5f};
 
 	float
 	ch = std::cos(heading),
@@ -188,11 +232,10 @@ void Game::updateView() {
 
 	viewPosition = viewOrigin + viewDirection * viewDistance;
 
-	// For perspective use: buildProjectionMatrix(&projMat, 2.f * std::tan(FOV * 0.5f), 0.2f, 1000.f, { 0, 0 }, getScreenWidth(), getScreenHeight());
-	buildOrthographicMatrix(&projectionMatrix, halfHeight, aspectRatio, level.getArenaWidth() + viewDistance * 2.f, -level.getArenaWidth() - viewDistance * 2.f);
-	buildViewRotationMatrix(&viewRotationMatrix, viewDirection);
-	buildViewMatrix(&viewMatrix, viewRotationMatrix, viewPosition);
+	projectionMatrix = glm::ortho(halfHeight * aspectRatio, -halfHeight * aspectRatio, -halfHeight, halfHeight, viewDistance - level.getArenaWidth(), viewDistance + level.getArenaWidth());
+	viewRotationMatrix = buildViewRotationMatrix(-viewDirection);
+	viewMatrix = buildViewMatrix(viewRotationMatrix, viewPosition);
 
-	viewUpDirection = viewRotationMatrix * upDirection;
-	viewSunDirection = viewRotationMatrix * sunDirection;
+	viewUpDirection = glm::transpose(viewRotationMatrix) * upDirection;
+	viewSunDirection = glm::transpose(viewRotationMatrix) * sunDirection;
 }

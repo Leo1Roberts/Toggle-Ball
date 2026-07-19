@@ -2,7 +2,6 @@
 #define OBSTACLE_H
 
 #include "Ball.h"
-#include "ButtonManager.h"
 #include "Mesh.h"
 #include "Obstacle.h"
 #include "PhysicsConstants.h"
@@ -61,31 +60,31 @@ constexpr float BEVEL_AMOUNT = 0.1f;
 class ObstacleKinematicState {
 public:
 	ObstacleKinematicState() = default;
-	ObstacleKinematicState(vec3 position, float angle, vec3 velocity, float angularVelocity) :
+	ObstacleKinematicState(glm::vec3 position, float angle, glm::vec3 velocity, float angularVelocity) :
 	    position(position),
 	    velocity(velocity),
 	    angularVelocity(angularVelocity) {
 		setAngle(angle);
 	}
 
-	void setPosition(vec3 pos) { position = pos; }
+	void setPosition(glm::vec3 pos) { position = pos; }
 	void setAngle(float radians);
-	void setVelocity(vec3 vel) { velocity = vel; }
+	void setVelocity(glm::vec3 vel) { velocity = vel; }
 	void setAngularVelocity(float angVel) { angularVelocity = angVel; }
 	void setPhase(float radians) { phase = wrapAngle(radians); }
 
-	[[nodiscard]] vec3 getPosition() const { return position; }
+	[[nodiscard]] glm::vec3 getPosition() const { return position; }
 	[[nodiscard]] float getAngle() const { return angle; }
-	[[nodiscard]] mat3 getRotation() const { return rotation; }
-	[[nodiscard]] vec3 getVelocity() const { return velocity; }
+	[[nodiscard]] glm::mat3 getRotation() const { return rotation; }
+	[[nodiscard]] glm::vec3 getVelocity() const { return velocity; }
 	[[nodiscard]] float getAngularVelocity() const { return angularVelocity; }
 	[[nodiscard]] float getPhase() const { return phase; }
 
 private:
-	vec3 position;
+	glm::vec3 position{0.f};
 	float angle{};
-	mat3 rotation = mat3::I;
-	vec3 velocity;
+	glm::mat3 rotation = glm::mat3(1.f);
+	glm::vec3 velocity{0.f};
 	float angularVelocity{};
 	float phase{};
 };
@@ -113,13 +112,13 @@ public:
 
 	[[nodiscard]] float getMinorRadius() const { return minorRadius; }
 	[[nodiscard]] float getBoundingRadius() const { return getMajorRadius() + getMinorRadius(); }
-	[[nodiscard]] vec3 getLeftCap() const { return leftCap; }
-	[[nodiscard]] vec3 getRightCap() const { return rightCap; }
+	[[nodiscard]] glm::vec3 getLeftCap() const { return leftCap; }
+	[[nodiscard]] glm::vec3 getRightCap() const { return rightCap; }
 	[[nodiscard]] virtual float getLeftCapAngle() const = 0;
 	[[nodiscard]] virtual float getRightCapAngle() const = 0;
 
 protected:
-	vec3 leftCap, rightCap;
+	glm::vec3 leftCap{}, rightCap{};
 
 	explicit AbstractShapeSpec(float minorRadius) :
 	    minorRadius(minorRadius) {}
@@ -294,7 +293,7 @@ private:
 
 class StaticSpec : public IMotionSpec {
 public:
-	StaticSpec(vec2 position, float angle) :
+	StaticSpec(glm::vec2 position, float angle) :
 	    position(planarToWorld(position)),
 	    angle(angle) {}
 
@@ -319,9 +318,9 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState&, const Smoother&) const override {}
 
 private:
-	vec3 position; // SSOT
+	glm::vec3 position{0.f}; // SSOT
 	float angle{}; // SSOT
-	mat3 rotation;
+	glm::mat3 rotation{1.f};
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class IMotionSpec;
@@ -330,14 +329,14 @@ private:
 
 	void buildDomainMesh(std::vector<ObjectVertex>&, std::vector<Index>&, const AbstractShapeSpec*) const override {}
 
-	[[nodiscard]] vec3 getPosition() const { return position; }
+	[[nodiscard]] glm::vec3 getPosition() const { return position; }
 	[[nodiscard]] float getAngle() const { return angle; }
-	[[nodiscard]] mat3 getRotation() const { return rotation; }
+	[[nodiscard]] glm::mat3 getRotation() const { return rotation; }
 };
 
 class TogglingPositionSpec : public IMotionSpec {
 public:
-	TogglingPositionSpec(float angle, vec2 positionA, vec2 positionB) :
+	TogglingPositionSpec(float angle, glm::vec2 positionA, glm::vec2 positionB) :
 	    angle(angle),
 	    positionA(planarToWorld(positionA)),
 	    positionB(planarToWorld(positionB)) {
@@ -366,9 +365,9 @@ public:
 
 private:
 	float angle{}; // SSOT
-	mat3 rotation;
-	vec3 positionA; // SSOT
-	vec3 positionB; // SSOT
+	glm::mat3 rotation{1.f};
+	glm::vec3 positionA{0.f}; // SSOT
+	glm::vec3 positionB{0.f}; // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class IMotionSpec;
@@ -378,14 +377,14 @@ private:
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
 
 	[[nodiscard]] float getAngle() const { return angle; }
-	[[nodiscard]] mat3 getRotation() const { return rotation; }
-	[[nodiscard]] vec3 getPositionA() const { return positionA; }
-	[[nodiscard]] vec3 getPositionB() const { return positionB; }
+	[[nodiscard]] glm::mat3 getRotation() const { return rotation; }
+	[[nodiscard]] glm::vec3 getPositionA() const { return positionA; }
+	[[nodiscard]] glm::vec3 getPositionB() const { return positionB; }
 };
 
 class TogglingAngleSpec : public IMotionSpec {
 public:
-	TogglingAngleSpec(vec2 position, float angleA, float angleB) :
+	TogglingAngleSpec(glm::vec2 position, float angleA, float angleB) :
 	    position(planarToWorld(position)),
 	    angleA(angleA),
 	    angleB(angleB) {}
@@ -409,7 +408,7 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	vec3 position;  // SSOT
+	glm::vec3 position{0.f};  // SSOT
 	float angleA{}; // SSOT
 	float angleB{}; // SSOT
 
@@ -420,14 +419,14 @@ private:
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
 
-	[[nodiscard]] vec3 getPosition() const { return position; }
+	[[nodiscard]] glm::vec3 getPosition() const { return position; }
 	[[nodiscard]] float getAngleA() const { return angleA; }
 	[[nodiscard]] float getAngleB() const { return angleB; }
 };
 
 class SpinningSpec : public IMotionSpec {
 public:
-	SpinningSpec(vec2 position, float initialAngle, float angularVelocityA, float angularVelocityB) :
+	SpinningSpec(glm::vec2 position, float initialAngle, float angularVelocityA, float angularVelocityB) :
 	    position(planarToWorld(position)),
 	    initialAngle(initialAngle),
 	    angularVelocityA(angularVelocityA),
@@ -452,7 +451,7 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother&) const override;
 
 private:
-	vec3 position;            // SSOT
+	glm::vec3 position{0.f};            // SSOT
 	float initialAngle{};     // SSOT
 	float angularVelocityA{}; // SSOT
 	float angularVelocityB{}; // SSOT
@@ -464,7 +463,7 @@ private:
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
 
-	[[nodiscard]] vec3 getPosition() const { return position; }
+	[[nodiscard]] glm::vec3 getPosition() const { return position; }
 	[[nodiscard]] float getInitialAngle() const { return initialAngle; }
 	[[nodiscard]] float getAngularVelocityA() const { return angularVelocityA; }
 	[[nodiscard]] float getAngularVelocityB() const { return angularVelocityB; }
@@ -472,7 +471,7 @@ private:
 
 class OscillatingPositionSpec : public IMotionSpec {
 public:
-	OscillatingPositionSpec(float angle, vec2 position1, vec2 position2, float angularFrequencyA, float angularFrequencyB) :
+	OscillatingPositionSpec(float angle, glm::vec2 position1, glm::vec2 position2, float angularFrequencyA, float angularFrequencyB) :
 	    position1(planarToWorld(position1)),
 	    position2(planarToWorld(position2)),
 	    angle(angle),
@@ -500,10 +499,10 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	vec3 position1; // SSOT
-	vec3 position2; // SSOT
+	glm::vec3 position1{0.f}; // SSOT
+	glm::vec3 position2{0.f}; // SSOT
 	float angle{};  // SSOT
-	mat3 rotation;
+	glm::mat3 rotation{1.f};
 	float angularFrequencyA{}; // SSOT
 	float angularFrequencyB{}; // SSOT
 
@@ -514,17 +513,17 @@ private:
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
 
-	[[nodiscard]] vec3 getPosition1() const { return position1; }
-	[[nodiscard]] vec3 getPosition2() const { return position2; }
+	[[nodiscard]] glm::vec3 getPosition1() const { return position1; }
+	[[nodiscard]] glm::vec3 getPosition2() const { return position2; }
 	[[nodiscard]] float getAngle() const { return angle; }
-	[[nodiscard]] mat3 getRotation() const { return rotation; }
+	[[nodiscard]] glm::mat3 getRotation() const { return rotation; }
 	[[nodiscard]] float getAngularFrequencyA() const { return angularFrequencyA; }
 	[[nodiscard]] float getAngularFrequencyB() const { return angularFrequencyB; }
 };
 
 class OscillatingAngleSpec : public IMotionSpec {
 public:
-	OscillatingAngleSpec(vec2 position, float angle1, float angle2, float angularFrequencyA, float angularFrequencyB) :
+	OscillatingAngleSpec(glm::vec2 position, float angle1, float angle2, float angularFrequencyA, float angularFrequencyB) :
 	    position(planarToWorld(position)),
 	    angle1(angle1),
 	    angle2(angle2),
@@ -550,7 +549,7 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	vec3 position;             // SSOT
+	glm::vec3 position{0.f};             // SSOT
 	float angle1{};            // SSOT
 	float angle2{};            // SSOT
 	float angularFrequencyA{}; // SSOT
@@ -563,7 +562,7 @@ private:
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
 
-	[[nodiscard]] vec3 getPosition() const { return position; }
+	[[nodiscard]] glm::vec3 getPosition() const { return position; }
 	[[nodiscard]] float getAngle1() const { return angle1; }
 	[[nodiscard]] float getAngle2() const { return angle2; }
 	[[nodiscard]] float getAngularFrequencyA() const { return angularFrequencyA; }
@@ -644,9 +643,9 @@ private:
 
 	Mesh<ObjectVertex> mesh = Mesh<ObjectVertex>(GL_STATIC_DRAW);
 
-	bool collideWithCap(GameBall& ball, vec3 cap) const;
+	bool collideWithCap(GameBall& ball, glm::vec3 cap) const;
 
-	[[nodiscard]] PlaneDescriptor getCapDividingPlane(vec3 cap, float capAngle) const;
+	[[nodiscard]] PlaneDescriptor getCapDividingPlane(glm::vec3 cap, float capAngle) const;
 };
 
 

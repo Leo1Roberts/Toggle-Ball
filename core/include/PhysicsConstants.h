@@ -1,7 +1,7 @@
 #ifndef PHYSICS_CONSTANTS_H
 #define PHYSICS_CONSTANTS_H
 
-#include "VectorMatrix.h"
+#include <glm/glm.hpp>
 
 enum {
 	MAT_BASKETBALL,
@@ -23,6 +23,6 @@ constexpr float GRAVITY = -9.81f;
 constexpr float AIR_DENSITY = 1.225f;
 //const float DYNAMIC_VISCOSITY = 0.000018f;
 
-constexpr vec3 OBSTACLE_ROTATION_AXIS = {1, 0, 0};
+constexpr glm::vec3 OBSTACLE_ROTATION_AXIS = {1, 0, 0};
 
 #endif // PHYSICS_CONSTANTS_H

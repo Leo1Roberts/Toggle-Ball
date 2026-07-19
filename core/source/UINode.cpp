@@ -1,5 +1,6 @@
 #include "UINode.h"
 
+
 void UINode::updateLayout(Rectangle parentBounds) {
 	float ax = 0.0f;
 	float ay = 0.0f;
@@ -36,7 +37,7 @@ void UINode::updateLayout(Rectangle parentBounds) {
 		child->updateLayout(absoluteBounds);
 }
 
-bool UINode::contains(vec2 point) const {
+bool UINode::contains(glm::vec2 point) const {
 	if (point.x < absoluteBounds.x || point.x > absoluteBounds.x + absoluteBounds.width ||
 		point.y < absoluteBounds.y || point.y > absoluteBounds.y + absoluteBounds.height)
 		return false;

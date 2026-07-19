@@ -71,15 +71,15 @@ LevelDescriptor::LevelDescriptor(const std::string& data) {
 				throw std::invalid_argument("Invalid transition time data format");
 		} else if (header == 'o') {
 			if (version == 0.1f) {
-				vec2 pos;
+				glm::vec2 pos;
 				float angle;
 				std::string isStraightString;
 				float minorRadius;
-				vec2 start;
-				vec2 end;
+				glm::vec2 start;
+				glm::vec2 end;
 				std::string stateTypeString;
-				vec3 stateA;
-				vec3 stateB;
+				glm::vec3 stateA;
+				glm::vec3 stateB;
 				std::string isGoalString;
 
 				if (!(ss >> c >> pos.x >> c >> pos.y >> c >> angle >> isStraightString >> minorRadius >> c >> start.x >> c >> start.y >> c >> c >> end.x >> c >> end.y >> c >> stateTypeString >> c >> stateA.x >> c >> stateA.y >> c >> stateA.z >> c >> c >> stateB.x >> c >> stateB.y >> c >> stateB.z >> c >> isGoalString))
@@ -89,7 +89,7 @@ LevelDescriptor::LevelDescriptor(const std::string& data) {
 				if (isStraightString == "true")
 					shapeSpec = std::make_unique<SegmentSpec>(minorRadius, -end.x, start.x);
 				else if (isStraightString == "false") {
-					float arcRadius = start.length();
+					float arcRadius = glm::length(start);
 					shapeSpec = std::make_unique<ArcSpec>(minorRadius, 2 * std::acos(start.y / arcRadius), arcRadius);
 				} else
 					throw std::invalid_argument("Invalid obstacle data format");
@@ -108,9 +108,9 @@ LevelDescriptor::LevelDescriptor(const std::string& data) {
 				if (stateTypeString == "static")
 					motionSpec = std::make_unique<StaticSpec>(pos, angle);
 				else if (stateTypeString == "pos")
-					motionSpec = std::make_unique<TogglingPositionSpec>(angle, vec2(stateA.y, stateA.z), vec2(stateB.y, stateB.z));
+					motionSpec = std::make_unique<TogglingPositionSpec>(angle, glm::vec2(stateA.y, stateA.z), glm::vec2(stateB.y, stateB.z));
 				else if (stateTypeString == "pos_osc")
-					motionSpec = std::make_unique<OscillatingPositionSpec>(angle, vec2(stateA.y, stateA.z), vec2(stateB.y, stateB.z), stateA.x, stateB.x);
+					motionSpec = std::make_unique<OscillatingPositionSpec>(angle, glm::vec2(stateA.y, stateA.z), glm::vec2(stateB.y, stateB.z), stateA.x, stateB.x);
 				else if (stateTypeString == "ang")
 					motionSpec = std::make_unique<TogglingAngleSpec>(pos, stateA.x, stateB.x);
 				else if (stateTypeString == "ang_vel")

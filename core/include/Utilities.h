@@ -1,12 +1,13 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
+#include "Colors.h"
 #include "main.h"
-#include "VectorMatrix.h"
 
+#include <glm/glm.hpp>
 #include <string_view>
 
-[[nodiscard]] vec3 colorToLinear(vec3 srgb);
+[[nodiscard]] glm::vec3 colorToLinear(col srgb);
 
 [[nodiscard]] bool iequals(std::string_view a, std::string_view b);
 
@@ -26,18 +27,18 @@ enum { // Order of these is important
 };
 float clamp(float val, float min, float max, byte* valPos);
 
-[[nodiscard]] constexpr vec3 planarToWorld(vec2 planarVec) {
+[[nodiscard]] constexpr glm::vec3 planarToWorld(glm::vec2 planarVec) {
 	return {0, planarVec.x, planarVec.y};
 }
-[[nodiscard]] constexpr vec2 worldToPlanar(vec3 worldVec) {
+[[nodiscard]] constexpr glm::vec2 worldToPlanar(glm::vec3 worldVec) {
 	return {worldVec.y, worldVec.z};
 }
 
-[[nodiscard]] vec2 pixelsToXNorm(float x, float y, float width, float height);
+[[nodiscard]] glm::vec2 pixelsToXNorm(float x, float y, float width, float height);
 
-[[nodiscard]] vec2 pixelsToYNorm(float x, float y, float width, float height);
+[[nodiscard]] glm::vec2 pixelsToYNorm(float x, float y, float width, float height);
 
-[[nodiscard]] vec2 pixelsToYNorm(vec2 pixels, float width, float height);
+[[nodiscard]] glm::vec2 pixelsToYNorm(glm::vec2 pixels, float width, float height);
 
 [[nodiscard]] GLuint loadShader(GLenum shaderType, const std::string& shaderSource);
 

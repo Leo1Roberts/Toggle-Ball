@@ -1,5 +1,4 @@
 #include "main.h"
-#include "Game_OLD.h"
 #include "AndroidWindow.h"
 
 #include <game-activity/GameActivity.cpp>

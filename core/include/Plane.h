@@ -1,14 +1,15 @@
 #ifndef PLANE_H
 #define PLANE_H
-#include "VectorMatrix.h"
+
+#include <glm/glm.hpp>
 
 
 struct PlaneDescriptor {
-	vec3 normal;
+	glm::vec3 normal{0.f};
 	float dotProduct{};
 
 	PlaneDescriptor() = default;
-	PlaneDescriptor(vec3 normal, vec3 point) : normal(normal), dotProduct(dot(point, normal)) {}
+	PlaneDescriptor(glm::vec3 normal, glm::vec3 point) : normal(normal), dotProduct(dot(point, normal)) {}
 };
 
 

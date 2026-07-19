@@ -7,6 +7,8 @@
 #include "Screen.h"
 #include "UIManager.h"
 
+#include <glm/glm.hpp>
+
 
 class Game : public Screen {
 public:
@@ -26,7 +28,7 @@ private:
 	void updatePhysics(microseconds dt);
 
 	void doDraw() override;
-	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, vec3 pos, const mat3& rot, vec3 scale = vec3(1));
+	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 pos, const glm::mat3& rot, glm::vec3 scale = glm::vec3(1));
 
 	void doResize(int width, int height) override;
 	void resizeLevel();
@@ -46,20 +48,20 @@ private:
 	float accumulator{};
 
 
-	vec3 viewOrigin;
+	glm::vec3 viewOrigin{0.f};
 	float heading = 0, pitch = 0;
-	vec3 viewDirection;
+	glm::vec3 viewDirection{};
 	float viewDistance{};
-	vec3 viewPosition;
+	glm::vec3 viewPosition{};
 	void updateView();
 
-	vec3 viewUpDirection;
-	vec3 viewSunDirection;
+	glm::vec3 viewUpDirection{0.f};
+	glm::vec3 viewSunDirection{0.f};
 
 	float halfHeight{};
 
-	mat4 worldMatrix{}, viewMatrix{}, projectionMatrix{};
-	mat3 viewRotationMatrix;
+	glm::mat4 worldMatrix{}, viewMatrix{}, projectionMatrix{};
+	glm::mat3 viewRotationMatrix{};
 };
 
 

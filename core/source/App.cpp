@@ -21,10 +21,10 @@ App::App(IWindow* window) : window(window) {
 	Shaders::load();
 	Textures::load();
 
-	quadVertices.emplace_back(vec2(-1, 1), vec2(0, 1));
-	quadVertices.emplace_back(vec2(-1, -1), vec2(0, 0));
-	quadVertices.emplace_back(vec2(1, -1), vec2(1, 0));
-	quadVertices.emplace_back(vec2(1, 1), vec2(1, 1));
+	quadVertices.emplace_back(glm::vec2(-1, 1), glm::vec2(0, 1));
+	quadVertices.emplace_back(glm::vec2(-1, -1), glm::vec2(0, 0));
+	quadVertices.emplace_back(glm::vec2(1, -1), glm::vec2(1, 0));
+	quadVertices.emplace_back(glm::vec2(1, 1), glm::vec2(1, 1));
 
 	quadIndices.push_back(0);
 	quadIndices.push_back(1);

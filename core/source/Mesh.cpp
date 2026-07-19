@@ -3,6 +3,7 @@
 
 #include "AssetManager.h"
 
+#include <glm/glm.hpp>
 #include <sstream>
 
 void ObjectVertex::setupLayout() {
@@ -37,9 +38,9 @@ int addFileIndices(std::vector<FileIndices>* fileIndices, const FileIndices* new
 
 template<>
 Mesh<ObjectVertex>::Mesh(const std::string& path, col color) : Mesh(GL_STATIC_DRAW) {
-	std::vector<vec3> tempVertices;
-	std::vector<vec2> tempUVs;
-	std::vector<vec3> tempNormals;
+	std::vector<glm::vec3> tempVertices;
+	std::vector<glm::vec2> tempUVs;
+	std::vector<glm::vec3> tempNormals;
 	std::vector<FileIndices> fileIndices;
 
 	std::vector<ObjectVertex> vertices;
@@ -62,15 +63,15 @@ Mesh<ObjectVertex>::Mesh(const std::string& path, col color) : Mesh(GL_STATIC_DR
 		if (!(lineStream >> prefix)) continue;
 
 		if (prefix == "v") {
-			vec3 vertex;
+			glm::vec3 vertex;
 			lineStream >> vertex.x >> vertex.y >> vertex.z;
 			tempVertices.push_back(vertex);
 		} else if (prefix == "vt") {
-			vec2 uv;
+			glm::vec2 uv;
 			lineStream >> uv.x >> uv.y;
 			tempUVs.push_back(uv);
 		} else if (prefix == "vn") {
-			vec3 normal;
+			glm::vec3 normal;
 			lineStream >> normal.x >> normal.y >> normal.z;
 			tempNormals.push_back(normal);
 		} else if (prefix == "f") {

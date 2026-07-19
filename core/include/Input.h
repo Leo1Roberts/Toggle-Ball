@@ -1,8 +1,7 @@
 #ifndef INPUT_STATE_H
 #define INPUT_STATE_H
 
-#include "VectorMatrix.h"
-
+#include <glm/glm.hpp>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -32,7 +31,7 @@ enum class PointerButton {
 
 
 struct PointerState {
-	vec2 position;
+	glm::vec2 position;
 	std::unordered_set<PointerButton> activeButtons;
 
 	[[nodiscard]] bool isDown(PointerButton button) const {

@@ -1,8 +1,9 @@
 #ifndef UI_MANAGER_H
 #define UI_MANAGER_H
 
-#include "UINode.h"
+#include "UIPanel.h"
 
+#include <glm/glm.hpp>
 #include <unordered_map>
 
 
@@ -16,12 +17,24 @@ public:
 
 	void setRootNode(std::unique_ptr<UINode> node) { rootNode = std::move(node); }
 
+	void submitPanel(const UIPanel* panel);
+	void render();
+
 private:
-	[[nodiscard]] static UINode* findNodePointedTo(UINode* currentNode, vec2 pointerPosition);
+	[[nodiscard]] static UINode* findNodePointedTo(UINode* currentNode, glm::vec2 pointerPosition);
+
+	void drawNodeRecursive(UINode* node);
+
+	void setRenderer(IUIRenderer* newRenderer);
 
 	std::unique_ptr<UINode> rootNode;
-	UINode* focusedNode{nullptr};
+	UINode* focusedNode = nullptr;
 	std::unordered_map<int, UINode*> hoveredNodes;
+
+	glm::mat4 projectionMatrix = {};
+
+	IUIRenderer* activeRenderer = nullptr;
+	UIPanelRenderer panelRenderer;
 };
 
 

@@ -1,8 +1,8 @@
 #include "main.h"
 #include "Smoother.h"
 
-#include "VectorMatrix.h"
 
+#include <glm/glm.hpp>
 #include <algorithm>
 
 void Smoother::reset() {
@@ -22,36 +22,29 @@ void Smoother::setDestination(float destPos, float destVel, float time) {
 	d = destPos;
 	destV = destVel;
 	arrive = time;
-	elapsed = 0.0f;
-
-	mat3 M, inverse;
+	elapsed = 0.f;
 
 	float
-		t_squared_over_2 = arrive * arrive / 2.0f,
-		t_cubed_over_6 = (arrive * t_squared_over_2) / 3.0f,
-		t_to_4_over_24 = t_squared_over_2 * t_squared_over_2 / 6.0f;
+		t_squared_over_2 = arrive * arrive / 2.f,
+		t_cubed_over_6 = (arrive * t_squared_over_2) / 3.f,
+		t_to_4_over_24 = t_squared_over_2 * t_squared_over_2 / 6.f;
 
 	// use matrix to solve simultaneous equations with 3 unknowns
+	auto M = glm::mat3(
+		t_to_4_over_24,   t_cubed_over_6,   t_squared_over_2,
+		t_cubed_over_6,   t_squared_over_2, arrive,
+		t_squared_over_2, arrive,           1.f
+	);
 
-	M.a = t_to_4_over_24;
-	M.b = t_cubed_over_6;
-	M.c = t_squared_over_2;
-	M.d = t_cubed_over_6;
-	M.e = t_squared_over_2;
-	M.f = arrive;
-	M.g = t_squared_over_2;
-	M.h = arrive;
-	M.i = 1.0f;
+	glm::mat3 inverse = glm::inverse(M);
 
-	inverse.SetInverseOf(&M);
+	glm::vec3 vector(
+		d - s - u * arrive,
+		destVel - u,
+		vector.z = 0.f
+	);
 
-	vec3 vector;
-
-	vector.x = d - s - u * arrive;
-	vector.y = destVel - u;
-	vector.z = 0.0f;
-
-	vec3 res = inverse * vector;
+	glm::vec3 res = inverse * vector;
 
 	k = res.x;
 	r = res.y;
@@ -71,10 +64,10 @@ void Smoother::update(float dt) {
 	}
 
 	float
-			t_squared_over_2 = elapsed * elapsed / 2.0f,
-			t_cubed_over_6 = (elapsed * t_squared_over_2) / 3.0f,
-			t_to_4_over_24 = t_squared_over_2 * t_squared_over_2 / 6.0f;
+		t_squared_over_2 = elapsed * elapsed / 2.f,
+		t_cubed_over_6 = (elapsed * t_squared_over_2) / 3.f,
+		t_to_4_over_24 = t_squared_over_2 * t_squared_over_2 / 6.f;
 
 	v = k * t_cubed_over_6 + r * t_squared_over_2 + i * elapsed + u;
-	x = std::clamp(k * t_to_4_over_24 + r * t_cubed_over_6 + i * t_squared_over_2 + u * elapsed + s, 0.0f, 1.0f);
+	x = std::clamp(k * t_to_4_over_24 + r * t_cubed_over_6 + i * t_squared_over_2 + u * elapsed + s, 0.f, 1.f);
 }

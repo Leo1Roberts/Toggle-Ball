@@ -7,11 +7,11 @@
 #include "Mesh.h"
 
 struct ScreenVertex {
-	vec2 pos;
-	vec2 uv;
+	glm::vec2 pos;
+	glm::vec2 uv;
 
 	ScreenVertex() = default;
-	ScreenVertex(vec2 pos, vec2 uv) : pos(pos), uv(uv) {}
+	ScreenVertex(glm::vec2 pos, glm::vec2 uv) : pos(pos), uv(uv) {}
 
 	static void setupLayout();
 };

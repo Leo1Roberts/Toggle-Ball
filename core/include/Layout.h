@@ -1,18 +1,19 @@
 #ifndef LAYOUT_H
 #define LAYOUT_H
-#include "VectorMatrix.h"
+
+#include <glm/glm.hpp>
 
 
 struct Rectangle {
 	union {
-		vec2 position{};
+		glm::vec2 position{};
 		struct {
 			float x;
 			float y;
 		};
 	};
 	union {
-		vec2 size{};
+		glm::vec2 size{};
 		struct {
 			float width;
 			float height;
@@ -41,7 +42,7 @@ struct Layout {
 	float width  = 1.f;
 	float height = 1.f;
 
-	vec2 offset{0.f};
+	glm::vec2 offset{0.f};
 };
 
 

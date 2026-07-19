@@ -11,7 +11,7 @@ public:
 	    arenaWidth(20),
 	    arenaHeight(20),
 	    transitionTime(1.0f),
-		ballDescriptor(std::make_unique<BallDescriptor>(BASKETBALL, vec2(arenaWidth / 2.f, arenaHeight / 2.f))) {}
+		ballDescriptor(std::make_unique<BallDescriptor>(BASKETBALL, glm::vec2(arenaWidth / 2.f, arenaHeight / 2.f))) {}
 
 	LevelDescriptor(const LevelDescriptor& other);
 	LevelDescriptor& operator=(const LevelDescriptor& other);
