@@ -1,12 +1,12 @@
 #include "main.h"
 #include "Editor.h"
 
+#include "Settings.h"
+
 #include <ranges>
 
 
 Editor::Editor(int width, int height) : Screen(width, height) {
-	keyBindings = KeyBindings::editor.get();
-
 	// Create UI here
 	uiManager.resize(width, height);
 }
@@ -42,9 +42,13 @@ void Editor::doProcessEvent(const Event& event) {
 		return;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
-		if (auto actionCode = keyBindings->translate(key->code)) {
+		if (auto actionCode = Settings::bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
+				case ActionCode::Undo:
+					undo();
+				case ActionCode::Redo:
+					redo();
 				default:;
 				}
 			}

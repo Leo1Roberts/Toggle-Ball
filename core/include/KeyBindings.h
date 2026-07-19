@@ -10,14 +10,46 @@
 #include <algorithm>
 
 
+enum ModifierFlags : byte {
+	MOD_NONE	= 0,
+	MOD_CTRL	= 1 << 0,
+	MOD_SHIFT	= 1 << 1,
+	MOD_ALT		= 1 << 2
+};
+
 enum class KeyCode {
+	Escape,
 	Space,
+	Z,
 	F11,
 	Unknown
 };
+
+struct KeyChord {
+	KeyCode code;
+	byte modifiers;
+
+	bool operator==(const KeyChord& other) const {
+		return code == other.code && modifiers == other.modifiers;
+	}
+};
+
+template<>
+struct std::hash<KeyChord> {
+	size_t operator()(const KeyChord& chord) const noexcept {
+		return (static_cast<size_t>(chord.code) << 8) | chord.modifiers;
+	}
+};
+
+
 enum class ActionCode {
+	Quit,
+	Fullscreen,
+
 	Toggle,
-	Fullscreen
+
+	Undo,
+	Redo,
 };
 
 
@@ -41,8 +73,11 @@ private:
 	struct Entry { ActionCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
+		{ ActionCode::Quit,			"Quit" },
+		{ ActionCode::Fullscreen,	"Fullscreen" },
 		{ ActionCode::Toggle,		"Toggle" },
-		{ ActionCode::Fullscreen,	"Fullscreen" }
+		{ ActionCode::Undo,			"Undo" },
+		{ ActionCode::Redo,			"Redo" },
 	};
 };
 
@@ -66,30 +101,31 @@ private:
 	struct Entry { KeyCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
+		{ KeyCode::Escape,	"ESC" },
 		{ KeyCode::Space,	"SPACE" },
-		{ KeyCode::F11,		"F11" }
+		{ KeyCode::Z,		"Z" },
+		{ KeyCode::F11,		"F11" },
 	};
 };
 
 
-class KeyBindingsContext {
+class KeyBindings {
 public:
-	KeyBindingsContext(const std::string& data);
+	KeyBindings(const std::string& data);
 	[[nodiscard]] std::string serialize() const;
 
-	[[nodiscard]] std::optional<ActionCode> translate(KeyCode key) const;
+	void bind(KeyChord chord, ActionCode action) {
+		bindings[chord] = action;
+	}
+
+	[[nodiscard]] std::optional<ActionCode> translate(KeyChord chord) const;
 
 private:
-	std::unordered_map<KeyCode, ActionCode> bindings;
+	[[nodiscard]] static std::optional<KeyChord> parseChord(std::string_view string);
+	[[nodiscard]] static std::string formatChord(const KeyChord& chord);
+
+	std::unordered_map<KeyChord, ActionCode> bindings;
 };
-
-namespace KeyBindings {
-	extern std::unique_ptr<KeyBindingsContext> app;
-	extern std::unique_ptr<KeyBindingsContext> game;
-	extern std::unique_ptr<KeyBindingsContext> editor;
-
-	void load();
-}
 
 
 #endif // KEY_BINDINGS_H
