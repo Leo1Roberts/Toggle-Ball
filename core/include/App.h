@@ -32,7 +32,6 @@ public:
 private:
 	IWindow* window;
 
-	KeyBindingsContext* keyBindings{};
 	std::vector<std::unique_ptr<Screen>> screens;
 
 	std::unique_ptr<Mesh<ScreenVertex>> quadMesh;

@@ -57,9 +57,21 @@ void APIENTRY glDebugOutput(GLenum source,
 }
 
 
+[[nodiscard]] static byte translateMods(int glfwMods) {
+	byte mods = MOD_NONE;
+
+	if (glfwMods & GLFW_MOD_CONTROL) mods |= MOD_CTRL;
+	if (glfwMods & GLFW_MOD_SHIFT)   mods |= MOD_SHIFT;
+	if (glfwMods & GLFW_MOD_ALT)     mods |= MOD_ALT;
+
+	return mods;
+}
+
 [[nodiscard]] static KeyCode translateKey(int glfwKey) {
 	switch (glfwKey) {
+	case GLFW_KEY_ESCAPE:	return KeyCode::Escape;
 	case GLFW_KEY_SPACE:	return KeyCode::Space;
+	case GLFW_KEY_Z:		return KeyCode::Z;
 	case GLFW_KEY_F11:		return KeyCode::F11;
 	default:				return KeyCode::Unknown;
 	}
@@ -77,7 +89,7 @@ void APIENTRY glDebugOutput(GLenum source,
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
-	app->processEvent(KeyEvent(translateKey(key), translateKeyAction(action)));
+	app->processEvent(KeyEvent({translateKey(key), translateMods(mods)}, translateKeyAction(action)));
 }
 
 int main() {

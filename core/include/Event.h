@@ -10,7 +10,7 @@
 template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
 
 
-struct KeyEvent { KeyCode code; KeyAction action; };
+struct KeyEvent { KeyChord chord; KeyAction action; };
 struct CharEvent { unsigned int character; };
 struct PointerEvent {
 	int id{};

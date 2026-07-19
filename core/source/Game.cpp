@@ -2,6 +2,7 @@
 
 #include "KeyBindings.h"
 #include "MatrixUtilities.h"
+#include "Settings.h"
 #include "Shader.h"
 
 #include <ranges>
@@ -15,8 +16,6 @@ constexpr vec3 sunDirection{0.4850712500726659, 0.4850712500726659, 0.7276068751
 
 
 Game::Game(int width, int height) : Screen(width, height) {
-	keyBindings = KeyBindings::game.get();
-
 	// Create UI here
 	uiManager.resize(width, height);
 }
@@ -62,7 +61,7 @@ void Game::doProcessEvent(const Event& event) {
 		return;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
-		if (auto actionCode = keyBindings->translate(key->code)) {
+		if (auto actionCode = Settings::bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
 				case ActionCode::Toggle:

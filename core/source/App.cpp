@@ -1,6 +1,7 @@
 #include "App.h"
 
 #include "AssetManager.h"
+#include "Settings.h"
 #include "Shader.h"
 #include "Texture.h"
 
@@ -15,9 +16,7 @@ void ScreenVertex::setupLayout() {
 }
 
 App::App(IWindow* window) : window(window) {
-	KeyBindings::load();
-	keyBindings = KeyBindings::app.get();
-
+	Settings::load();
 	Meshes::load();
 	Shaders::load();
 	Textures::load();
@@ -44,9 +43,11 @@ App::App(IWindow* window) : window(window) {
 
 void App::processEvent(const Event& event) {
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
-		if (auto actionCode = keyBindings->translate(key->code)) {
+		if (auto actionCode = Settings::bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
+				case ActionCode::Quit:
+					window->close();
 				case ActionCode::Fullscreen:
 					window->toggleFullscreen();
 				default:;
