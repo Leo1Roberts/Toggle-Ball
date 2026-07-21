@@ -3,7 +3,6 @@
 
 #include "Ball.h"
 #include "Mesh.h"
-#include "Obstacle.h"
 #include "PhysicsConstants.h"
 #include "Plane.h"
 #include "Sizes.h"

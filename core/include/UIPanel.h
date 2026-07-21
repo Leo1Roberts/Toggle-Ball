@@ -2,7 +2,6 @@
 #define UI_PANEL_H
 
 #include "UINode.h"
-#include "Colors.h"
 #include "Mesh.h"
 
 
@@ -19,8 +18,6 @@ struct UIPanelVertex {
 	static void setupLayout();
 };
 
-
-class UIManager;
 
 class UIPanel : public UINode {
 public:

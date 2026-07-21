@@ -1,6 +1,9 @@
 #include "Texture.h"
 #include "AssetManager.h"
 #define STB_IMAGE_IMPLEMENTATION
+#include "Font.h"
+
+
 #include <stb_image.h>
 
 Texture::Texture(const std::string& path, bool monochrome) {
@@ -36,19 +39,19 @@ namespace Textures {
 	std::unique_ptr<Texture> white;
 	std::unique_ptr<Texture> basketball;
 
-	namespace Cursors {
-		std::unique_ptr<Texture> arrow;
-		std::unique_ptr<Texture> hand;
-		std::unique_ptr<Texture> resize;
-	} // namespace Cursors
+	// namespace Cursors {
+	// 	std::unique_ptr<Texture> arrow;
+	// 	std::unique_ptr<Texture> hand;
+	// 	std::unique_ptr<Texture> resize;
+	// }
 
 	void load() {
 		white = std::make_unique<Texture>("textures/white.png");
 		basketball = std::make_unique<Texture>("textures/basketball.png");
-#if defined(PLATFORM_DESKTOP)
-		Cursors::arrow = std::make_unique<Texture>("cursors/arrow.png");
-		Cursors::hand = std::make_unique<Texture>("cursors/hand.png");
-		Cursors::resize = std::make_unique<Texture>("cursors/resize.png");
-#endif
+// #if defined(PLATFORM_DESKTOP)
+// 		Cursors::arrow = std::make_unique<Texture>("cursors/arrow.png");
+// 		Cursors::hand = std::make_unique<Texture>("cursors/hand.png");
+// 		Cursors::resize = std::make_unique<Texture>("cursors/resize.png");
+// #endif
 	}
-} // namespace Textures
+}

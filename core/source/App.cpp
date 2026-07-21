@@ -1,6 +1,7 @@
 #include "App.h"
 
 #include "AssetManager.h"
+#include "Font.h"
 #include "Settings.h"
 #include "Shader.h"
 #include "Texture.h"
@@ -20,6 +21,7 @@ App::App(IWindow* window) : window(window) {
 	Meshes::load();
 	Shaders::load();
 	Textures::load();
+	Fonts::load();
 
 	quadVertices.emplace_back(glm::vec2(-1, 1), glm::vec2(0, 1));
 	quadVertices.emplace_back(glm::vec2(-1, -1), glm::vec2(0, 0));

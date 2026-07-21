@@ -1,5 +1,6 @@
 #include "Game.h"
 
+#include "Font.h"
 #include "KeyBindings.h"
 #include "MatrixUtilities.h"
 #include "Settings.h"
@@ -41,6 +42,17 @@ Game::Game(int width, int height) : Screen(width, height) {
 	panel2->strokeColor = BLACK;
 	panel2->cornerRadius = 10.f;
 	panel2->strokeWidth = 3.f;
+
+	auto text1 = std::make_unique<UIText>();
+	text1->layout = {
+		.offset = { 10.f, 10.f }
+	};
+	text1->font = Fonts::Bahnschrift.get();
+	text1->color = BLACK;
+	text1->text = "Hello";
+	text1->size = 36.f;
+
+	panel2->addChild(std::move(text1));
 
 	auto panel3 = std::make_unique<UIPanel>();
 	panel3->layout = {

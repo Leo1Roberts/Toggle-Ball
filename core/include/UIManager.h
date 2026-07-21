@@ -2,6 +2,7 @@
 #define UI_MANAGER_H
 
 #include "UIPanel.h"
+#include "UIText.h"
 
 #include <glm/glm.hpp>
 #include <unordered_map>
@@ -18,6 +19,7 @@ public:
 	void setRootNode(std::unique_ptr<UINode> node) { rootNode = std::move(node); }
 
 	void submitPanel(const UIPanel* panel);
+	void submitText(const UIText* text);
 	void render();
 
 private:
@@ -35,6 +37,7 @@ private:
 
 	IUIRenderer* activeRenderer = nullptr;
 	UIPanelRenderer panelRenderer;
+	UITextRenderer textRenderer;
 };
 
 

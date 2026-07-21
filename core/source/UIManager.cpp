@@ -114,6 +114,10 @@ void UIManager::submitPanel(const UIPanel* panel) {
 	setRenderer(&panelRenderer);
 	panelRenderer.addPanel(panel);
 }
+void UIManager::submitText(const UIText* text) {
+	setRenderer(&textRenderer);
+	textRenderer.addText(text);
+}
 
 
 void UIManager::setRenderer(IUIRenderer* newRenderer) {
@@ -121,6 +125,9 @@ void UIManager::setRenderer(IUIRenderer* newRenderer) {
 		if (activeRenderer)
 			activeRenderer->flush(projectionMatrix);
 		activeRenderer = newRenderer;
+
+		if (activeRenderer == &textRenderer)
+			textRenderer.begin(projectionMatrix);
 	}
 }
 
