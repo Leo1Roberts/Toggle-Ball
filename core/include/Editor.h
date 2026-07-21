@@ -28,7 +28,7 @@ struct UndoNode {
 
 class Editor : public Screen {
 public:
-	Editor(int width, int height);
+	Editor();
 
 	void open(const std::shared_ptr<LevelDescriptor>& levelToEdit);
 

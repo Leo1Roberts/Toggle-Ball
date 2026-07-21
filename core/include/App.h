@@ -27,7 +27,7 @@ public:
 
 	void processEvent(const Event& event);
 
-	void tick(microseconds dt, int windowWidth, int windowHeight) const;
+	void tick(microseconds dt, int windowWidth, int windowHeight, float windowDPI) const;
 
 private:
 	IWindow* window;

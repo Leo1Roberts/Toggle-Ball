@@ -5,16 +5,19 @@
 #include <ranges>
 
 
-void UIManager::resize(int screenWidth, int screenHeight) {
-	Rectangle screenBounds = {
-		.x = 0.f, .y = 0.f,
-		.width = (float)screenWidth, .height = (float)screenHeight
-	};
+void UIManager::resize(int screenWidth, int screenHeight, float screenDPIScale) {
+	dpiScale = screenDPIScale;
+	glm::vec2 logicalSize = glm::vec2((float)screenWidth, (float)screenHeight) / getScale();
 
-	projectionMatrix = glm::ortho(0.f, (float)screenWidth, (float)screenHeight, 0.f);
+	projectionMatrix = glm::ortho(0.f, logicalSize.x, logicalSize.y, 0.f);
 
-	if (rootNode)
+	if (rootNode) {
+		Rectangle screenBounds = {
+			.x = 0.f, .y = 0.f,
+			.width = logicalSize.x, .height = logicalSize.y,
+		};
 		rootNode->updateLayout(screenBounds);
+	}
 }
 
 

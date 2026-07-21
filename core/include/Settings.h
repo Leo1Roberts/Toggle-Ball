@@ -7,7 +7,8 @@
 
 
 namespace Settings {
-	extern std::unique_ptr<KeyBindings> bindings;
+	extern std::unique_ptr<KeyBindings> Bindings;
+	extern float UIScale;
 
 	void load();
 }

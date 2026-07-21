@@ -6,9 +6,8 @@
 #include <ranges>
 
 
-Editor::Editor(int width, int height) : Screen(width, height) {
+Editor::Editor() {
 	// Create UI here
-	uiManager.resize(width, height);
 }
 
 
@@ -42,7 +41,7 @@ void Editor::doProcessEvent(const Event& event) {
 		return;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
-		if (auto actionCode = Settings::bindings->translate(key->chord)) {
+		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
 				case ActionCode::Undo:

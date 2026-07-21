@@ -17,7 +17,7 @@ constexpr glm::vec3 upDirection{0, 0, 1};
 constexpr glm::vec3 sunDirection{0.4850712500726659, 0.4850712500726659, 0.7276068751089989};
 
 
-Game::Game(int width, int height) : Screen(width, height) {
+Game::Game() {
 	auto rootNode = std::make_unique<UINode>();
 
 	auto panel1 = std::make_unique<UIPanel>();
@@ -44,8 +44,6 @@ Game::Game(int width, int height) : Screen(width, height) {
 	panel1->addChild(std::move(panel2));
 	rootNode->addChild(std::move(panel1));
 	uiManager.setRootNode(std::move(rootNode));
-
-	uiManager.resize(width, height);
 }
 
 
@@ -89,7 +87,7 @@ void Game::doProcessEvent(const Event& event) {
 		return;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
-		if (auto actionCode = Settings::bindings->translate(key->chord)) {
+		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
 				case ActionCode::Toggle:
@@ -185,8 +183,8 @@ void Game::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, g
 }
 
 
-void Game::doResize(int width, int height) {
-	uiManager.resize(width, height);
+void Game::doResize(int width, int height, float dpiScale) {
+	uiManager.resize(width, height, dpiScale);
 	resizeLevel();
 	updateView();
 }

@@ -15,16 +15,17 @@ EGLSurface eglSurface;
 EGLContext eglContext;
 
 EGLint width, height;
+float dpiScale = 1.f;
 
 /*!
  * Handles commands sent to this Android application
- * @param pApp the app the commands are coming from
+ * @param androidApp the app the commands are coming from
  * @param cmd the command to handle
  */
-void handle_cmd(android_app *pApp, int32_t cmd) {
+void handle_cmd(android_app *androidApp, int32_t cmd) {
 	switch (cmd) {
 	case APP_CMD_INIT_WINDOW: {
-        if (pApp->window == nullptr) break;
+        if (androidApp->window == nullptr) break;
 
         // 1. Initialize Display & Context ONLY ONCE on cold start
         if (eglDisplay == EGL_NO_DISPLAY) {
@@ -51,9 +52,9 @@ void handle_cmd(android_app *pApp, int32_t cmd) {
 
         EGLint format;
         eglGetConfigAttrib(eglDisplay, config, EGL_NATIVE_VISUAL_ID, &format);
-        ANativeWindow_setBuffersGeometry(pApp->window, 0, 0, format);
+        ANativeWindow_setBuffersGeometry(androidApp->window, 0, 0, format);
 
-        eglSurface = eglCreateWindowSurface(eglDisplay, config, pApp->window, nullptr);
+        eglSurface = eglCreateWindowSurface(eglDisplay, config, androidApp->window, nullptr);
 
         if (eglContext == EGL_NO_CONTEXT) {
             EGLint contextAttributes[] = { EGL_CONTEXT_MAJOR_VERSION, 3, EGL_NONE };
@@ -62,22 +63,18 @@ void handle_cmd(android_app *pApp, int32_t cmd) {
 
         eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
 
-        if (pApp->userData == nullptr) {
-            eglQuerySurface(eglDisplay, eglSurface, EGL_WIDTH, &width);
-            eglQuerySurface(eglDisplay, eglSurface, EGL_HEIGHT, &height);
+        if (androidApp->userData == nullptr) {
+            AndroidWindow window(androidApp);
 
-            AndroidWindow window(pApp);
-
-            AssetManager::init(pApp->activity->assetManager);
+            AssetManager::init(androidApp->activity->assetManager);
             auto app = std::make_unique<App>(&window);
-            auto game = std::make_unique<Game>(width, height);
+            auto game = std::make_unique<Game>();
             game->play(LevelDescriptor::load("Level 1").get());
             app->addScreen(std::move(game));
 
-            pApp->userData = app.release();
+            androidApp->userData = app.release();
         }
-        break;
-    }
+    } break;
     case APP_CMD_TERM_WINDOW: {
         // The window is hidden/destroyed. ONLY destroy the surface, NOT the context or App!
         if (eglDisplay != EGL_NO_DISPLAY) {
@@ -87,13 +84,16 @@ void handle_cmd(android_app *pApp, int32_t cmd) {
                 eglSurface = EGL_NO_SURFACE;
             }
         }
-        break;
-    }
+    } break;
+    case APP_CMD_CONFIG_CHANGED: {
+        int densityDpi = AConfiguration_getDensity(androidApp->config);
+        dpiScale = (float)densityDpi / 160.0f;
+    } break;
     case APP_CMD_DESTROY: {
         // The entire process is shutting down. Clean up all persistent state.
-        if (pApp->userData) {
-            delete reinterpret_cast<App *>(pApp->userData);
-            pApp->userData = nullptr;
+        if (androidApp->userData) {
+            delete reinterpret_cast<App *>(androidApp->userData);
+            androidApp->userData = nullptr;
         }
 
         if (eglDisplay != EGL_NO_DISPLAY) {
@@ -105,8 +105,7 @@ void handle_cmd(android_app *pApp, int32_t cmd) {
             eglTerminate(eglDisplay);
             eglDisplay = EGL_NO_DISPLAY;
         }
-        break;
-    }
+    } break;
 	default:
 		break;
 	}
@@ -130,14 +129,18 @@ bool motion_event_filter_func(const GameActivityMotionEvent *motionEvent) {
 /*!
  * This the main entry point for a native activity
  */
-void android_main(struct android_app *pApp) {
+void android_main(struct android_app *androidApp) {
 	// Register an event handler for Android events
-	pApp->onAppCmd = handle_cmd;
+	androidApp->onAppCmd = handle_cmd;
+
+    int densityDpi = AConfiguration_getDensity(androidApp->config);
+    if (densityDpi != 0 && densityDpi != ACONFIGURATION_DENSITY_NONE)
+        dpiScale = (float)densityDpi / (float)ACONFIGURATION_DENSITY_MEDIUM;
 
 	// Set input event filters (set it to NULL if the app wants to process all inputs).
 	// Note that for key inputs, this example uses the default default_key_filter()
 	// implemented in android_native_app_glue.c.
-	android_app_set_motion_event_filter(pApp, motion_event_filter_func);
+	android_app_set_motion_event_filter(androidApp, motion_event_filter_func);
     microseconds t1 = now();
 
 	// This sets up a typical game/event loop. It will run until the app is destroyed.
@@ -163,19 +166,19 @@ void android_main(struct android_app *pApp) {
 				break;
 			default:
 				if (pSource) {
-					pSource->process(pApp, pSource);
+					pSource->process(androidApp, pSource);
 				}
 			}
 		}
 
-        if (pApp->userData && eglSurface != EGL_NO_SURFACE) {
-            auto *app = reinterpret_cast<App *>(pApp->userData);
+        if (androidApp->userData && eglSurface != EGL_NO_SURFACE) {
+            auto *app = reinterpret_cast<App *>(androidApp->userData);
 
             eglQuerySurface(eglDisplay, eglSurface, EGL_WIDTH, &width);
             eglQuerySurface(eglDisplay, eglSurface, EGL_HEIGHT, &height);
 
             microseconds t2 = now();
-            app->tick(t2 - t1, width, height);
+            app->tick(t2 - t1, width, height, dpiScale);
             t1 = t2;
 
             if (eglSwapBuffers(eglDisplay, eglSurface) == EGL_FALSE) {
@@ -185,6 +188,6 @@ void android_main(struct android_app *pApp) {
                 }
             }
         }
-	} while (!pApp->destroyRequested);
+	} while (!androidApp->destroyRequested);
 }
 }

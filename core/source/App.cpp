@@ -45,7 +45,7 @@ App::App(IWindow* window) : window(window) {
 
 void App::processEvent(const Event& event) {
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
-		if (auto actionCode = Settings::bindings->translate(key->chord)) {
+		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
 				case ActionCode::Quit:
@@ -61,12 +61,12 @@ void App::processEvent(const Event& event) {
 	screens.back()->processEvent(event);
 }
 
-void App::tick(microseconds dt, int windowWidth, int windowHeight) const {
+void App::tick(microseconds dt, int windowWidth, int windowHeight, float windowDPI) const {
 	for (const auto& screen : screens)
 		screen->update(dt);
 
 	for (const auto& screen: screens) {
-		screen->resize(windowWidth, windowHeight);
+		screen->resize(windowWidth, windowHeight, windowDPI);
 		screen->draw();
 	}
 

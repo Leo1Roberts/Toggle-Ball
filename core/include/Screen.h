@@ -6,7 +6,7 @@
 
 class Screen {
 public:
-	Screen(int width, int height) : framebuffer({width, height}) {}
+	Screen() : framebuffer() {}
 	virtual ~Screen() = default;
 
 	void processEvent(const Event& event) { doProcessEvent(event); }
@@ -19,10 +19,10 @@ public:
 		doDraw();
 	}
 
-	void resize(int width, int height) {
+	void resize(int width, int height, float dpiScale) {
 		if (framebuffer.resize(width, height)) {
 			aspectRatio = (float) width / (float) height;
-			doResize(width, height);
+			doResize(width, height, dpiScale);
 		}
 	}
 
@@ -37,7 +37,7 @@ private:
 	virtual void doProcessEvent(const Event& event) = 0;
 	virtual void doUpdate(microseconds dt) = 0;
 	virtual void doDraw() = 0;
-	virtual void doResize(int width, int height) {}
+	virtual void doResize(int width, int height, float dpiScale) {}
 };
 
 #endif // SCREEN_H

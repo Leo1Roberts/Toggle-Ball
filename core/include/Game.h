@@ -12,7 +12,7 @@
 
 class Game : public Screen {
 public:
-	Game(int width, int height);
+	Game();
 
 	void play(const LevelDescriptor* levelToPlay);
 
@@ -30,7 +30,7 @@ private:
 	void doDraw() override;
 	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 pos, const glm::mat3& rot, glm::vec3 scale = glm::vec3(1));
 
-	void doResize(int width, int height) override;
+	void doResize(int width, int height, float dpiScale) override;
 	void resizeLevel();
 
 

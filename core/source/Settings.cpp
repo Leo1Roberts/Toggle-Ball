@@ -2,9 +2,10 @@
 #include "AssetManager.h"
 
 namespace Settings {
-	std::unique_ptr<KeyBindings> bindings;
+	std::unique_ptr<KeyBindings> Bindings;
+	float UIScale = 1.0f; // TODO: load this from a config file
 
 	void load() {
-		bindings = std::make_unique<KeyBindings>(AssetManager::loadTextFile("settings/bindings.cfg"));
+		Bindings = std::make_unique<KeyBindings>(AssetManager::loadTextFile("settings/bindings.cfg"));
 	}
 }
