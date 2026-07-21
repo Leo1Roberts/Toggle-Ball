@@ -300,7 +300,7 @@ public:
 
 	~StaticSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return WHITE; }
+	[[nodiscard]] const col& getColor() const override { return Color::White; }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<StaticSpec>(*this);
@@ -346,7 +346,7 @@ public:
 
 	~TogglingPositionSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return SOFT_BLUE; }
+	[[nodiscard]] const col& getColor() const override { return Color::SoftBlue; }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<TogglingPositionSpec>(*this);
@@ -392,7 +392,7 @@ public:
 
 	~TogglingAngleSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return SOFT_RED; }
+	[[nodiscard]] const col& getColor() const override { return Color::SoftRed; }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<TogglingAngleSpec>(*this);
@@ -435,7 +435,7 @@ public:
 
 	~SpinningSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return SOFT_MAGENTA; }
+	[[nodiscard]] const col& getColor() const override { return Color::SoftMagenta; }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<SpinningSpec>(*this);
@@ -481,7 +481,7 @@ public:
 
 	~OscillatingPositionSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return SOFT_CYAN; }
+	[[nodiscard]] const col& getColor() const override { return Color::SoftCyan; }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<OscillatingPositionSpec>(*this);
@@ -533,7 +533,7 @@ public:
 
 	~OscillatingAngleSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return SOFT_YELLOW; }
+	[[nodiscard]] const col& getColor() const override { return Color::SoftYellow; }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<OscillatingAngleSpec>(*this);
@@ -603,7 +603,7 @@ public:
 	explicit GameObstacle(const ObstacleDescriptor* descriptor) :
 	    descriptor(descriptor) {
 		reset();
-		descriptor->getShape()->generateObstacleMesh(mesh, descriptor->isGoal() ? SOFT_GREEN : descriptor->getMotion()->getColor());
+		descriptor->getShape()->generateObstacleMesh(mesh, descriptor->isGoal() ? Color::SoftGreen : descriptor->getMotion()->getColor());
 	}
 
 	~GameObstacle() = default;

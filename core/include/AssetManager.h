@@ -16,6 +16,6 @@ namespace AssetManager {
 	bool saveTextFile(const std::string& path, const std::string& text);
 
 	std::vector<std::string> getFileList(const std::string& directory, const std::string& extension);
-} // namespace AssetManager
+}
 
 #endif

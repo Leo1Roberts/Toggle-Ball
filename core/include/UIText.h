@@ -3,6 +3,7 @@
 
 #include "UINode.h"
 #include "Mesh.h"
+#include "UIStyle.h"
 
 
 struct CharVertex {
@@ -20,14 +21,15 @@ struct Font;
 
 class UIText : public UINode {
 public:
+	UIText(const std::string& text, const TextStyle& style)
+		: text(text), style(style) {}
+
 	void submitRender(UIManager& manager) override;
 
 	[[nodiscard]] float calculateWidth() const;
 
 	std::string text;
-	const Font* font;
-	float size;
-	col color;
+	TextStyle style;
 };
 
 

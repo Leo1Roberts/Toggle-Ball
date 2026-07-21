@@ -23,11 +23,12 @@ void UIText::submitRender(UIManager& manager) {
 
 
 float UIText::calculateWidth() const {
+	auto font = Fonts::get(style.font);
 	int length = (int)text.length();
 	float width = 0.f;
 	for (int i = 0; i < length; i++) {
 		char c = text.at(i);
-		float scaleFactor = size / font->typeface->size;
+		float scaleFactor = style.fontSize / font->typeface->size;
 		if (c == ' ')
 			width += font->wordSpacing * scaleFactor;
 		else {
@@ -56,7 +57,8 @@ float UIText::calculateWidth() const {
 
 
 void UITextRenderer::addText(const UIText* textNode) {
-	auto typeface = textNode->font->typeface;
+	auto font = Fonts::get(textNode->style.font);
+	auto typeface = font->typeface;
 
 	// Draw on texture change
 	if (activeTexture != typeface->texture.get()) {
@@ -68,12 +70,12 @@ void UITextRenderer::addText(const UIText* textNode) {
 	const auto& bounds = textNode->getAbsoluteBounds();
 	float xPos = bounds.x;
 	float yPos = bounds.y;
-	
+
 	for (char c : textNode->text) {
-		float scaleFactor = textNode->size / typeface->size;
-		
+		float scaleFactor = textNode->style.fontSize / typeface->size;
+
 		if (c == ' ') {
-			xPos += textNode->font->wordSpacing * scaleFactor;
+			xPos += font->wordSpacing * scaleFactor;
 			continue;
 		}
 
@@ -83,7 +85,7 @@ void UITextRenderer::addText(const UIText* textNode) {
 
 		float width = cb.right - cb.left;
 
-		if (textNode->font->monoSpaced) {
+		if (font->monoSpaced) {
 			float padding = (typeface->maxCharWidth - width) / 2.f;
 			xPos += padding * scaleFactor;
 			width += padding;
@@ -99,18 +101,18 @@ void UITextRenderer::addText(const UIText* textNode) {
 		Index base = vertices.size();
 
 		// Top left
-		vertices.emplace_back(glm::vec2(xPos, yPos), glm::vec2(cb.left, cb.top), textNode->color);
+		vertices.emplace_back(glm::vec2(xPos, yPos), glm::vec2(cb.left, cb.top), textNode->style.color);
 		// Bottom left
-		vertices.emplace_back(glm::vec2(xPos, yPos + finalHeight), glm::vec2(cb.left, cb.bottom), textNode->color);
+		vertices.emplace_back(glm::vec2(xPos, yPos + finalHeight), glm::vec2(cb.left, cb.bottom), textNode->style.color);
 		// Bottom right
-		vertices.emplace_back(glm::vec2(xPos + finalWidth, yPos + finalHeight), glm::vec2(cb.right, cb.bottom), textNode->color);
+		vertices.emplace_back(glm::vec2(xPos + finalWidth, yPos + finalHeight), glm::vec2(cb.right, cb.bottom), textNode->style.color);
 		// Top right
-		vertices.emplace_back(glm::vec2(xPos + finalWidth, yPos), glm::vec2(cb.right, cb.top), textNode->color);
+		vertices.emplace_back(glm::vec2(xPos + finalWidth, yPos), glm::vec2(cb.right, cb.top), textNode->style.color);
 
 		indices.push_back(base); indices.push_back(base + 1); indices.push_back(base + 2);
 		indices.push_back(base); indices.push_back(base + 2); indices.push_back(base + 3);
 
-		xPos += (width + textNode->font->charSpacing) * scaleFactor;
+		xPos += (width + font->charSpacing) * scaleFactor;
 	}
 }
 

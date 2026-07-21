@@ -3,6 +3,7 @@
 
 #include "UINode.h"
 #include "Mesh.h"
+#include "UIStyle.h"
 
 
 struct UIPanelVertex {
@@ -23,10 +24,11 @@ class UIPanel : public UINode {
 public:
 	void submitRender(UIManager& manager) override;
 
-	col fillColor;
-	col strokeColor;
-	float cornerRadius;
-	float strokeWidth;
+	PanelStyle style;
+
+protected:
+	// Only call from within contains(), as it may assume the basic bounds check has already been made
+	[[nodiscard]] bool containsPrecise(glm::vec2 point) const override;
 };
 
 

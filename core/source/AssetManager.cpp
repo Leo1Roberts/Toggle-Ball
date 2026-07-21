@@ -96,4 +96,4 @@ namespace AssetManager {
 
 		return fileList;
 	}
-} // namespace AssetManager
+}

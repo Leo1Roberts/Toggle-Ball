@@ -18,7 +18,7 @@ struct ObjectVertex {
 	col color;
 
 	ObjectVertex() = default;
-	ObjectVertex(glm::vec3 position, glm::vec2 uv, glm::vec3 normal, col color = WHITE) : position(position), uv(uv), normal(normal), color(color) {}
+	ObjectVertex(glm::vec3 position, glm::vec2 uv, glm::vec3 normal, col color = Color::White) : position(position), uv(uv), normal(normal), color(color) {}
 
 	static void setupLayout();
 };
@@ -43,7 +43,7 @@ public:
 	Mesh(const std::vector<TVertex>& vertices, const std::vector<Index>& indices, GLenum usage = GL_STATIC_DRAW) :
 	    Mesh(usage) { setData(vertices, indices); }
 
-	explicit Mesh(const std::string& path, col color = WHITE);
+	explicit Mesh(const std::string& path, col color = Color::White);
 
 	void setData(const std::vector<TVertex>& vertices, const std::vector<Index>& indices) {
 		indexCount = static_cast<GLsizei>(indices.size());

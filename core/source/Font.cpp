@@ -53,4 +53,12 @@ namespace Fonts {
 		Bahnschrift = std::make_unique<Font>(Typefaces::Bahnschrift.get(), false, 0.008f, 0.02f);
 		CourierNew = std::make_unique<Font>(Typefaces::CourierNew.get(), true, -0.004f, 0.06f);
 	}
+
+	const Font* get(FontId id) {
+		switch (id) {
+		case FontId::Bahnschrift:	return Bahnschrift.get();
+	    case FontId::CourierNew:	return CourierNew.get();
+		default:					return nullptr;
+		}
+	}
 }

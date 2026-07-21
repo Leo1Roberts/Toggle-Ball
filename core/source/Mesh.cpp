@@ -102,6 +102,6 @@ namespace Meshes {
 
 	void load() {
 		ball = std::make_unique<Mesh<ObjectVertex>>("models/Ball.obj");
-		plane = std::make_unique<Mesh<ObjectVertex>>("models/Ground.obj", BOUNDARY);
+		plane = std::make_unique<Mesh<ObjectVertex>>("models/Ground.obj", Color::Boundary);
 	}
-} // namespace Meshes
+}

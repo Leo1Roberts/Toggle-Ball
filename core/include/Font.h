@@ -1,8 +1,10 @@
 #ifndef FONT_H
 #define FONT_H
 
+#include "main.h"
+
+
 #include <memory>
-#include <vector>
 
 
 struct CharBounds {
@@ -28,6 +30,11 @@ struct Font {
 	float wordSpacing = 0.f;
 };
 
+enum class FontId : byte {
+	Bahnschrift,
+	CourierNew,
+};
+
 namespace Fonts {
 	namespace Typefaces {
 		extern std::unique_ptr<Typeface> Bahnschrift;
@@ -40,22 +47,8 @@ namespace Fonts {
 	extern std::unique_ptr<Font> CourierNew;
 
 	void load();
+	const Font* get(FontId id);
 }
-
-class UIFontManager {
-public:
-	static int loadTypeFace(const std::string& name);
-	static const Typeface& getTypeFace(int id) { return fontFaces[id]; }
-
-private:
-	static std::vector<Typeface> fontFaces;
-
-	struct charInfo {
-		char c;
-		char _spacer1_, _spacer2_, _spacer3_;
-		CharBounds bounds;
-	};
-};
 
 
 #endif // FONT_H

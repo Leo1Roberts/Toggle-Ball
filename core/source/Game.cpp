@@ -1,10 +1,10 @@
 #include "Game.h"
 
-#include "Font.h"
 #include "KeyBindings.h"
 #include "MatrixUtilities.h"
 #include "Settings.h"
 #include "Shader.h"
+#include "Theme.h"
 
 #include <glm/glm.hpp>
 #include <ranges>
@@ -26,48 +26,22 @@ Game::Game(int width, int height) : Screen(width, height) {
 		.width = 400.f, .height = 1.f,
 		.offset = { 20.f, 20.f }
 	};
-	panel1->fillColor = GREY_T;
-	panel1->strokeColor = WHITE;
-	panel1->cornerRadius = 16.f;
-	panel1->strokeWidth = 3.f;
 
 	auto panel2 = std::make_unique<UIPanel>();
 	panel2->layout = {
 		.anchor = Anchor::TopCentre,
 		.widthMode = SizingMode::Relative, .heightMode = SizingMode::Relative,
 		.width = 1.f, .height = 0.5f,
-		.offset = { 10.f, 10.f }
+		.offset = { 10.f, 10.f },
 	};
-	panel2->fillColor = GREEN_T;
-	panel2->strokeColor = BLACK;
-	panel2->cornerRadius = 10.f;
-	panel2->strokeWidth = 3.f;
+	panel2->style = Theme::LightCard;
 
-	auto text1 = std::make_unique<UIText>();
-	text1->layout = {
-		.offset = { 10.f, 10.f }
-	};
-	text1->font = Fonts::Bahnschrift.get();
-	text1->color = BLACK;
-	text1->text = "Hello";
-	text1->size = 36.f;
+	auto text1 = std::make_unique<UIText>("Hello", Theme::Body);
+	text1->layout = { .offset = { 10.f, 10.f } };
 
 	panel2->addChild(std::move(text1));
 
-	auto panel3 = std::make_unique<UIPanel>();
-	panel3->layout = {
-		.anchor = Anchor::BottomCentre,
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = 100.f, .height = 100.f,
-		.offset = { 0.f, -10.f }
-	};
-	panel3->fillColor = RED_T;
-	panel3->strokeColor = BLACK;
-	panel3->cornerRadius = 0.f;
-	panel3->strokeWidth = 10.f;
-
 	panel1->addChild(std::move(panel2));
-	panel1->addChild(std::move(panel3));
 	rootNode->addChild(std::move(panel1));
 	uiManager.setRootNode(std::move(rootNode));
 
