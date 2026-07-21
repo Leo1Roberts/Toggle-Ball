@@ -68,6 +68,7 @@ void APIENTRY glDebugOutput(GLenum source,
 
 [[nodiscard]] static KeyCode translateKey(int glfwKey) {
 	switch (glfwKey) {
+	case GLFW_KEY_ENTER:	return KeyCode::Enter;
 	case GLFW_KEY_ESCAPE:	return KeyCode::Escape;
 	case GLFW_KEY_SPACE:	return KeyCode::Space;
 	case GLFW_KEY_Z:		return KeyCode::Z;
@@ -91,6 +92,50 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	app->processEvent(KeyEvent({translateKey(key), translateMods(mods)}, translateKeyAction(action)));
 }
 
+
+[[nodiscard]] static PointerButton translateMouseButton(int glfwMouseButton) {
+	switch (glfwMouseButton) {
+	case GLFW_MOUSE_BUTTON_LEFT:	return PointerButton::Primary;
+	case GLFW_MOUSE_BUTTON_RIGHT:	return PointerButton::Secondary;
+	case GLFW_MOUSE_BUTTON_MIDDLE:	return PointerButton::Tertiary;
+	default:						return PointerButton::Unknown;
+	}
+}
+
+[[nodiscard]] static PointerAction translateMouseButtonAction(int glfwMouseButtonAction) {
+	switch (glfwMouseButtonAction) {
+	case GLFW_PRESS:	return PointerAction::Down;
+	case GLFW_RELEASE:	return PointerAction::Up;
+	default:			return PointerAction::Unknown;
+	}
+}
+
+glm::vec2 mousePosition;
+float xScale, yScale;
+
+static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+	auto* app = (App*)glfwGetWindowUserPointer(window);
+	if (!app) return;
+	app->processEvent(PointerEvent(0, mousePosition, translateMouseButtonAction(action), translateMouseButton(button)));
+}
+
+static void cursorPosCallback(GLFWwindow* window, double x, double y) {
+	auto* app = (App*)glfwGetWindowUserPointer(window);
+	if (!app) return;
+#if defined(PLATFORM_LINUX)
+	mousePosition = glm::vec2(x, y) * xScale;
+#else
+	mousePosition = {x, y};
+#endif
+	app->processEvent(PointerEvent(0, mousePosition, PointerAction::Move, PointerButton::Unknown));
+}
+
+static void scrollCallback(GLFWwindow* window, double xOffset, double yOffset) {
+	auto* app = (App*)glfwGetWindowUserPointer(window);
+	if (!app) return;
+	app->processEvent(PointerEvent(0, mousePosition, PointerAction::Scroll, PointerButton::Unknown, {xOffset, yOffset}));
+}
+
 int main() {
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
@@ -102,7 +147,6 @@ int main() {
 	// glfwWindowHint(GLFW_SAMPLES, 4);
 
 	int width = 1600, height = 1000;
-	float xScale, yScale, dpiScale;
 
 	GLFWwindow* rawWindow = glfwCreateWindow(width, height, "Toggle Ball", nullptr, nullptr);
 
@@ -125,14 +169,13 @@ int main() {
 	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	// glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 	//
-	// glfwSetKeyCallback(window, &Game::handleKeyInput);
 	// glfwSetCharCallback(window, &Game::handleCharInput);
-	// glfwSetCursorPosCallback(window, &Game::handleCursorPosInput);
 	// glfwSetCursorEnterCallback(window, &Game::handleCursorEnterEvent);
-	// glfwSetMouseButtonCallback(window, &Game::handleMouseButtonInput);
-	// glfwSetScrollCallback(window, &Game::handleScrollInput);
 
 	glfwSetKeyCallback(rawWindow, keyCallback);
+	glfwSetMouseButtonCallback(rawWindow, mouseButtonCallback);
+	glfwSetCursorPosCallback(rawWindow, cursorPosCallback);
+	glfwSetScrollCallback(rawWindow, scrollCallback);
 
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
@@ -155,10 +198,9 @@ int main() {
 
 		glfwGetFramebufferSize(rawWindow, &width, &height);
 		glfwGetWindowContentScale(rawWindow, &xScale, &yScale);
-		dpiScale = xScale;
 
 		microseconds t2 = now();
-		app.tick(t2 - t1, width, height, dpiScale);
+		app.tick(t2 - t1, width, height, xScale);
 		t1 = t2;
 		glfwSwapBuffers(rawWindow);
 	} while (!glfwWindowShouldClose(rawWindow));

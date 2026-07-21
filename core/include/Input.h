@@ -21,12 +21,14 @@ enum class PointerAction {
 	Down,
 	Move,
 	Up,
-	Scroll
+	Scroll,
+	Unknown
 };
 enum class PointerButton {
 	Primary,
 	Secondary,
-	Tertiary
+	Tertiary,
+	Unknown
 };
 
 

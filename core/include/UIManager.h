@@ -37,6 +37,7 @@ private:
 	std::unique_ptr<UINode> rootNode;
 	UINode* focusedNode = nullptr;
 	std::unordered_map<int, UINode*> hoveredNodes;
+	std::unordered_map<uint32_t, UINode*> capturedNodes;
 
 	float dpiScale = 1.f;
 	glm::mat4 projectionMatrix = {};

@@ -22,36 +22,44 @@ void UIText::submitRender(UIManager& manager) {
 
 
 
-float UIText::calculateWidth() const {
+glm::vec2 UIText::measure() const {
+	if (text.empty()) return {0.f, 0.f};
+
 	auto font = Fonts::get(style.font);
-	int length = (int)text.length();
+	auto typeface = font->typeface;
+
 	float width = 0.f;
+	int length = (int)text.length();
+	float scaleFactor = style.fontSize / typeface->size;
+
 	for (int i = 0; i < length; i++) {
-		char c = text.at(i);
-		float scaleFactor = style.fontSize / font->typeface->size;
-		if (c == ' ')
-			width += font->wordSpacing * scaleFactor;
-		else {
-			CharBounds bounds = font->typeface->charLocations[c];
-			if (bounds.right == 0.f) // char not found
-				bounds = font->typeface->charLocations['?'];
-
-			float charWidth = bounds.right - bounds.left;
-
-			if (font->monoSpaced) {
-				float padding = (font->typeface->maxCharWidth - charWidth) / 2.f;
-				width += padding * scaleFactor;
-				charWidth += padding;
-			} else if (c >= '0' && c <= '9') {
-				float padding = (font->typeface->digitWidth - charWidth) / 2.f;
-				width += padding * scaleFactor;
-				charWidth += padding;
-			}
-			width += (charWidth + font->charSpacing) * scaleFactor;
+		char c = text[i];
+		if (c == ' ') {
+			width += font->wordSpacing * scaleFactor; // Assuming you kept your Font struct logic
+			continue;
 		}
+
+		CharBounds cb = typeface->charLocations[c];
+		if (cb.right == 0) cb = typeface->charLocations['?'];
+
+		float charWidth = cb.right - cb.left;
+
+		if (font->monoSpaced) {
+			float padding = (font->typeface->maxCharWidth - charWidth) / 2.f;
+			width += padding * scaleFactor;
+			charWidth += padding;
+		} else if (c >= '0' && c <= '9') {
+			float padding = (font->typeface->digitWidth - charWidth) / 2.f;
+			width += padding * scaleFactor;
+			charWidth += padding;
+		}
+
+		width += (charWidth + font->charSpacing) * scaleFactor;
 	}
 
-	return width;
+	float height = style.fontSize;
+
+	return glm::vec2(width, height);
 }
 
 
@@ -68,8 +76,34 @@ void UITextRenderer::addText(const UIText* textNode) {
 	}
 
 	const auto& bounds = textNode->getAbsoluteBounds();
+
+	glm::vec2 textSize = textNode->measure();
+
 	float xPos = bounds.x;
+	switch (textNode->style.alignHorizontal) {
+	case TextAlignHorizontal::Centre:
+		xPos += (bounds.width - textSize.x) * 0.5f;
+		break;
+	case TextAlignHorizontal::Right:
+		xPos += (bounds.width - textSize.x);
+		break;
+	case TextAlignHorizontal::Left:
+	default:
+		break;
+	}
+
 	float yPos = bounds.y;
+	switch (textNode->style.alignVertical) {
+	case TextAlignVertical::Middle:
+		yPos += (bounds.height - textSize.y) * 0.5f;
+		break;
+	case TextAlignVertical::Bottom:
+		yPos += (bounds.height - textSize.y);
+		break;
+	case TextAlignVertical::Top:
+	default:
+		break;
+	}
 
 	for (char c : textNode->text) {
 		float scaleFactor = textNode->style.fontSize / typeface->size;

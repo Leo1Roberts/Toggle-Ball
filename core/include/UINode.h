@@ -46,12 +46,15 @@ public:
 	[[nodiscard]] const std::vector<std::unique_ptr<UINode>>& getChildren() const { return children; }
 	[[nodiscard]] bool isVisible() const { return visible; }
 	[[nodiscard]] bool isActive() const { return active; }
-	[[nodiscard]] bool isFocusable() const { return focusable; }
+	[[nodiscard]] bool isHitTestable() const { return hitTestable && active && visible; }
+	[[nodiscard]] virtual bool isFocusable() const { return false; }
 
 	Layout layout;
 
 protected:
 	[[nodiscard]] virtual bool containsPrecise(glm::vec2 point) const { return true; }
+
+	bool hitTestable = true;
 
 private:
 	Rectangle absoluteBounds;
@@ -61,7 +64,6 @@ private:
 
 	bool visible = true;
 	bool active = true;
-	bool focusable = false;
 };
 
 

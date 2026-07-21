@@ -54,35 +54,54 @@ bool UIManager::processEvent(const Event& event) {
 		return false;
 	}
 
-	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (!rootNode || !rootNode->contains(pointer->position))
-			return false;
+	if (auto* rawPointer = std::get_if<PointerEvent>(&event)) {
+		auto pointer = *rawPointer;
+		pointer.position = screenToLogicalPosition(pointer.position);
+		
+		UINode* nodePointedTo = nullptr;
 
-		UINode* nodePointedTo = findNodePointedTo(rootNode.get(), pointer->position);
+		if (rootNode && rootNode->contains(pointer.position)) {
+			nodePointedTo = findNodePointedTo(rootNode.get(), pointer.position);
+			if (nodePointedTo == rootNode.get())
+				nodePointedTo = nullptr;
+		}
 
-		if (nodePointedTo == rootNode.get())
-			nodePointedTo = nullptr;
 
-		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Down) {
-			UINode* previousHoveredNode = hoveredNodes[pointer->id];
+		// Track pointer entry
+
+		if (pointer.action == PointerAction::Move || pointer.action == PointerAction::Down) {
+			UINode* previousHoveredNode = hoveredNodes[pointer.id];
 			if (previousHoveredNode != nodePointedTo) {
-				if (previousHoveredNode) previousHoveredNode->onPointerExited();
-				if (nodePointedTo) nodePointedTo->onPointerEntered();
-				hoveredNodes[pointer->id] = nodePointedTo;
+				if (previousHoveredNode)
+					previousHoveredNode->onPointerExited();
+				if (nodePointedTo)
+					nodePointedTo->onPointerEntered();
+				hoveredNodes[pointer.id] = nodePointedTo;
 			}
 		}
 
-		if (pointer->id > 0 && pointer->action == PointerAction::Up) {
-			if (hoveredNodes[pointer->id])
-				hoveredNodes[pointer->id]->onPointerExited();
-			hoveredNodes.erase(pointer->id);
+
+		// Allow nodes to capture the pointer
+
+		UINode* targetNode = nullptr;
+		auto captureIt = capturedNodes.find(pointer.id);
+
+		if (captureIt != capturedNodes.end() && captureIt->second)
+			targetNode = captureIt->second; // Continue capturing the pointer
+		else {
+			targetNode = nodePointedTo;
+			if (targetNode && pointer.action == PointerAction::Down)
+				capturedNodes[pointer.id] = targetNode; // Start capturing the pointer
 		}
 
-		if (nodePointedTo) {
-			if (pointer->action == PointerAction::Down && pointer->button == PointerButton::Primary)
-				changeFocus(nodePointedTo->isFocusable() ? nodePointedTo : nullptr, false);
 
-			switch (nodePointedTo->processEvent(event)) {
+		// Dispatch event to target node
+
+		if (targetNode) {
+			if (pointer.action == PointerAction::Down && pointer.button == PointerButton::Primary)
+				changeFocus(targetNode->isFocusable() ? targetNode : nullptr, false);
+
+			switch (targetNode->processEvent(event)) {
 			case UIResponse::Ignored:
 			case UIResponse::Consumed:
 				break;
@@ -93,12 +112,25 @@ bool UIManager::processEvent(const Event& event) {
 				changeFocus(nullptr, true);
 				break;
 			}
-			return true;
+		} else if (pointer.action == PointerAction::Down) // Pointer down on nothing
+			changeFocus(nullptr, false);
+
+
+		// Track pointer exit
+
+		if (pointer.action == PointerAction::Up) {
+			auto hoverIt = hoveredNodes.find(pointer.id);
+			if (hoverIt != hoveredNodes.end()) {
+				if (hoverIt->second)
+					hoverIt->second->onPointerExited();
+				hoveredNodes.erase(hoverIt);
+			}
+
+			capturedNodes.erase(pointer.id); // Stop capturing the pointer
 		}
 
-		// Pointer down on nothing
-		if (pointer->action == PointerAction::Down)
-			changeFocus(nullptr, false);
+
+		return targetNode != nullptr;
 	}
 	return false;
 }
@@ -106,7 +138,7 @@ bool UIManager::processEvent(const Event& event) {
 
 UINode* UIManager::findNodePointedTo(UINode* currentNode, glm::vec2 pointerPosition) {
 	for (const auto& child: std::views::reverse(currentNode->getChildren()))
-		if (child->contains(pointerPosition))
+		if (child->isHitTestable() && child->contains(pointerPosition))
 			return findNodePointedTo(child.get(), pointerPosition);
 
 	return currentNode;

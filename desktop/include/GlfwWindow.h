@@ -8,7 +8,7 @@
 
 class GlfwWindow : public IWindow {
 public:
-	GlfwWindow(GLFWwindow* handle) : windowHandle(handle) {}
+	explicit GlfwWindow(GLFWwindow* handle) : windowHandle(handle) {}
 
 	[[nodiscard]] bool isFullscreen() const override {
 		return currentlyFullscreen;

@@ -21,18 +21,8 @@ struct col {
 };
 
 namespace Color {
-	constexpr col Invisible = col(0, 0, 0, 120);
-
 	constexpr col Black = col(0, 0, 0);
 	constexpr col White = col(255, 255, 255);
-	constexpr col Red = col(255, 0, 0);
-	constexpr col Green = col(0, 255, 0);
-	constexpr col Blue = col(0, 0, 255);
-	constexpr col Cyan = col(0, 255, 255);
-	constexpr col Yellow = col(255, 255, 0);
-	constexpr col Magenta = col(255, 0, 255);
-
-	constexpr col DarkGrey = col(60, 60, 60);
 
 	constexpr col SoftRed = col(240, 10, 10);
 	constexpr col SoftGreen = col(10, 240, 10);
@@ -57,25 +47,6 @@ namespace Color {
 	constexpr col ObBlobCentral = col(100, 0, 255);
 	constexpr col ObBlobCentralHover = col(90, 0, 230);
 	constexpr col ObBlobCentralPressed = col(70, 0, 179);
-
-	constexpr col GreyT = col(200, 200, 200, 180);
-	constexpr col GreyTHover = col(180, 180, 180, 180);
-	constexpr col GreyTPressed = col(160, 160, 160, 180);
-
-	constexpr col GreenT = col(0, 255, 0, 180);
-	constexpr col GreenTHover = col(0, 230, 0, 180);
-	constexpr col GreenTPressed = col(0, 205, 0, 180);
-
-	constexpr col RedT = col(255, 0, 0, 180);
-	constexpr col RedTHover = col(230, 0, 0, 180);
-	constexpr col RedTPressed = col(205, 0, 0, 180);
-
-	constexpr col TextActive = White;
-	constexpr col TextInactive = col(210, 210, 210);
-	constexpr col TextBox = col(50, 50, 50);
-	constexpr col TextBoxHover = col(40, 40, 40);
-	constexpr col TextBoxActive = col(30, 30, 30);
-	constexpr col TextHighlight = col(33, 66, 131);
 
 	constexpr col StateA = col(204, 22, 22);
 	constexpr col StateB = col(22, 95, 204);

@@ -12,12 +12,30 @@ struct PanelStyle {
 	float strokeWidth = 0.f;
 };
 
+
 struct Font;
+enum class TextAlignHorizontal { Left, Centre, Right };
+enum class TextAlignVertical { Top, Middle, Bottom };
+
 struct TextStyle {
 	FontId font = FontId::Bahnschrift;
 	float fontSize = 20.f;
 	col color = Color::Black;
+
+	TextAlignHorizontal alignHorizontal = TextAlignHorizontal::Left;
+	TextAlignVertical alignVertical = TextAlignVertical::Top;
 };
 
+struct ButtonStyle {
+	PanelStyle normalPanel;
+	PanelStyle hoveredPanel;
+	PanelStyle pressedPanel;
+	PanelStyle disabledPanel;
+
+	TextStyle normalText;
+	TextStyle hoveredText;
+	TextStyle pressedText;
+	TextStyle disabledText;
+};
 
 #endif // UI_STYLE_H

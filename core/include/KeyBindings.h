@@ -18,6 +18,7 @@ enum ModifierFlags : byte {
 };
 
 enum class KeyCode {
+	Enter,
 	Escape,
 	Space,
 	Z,
@@ -43,6 +44,9 @@ struct std::hash<KeyChord> {
 
 
 enum class ActionCode {
+	Confirm,
+	Cancel,
+
 	Quit,
 	Fullscreen,
 
@@ -73,6 +77,8 @@ private:
 	struct Entry { ActionCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
+		{ ActionCode::Confirm,		"Confirm" },
+		{ ActionCode::Cancel,		"Cancel" },
 		{ ActionCode::Quit,			"Quit" },
 		{ ActionCode::Fullscreen,	"Fullscreen" },
 		{ ActionCode::Toggle,		"Toggle" },
@@ -101,6 +107,7 @@ private:
 	struct Entry { KeyCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
+		{ KeyCode::Enter,	"ENTER" },
 		{ KeyCode::Escape,	"ESC" },
 		{ KeyCode::Space,	"SPACE" },
 		{ KeyCode::Z,		"Z" },

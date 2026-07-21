@@ -5,6 +5,7 @@
 #include "Settings.h"
 #include "Shader.h"
 #include "Theme.h"
+#include "UIButton.h"
 
 #include <glm/glm.hpp>
 #include <ranges>
@@ -20,29 +21,17 @@ constexpr glm::vec3 sunDirection{0.4850712500726659, 0.4850712500726659, 0.72760
 Game::Game() {
 	auto rootNode = std::make_unique<UINode>();
 
-	auto panel1 = std::make_unique<UIPanel>();
-	panel1->layout = {
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Relative,
-		.width = 400.f, .height = 1.f,
-		.offset = { 20.f, 20.f }
+	auto restartButton = std::make_unique<UIButton>("Restart", Theme::PrimaryButton);
+	restartButton->layout = {
+		.anchor = Anchor::TopRight,
+		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
+		.width = 100.f, .height = 60.f,
+		.offset = {-20.f, 20.f}
 	};
+	restartButton->setOnClick([this] { this->start(); });
 
-	auto panel2 = std::make_unique<UIPanel>();
-	panel2->layout = {
-		.anchor = Anchor::TopCentre,
-		.widthMode = SizingMode::Relative, .heightMode = SizingMode::Relative,
-		.width = 1.f, .height = 0.5f,
-		.offset = { 10.f, 10.f },
-	};
-	panel2->style = Theme::LightCard;
+	rootNode->addChild(std::move(restartButton));
 
-	auto text1 = std::make_unique<UIText>("Hello", Theme::Body);
-	text1->layout = { .offset = { 10.f, 10.f } };
-
-	panel2->addChild(std::move(text1));
-
-	panel1->addChild(std::move(panel2));
-	rootNode->addChild(std::move(panel1));
 	uiManager.setRootNode(std::move(rootNode));
 }
 
@@ -97,6 +86,9 @@ void Game::doProcessEvent(const Event& event) {
 				}
 			}
 		}
+	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
+		if (pointer->button == PointerButton::Primary && pointer->action == PointerAction::Down)
+			toggle();
 	}
 }
 
@@ -136,7 +128,7 @@ constexpr glm::mat3 backgroundRotation = {
 1, 0, 0};
 
 void Game::doDraw() {
-	glClearColor(0, 0, 0, 1);
+	glClearColor(0.2f, 0.2f, 0.2f, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	Shaders::object->use();

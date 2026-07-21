@@ -5,23 +5,197 @@
 
 
 namespace Theme {
-	inline constexpr PanelStyle LightCard {
-		.fillColor = Color::GreyT,
-		.strokeColor = Color::Black,
+	inline constexpr PanelStyle DarkCard {
+		.fillColor = {24, 26, 32, 240},      // Deep dark slate with slight alpha
+		.strokeColor = {48, 52, 64, 255},    // Muted border outline
+		.cornerRadius = 12.0f,               // Smooth modern corners
+		.strokeWidth = 1.0f
+	};
+
+	inline constexpr ButtonStyle PrimaryButton {
+		// --- Panel States ---
+		.normalPanel = {
+			.fillColor = {88, 101, 242, 255},    // Crisp Indigo
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 8.0f,
+			.strokeWidth = 0.0f
+		},
+		.hoveredPanel = {
+			.fillColor = {71, 82, 196, 255},     // Slightly darker Indigo
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 8.0f,
+			.strokeWidth = 0.0f
+		},
+		.pressedPanel = {
+			.fillColor = {58, 66, 160, 255},     // Deep Indigo
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 8.0f,
+			.strokeWidth = 0.0f
+		},
+		.disabledPanel = {
+			.fillColor = {50, 54, 62, 128},      // Dimmed greyed-out
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 8.0f,
+			.strokeWidth = 0.0f
+		},
+
+		// --- Text States ---
+		.normalText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 18.0f,
+			.color = Color::White,
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.hoveredText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 18.0f,
+			.color = Color::White,
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.pressedText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 18.0f,
+			.color = {220, 220, 220, 255},       // Slightly dimmed white
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.disabledText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 18.0f,
+			.color = {140, 140, 140, 255},       // Muted grey
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		}
+	};
+
+	inline constexpr PanelStyle GlassSurface {
+		.fillColor = {18, 20, 26, 180},      // Translucent dark background
+		.strokeColor = {255, 255, 255, 30},  // Soft semi-transparent white highlight
 		.cornerRadius = 12.0f,
+		.strokeWidth = 1.0f
+	};
+
+	inline constexpr ButtonStyle SecondaryOutline {
+		// --- Panel States ---
+		.normalPanel = {
+			.fillColor = {255, 255, 255, 12},     // 5% White Glass
+			.strokeColor = {255, 255, 255, 45},   // Subtle border
+			.cornerRadius = 6.0f,
+			.strokeWidth = 1.0f
+		},
+		.hoveredPanel = {
+			.fillColor = {255, 255, 255, 25},     // 10% White Glass
+			.strokeColor = {255, 255, 255, 120},  // Glowing border
+			.cornerRadius = 6.0f,
+			.strokeWidth = 1.0f
+		},
+		.pressedPanel = {
+			.fillColor = {255, 255, 255, 40},     // 15% White Glass
+			.strokeColor = {255, 255, 255, 180},
+			.cornerRadius = 6.0f,
+			.strokeWidth = 1.0f
+		},
+		.disabledPanel = {
+			.fillColor = {255, 255, 255, 5},
+			.strokeColor = {255, 255, 255, 20},
+			.cornerRadius = 6.0f,
+			.strokeWidth = 1.0f
+		},
+
+		// --- Text States ---
+		.normalText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 16.0f,
+			.color = {220, 225, 235, 255},
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.hoveredText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 16.0f,
+			.color = Color::White,
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.pressedText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 16.0f,
+			.color = {180, 185, 195, 255},
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.disabledText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 16.0f,
+			.color = {100, 100, 100, 255},
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		}
+	};
+
+	inline const PanelStyle SuccessBanner {
+		.fillColor = {12, 38, 28, 220},      // Deep translucent emerald tint
+		.strokeColor = {16, 185, 129, 120},  // Soft green accent outline
+		.cornerRadius = 10.0f,
 		.strokeWidth = 1.5f
 	};
 
-	inline constexpr TextStyle Body {
-		.font = FontId::Bahnschrift,
-		.fontSize = 20.f,
-		.color = Color::Black
-	};
+	inline constexpr ButtonStyle SuccessButton {
+		.normalPanel = {
+			.fillColor = {16, 185, 129, 255},    // Emerald Green
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 10.0f,
+			.strokeWidth = 0.0f
+		},
+		.hoveredPanel = {
+			.fillColor = {5, 150, 105, 255},     // Darker Emerald
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 10.0f,
+			.strokeWidth = 0.0f
+		},
+		.pressedPanel = {
+			.fillColor = {4, 120, 87, 255},      // Deep Forest Emerald
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 10.0f,
+			.strokeWidth = 0.0f
+		},
+		.disabledPanel = {
+			.fillColor = {40, 60, 50, 128},
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 10.0f,
+			.strokeWidth = 0.0f
+		},
 
-	inline constexpr TextStyle TechStats {
-		.font = FontId::CourierNew,
-		.fontSize = 24.f,
-		.color = Color::Green
+		.normalText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 18.0f,
+			.color = Color::White,
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.hoveredText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 18.0f,
+			.color = Color::White,
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.pressedText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 18.0f,
+			.color = {210, 240, 225, 255},
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.disabledText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 18.0f,
+			.color = {120, 140, 130, 255},
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		}
 	};
 }
 

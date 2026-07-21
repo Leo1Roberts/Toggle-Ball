@@ -21,12 +21,14 @@ struct Font;
 
 class UIText : public UINode {
 public:
-	UIText(const std::string& text, const TextStyle& style)
-		: text(text), style(style) {}
+	explicit UIText(const std::string& text, const TextStyle& style = {})
+		: text(text), style(style) {
+		hitTestable = false;
+	}
 
 	void submitRender(UIManager& manager) override;
 
-	[[nodiscard]] float calculateWidth() const;
+	[[nodiscard]] glm::vec2 measure() const;
 
 	std::string text;
 	TextStyle style;

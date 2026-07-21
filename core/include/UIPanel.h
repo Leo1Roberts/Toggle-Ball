@@ -22,6 +22,8 @@ struct UIPanelVertex {
 
 class UIPanel : public UINode {
 public:
+	explicit UIPanel(const PanelStyle& style = {}) : style(style) {}
+
 	void submitRender(UIManager& manager) override;
 
 	PanelStyle style;

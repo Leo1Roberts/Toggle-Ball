@@ -111,20 +111,70 @@ void handle_cmd(android_app *androidApp, int32_t cmd) {
 	}
 }
 
-/*!
- * Enable the motion events you want to handle; not handled events are
- * passed back to OS for further processing. For this example case,
- * only pointer and joystick devices are enabled.
- *
- * @param motionEvent the newly arrived GameActivityMotionEvent.
- * @return true if the event is from a pointer or joystick device,
- *		 false for all other input devices.
- */
-bool motion_event_filter_func(const GameActivityMotionEvent *motionEvent) {
-	auto sourceClass = motionEvent->source & AINPUT_SOURCE_CLASS_MASK;
-	return (sourceClass == AINPUT_SOURCE_CLASS_POINTER ||
-			sourceClass == AINPUT_SOURCE_CLASS_JOYSTICK);
+
+void processInputEvents(struct android_app* androidApp, App* app) {
+    // Swap and retrieve the input buffer for the current frame
+    android_input_buffer* inputBuffer = android_app_swap_input_buffers(androidApp);
+    if (!inputBuffer) return;
+
+    if (inputBuffer->motionEventsCount > 0) {
+        for (uint64_t i = 0; i < inputBuffer->motionEventsCount; ++i) {
+            GameActivityMotionEvent* event = &inputBuffer->motionEvents[i];
+
+            int32_t action = event->action;
+            int32_t actionCode = action & AMOTION_EVENT_ACTION_MASK;
+            size_t pointerIndex = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK)
+                    >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
+
+            PointerButton button = PointerButton::Primary;
+
+            switch (actionCode) {
+            case AMOTION_EVENT_ACTION_DOWN:
+            case AMOTION_EVENT_ACTION_POINTER_DOWN: {
+                auto* pointer = &event->pointers[pointerIndex];
+                int32_t pointerId = pointer->id;
+                float x = GameActivityPointerAxes_getX(pointer);
+                float y = GameActivityPointerAxes_getY(pointer);
+
+                app->processEvent(PointerEvent(pointerId, {x, y}, PointerAction::Down, button));
+                break;
+            }
+
+            case AMOTION_EVENT_ACTION_UP:
+            case AMOTION_EVENT_ACTION_POINTER_UP:
+            case AMOTION_EVENT_ACTION_CANCEL: {
+                auto* pointer = &event->pointers[pointerIndex];
+                int32_t pointerId = pointer->id;
+                float x = GameActivityPointerAxes_getX(pointer);
+                float y = GameActivityPointerAxes_getY(pointer);
+
+                app->processEvent(PointerEvent(pointerId, {x, y}, PointerAction::Up, button));
+                break;
+            }
+
+            case AMOTION_EVENT_ACTION_MOVE: {
+                // AMOTION_EVENT_ACTION_MOVE contains coordinates for ALL active pointers
+                for (uint32_t p = 0; p < event->pointerCount; ++p) {
+                    auto* pointer = &event->pointers[p];
+                    int32_t pointerId = pointer->id;
+                    float x = GameActivityPointerAxes_getX(pointer);
+                    float y = GameActivityPointerAxes_getY(pointer);
+
+                    app->processEvent(PointerEvent(pointerId, {x, y}, PointerAction::Move, PointerButton::Unknown));
+                }
+                break;
+            }
+
+            default:
+                break;
+            }
+        }
+
+        // Clear motion events buffer after processing
+        android_app_clear_motion_events(inputBuffer);
+    }
 }
+
 
 /*!
  * This the main entry point for a native activity
@@ -137,10 +187,9 @@ void android_main(struct android_app *androidApp) {
     if (densityDpi != 0 && densityDpi != ACONFIGURATION_DENSITY_NONE)
         dpiScale = (float)densityDpi / (float)ACONFIGURATION_DENSITY_MEDIUM;
 
-	// Set input event filters (set it to NULL if the app wants to process all inputs).
-	// Note that for key inputs, this example uses the default default_key_filter()
-	// implemented in android_native_app_glue.c.
-	android_app_set_motion_event_filter(androidApp, motion_event_filter_func);
+    android_app_set_key_event_filter(androidApp, nullptr);
+	android_app_set_motion_event_filter(androidApp, nullptr);
+
     microseconds t1 = now();
 
 	// This sets up a typical game/event loop. It will run until the app is destroyed.
@@ -148,12 +197,10 @@ void android_main(struct android_app *androidApp) {
 		// Process all pending events before running game logic.
 		bool done = false;
 		while (!done) {
-			// 0 is non-blocking.
-			int timeout = 0;
 			int events;
 			android_poll_source *pSource;
-			int result = ALooper_pollOnce(timeout, nullptr, &events,
-										  reinterpret_cast<void **>(&pSource));
+			int result = ALooper_pollOnce(0, nullptr, &events, reinterpret_cast<void **>(&pSource));
+
 			switch (result) {
 			case ALOOPER_POLL_TIMEOUT:
 				[[clang::fallthrough]];
@@ -165,14 +212,15 @@ void android_main(struct android_app *androidApp) {
 			case ALOOPER_POLL_CALLBACK:
 				break;
 			default:
-				if (pSource) {
+				if (pSource)
 					pSource->process(androidApp, pSource);
-				}
 			}
 		}
 
         if (androidApp->userData && eglSurface != EGL_NO_SURFACE) {
             auto *app = reinterpret_cast<App *>(androidApp->userData);
+
+            processInputEvents(androidApp, app);
 
             eglQuerySurface(eglDisplay, eglSurface, EGL_WIDTH, &width);
             eglQuerySurface(eglDisplay, eglSurface, EGL_HEIGHT, &height);

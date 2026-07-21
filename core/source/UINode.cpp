@@ -2,8 +2,8 @@
 
 
 void UINode::updateLayout(Rectangle parentBounds) {
-	float ax = 0.0f;
-	float ay = 0.0f;
+	float ax = 0.f;
+	float ay = 0.f;
 
 	switch (layout.anchor) {
 		case Anchor::TopLeft:      ax = 0.0f; ay = 0.0f; break;
@@ -21,7 +21,7 @@ void UINode::updateLayout(Rectangle parentBounds) {
 		absoluteBounds.width = layout.width;
 		absoluteBounds.x = parentBounds.x + (parentBounds.width - absoluteBounds.width) * ax + layout.offset.x;
 	} else {
-		absoluteBounds.width = (parentBounds.width * layout.width) - (2.0f * layout.offset.x);
+		absoluteBounds.width = (parentBounds.width * layout.width) - (2.f * layout.offset.x);
 		absoluteBounds.x = parentBounds.x + (parentBounds.width - absoluteBounds.width) * ax + layout.offset.x * (1.f - 2.f * ax);
 	}
 
@@ -29,7 +29,7 @@ void UINode::updateLayout(Rectangle parentBounds) {
 		absoluteBounds.height = layout.height;
 		absoluteBounds.y = parentBounds.y + (parentBounds.height - absoluteBounds.height) * ay + layout.offset.y;
 	} else {
-		absoluteBounds.height = (parentBounds.height * layout.height) - (2.0f * layout.offset.y);
+		absoluteBounds.height = (parentBounds.height * layout.height) - (2.f * layout.offset.y);
 		absoluteBounds.y = parentBounds.y + (parentBounds.height - absoluteBounds.height) * ay + layout.offset.y * (1.f - 2.f * ay);
 	}
 
