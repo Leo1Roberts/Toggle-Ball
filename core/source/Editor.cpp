@@ -60,8 +60,7 @@ void Editor::doUpdate(microseconds dt) {
 }
 
 void Editor::doDraw() {
-	glClearColor(0.5, 0.5, 0.5, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 }
 
 

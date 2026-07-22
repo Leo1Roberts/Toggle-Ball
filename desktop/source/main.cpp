@@ -144,7 +144,7 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_CONTEXT_DEBUG, GL_TRUE);
-	// glfwWindowHint(GLFW_SAMPLES, 4);
+	glfwWindowHint(GLFW_SAMPLES, 4);
 
 	int width = 1600, height = 1000;
 
@@ -186,6 +186,7 @@ int main() {
 
 	App app(&window);
 	auto game = std::make_unique<Game>();
+	game->activate();
 	game->play(LevelDescriptor::load("Level 1").get());
 	app.addScreen(std::move(game));
 

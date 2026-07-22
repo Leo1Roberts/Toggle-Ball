@@ -69,6 +69,7 @@ void handle_cmd(android_app *androidApp, int32_t cmd) {
             AssetManager::init(androidApp->activity->assetManager);
             auto app = std::make_unique<App>(&window);
             auto game = std::make_unique<Game>();
+            game->activate();
             game->play(LevelDescriptor::load("Level 1").get());
             app->addScreen(std::move(game));
 

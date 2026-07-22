@@ -72,31 +72,26 @@ void App::processEvent(const Event& event) {
 }
 
 void App::tick(microseconds dt, int windowWidth, int windowHeight, float windowDPI) {
+	glViewport(0, 0, windowWidth, windowHeight);
+	glScissor(0, 0, windowWidth, windowHeight);
+
+	glClearColor(0.2f, 0.2f, 0.2f, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	for (const auto& screen : screens)
+		if (screen->isActive())
+			screen->update(dt);
+
+	for (const auto& screen: screens) {
+		if (screen->isActive()) {
+			screen->resize(windowWidth, windowHeight, windowDPI);
+			screen->draw();
+		}
+	}
+
 	if (fpsOverlay)
 		fpsOverlay->update(dt);
 
-	for (const auto& screen : screens)
-		screen->update(dt);
-
 	overlayUIManager.resize(windowWidth, windowHeight, windowDPI);
-
-	for (const auto& screen: screens) {
-		screen->resize(windowWidth, windowHeight, windowDPI);
-		screen->draw();
-	}
-
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, windowWidth, windowHeight);
-	glScissor(0, 0, windowWidth, windowHeight);
-	glClearColor(1, 0, 0, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	for (const auto& screen: screens) {
-		Shaders::quad->use();
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, screen->getTexture());
-		quadMesh->draw();
-	}
-
 	overlayUIManager.render();
 }

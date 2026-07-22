@@ -23,7 +23,7 @@ class FPSOverlay;
 
 class App {
 public:
-	App(IWindow* window);
+	explicit App(IWindow* window);
 
 	App(const App&) = delete;
 	App& operator=(const App&) = delete;
