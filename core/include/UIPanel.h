@@ -22,11 +22,11 @@ struct UIPanelVertex {
 
 class UIPanel : public UINode {
 public:
-	explicit UIPanel(const PanelStyle& style = {}) : style(style) {}
+	explicit UIPanel(const PanelStyle& style = {}) : panelStyle(style) {}
 
 	void submitRender(UIManager& manager) override;
 
-	PanelStyle style;
+	PanelStyle panelStyle;
 
 protected:
 	// Only call from within contains(), as it may assume the basic bounds check has already been made

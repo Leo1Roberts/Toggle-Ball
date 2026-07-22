@@ -27,8 +27,6 @@ GameWorld::GameWorld(const LevelDescriptor& levelDescriptor) {
 
 	ball = GameBall(level.getBallDescriptor().get());
 	obstacles.append_range(level.getObstacleDescriptors() | std::views::transform([](const auto& d) { return GameObstacle(d.get()); }));
-
-	updateView();
 }
 
 

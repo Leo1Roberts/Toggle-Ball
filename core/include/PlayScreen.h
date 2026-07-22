@@ -6,6 +6,7 @@
 #include "UIManager.h"
 
 
+class UIButton;
 class PlayScreen : public Screen {
 public:
 	explicit PlayScreen(const LevelDescriptor* levelToPlay, const std::function<void()>& browseLevelsCallback);
@@ -19,6 +20,8 @@ private:
 
 	GameWorld game;
 	UIManager uiManager{};
+
+	UIButton* levelCompleteDisplay = nullptr;
 };
 
 

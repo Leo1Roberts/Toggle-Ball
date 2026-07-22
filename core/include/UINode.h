@@ -45,11 +45,16 @@ public:
 
 	virtual void submitRender(UIManager& manager) {}
 
+	void show() { visible = true; }
+	void hide() { visible = false; }
+	void activate() { active = true; }
+	void deactivate() { active = false; }
+
 	[[nodiscard]] const UINode* getParent() const { return parent; }
 	[[nodiscard]] const std::vector<std::unique_ptr<UINode>>& getChildren() const { return children; }
 	[[nodiscard]] bool isVisible() const { return visible; }
 	[[nodiscard]] bool isActive() const { return active; }
-	[[nodiscard]] bool isHitTestable() const { return hitTestable && active && visible; }
+	[[nodiscard]] bool isHitTestable() const { return hitTestable && active; }
 	[[nodiscard]] virtual bool isFocusable() const { return false; }
 
 	Layout layout;

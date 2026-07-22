@@ -25,12 +25,12 @@ void UIText::submitRender(UIManager& manager) {
 glm::vec2 UIText::measure() const {
 	if (text.empty()) return {0.f, 0.f};
 
-	auto font = Fonts::get(style.font);
+	auto font = Fonts::get(textStyle.font);
 	auto typeface = font->typeface;
 
 	float width = 0.f;
 	int length = (int)text.length();
-	float scaleFactor = style.fontSize / typeface->size;
+	float scaleFactor = textStyle.fontSize / typeface->size;
 
 	for (int i = 0; i < length; i++) {
 		char c = text[i];
@@ -57,7 +57,7 @@ glm::vec2 UIText::measure() const {
 		width += (charWidth + font->charSpacing) * scaleFactor;
 	}
 
-	float height = style.fontSize;
+	float height = textStyle.fontSize;
 
 	return glm::vec2(width, height);
 }
@@ -65,7 +65,7 @@ glm::vec2 UIText::measure() const {
 
 
 void UITextRenderer::addText(const UIText* textNode) {
-	auto font = Fonts::get(textNode->style.font);
+	auto font = Fonts::get(textNode->textStyle.font);
 	auto typeface = font->typeface;
 
 	// Draw on texture change
@@ -80,7 +80,7 @@ void UITextRenderer::addText(const UIText* textNode) {
 	glm::vec2 textSize = textNode->measure();
 
 	float xPos = bounds.x;
-	switch (textNode->style.alignHorizontal) {
+	switch (textNode->textStyle.alignHorizontal) {
 	case TextAlignHorizontal::Centre:
 		xPos += (bounds.width - textSize.x) * 0.5f;
 		break;
@@ -93,7 +93,7 @@ void UITextRenderer::addText(const UIText* textNode) {
 	}
 
 	float yPos = bounds.y;
-	switch (textNode->style.alignVertical) {
+	switch (textNode->textStyle.alignVertical) {
 	case TextAlignVertical::Middle:
 		yPos += (bounds.height - textSize.y) * 0.5f;
 		break;
@@ -106,7 +106,7 @@ void UITextRenderer::addText(const UIText* textNode) {
 	}
 
 	for (char c : textNode->text) {
-		float scaleFactor = textNode->style.fontSize / typeface->size;
+		float scaleFactor = textNode->textStyle.fontSize / typeface->size;
 
 		if (c == ' ') {
 			xPos += font->wordSpacing * scaleFactor;
@@ -135,13 +135,13 @@ void UITextRenderer::addText(const UIText* textNode) {
 		Index base = vertices.size();
 
 		// Top left
-		vertices.emplace_back(glm::vec2(xPos, yPos), glm::vec2(cb.left, cb.top), textNode->style.color);
+		vertices.emplace_back(glm::vec2(xPos, yPos), glm::vec2(cb.left, cb.top), textNode->textStyle.color);
 		// Bottom left
-		vertices.emplace_back(glm::vec2(xPos, yPos + finalHeight), glm::vec2(cb.left, cb.bottom), textNode->style.color);
+		vertices.emplace_back(glm::vec2(xPos, yPos + finalHeight), glm::vec2(cb.left, cb.bottom), textNode->textStyle.color);
 		// Bottom right
-		vertices.emplace_back(glm::vec2(xPos + finalWidth, yPos + finalHeight), glm::vec2(cb.right, cb.bottom), textNode->style.color);
+		vertices.emplace_back(glm::vec2(xPos + finalWidth, yPos + finalHeight), glm::vec2(cb.right, cb.bottom), textNode->textStyle.color);
 		// Top right
-		vertices.emplace_back(glm::vec2(xPos + finalWidth, yPos), glm::vec2(cb.right, cb.top), textNode->style.color);
+		vertices.emplace_back(glm::vec2(xPos + finalWidth, yPos), glm::vec2(cb.right, cb.top), textNode->textStyle.color);
 
 		indices.push_back(base); indices.push_back(base + 1); indices.push_back(base + 2);
 		indices.push_back(base); indices.push_back(base + 2); indices.push_back(base + 3);

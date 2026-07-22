@@ -80,18 +80,18 @@ void UIButton::updateVisualState() {
 		state = ButtonState::Normal;
 	
 	switch (state) {
-	case ButtonState::Normal:   style = buttonStyle.normalPanel;   break;
-	case ButtonState::Hovered:  style = buttonStyle.hoveredPanel;  break;
-	case ButtonState::Pressed:  style = buttonStyle.pressedPanel;  break;
-	case ButtonState::Disabled: style = buttonStyle.disabledPanel; break;
+	case ButtonState::Normal:   panelStyle = buttonStyle.normalPanel;   break;
+	case ButtonState::Hovered:  panelStyle = buttonStyle.hoveredPanel;  break;
+	case ButtonState::Pressed:  panelStyle = buttonStyle.pressedPanel;  break;
+	case ButtonState::Disabled: panelStyle = buttonStyle.disabledPanel; break;
 	}
 
 	if (labelNode) {
 		switch (state) {
-		case ButtonState::Normal:   labelNode->style = buttonStyle.normalText;   break;
-		case ButtonState::Hovered:  labelNode->style = buttonStyle.hoveredText;  break;
-		case ButtonState::Pressed:  labelNode->style = buttonStyle.pressedText;  break;
-		case ButtonState::Disabled: labelNode->style = buttonStyle.disabledText; break;
+		case ButtonState::Normal:   labelNode->textStyle = buttonStyle.normalText;   break;
+		case ButtonState::Hovered:  labelNode->textStyle = buttonStyle.hoveredText;  break;
+		case ButtonState::Pressed:  labelNode->textStyle = buttonStyle.pressedText;  break;
+		case ButtonState::Disabled: labelNode->textStyle = buttonStyle.disabledText; break;
 		}
 	}
 }

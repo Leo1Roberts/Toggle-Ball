@@ -26,6 +26,8 @@ public:
 	void disable() { state = ButtonState::Disabled; updateVisualState(); }
 	void enable() { state = ButtonState::Normal; updateVisualState(); }
 
+	void setStyle(const ButtonStyle& style) { buttonStyle = style; updateVisualState(); }
+
 	[[nodiscard]] bool isFocusable() const override {
 		return state != ButtonState::Disabled && isVisible() && isActive();
 	}

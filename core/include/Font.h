@@ -19,8 +19,8 @@ struct Typeface {
 	std::unique_ptr<Texture> texture;
 	CharBounds charLocations[256]{};
 	float size;
-	float digitWidth;
-	float maxCharWidth;
+	float digitWidth = 0;
+	float maxCharWidth = 0;
 };
 
 struct Font {

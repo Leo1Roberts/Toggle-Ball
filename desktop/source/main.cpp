@@ -5,6 +5,7 @@
 #include "GlfwWindow.h"
 #include "Shader.h"
 
+#include <fenv.h>
 #include <iostream>
 
 inline unsigned max_unsigned(unsigned a, unsigned b) { return (a > b) ? a : b; }
@@ -138,6 +139,8 @@ static void scrollCallback(GLFWwindow* window, double xOffset, double yOffset) {
 }
 
 int main() {
+	feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW );
+
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
 

@@ -24,7 +24,7 @@ struct Font;
 class UIText : public UINode {
 public:
 	explicit UIText(std::string text, const TextStyle& style = {})
-		: text(std::move(text)), style(style) {
+		: text(std::move(text)), textStyle(style) {
 		hitTestable = false;
 	}
 
@@ -33,7 +33,7 @@ public:
 	[[nodiscard]] glm::vec2 measure() const;
 
 	std::string text;
-	TextStyle style;
+	TextStyle textStyle;
 };
 
 

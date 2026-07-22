@@ -135,7 +135,7 @@ namespace Theme {
 		}
 	};
 
-	inline const PanelStyle SuccessBanner {
+	inline constexpr PanelStyle SuccessBanner {
 		.fillColor = {12, 38, 28, 220},      // Deep translucent emerald tint
 		.strokeColor = {16, 185, 129, 120},  // Soft green accent outline
 		.cornerRadius = 10.0f,
@@ -170,28 +170,28 @@ namespace Theme {
 
 		.normalText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 20.f,
+			.fontSize = 40.f,
 			.color = Color::White,
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.hoveredText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 20.f,
+			.fontSize = 40.f,
 			.color = Color::White,
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.pressedText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 20.f,
+			.fontSize = 40.f,
 			.color = {210, 240, 225, 255},
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.disabledText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 20.f,
+			.fontSize = 40.f,
 			.color = {120, 140, 130, 255},
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
