@@ -1,6 +1,8 @@
 #ifndef UI_TEXT_H
 #define UI_TEXT_H
 
+#include <utility>
+
 #include "UINode.h"
 #include "Mesh.h"
 #include "UIStyle.h"
@@ -21,8 +23,8 @@ struct Font;
 
 class UIText : public UINode {
 public:
-	explicit UIText(const std::string& text, const TextStyle& style = {})
-		: text(text), style(style) {
+	explicit UIText(std::string text, const TextStyle& style = {})
+		: text(std::move(text)), style(style) {
 		hitTestable = false;
 	}
 

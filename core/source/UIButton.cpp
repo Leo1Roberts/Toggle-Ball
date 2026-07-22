@@ -4,10 +4,8 @@
 
 UIButton::UIButton(const std::string& labelText, const ButtonStyle& bStyle)
 	: UIPanel(bStyle.normalPanel), buttonStyle(bStyle) {
-	if (!labelText.empty()) {
-		addChild(std::make_unique<UIText>(labelText, buttonStyle.normalText));
-		labelNode = (UIText*)getChildren().back().get();
-	}
+	if (!labelText.empty())
+		labelNode = addChild(std::make_unique<UIText>(labelText, buttonStyle.normalText));
 	updateVisualState();
 }
 

@@ -6,8 +6,13 @@
 
 
 void UIManager::resize(int screenWidth, int screenHeight, float screenDPIScale) {
+	if (width == screenWidth && height == screenHeight && dpiScale == screenDPIScale) return;
+
+	width = screenWidth;
+	height = screenHeight;
 	dpiScale = screenDPIScale;
-	glm::vec2 logicalSize = glm::vec2((float)screenWidth, (float)screenHeight) / getScale();
+
+	glm::vec2 logicalSize = glm::vec2((float)width, (float)height) / getScale();
 
 	projectionMatrix = glm::ortho(0.f, logicalSize.x, logicalSize.y, 0.f);
 

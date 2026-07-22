@@ -22,9 +22,12 @@ class UINode {
 public:
 	virtual ~UINode() = default;
 
-	void addChild(std::unique_ptr<UINode> child) {
+	template <typename T>
+	T* addChild(std::unique_ptr<T> child) {
 		child->parent = this;
+		T* ptr = child.get();
 		children.push_back(std::move(child));
+		return ptr;
 	}
 
 	virtual void updateLayout(Rectangle parentBounds);

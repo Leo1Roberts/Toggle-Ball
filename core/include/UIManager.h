@@ -11,7 +11,7 @@
 
 class UIManager {
 public:
-	void resize(int screenWidth, int screenHeight, float dpiScale);
+	void resize(int screenWidth, int screenHeight, float screenDPIScale);
 
 	void changeFocus(UINode* newFocus, bool cancel);
 
@@ -39,6 +39,7 @@ private:
 	std::unordered_map<int, UINode*> hoveredNodes;
 	std::unordered_map<uint32_t, UINode*> capturedNodes;
 
+	int width = 0, height = 0; // Physical resolution
 	float dpiScale = 1.f;
 	glm::mat4 projectionMatrix = {};
 

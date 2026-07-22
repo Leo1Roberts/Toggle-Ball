@@ -1,6 +1,7 @@
 #include "App.h"
 
 #include "AssetManager.h"
+#include "FPSOverlay.h"
 #include "Font.h"
 #include "Settings.h"
 #include "Shader.h"
@@ -23,6 +24,12 @@ App::App(IWindow* window) : window(window) {
 	Textures::load();
 	Fonts::load();
 
+	auto rootNode = std::make_unique<UINode>();
+	auto fps = std::make_unique<FPSOverlay>();
+	fps->layout = { .offset = {10.f, 10.f} };
+	fpsOverlay = rootNode->addChild(std::move(fps));
+	overlayUIManager.setRootNode(std::move(rootNode));
+
 	quadVertices.emplace_back(glm::vec2(-1, 1), glm::vec2(0, 1));
 	quadVertices.emplace_back(glm::vec2(-1, -1), glm::vec2(0, 0));
 	quadVertices.emplace_back(glm::vec2(1, -1), glm::vec2(1, 0));
@@ -44,6 +51,9 @@ App::App(IWindow* window) : window(window) {
 }
 
 void App::processEvent(const Event& event) {
+	if (overlayUIManager.processEvent(event))
+		return;
+
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
@@ -61,9 +71,14 @@ void App::processEvent(const Event& event) {
 	screens.back()->processEvent(event);
 }
 
-void App::tick(microseconds dt, int windowWidth, int windowHeight, float windowDPI) const {
+void App::tick(microseconds dt, int windowWidth, int windowHeight, float windowDPI) {
+	if (fpsOverlay)
+		fpsOverlay->update(dt);
+
 	for (const auto& screen : screens)
 		screen->update(dt);
+
+	overlayUIManager.resize(windowWidth, windowHeight, windowDPI);
 
 	for (const auto& screen: screens) {
 		screen->resize(windowWidth, windowHeight, windowDPI);
@@ -82,4 +97,6 @@ void App::tick(microseconds dt, int windowWidth, int windowHeight, float windowD
 		glBindTexture(GL_TEXTURE_2D, screen->getTexture());
 		quadMesh->draw();
 	}
+
+	overlayUIManager.render();
 }

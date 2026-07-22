@@ -5,6 +5,8 @@
 #include "Event.h"
 #include "IWindow.h"
 #include "Mesh.h"
+#include "UIManager.h"
+
 
 struct ScreenVertex {
 	glm::vec2 pos;
@@ -15,6 +17,9 @@ struct ScreenVertex {
 
 	static void setupLayout();
 };
+
+
+class FPSOverlay;
 
 class App {
 public:
@@ -27,12 +32,15 @@ public:
 
 	void processEvent(const Event& event);
 
-	void tick(microseconds dt, int windowWidth, int windowHeight, float windowDPI) const;
+	void tick(microseconds dt, int windowWidth, int windowHeight, float windowDPI);
 
 private:
 	IWindow* window;
 
 	std::vector<std::unique_ptr<Screen>> screens;
+
+	UIManager overlayUIManager;
+	FPSOverlay* fpsOverlay = nullptr;
 
 	std::unique_ptr<Mesh<ScreenVertex>> quadMesh;
 	std::vector<ScreenVertex> quadVertices;
