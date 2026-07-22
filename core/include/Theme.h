@@ -42,28 +42,28 @@ namespace Theme {
 		// --- Text States ---
 		.normalText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 18.0f,
+			.fontSize = 20.f,
 			.color = Color::White,
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.hoveredText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 18.0f,
+			.fontSize = 20.f,
 			.color = Color::White,
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.pressedText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 18.0f,
+			.fontSize = 20.f,
 			.color = {220, 220, 220, 255},       // Slightly dimmed white
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.disabledText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 18.0f,
+			.fontSize = 20.f,
 			.color = {140, 140, 140, 255},       // Muted grey
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
@@ -107,28 +107,28 @@ namespace Theme {
 		// --- Text States ---
 		.normalText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 16.0f,
+			.fontSize = 20.f,
 			.color = {220, 225, 235, 255},
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.hoveredText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 16.0f,
+			.fontSize = 20.f,
 			.color = Color::White,
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.pressedText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 16.0f,
+			.fontSize = 20.f,
 			.color = {180, 185, 195, 255},
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.disabledText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 16.0f,
+			.fontSize = 20.f,
 			.color = {100, 100, 100, 255},
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
@@ -170,28 +170,28 @@ namespace Theme {
 
 		.normalText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 18.0f,
+			.fontSize = 20.f,
 			.color = Color::White,
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.hoveredText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 18.0f,
+			.fontSize = 20.f,
 			.color = Color::White,
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.pressedText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 18.0f,
+			.fontSize = 20.f,
 			.color = {210, 240, 225, 255},
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle
 		},
 		.disabledText = {
 			.font = FontId::Bahnschrift,
-			.fontSize = 18.0f,
+			.fontSize = 20.f,
 			.color = {120, 140, 130, 255},
 			.alignHorizontal = TextAlignHorizontal::Centre,
 			.alignVertical = TextAlignVertical::Middle

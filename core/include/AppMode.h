@@ -22,6 +22,11 @@ public:
 	}
 
 protected:
+	void resizeToMatchActiveScreen(Screen* screen) {
+		if (activeScreen)
+			screen->resize(activeScreen->getWidth(), activeScreen->getHeight(), activeScreen->getDPIScale());
+	}
+
 	Screen* activeScreen = nullptr;
 };
 

@@ -22,6 +22,7 @@ LevelDescriptor::LevelDescriptor(const LevelDescriptor& other) :
 
 LevelDescriptor& LevelDescriptor::operator=(const LevelDescriptor& other) {
 	if (this != &other) {
+		name = other.name;
 		arenaWidth = other.arenaWidth;
 		arenaHeight = other.arenaHeight;
 		transitionTime = other.transitionTime;

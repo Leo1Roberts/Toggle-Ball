@@ -3,6 +3,7 @@
 
 #include "AppMode.h"
 #include "PlayScreen.h"
+#include "LevelBrowserScreen.h"
 
 
 class GameMode : public AppMode {
@@ -10,7 +11,11 @@ public:
 	GameMode();
 
 private:
+	void browseLevels();
+	void playLevel(const std::string& levelName);
+
 	std::unique_ptr<PlayScreen> playScreen;
+	std::unique_ptr<LevelBrowserScreen> levelBrowserScreen;
 };
 
 

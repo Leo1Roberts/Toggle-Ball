@@ -1,6 +1,20 @@
 #include "GameMode.h"
 
 GameMode::GameMode() {
-	playScreen = std::make_unique<PlayScreen>(LevelDescriptor::load("Level 1").get());
+	browseLevels();
+}
+
+
+void GameMode::browseLevels() {
+	levelBrowserScreen = std::make_unique<LevelBrowserScreen>(
+		[&](const std::string& levelName) { this->playLevel(levelName); } );
+	resizeToMatchActiveScreen(levelBrowserScreen.get());
+	activeScreen = levelBrowserScreen.get();
+}
+
+void GameMode::playLevel(const std::string& levelName) {
+	playScreen = std::make_unique<PlayScreen>(LevelDescriptor::load(levelName).get(),
+		[&] { this->browseLevels(); });
+	resizeToMatchActiveScreen(playScreen.get());
 	activeScreen = playScreen.get();
 }

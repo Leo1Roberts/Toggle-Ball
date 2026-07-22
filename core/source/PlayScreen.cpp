@@ -14,10 +14,11 @@ const glm::vec3 skyColor = colorToLinear({85, 110, 128});
 const glm::vec3 sunColor = colorToLinear({255, 255, 230});
 
 constexpr glm::vec3 upDirection{0, 0, 1};
-constexpr glm::vec3 sunDirection{0.4850712500726659, 0.4850712500726659, 0.7276068751089989};
+const glm::vec3 sunDirection = glm::normalize(glm::vec3(2, 2, 3));
 
 
-PlayScreen::PlayScreen(const LevelDescriptor* levelToPlay) : game(*levelToPlay) {
+PlayScreen::PlayScreen(const LevelDescriptor* levelToPlay, const std::function<void()>& browseLevelsCallback)
+	: game(*levelToPlay) {
 	auto rootNode = std::make_unique<UINode>();
 
 	auto restartButton = std::make_unique<UIButton>("Restart", Theme::PrimaryButton);
@@ -29,7 +30,17 @@ PlayScreen::PlayScreen(const LevelDescriptor* levelToPlay) : game(*levelToPlay) 
 	};
 	restartButton->setOnClick([&] { game.start(); });
 
+	auto levelButton = std::make_unique<UIButton>(levelToPlay->getName(), Theme::SecondaryOutline);
+	levelButton->layout = {
+		.anchor = Anchor::BottomRight,
+		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
+		.width = 100.f, .height = 60.f,
+		.offset = {-20.f, -20.f}
+	};
+	levelButton->setOnClick(browseLevelsCallback);
+
 	rootNode->addChild(std::move(restartButton));
+	rootNode->addChild(std::move(levelButton));
 
 	uiManager.setRootNode(std::move(rootNode));
 

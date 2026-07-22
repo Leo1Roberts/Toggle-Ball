@@ -19,7 +19,9 @@ public:
 	explicit LevelDescriptor(const std::string& data);
 
 	static std::unique_ptr<LevelDescriptor> load(const std::string& name) {
-		return std::make_unique<LevelDescriptor>(AssetManager::loadTextFile("levels/" + name + ".lvl"));
+		auto level = std::make_unique<LevelDescriptor>(AssetManager::loadTextFile("levels/" + name + ".lvl"));
+		level->setName(name);
+		return level;
 	}
 
 	void scale();
@@ -28,6 +30,7 @@ public:
 
 	void setName(const std::string& n) { name = n; }
 
+	[[nodiscard]] const std::string& getName() const { return name; }
 	[[nodiscard]] float getArenaWidth() const { return arenaWidth; }
 	[[nodiscard]] float getArenaHeight() const { return arenaHeight; }
 	[[nodiscard]] float getTransitionTime() const { return transitionTime; }

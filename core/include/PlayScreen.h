@@ -8,8 +8,7 @@
 
 class PlayScreen : public Screen {
 public:
-	PlayScreen() = default;
-	explicit PlayScreen(const LevelDescriptor* levelToPlay);
+	explicit PlayScreen(const LevelDescriptor* levelToPlay, const std::function<void()>& browseLevelsCallback);
 
 	void processEvent(const Event& event) override;
 	void update(microseconds dt) override;

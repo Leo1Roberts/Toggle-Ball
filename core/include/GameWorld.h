@@ -7,7 +7,6 @@
 
 class GameWorld {
 public:
-	GameWorld() = default;
 	explicit GameWorld(const LevelDescriptor& levelDescriptor);
 
 	void start();

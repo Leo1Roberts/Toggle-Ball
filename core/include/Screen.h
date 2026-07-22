@@ -8,7 +8,7 @@ public:
 	virtual ~Screen() = default;
 
 	virtual void processEvent(const Event& event) = 0;
-	virtual void update(microseconds dt) = 0;
+	virtual void update(microseconds dt) {}
 	virtual void render() = 0;
 
 	void resize(int screenWidth, int screenHeight, float screenDPIScale) {
@@ -21,6 +21,10 @@ public:
 		dpiScale = screenDPIScale;
 		doResize(width, height, dpiScale);
 	}
+
+	[[nodiscard]] int getWidth() const { return width; }
+	[[nodiscard]] int getHeight() const { return height; }
+	[[nodiscard]] float getDPIScale() const { return dpiScale; }
 
 protected:
 	int width = 0, height = 0;
