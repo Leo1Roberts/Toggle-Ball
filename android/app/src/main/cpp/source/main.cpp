@@ -4,7 +4,6 @@
 #include <game-activity/GameActivity.cpp>
 #include <game-text-input/gametextinput.cpp>
 #include <App.h>
-#include <Game.h>
 
 extern "C" {
 
@@ -67,11 +66,8 @@ void handle_cmd(android_app *androidApp, int32_t cmd) {
             AndroidWindow window(androidApp);
 
             AssetManager::init(androidApp->activity->assetManager);
+
             auto app = std::make_unique<App>(&window);
-            auto game = std::make_unique<Game>();
-            game->activate();
-            game->play(LevelDescriptor::load("Level 1").get());
-            app->addScreen(std::move(game));
 
             androidApp->userData = app.release();
         }
