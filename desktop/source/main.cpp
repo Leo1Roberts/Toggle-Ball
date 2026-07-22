@@ -1,8 +1,9 @@
 #include "main.h"
 
 #include "App.h"
-#include "Game.h"
+#include "PlayScreen.h"
 #include "GlfwWindow.h"
+#include "Shader.h"
 
 #include <iostream>
 
@@ -185,10 +186,6 @@ int main() {
 	GlfwWindow window(rawWindow);
 
 	App app(&window);
-	auto game = std::make_unique<Game>();
-	game->activate();
-	game->play(LevelDescriptor::load("Level 1").get());
-	app.addScreen(std::move(game));
 
 	glfwSetWindowUserPointer(rawWindow, &app);
 

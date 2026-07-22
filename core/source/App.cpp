@@ -24,11 +24,14 @@ App::App(IWindow* window) : window(window) {
 	Textures::load();
 	Fonts::load();
 
+	gameMode = std::make_unique<GameMode>();
+	activeMode = gameMode.get();
+
 	auto rootNode = std::make_unique<UINode>();
 	auto fps = std::make_unique<FPSOverlay>();
 	fps->layout = { .offset = {10.f, 10.f} };
 	fpsOverlay = rootNode->addChild(std::move(fps));
-	overlayUIManager.setRootNode(std::move(rootNode));
+	overlayUI.setRootNode(std::move(rootNode));
 
 	quadVertices.emplace_back(glm::vec2(-1, 1), glm::vec2(0, 1));
 	quadVertices.emplace_back(glm::vec2(-1, -1), glm::vec2(0, 0));
@@ -51,7 +54,7 @@ App::App(IWindow* window) : window(window) {
 }
 
 void App::processEvent(const Event& event) {
-	if (overlayUIManager.processEvent(event))
+	if (overlayUI.processEvent(event))
 		return;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
@@ -68,30 +71,30 @@ void App::processEvent(const Event& event) {
 		}
 	}
 
-	screens.back()->processEvent(event);
+	activeMode->processEvent(event);
 }
 
-void App::tick(microseconds dt, int windowWidth, int windowHeight, float windowDPI) {
+void App::tick(microseconds dt, int width, int height, float dpi) {
 	glViewport(0, 0, windowWidth, windowHeight);
 	glScissor(0, 0, windowWidth, windowHeight);
 
 	glClearColor(0.2f, 0.2f, 0.2f, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	for (const auto& screen : screens)
-		if (screen->isActive())
-			screen->update(dt);
+	if (width != windowWidth || height != windowHeight || dpi != windowDPI) {
+		if (activeMode)
+			activeMode->resize(width, height, dpi);
+		overlayUI.resize(width, height, dpi);
 
-	for (const auto& screen: screens) {
-		if (screen->isActive()) {
-			screen->resize(windowWidth, windowHeight, windowDPI);
-			screen->draw();
-		}
+		windowWidth = width; windowHeight = height; windowDPI = dpi;
 	}
+
+	if (activeMode)
+		activeMode->tick(dt);
 
 	if (fpsOverlay)
 		fpsOverlay->update(dt);
 
-	overlayUIManager.resize(windowWidth, windowHeight, windowDPI);
-	overlayUIManager.render();
+	overlayUI.resize(windowWidth, windowHeight, windowDPI);
+	overlayUI.render();
 }

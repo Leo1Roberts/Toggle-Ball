@@ -26,19 +26,17 @@ struct UndoNode {
 	std::shared_ptr<UndoNode> next;
 };
 
-class Editor : public Screen {
+class EditorScreen : public Screen {
 public:
-	Editor();
+	EditorScreen();
 
 	void open(const std::shared_ptr<LevelDescriptor>& levelToEdit);
 
+	void processEvent(const Event& event) override;
+	void update(microseconds dt) override;
+	void render() override;
+
 private:
-	void doProcessEvent(const Event& event) override;
-
-	void doUpdate(microseconds dt) override;
-
-	void doDraw() override;
-
 	[[nodiscard]] std::shared_ptr<UndoNode> makeUndoNode() const;
 	[[nodiscard]] std::shared_ptr<SelectionUndoNode> makeSelectionUndoNode() const;
 	void syncLevel();

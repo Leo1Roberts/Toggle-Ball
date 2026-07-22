@@ -1,8 +1,9 @@
 #ifndef APP_H
 #define APP_H
 
-#include "Screen.h"
+#include "EditorMode.h"
 #include "Event.h"
+#include "GameMode.h"
 #include "IWindow.h"
 #include "Mesh.h"
 #include "UIManager.h"
@@ -28,18 +29,21 @@ public:
 	App(const App&) = delete;
 	App& operator=(const App&) = delete;
 
-	void addScreen(std::unique_ptr<Screen> screen) { screens.push_back(std::move(screen)); }
-
 	void processEvent(const Event& event);
 
-	void tick(microseconds dt, int windowWidth, int windowHeight, float windowDPI);
+	void tick(microseconds dt, int width, int height, float dpi);
 
 private:
 	IWindow* window;
 
-	std::vector<std::unique_ptr<Screen>> screens;
+	int windowWidth{}, windowHeight{};
+	float windowDPI{};
 
-	UIManager overlayUIManager;
+	AppMode* activeMode;
+	std::unique_ptr<GameMode> gameMode;
+	std::unique_ptr<EditorMode> editorMode;
+
+	UIManager overlayUI;
 	FPSOverlay* fpsOverlay = nullptr;
 
 	std::unique_ptr<Mesh<ScreenVertex>> quadMesh;

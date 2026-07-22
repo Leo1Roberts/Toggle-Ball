@@ -1,17 +1,17 @@
 #include "main.h"
-#include "Editor.h"
+#include "EditorScreen.h"
 
 #include "Settings.h"
 
 #include <ranges>
 
 
-Editor::Editor() {
+EditorScreen::EditorScreen() {
 	// Create UI here
 }
 
 
-void Editor::open(const std::shared_ptr<LevelDescriptor>& levelToEdit) {
+void EditorScreen::open(const std::shared_ptr<LevelDescriptor>& levelToEdit) {
 	level = levelToEdit;
 	ball = EditorBall(level->getBallDescriptor().get());
 	obstacles.append_range(levelToEdit->getObstacleDescriptors()
@@ -21,11 +21,11 @@ void Editor::open(const std::shared_ptr<LevelDescriptor>& levelToEdit) {
 }
 
 
-std::shared_ptr<UndoNode> Editor::makeUndoNode() const {
+std::shared_ptr<UndoNode> EditorScreen::makeUndoNode() const {
 	return std::make_shared<UndoNode>(level.get(), makeSelectionUndoNode());
 }
 
-std::shared_ptr<SelectionUndoNode> Editor::makeSelectionUndoNode() const {
+std::shared_ptr<SelectionUndoNode> EditorScreen::makeSelectionUndoNode() const {
 	return std::make_shared<SelectionUndoNode>(
 		focus,
 		ball.isSelected(),
@@ -36,7 +36,7 @@ std::shared_ptr<SelectionUndoNode> Editor::makeSelectionUndoNode() const {
 }
 
 
-void Editor::doProcessEvent(const Event& event) {
+void EditorScreen::processEvent(const Event& event) {
 	if (uiManager.processEvent(event))
 		return;
 
@@ -55,16 +55,16 @@ void Editor::doProcessEvent(const Event& event) {
 	}
 }
 
-void Editor::doUpdate(microseconds dt) {
+void EditorScreen::update(microseconds dt) {
 
 }
 
-void Editor::doDraw() {
+void EditorScreen::render() {
 
 }
 
 
-void Editor::syncLevel() {
+void EditorScreen::syncLevel() {
 	*level = currentNode->level;
 
 	ball = EditorBall(level->getBallDescriptor().get());
@@ -73,13 +73,13 @@ void Editor::syncLevel() {
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
 }
 
-void Editor::syncSelection() {
+void EditorScreen::syncSelection() {
 	focus = currentNode->selection->focus;
 	for (size_t i = 0; i < obstacles.size(); i++)
 		obstacles[i].setSelected(currentNode->selection->obstacles[i]);
 }
 
-void Editor::undo() {
+void EditorScreen::undo() {
 	if (currentNode->selection->previous) { // Undo selection only
 		currentNode->selection = currentNode->selection->previous;
 		syncSelection();
@@ -90,7 +90,7 @@ void Editor::undo() {
 	}
 }
 
-void Editor::redo() {
+void EditorScreen::redo() {
 	if (currentNode->selection->next) { // Redo selection only
 		currentNode->selection = currentNode->selection->next;
 		syncSelection();
