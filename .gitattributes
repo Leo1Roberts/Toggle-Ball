@@ -8,6 +8,7 @@
 .lvl    text
 .vert   text
 .frag   text
+.cfg    text
 
 # Ensure consistent line endings on Windows machines
 text=auto
