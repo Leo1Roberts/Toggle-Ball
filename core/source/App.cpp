@@ -1,12 +1,10 @@
 #include "App.h"
 
+#include "AppMode.h"
 #include "AssetManager.h"
 #include "FPSOverlay.h"
-#include "Font.h"
 #include "Settings.h"
 #include "Shader.h"
-#include "Texture.h"
-
 #include <ranges>
 
 void ScreenVertex::setupLayout() {
@@ -17,18 +15,7 @@ void ScreenVertex::setupLayout() {
 	glEnableVertexAttribArray(1);
 }
 
-App::App(std::unique_ptr<AbstractWindow> appWindow) : window(std::move(appWindow)) {
-	Settings::load();
-	Meshes::load();
-	Shaders::load();
-	Textures::load();
-	Fonts::load();
-
-	gameMode = std::make_unique<GameMode>();
-	activeMode = gameMode.get();
-	// editorMode = std::make_unique<EditorMode>();
-	// activeMode = editorMode.get();
-
+App::App(std::unique_ptr<AbstractWindow> appWindow, std::unique_ptr<AppMode> appMode) : window(std::move(appWindow)), content(std::move(appMode)) {
 	auto rootNode = std::make_unique<UINode>();
 	auto fps = std::make_unique<FPSOverlay>();
 	fps->layout = { .offset = {10.f, 10.f} };
@@ -54,7 +41,7 @@ App::App(std::unique_ptr<AbstractWindow> appWindow) : window(std::move(appWindow
 	glEnable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
 
-	activeMode->resize(window->config.width, window->config.height, window->config.dpiScale);
+	content->resize(window->config.width, window->config.height, window->config.dpiScale);
 	overlayUI.resize(window->config.width, window->config.height, window->config.dpiScale);
 }
 
@@ -65,8 +52,8 @@ void App::tick(microseconds dt) {
 	glClearColor(0.2f, 0.2f, 0.2f, 1);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	if (activeMode)
-		activeMode->tick(dt);
+	if (content)
+		content->tick(dt);
 
 	if (fpsOverlay)
 		fpsOverlay->update(dt);
@@ -75,15 +62,15 @@ void App::tick(microseconds dt) {
 }
 
 
-void App::resize(int width, int height) {
-	window->config.width = width; window->config.height = height;
-	activeMode->resize(window->config.width, window->config.height, window->config.dpiScale);
+void App::resizeWindow() {
+	window->updateWindowSize();
+	content->resize(window->config.width, window->config.height, window->config.dpiScale);
 	overlayUI.resize(window->config.width, window->config.height, window->config.dpiScale);
 }
 
-void App::updateDPIScale(float dpi) {
-	window->config.dpiScale = dpi;
-	activeMode->resize(window->config.width, window->config.height, window->config.dpiScale);
+void App::updateDPIScale() {
+	window->updateWindowDPIScale();
+	content->resize(window->config.width, window->config.height, window->config.dpiScale);
 	overlayUI.resize(window->config.width, window->config.height, window->config.dpiScale);
 }
 
@@ -106,5 +93,5 @@ void App::processEvent(const Event& event) {
 		}
 	}
 
-	activeMode->processEvent(event);
+	content->processEvent(event);
 }

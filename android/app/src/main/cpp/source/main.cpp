@@ -4,6 +4,10 @@
 #include <game-activity/GameActivity.cpp>
 #include <game-text-input/gametextinput.cpp>
 #include <App.h>
+#include <AssetManager.h>
+#include <Shader.h>
+#include <Texture.h>
+#include <GameMode.h>
 
 extern "C" {
 
@@ -61,8 +65,13 @@ void handle_cmd(android_app *androidApp, int32_t cmd) {
 
         if (androidApp->userData == nullptr) {
             AssetManager::init(androidApp->activity->assetManager);
+            Settings::load();
+            Meshes::load();
+            Shaders::load();
+            Textures::load();
+            Fonts::load();
 
-            androidApp->userData = new App(std::make_unique<AndroidWindow>(androidApp));
+            androidApp->userData = new App(std::make_unique<AndroidWindow>(androidApp), std::make_unique<GameMode>());
         }
     } break;
     case APP_CMD_TERM_WINDOW: {
@@ -78,13 +87,13 @@ void handle_cmd(android_app *androidApp, int32_t cmd) {
     case APP_CMD_WINDOW_RESIZED: {
         if (androidApp->userData) {
             auto *app = reinterpret_cast<App *>(androidApp->userData);
-            app->window->updateWindowConfiguration();
+            app->resizeWindow();
         }
     }
     case APP_CMD_CONFIG_CHANGED: {
         if (androidApp->userData) {
             auto *app = reinterpret_cast<App *>(androidApp->userData);
-            app->window->updateWindowConfiguration();
+            app->updateDPIScale();
         }
     } break;
     case APP_CMD_DESTROY: {

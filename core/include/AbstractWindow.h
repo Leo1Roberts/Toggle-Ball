@@ -16,7 +16,12 @@ public:
 	[[nodiscard]] virtual bool isFullscreen() const = 0;
 	virtual void close() = 0;
 
-	virtual void updateWindowConfiguration() = 0;
+	virtual void updateWindowSize() = 0;
+	virtual void updateWindowDPIScale() = 0;
+	void updateWindowConfiguration() {
+		updateWindowSize();
+		updateWindowDPIScale();
+	};
 
 	WindowConfiguration config{};
 };

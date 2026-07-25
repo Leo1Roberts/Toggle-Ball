@@ -1,6 +1,7 @@
 #include "main.h"
 
 #include "App.h"
+#include "EditorMode.h"
 #include "PlayScreen.h"
 #include "GlfwWindow.h"
 #include "Shader.h"
@@ -138,16 +139,16 @@ static void scrollCallback(GLFWwindow* window, double xOffset, double yOffset) {
 }
 
 
-static void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
+static void framebufferSizeCallback(GLFWwindow* window, int, int) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
-	app->resize(width, height);
+	app->resizeWindow();
 }
 
-static void windowContentScaleCallback(GLFWwindow* window, float xScale, float yScale) {
+static void windowContentScaleCallback(GLFWwindow* window, float, float) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
-	app->updateDPIScale(xScale);
+	app->updateDPIScale();
 }
 
 int main() {
@@ -198,7 +199,13 @@ int main() {
 	glDebugMessageCallback(glDebugOutput, nullptr);
 	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
-	App app(std::make_unique<GlfwWindow>(rawWindow));
+	Settings::load();
+	Meshes::load();
+	Shaders::load();
+	Textures::load();
+	Fonts::load();
+
+	App app(std::make_unique<GlfwWindow>(rawWindow), std::make_unique<EditorMode>());
 
 	glfwSetWindowUserPointer(rawWindow, &app);
 

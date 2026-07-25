@@ -19,8 +19,3 @@ void GlfwWindow::toggleFullscreen() {
 		currentlyFullscreen = true;
 	}
 }
-
-void GlfwWindow::updateWindowConfiguration() {
-	glfwGetFramebufferSize(windowHandle, &config.width, &config.height);
-	glfwGetWindowContentScale(windowHandle, &config.dpiScale, nullptr);
-}

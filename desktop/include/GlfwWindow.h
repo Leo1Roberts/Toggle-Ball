@@ -9,20 +9,17 @@
 class GlfwWindow : public AbstractWindow {
 public:
 	explicit GlfwWindow(GLFWwindow* handle) : windowHandle(handle) {
-		GlfwWindow::updateWindowConfiguration();
+		updateWindowConfiguration();
 	}
 
-	[[nodiscard]] bool isFullscreen() const override {
-		return currentlyFullscreen;
-	}
+	[[nodiscard]] bool isFullscreen() const override { return currentlyFullscreen; }
 
-	void close() override {
-		glfwSetWindowShouldClose(windowHandle, GLFW_TRUE);
-	}
+	void close() override { glfwSetWindowShouldClose(windowHandle, GLFW_TRUE); 	}
 
 	void toggleFullscreen() override;
 
-	void updateWindowConfiguration() override;
+	void updateWindowSize() override { glfwGetFramebufferSize(windowHandle, &config.width, &config.height); }
+	void updateWindowDPIScale() override { glfwGetWindowContentScale(windowHandle, &config.dpiScale, nullptr); }
 
 private:
 	GLFWwindow* windowHandle;

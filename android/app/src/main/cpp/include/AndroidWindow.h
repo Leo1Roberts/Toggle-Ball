@@ -16,13 +16,19 @@ public:
 		return currentlyFullscreen;
 	}
 
-	void close() override {
-		GameActivity_finish(app->activity);
-	}
+	void close() override { GameActivity_finish(app->activity); }
 
 	void toggleFullscreen() override;
 
-	void updateWindowConfiguration() override;
+    void updateWindowSize() override {
+        config.width = ANativeWindow_getWidth(app->window);
+        config.height = ANativeWindow_getHeight(app->window);
+    }
+    void updateWindowDPIScale() override {
+        int densityDpi = AConfiguration_getDensity(app->config);
+        if (densityDpi != 0 && densityDpi != ACONFIGURATION_DENSITY_NONE)
+            config.dpiScale = (float)densityDpi / (float)ACONFIGURATION_DENSITY_MEDIUM;
+    }
 
 private:
 	struct android_app* app;
