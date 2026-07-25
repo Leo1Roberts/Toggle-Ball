@@ -30,9 +30,7 @@ struct KeyChord {
 	KeyCode code;
 	byte modifiers;
 
-	bool operator==(const KeyChord& other) const {
-		return code == other.code && modifiers == other.modifiers;
-	}
+	bool operator==(const KeyChord&) const = default;
 };
 
 template<>
@@ -51,6 +49,7 @@ enum class ActionCode {
 	Fullscreen,
 
 	Toggle,
+	InstantToggle,
 
 	Undo,
 	Redo,
@@ -82,6 +81,7 @@ private:
 		{ ActionCode::Quit,			"Quit" },
 		{ ActionCode::Fullscreen,	"Fullscreen" },
 		{ ActionCode::Toggle,		"Toggle" },
+		{ ActionCode::InstantToggle,"Instant toggle" },
 		{ ActionCode::Undo,			"Undo" },
 		{ ActionCode::Redo,			"Redo" },
 	};

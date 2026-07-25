@@ -43,7 +43,6 @@ private:
 	glm::vec3 viewDirection{};
 	float viewDistance{};
 	glm::vec3 viewPosition{};
-	void updateView();
 
 	glm::vec3 viewUpDirection{0.f};
 	glm::vec3 viewSunDirection{0.f};

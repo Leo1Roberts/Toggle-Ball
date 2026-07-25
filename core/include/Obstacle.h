@@ -5,9 +5,10 @@
 #include "Mesh.h"
 #include "PhysicsConstants.h"
 #include "Plane.h"
-#include "Sizes.h"
 #include "Smoother.h"
 #include "Utilities.h"
+
+constexpr float OUTLINE_WIDTH_WORLD = 0.1f; // TODO: REMOVE TEMP TEST
 
 struct BallCollisionInfo;
 class GameBall;
@@ -82,7 +83,7 @@ public:
 private:
 	glm::vec3 position{0.f};
 	float angle{};
-	glm::mat3 rotation = glm::mat3(1.f);
+	glm::mat3 rotation = glm::mat3(1);
 	glm::vec3 velocity{0.f};
 	float angularVelocity{};
 	float phase{};
@@ -653,6 +654,9 @@ public:
 	explicit EditorObstacle(ObstacleDescriptor* descriptor) :
 	    descriptor(descriptor) {
 		descriptor->getMotion()->initKinematicState(kinematicState);
+		descriptor->getShape()->generateObstacleMesh(obstacleMesh, descriptor->isGoal() ? Color::SoftGreen : descriptor->getMotion()->getColor());
+		// descriptor->getShape()->generateOutlineMesh(outlineMesh);
+		descriptor->getMotion()->generateDomainMesh(domainMesh, descriptor->getShape());
 	}
 
 	~EditorObstacle() = default;
@@ -662,13 +666,18 @@ public:
 	EditorObstacle(EditorObstacle&&) = default;
 	EditorObstacle& operator=(EditorObstacle&&) = default;
 
+	// Only provide numSteps if demonstrating the continuous motion of an obstacle
+	void updateKinematicState(const Smoother& smoother, int numSteps = -1);
+
 	[[nodiscard]] bool isSelected() const { return selected; }
 	void select() { selected = true; }
 	void deselect() { selected = false; }
 	void setSelected(bool isSelected) { selected = isSelected; }
 
-	// Only provide numSteps if demonstrating the continuous motion of an obstacle
-	void updateKinematicState(const Smoother& smoother, int numSteps = -1);
+	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
+	[[nodiscard]] const Mesh<ObjectVertex>* getObstacleMesh() const { return &obstacleMesh; }
+	[[nodiscard]] const Mesh<ObjectVertex>* getOutlineMesh() const { return &outlineMesh; }
+	[[nodiscard]] const Mesh<ObjectVertex>* getDomainMesh() const { return &domainMesh; }
 
 private:
 	ObstacleDescriptor* descriptor;
@@ -677,9 +686,9 @@ private:
 
 	bool selected = false;
 
-	Mesh<ObjectVertex> obstacle = Mesh<ObjectVertex>(GL_STATIC_DRAW);
-	Mesh<ObjectVertex> outline = Mesh<ObjectVertex>(GL_STATIC_DRAW);
-	Mesh<ObjectVertex> domain = Mesh<ObjectVertex>(GL_STATIC_DRAW);
+	Mesh<ObjectVertex> obstacleMesh = Mesh<ObjectVertex>(GL_STATIC_DRAW);
+	Mesh<ObjectVertex> outlineMesh = Mesh<ObjectVertex>(GL_STATIC_DRAW);
+	Mesh<ObjectVertex> domainMesh = Mesh<ObjectVertex>(GL_STATIC_DRAW);
 };
 
 #endif // OBSTACLE_H

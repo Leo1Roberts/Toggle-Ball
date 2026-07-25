@@ -32,7 +32,7 @@ std::string BallDescriptor::serialize() const {
 
 void BallDescriptor::initKinematicState(BallKinematicState& kinematicState) const {
 	kinematicState.position = getInitialPosition();
-	kinematicState.rotation = glm::mat3(1.f);
+	kinematicState.rotation = glm::mat3(1);
 	kinematicState.velocity = kinematicState.angularVelocity = glm::vec3(0.f);
 }
 

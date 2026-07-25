@@ -174,6 +174,7 @@ public:
 	[[nodiscard]] bool isSelected() const { return selected; }
 	void select() { selected = true; }
 	void deselect() { selected = false; }
+	[[nodiscard]] const Texture* getTexture() const { return texture; }
 
 private:
 	BallDescriptor* descriptor{};

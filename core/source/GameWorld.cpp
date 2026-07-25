@@ -105,15 +105,35 @@ void GameWorld::render() {
 
 
 void GameWorld::resize(int screenWidth, int screenHeight) {
-	if (level.getArenaWidth() * screenHeight > screenWidth * level.getArenaHeight()) { // Level is wider than screen
+	if (level.getArenaWidth() * (float)screenHeight > (float)screenWidth * level.getArenaHeight()) { // Level is wider than screen
 		halfWidth = level.getArenaWidth() * 0.5f;
-		halfHeight = halfWidth * screenHeight / screenWidth;
+		halfHeight = halfWidth * (float)screenHeight / (float)screenWidth;
 	} else {
 		halfHeight = level.getArenaHeight() * 0.5f;
-		halfWidth = halfHeight * screenWidth / screenHeight;
+		halfWidth = halfHeight * (float)screenWidth / (float)screenHeight;
 	}
 
-	updateView();
+	viewOrigin = {0, 0, level.getArenaHeight() * 0.5f};
+
+	float
+	ch = std::cos(heading),
+	sh = std::sin(heading),
+	cp = std::cos(pitch),
+	sp = std::sin(pitch);
+	viewDirection.x = ch * cp;
+	viewDirection.y = sh * cp;
+	viewDirection.z = sp;
+
+	viewDistance = std::max(level.getArenaWidth(), level.getArenaHeight()) * 2.f;
+
+	viewPosition = viewOrigin + viewDirection * viewDistance;
+
+	projectionMatrix = glm::ortho(halfWidth, -halfWidth, -halfHeight, halfHeight, viewDistance - level.getArenaWidth(), viewDistance + level.getArenaWidth());
+	viewRotationMatrix = buildViewRotationMatrix(-viewDirection);
+	viewMatrix = buildViewMatrix(viewRotationMatrix, viewPosition);
+
+	viewUpDirection = glm::transpose(viewRotationMatrix) * upDirection;
+	viewSunDirection = glm::transpose(viewRotationMatrix) * sunDirection;
 }
 
 
@@ -159,29 +179,4 @@ void GameWorld::drawObject(const Mesh<ObjectVertex>* model, const Texture* textu
 
 	texture->bind(0);
 	model->draw();
-}
-
-
-void GameWorld::updateView() {
-	viewOrigin = {0, 0, level.getArenaHeight() * 0.5f};
-
-	float
-	ch = std::cos(heading),
-	sh = std::sin(heading),
-	cp = std::cos(pitch),
-	sp = std::sin(pitch);
-	viewDirection.x = ch * cp;
-	viewDirection.y = sh * cp;
-	viewDirection.z = sp;
-
-	viewDistance = std::max(level.getArenaWidth(), level.getArenaHeight()) * 2.f;
-
-	viewPosition = viewOrigin + viewDirection * viewDistance;
-
-	projectionMatrix = glm::ortho(halfWidth, -halfWidth, -halfHeight, halfHeight, viewDistance - level.getArenaWidth(), viewDistance + level.getArenaWidth());
-	viewRotationMatrix = buildViewRotationMatrix(-viewDirection);
-	viewMatrix = buildViewMatrix(viewRotationMatrix, viewPosition);
-
-	viewUpDirection = glm::transpose(viewRotationMatrix) * upDirection;
-	viewSunDirection = glm::transpose(viewRotationMatrix) * sunDirection;
 }

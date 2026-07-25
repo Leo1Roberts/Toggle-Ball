@@ -4,39 +4,62 @@
 #include "Obstacle.h"
 #include "Level.h"
 #include "Screen.h"
+
+#include <utility>
 #include "UIManager.h"
 
+
+enum class EntityType { None, Ball, Obstacle };
+struct EntityReference {
+	EntityType type = EntityType::None;
+	unsigned short index = 0;
+
+	bool operator==(const EntityReference&) const = default;
+};
+
+struct SelectionState {
+	EntityReference focus;
+	std::vector<EntityReference> selection;
+};
+
+
 struct SelectionUndoNode {
-	short focus;
-	bool ball;
-	std::vector<bool> obstacles;
+	SelectionUndoNode(SelectionState selectionState, const std::shared_ptr<SelectionUndoNode>& previous = nullptr, const std::shared_ptr<SelectionUndoNode>& next = nullptr) :
+		selectionState(std::move(selectionState)), previous(previous), next(next) {}
+
+	SelectionState selectionState;
 
 	std::shared_ptr<SelectionUndoNode> previous;
 	std::shared_ptr<SelectionUndoNode> next;
 };
 
 struct UndoNode {
-	UndoNode(const LevelDescriptor* level, const std::shared_ptr<SelectionUndoNode>& selection, const std::shared_ptr<UndoNode>& previous = nullptr, const std::shared_ptr<UndoNode>& next = nullptr) :
-		level(*level), selection(selection), previous(previous), next(next) {}
+	UndoNode(const LevelDescriptor& level, const std::shared_ptr<SelectionUndoNode>& selectionNode, const std::shared_ptr<UndoNode>& previous = nullptr, const std::shared_ptr<UndoNode>& next = nullptr) :
+		level(level), selectionNode(selectionNode), previous(previous), next(next) {}
 
 	LevelDescriptor level;
-	std::shared_ptr<SelectionUndoNode> selection;
+	std::shared_ptr<SelectionUndoNode> selectionNode;
 
 	std::shared_ptr<UndoNode> previous;
 	std::shared_ptr<UndoNode> next;
 };
 
+
 class EditorScreen : public Screen {
 public:
-	EditorScreen();
-
-	void open(const std::shared_ptr<LevelDescriptor>& levelToEdit);
+	explicit EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit);
 
 	void processEvent(const Event& event) override;
 	void update(microseconds dt) override;
 	void render() override;
 
 private:
+	void toggle(bool transition = true);
+
+	void updateObstaclePositions(microseconds dt);
+
+	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 pos, const glm::mat3& rot, glm::vec3 scale = glm::vec3(1.f));
+
 	[[nodiscard]] std::shared_ptr<UndoNode> makeUndoNode() const;
 	[[nodiscard]] std::shared_ptr<SelectionUndoNode> makeSelectionUndoNode() const;
 	void syncLevel();
@@ -44,19 +67,34 @@ private:
 	void undo();
 	void redo();
 
-
-	UIManager uiManager{};
-
-
-	std::shared_ptr<LevelDescriptor> level{};
+	std::unique_ptr<LevelDescriptor> level;
 	EditorBall ball{};
 	std::vector<EditorObstacle> obstacles;
 
 	bool toggled{false};
 	Smoother togglePosition{};
 
-	short focus{}; // TODO: decide how value is interpreted (no focus, ball focus, obstacle focus)
+	EntityReference selectionFocus;
 	std::shared_ptr<UndoNode> currentNode;
+
+
+	glm::vec3 viewOrigin{0.f};
+	float heading = 0.f, pitch = 0.f;
+	glm::vec3 viewDirection{};
+	float viewDistance{};
+	glm::vec3 viewPosition{};
+
+	glm::vec3 viewUpDirection{0.f};
+	glm::vec3 viewSunDirection{0.f};
+
+	float halfWidth{}, halfHeight{};
+
+	glm::mat4 worldMatrix{}, viewMatrix{}, projectionMatrix{};
+	glm::mat3 viewRotationMatrix{};
+
+	void doResize(int width, int height, float dpiScale) override;
+
+	UIManager uiManager{};
 };
 
 #endif // EDITOR_H

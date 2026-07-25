@@ -1,23 +1,25 @@
 #ifndef COLORS_H
 #define COLORS_H
 
+#include "main.h"
+
 #include <glm/glm.hpp>
 
 struct col {
-	glm::uint8 r = 0, g = 0, b = 0, a = 0;
+	byte r = 0, g = 0, b = 0, a = 0;
 
 	constexpr col() = default;
-	constexpr col(glm::uint8 r, glm::uint8 g, glm::uint8 b, glm::uint8 a = 255)
+	constexpr col(byte r, byte g, byte b, byte a = 255)
 		: r(r), g(g), b(b), a(a) {}
 	constexpr col(const glm::vec3& v)
-		: r((glm::uint8)(v.r * 255.f)), g((glm::uint8)(v.g * 255.f)), b((glm::uint8)(v.b * 255.f)), a(255) {}
+		: r((byte)(v.r * 255.f)), g((byte)(v.g * 255.f)), b((byte)(v.b * 255.f)), a(255) {}
 	constexpr col(const glm::vec4& v)
-		: r((glm::uint8)(v.r * 255.f)), g((glm::uint8)(v.g * 255.f)), b((glm::uint8)(v.b * 255.f)), a((glm::uint8)(v.a * 255.f)) {}
+		: r((byte)(v.r * 255.f)), g((byte)(v.g * 255.f)), b((byte)(v.b * 255.f)), a((byte)(v.a * 255.f)) {}
 
 	operator glm::vec3() const { return glm::vec3(r, g, b) / 255.f; }
 	operator glm::vec4() const { return glm::vec4(r, g, b, a) / 255.f; }
 
-	bool operator==(const col& c) const { return r == c.r && g == c.g && b == c.b && a == c.a; }
+	bool operator==(const col&) const = default;
 };
 
 namespace Color {

@@ -1279,24 +1279,26 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			}
 		}
 
-		vs.emplace_back(glm::vec3(), glm::vec2(), glm::vec3());
+		if (NUM_SECTORS != 0) {
+			vs.emplace_back(glm::vec3(), glm::vec2(), glm::vec3());
 
-		const float startRadius = glm::length(segment->getRightCap()) + segment->getMinorRadius();
-		const float endRadius = glm::length(segment->getLeftCap()) + segment->getMinorRadius();
-		for (int i = 0; i <= NUM_SECTORS; i++) {
-			float ang = domainStartAngle + (float)i / (float)NUM_SECTORS * (domainEndAngle - domainStartAngle);
-			glm::vec3 dir = glm::vec3(0.f, std::cos(ang), std::sin(ang));
-			vs.emplace_back(dir * startRadius, glm::vec2(), glm::vec3());
-			vs.emplace_back(dir * -endRadius, glm::vec2(), glm::vec3());
-		}
+			const float startRadius = glm::length(segment->getRightCap()) + segment->getMinorRadius();
+			const float endRadius = glm::length(segment->getLeftCap()) + segment->getMinorRadius();
+			for (int i = 0; i <= NUM_SECTORS; i++) {
+				float ang = domainStartAngle + (float)i / (float)NUM_SECTORS * (domainEndAngle - domainStartAngle);
+				glm::vec3 dir = glm::vec3(0.f, std::cos(ang), std::sin(ang));
+				vs.emplace_back(dir * startRadius, glm::vec2(), glm::vec3());
+				vs.emplace_back(dir * -endRadius, glm::vec2(), glm::vec3());
+			}
 
-		for (int i = START_INDEX + 1; i < START_INDEX + 1 + NUM_SECTORS * 2; i += 2) {
-			is.push_back(START_INDEX);
-			is.push_back(i + 0);
-			is.push_back(i + 2);
-			is.push_back(START_INDEX);
-			is.push_back(i + 1);
-			is.push_back(i + 3);
+			for (int i = START_INDEX + 1; i < START_INDEX + 1 + NUM_SECTORS * 2; i += 2) {
+				is.push_back(START_INDEX);
+				is.push_back(i + 0);
+				is.push_back(i + 2);
+				is.push_back(START_INDEX);
+				is.push_back(i + 1);
+				is.push_back(i + 3);
+			}
 		}
 	} else if (auto* arc = dynamic_cast<const ArcSpec*>(shapeSpec)) {
 		bool fullCircle = std::abs(getAngle2() - getAngle1()) + arc->getArcAngle() >= 2 * PI;
@@ -1349,20 +1351,22 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			START_INDEX = 2 + (SECTORS_PER_SEMICIRCLE + 1) * 2;
 		}
 
-		// Arc
-		for (int i = 0; i <= NUM_SECTORS; i++) {
-			float ang = startAngle + (float)i / (float)NUM_SECTORS * (endAngle - startAngle);
-			glm::vec3 dir = glm::vec3(0.f, -std::sin(ang), std::cos(ang));
-			vs.emplace_back(dir * (arc->getArcRadius() - arc->getMinorRadius()), glm::vec2(), glm::vec3());
-			vs.emplace_back(dir * (arc->getArcRadius() + arc->getMinorRadius()), glm::vec2(), glm::vec3());
-		}
-		for (int i = START_INDEX; i < START_INDEX + NUM_SECTORS * 2; i += 2) {
-			is.push_back(i + 0);
-			is.push_back(i + 1);
-			is.push_back(i + 3);
-			is.push_back(i + 0);
-			is.push_back(i + 3);
-			is.push_back(i + 2);
+		if (NUM_SECTORS != 0) {
+			// Arc
+			for (int i = 0; i <= NUM_SECTORS; i++) {
+				float ang = startAngle + (float)i / (float)NUM_SECTORS * (endAngle - startAngle);
+				glm::vec3 dir = glm::vec3(0.f, -std::sin(ang), std::cos(ang));
+				vs.emplace_back(dir * (arc->getArcRadius() - arc->getMinorRadius()), glm::vec2(), glm::vec3());
+				vs.emplace_back(dir * (arc->getArcRadius() + arc->getMinorRadius()), glm::vec2(), glm::vec3());
+			}
+			for (int i = START_INDEX; i < START_INDEX + NUM_SECTORS * 2; i += 2) {
+				is.push_back(i + 0);
+				is.push_back(i + 1);
+				is.push_back(i + 3);
+				is.push_back(i + 0);
+				is.push_back(i + 3);
+				is.push_back(i + 2);
+			}
 		}
 	}
 }

@@ -24,8 +24,9 @@ App::App(IWindow* window) : window(window) {
 	Textures::load();
 	Fonts::load();
 
-	gameMode = std::make_unique<GameMode>();
-	activeMode = gameMode.get();
+	// gameMode = std::make_unique<GameMode>();
+	editorMode = std::make_unique<EditorMode>();
+	activeMode = editorMode.get();
 
 	auto rootNode = std::make_unique<UINode>();
 	auto fps = std::make_unique<FPSOverlay>();
