@@ -96,6 +96,8 @@ private:
 	glm::mat4 worldMatrix{}, viewMatrix{}, projectionMatrix{};
 	glm::mat3 viewRotationMatrix{};
 
+	float centreDotRadius{};
+
 	void doResize(int width, int height, float dpiScale) override;
 
 	UIManager uiManager{};

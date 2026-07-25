@@ -109,7 +109,7 @@ void EditorScreen::render() {
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
 	for (int i = 0; i < obstacles.size(); i++) {
-		auto& obstacle = obstacles[i];
+		const auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
 			Shaders::outline->setVec4("uOutlineColor", col(obstacle.getDescriptor()->getColor(), Settings::Colors.domainOpacity));
 
@@ -125,7 +125,7 @@ void EditorScreen::render() {
 	glEnable(GL_CULL_FACE);
 
 	Shaders::object->use();
-	for (auto& obstacle: obstacles) {
+	for (const auto& obstacle: obstacles) {
 		Shaders::object->setFloat("uAlpha", getObstacleOpacity(obstacle));
 
 		drawObject(obstacle.getObstacleMesh(), Textures::white.get(),
@@ -242,8 +242,13 @@ void EditorScreen::drawObject(const Mesh<ObjectVertex>* model, const Texture* te
 void EditorScreen::drawObstacleOutline(const EditorObstacle& obstacle) {
 	worldMatrix = buildScaledWorldMatrix(obstacle.getKinematicState()->getRotation(), obstacle.getKinematicState()->getPosition());
 	Shaders::outline->setMat4("uProjectionFull", projectionMatrix * viewMatrix * worldMatrix);
-
 	obstacle.getOutlineMesh()->draw();
+
+	glDisable(GL_DEPTH_TEST);
+	worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), obstacle.getKinematicState()->getPosition(), glm::vec3(centreDotRadius));
+	Shaders::outline->setMat4("uProjectionFull", projectionMatrix * viewMatrix * worldMatrix);
+	Meshes::ball->draw();
+	glEnable(GL_DEPTH_TEST);
 }
 
 
@@ -314,6 +319,7 @@ void EditorScreen::doResize(int width, int height, float dpiScale) {
 	viewPosition = viewOrigin + viewDirection * viewDistance;
 
 	float uiToWorldScale = dpiScale * Settings::Sizes.uiScale * halfHeight * 2.f / height;
+	centreDotRadius = uiToWorldScale * Settings::Sizes.centreDotRadius;
 	ball.updateOutlineRadius(uiToWorldScale);
 	for (auto& obstacle : obstacles)
 		obstacle.generateEphemeralMeshes(uiToWorldScale);
