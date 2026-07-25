@@ -87,7 +87,7 @@ void PlayScreen::render() {
 }
 
 
-void PlayScreen::doResize(int width, int height, float dpiScale) {
+void PlayScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
 	game.resize(width, height);
 }

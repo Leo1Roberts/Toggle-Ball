@@ -85,6 +85,8 @@ private:
 	glm::vec3 viewOrigin{0.f};
 	float heading = 0.f, pitch = 0.f;
 	glm::vec3 viewDirection{};
+	float baseViewDistance{};
+	float zoomInv = 1.f;
 	float viewDistance{};
 	glm::vec3 viewPosition{};
 
@@ -98,7 +100,12 @@ private:
 
 	float centreDotRadius{};
 
-	void doResize(int width, int height, float dpiScale) override;
+	void resetView();
+	void updateView();
+
+	void doResize() override;
+
+	[[nodiscard]] glm::vec3 pointerToWorldPosition(glm::vec2 pointerPosition) const;
 
 	UIManager uiManager{};
 };

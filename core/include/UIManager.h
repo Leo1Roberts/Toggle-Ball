@@ -23,6 +23,8 @@ public:
 	void submitText(const UIText* text);
 	void render();
 
+	[[nodiscard]] float getScale() const { return dpiScale * Settings::Sizes.uiScale; }
+
 private:
 	[[nodiscard]] static UINode* findNodePointedTo(UINode* currentNode, glm::vec2 pointerPosition);
 
@@ -31,8 +33,6 @@ private:
 	[[nodiscard]] glm::vec2 screenToLogicalPosition(glm::vec2 screenPosition) const { return screenPosition / getScale(); }
 
 	void setRenderer(IUIRenderer* newRenderer);
-
-	[[nodiscard]] float getScale() const { return dpiScale * Settings::Sizes.uiScale; }
 
 	std::unique_ptr<UINode> rootNode;
 	UINode* focusedNode = nullptr;

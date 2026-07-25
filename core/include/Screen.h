@@ -16,7 +16,7 @@ public:
 		height = screenHeight;
 		aspectRatio = (float)width / (float)height;
 		dpiScale = screenDPIScale;
-		doResize(width, height, dpiScale);
+		doResize();
 	}
 
 	[[nodiscard]] int getWidth() const { return width; }
@@ -29,7 +29,7 @@ protected:
 	float dpiScale{};
 
 private:
-	virtual void doResize(int screenWidth, int screenHeight, float screenDPIScale) {}
+	virtual void doResize() {}
 };
 
 #endif // SCREEN_H

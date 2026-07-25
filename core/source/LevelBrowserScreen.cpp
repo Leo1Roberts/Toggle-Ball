@@ -39,6 +39,6 @@ void LevelBrowserScreen::render() {
 }
 
 
-void LevelBrowserScreen::doResize(int screenWidth, int screenHeight, float screenDPIScale) {
-	uiManager.resize(screenWidth, screenHeight, screenDPIScale);
+void LevelBrowserScreen::doResize() {
+	uiManager.resize(width, height, dpiScale);
 }

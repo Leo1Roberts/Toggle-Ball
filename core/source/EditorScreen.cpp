@@ -24,6 +24,11 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) {
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
 
 	currentNode = makeUndoNode();
+
+	resetView();
+
+	for (auto& o : obstacles)
+		o.select();
 }
 
 
@@ -68,10 +73,16 @@ void EditorScreen::processEvent(const Event& event) {
 			}
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (pointer->action == PointerAction::Down) {
-			switch (pointer->button) {
-			default:;
-			}
+		if (pointer->action == PointerAction::Scroll) {
+			float multiplier = 1.f;
+			if (pointer->scroll.y > 0)
+				multiplier = 1.f / 1.2f;
+			else if (pointer->scroll.y < 0)
+				multiplier = 1.2f;
+			zoomInv *= multiplier;
+			viewOrigin = viewOrigin * multiplier + pointerToWorldPosition(pointer->position) * (1 - multiplier);
+			updateView();
+			return;
 		}
 	}
 }
@@ -292,9 +303,13 @@ void EditorScreen::redo() {
 }
 
 
-void EditorScreen::doResize(int width, int height, float dpiScale) {
-	uiManager.resize(width, height, dpiScale);
-
+void EditorScreen::resetView() {
+	heading = pitch = 0.f;
+	viewOrigin = {0.f, 0.f, level->getArenaHeight() * 0.5f};
+	baseViewDistance = std::max(level->getArenaWidth(), level->getArenaHeight()) * 2.f;
+	zoomInv = 1.f;
+}
+void EditorScreen::updateView() {
 	if (level->getArenaWidth() * (float)height > (float)width * level->getArenaHeight()) { // Level is wider than screen
 		halfWidth = level->getArenaWidth() * 0.5f;
 		halfHeight = halfWidth * (float)height / (float)width;
@@ -302,8 +317,8 @@ void EditorScreen::doResize(int width, int height, float dpiScale) {
 		halfHeight = level->getArenaHeight() * 0.5f;
 		halfWidth = halfHeight * (float)width / (float)height;
 	}
-
-	viewOrigin = {0.f, 0.f, level->getArenaHeight() * 0.5f};
+	halfWidth *= zoomInv;
+	halfHeight *= zoomInv;
 
 	float
 	ch = std::cos(heading),
@@ -314,15 +329,9 @@ void EditorScreen::doResize(int width, int height, float dpiScale) {
 	viewDirection.y = sh * cp;
 	viewDirection.z = sp;
 
-	viewDistance = std::max(level->getArenaWidth(), level->getArenaHeight()) * 2.f;
+	viewDistance = baseViewDistance * zoomInv;
 
 	viewPosition = viewOrigin + viewDirection * viewDistance;
-
-	float uiToWorldScale = dpiScale * Settings::Sizes.uiScale * halfHeight * 2.f / height;
-	centreDotRadius = uiToWorldScale * Settings::Sizes.centreDotRadius;
-	ball.updateOutlineRadius(uiToWorldScale);
-	for (auto& obstacle : obstacles)
-		obstacle.generateEphemeralMeshes(uiToWorldScale);
 
 	projectionMatrix = glm::ortho(halfWidth, -halfWidth, -halfHeight, halfHeight, viewDistance - level->getArenaWidth(), viewDistance + level->getArenaWidth());
 	viewRotationMatrix = buildViewRotationMatrix(-viewDirection);
@@ -330,4 +339,36 @@ void EditorScreen::doResize(int width, int height, float dpiScale) {
 
 	viewUpDirection = glm::transpose(viewRotationMatrix) * upDirection;
 	viewSunDirection = glm::transpose(viewRotationMatrix) * sunDirection;
+
+	float uiToWorldScale = uiManager.getScale() * halfHeight * 2.f / height;
+	centreDotRadius = uiToWorldScale * Settings::Sizes.centreDotRadius;
+	ball.updateOutlineRadius(uiToWorldScale);
+	for (auto& obstacle : obstacles)
+		obstacle.generateEphemeralMeshes(uiToWorldScale);
+}
+
+void EditorScreen::doResize() {
+	uiManager.resize(width, height, dpiScale);
+	updateView();
+}
+
+
+glm::vec3 EditorScreen::pointerToWorldPosition(glm::vec2 pointerPosition) const {
+	glm::vec2 posYNorm = pixelsToYNorm(pointerPosition, width, height);
+	float
+	ch = std::cos(heading),
+	sh = std::sin(heading),
+	cp = std::cos(pitch),
+	sp = std::sin(pitch);
+
+	glm::vec3 offset;
+	offset.x = posYNorm.x * halfHeight * -sh + posYNorm.y * halfHeight * -sp * ch;
+	offset.y = posYNorm.x * halfHeight * ch + posYNorm.y * halfHeight * -sp * sh;
+	offset.z = posYNorm.y * halfHeight * cp;
+	glm::vec3 mousePos = viewPosition + offset;
+	glm::vec3 mouseDir = viewDirection * -1.f;
+
+	glm::vec3 normal = {1, 0, 0};
+	float d = dot(mousePos, normal) / dot(mouseDir, normal);
+	return mousePos - mouseDir * d;
 }

@@ -16,7 +16,7 @@ public:
 	void render() override;
 
 private:
-	void doResize(int width, int height, float dpiScale) override;
+	void doResize() override;
 
 	GameWorld game;
 	UIManager uiManager{};

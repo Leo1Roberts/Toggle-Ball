@@ -13,7 +13,7 @@ public:
 	void render() override;
 
 private:
-	void doResize(int screenWidth, int screenHeight, float screenDPIScale) override;
+	void doResize() override;
 
 	UIManager uiManager{};
 };

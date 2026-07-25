@@ -73,7 +73,7 @@ void PlayTestScreen::render() {
 }
 
 
-void PlayTestScreen::doResize(int width, int height, float dpiScale) {
+void PlayTestScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
 	game.resize(width, height);
 }
