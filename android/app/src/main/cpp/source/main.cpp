@@ -72,7 +72,7 @@ void handle_cmd(android_app *androidApp, int32_t cmd) {
             Textures::load();
             Fonts::load();
 
-            androidApp->userData = new App(std::make_unique<AndroidWindow>(androidApp), std::make_unique<EditorMode>());
+            androidApp->userData = new App(std::make_unique<AndroidWindow>(androidApp), std::make_unique<GameMode>());
         }
     } break;
     case APP_CMD_TERM_WINDOW: {

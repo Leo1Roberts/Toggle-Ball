@@ -19,26 +19,6 @@ PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<v
 	: game(levelToPlay) {
 	auto rootNode = std::make_unique<UINode>();
 
-	auto restartButton = std::make_unique<UIButton>("Restart", Theme::PrimaryButton);
-	restartButton->layout = {
-		.anchor = Anchor::TopRight,
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = 100.f, .height = 60.f,
-		.offset = {-20.f, 20.f}
-	};
-	restartButton->setOnClick([&] { game.start(); });
-	rootNode->addChild(std::move(restartButton));
-
-	auto levelButton = std::make_unique<UIButton>(levelToPlay.getName(), Theme::SecondaryOutline);
-	levelButton->layout = {
-		.anchor = Anchor::BottomLeft,
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = 100.f, .height = 60.f,
-		.offset = {20.f, -20.f}
-	};
-	levelButton->setOnClick(browseLevelsCallback);
-	rootNode->addChild(std::move(levelButton));
-
 	auto levelCompleteBackground = std::make_unique<UIButton>();
 	levelCompleteBackground->hide();
 	levelCompleteDisplay = rootNode->addChild(std::move(levelCompleteBackground));
@@ -60,6 +40,29 @@ PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<v
 
 	levelCompleteDisplay->addChild(std::move(levelCompleteButton));
 	levelCompleteDisplay->deactivate();
+
+	auto restartButton = std::make_unique<UIButton>("Restart", Theme::PrimaryButton);
+	restartButton->layout = {
+		.anchor = Anchor::TopRight,
+		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
+		.width = 100.f, .height = 60.f,
+		.offset = {-20.f, 20.f}
+	};
+	restartButton->setOnClick([&] {
+		levelCompleteDisplay->deactivate();
+		game.start();
+	});
+	rootNode->addChild(std::move(restartButton));
+
+	auto levelButton = std::make_unique<UIButton>(levelToPlay.getName(), Theme::SecondaryOutline);
+	levelButton->layout = {
+		.anchor = Anchor::BottomLeft,
+		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
+		.width = 100.f, .height = 60.f,
+		.offset = {20.f, -20.f}
+	};
+	levelButton->setOnClick(browseLevelsCallback);
+	rootNode->addChild(std::move(levelButton));
 
 	uiManager.setRootNode(std::move(rootNode));
 

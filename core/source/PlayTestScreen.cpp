@@ -15,16 +15,6 @@ PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 	: game(levelToPlay) {
 	auto rootNode = std::make_unique<UINode>();
 
-	auto restartButton = std::make_unique<UIButton>("Restart", Theme::PrimaryButton);
-	restartButton->layout = {
-		.anchor = Anchor::TopRight,
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = 100.f, .height = 60.f,
-		.offset = {-20.f, 20.f}
-	};
-	restartButton->setOnClick([&] { game.start(); });
-	rootNode->addChild(std::move(restartButton));
-
 	auto levelCompleteBackground = std::make_unique<UIButton>();
 	levelCompleteBackground->hide();
 	levelCompleteDisplay = rootNode->addChild(std::move(levelCompleteBackground));
@@ -46,6 +36,19 @@ PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 
 	levelCompleteDisplay->addChild(std::move(levelCompleteButton));
 	levelCompleteDisplay->deactivate();
+
+	auto restartButton = std::make_unique<UIButton>("Restart", Theme::PrimaryButton);
+	restartButton->layout = {
+		.anchor = Anchor::TopRight,
+		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
+		.width = 100.f, .height = 60.f,
+		.offset = {-20.f, 20.f}
+	};
+	restartButton->setOnClick([&] {
+		levelCompleteDisplay->deactivate();
+		game.start();
+	});
+	rootNode->addChild(std::move(restartButton));
 	
 	uiManager.setRootNode(std::move(rootNode));
 

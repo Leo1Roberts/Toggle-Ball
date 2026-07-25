@@ -26,9 +26,6 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) {
 	currentNode = makeUndoNode();
 
 	resetView();
-
-	for (auto& o : obstacles)
-		o.select();
 }
 
 
