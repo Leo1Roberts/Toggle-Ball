@@ -18,6 +18,7 @@ enum ModifierFlags : byte {
 };
 
 enum class KeyCode {
+	Tab,
 	Enter,
 	Escape,
 	Space,
@@ -47,6 +48,8 @@ enum class ActionCode {
 
 	Quit,
 	Fullscreen,
+
+	TestLevel,
 
 	Toggle,
 	InstantToggle,
@@ -80,6 +83,7 @@ private:
 		{ ActionCode::Cancel,		"Cancel" },
 		{ ActionCode::Quit,			"Quit" },
 		{ ActionCode::Fullscreen,	"Fullscreen" },
+		{ ActionCode::TestLevel,	"Test level" },
 		{ ActionCode::Toggle,		"Toggle" },
 		{ ActionCode::InstantToggle,"Instant toggle" },
 		{ ActionCode::Undo,			"Undo" },
@@ -107,6 +111,7 @@ private:
 	struct Entry { KeyCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
+		{ KeyCode::Tab,		"TAB" },
 		{ KeyCode::Enter,	"ENTER" },
 		{ KeyCode::Escape,	"ESC" },
 		{ KeyCode::Space,	"SPACE" },

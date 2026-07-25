@@ -1,5 +1,5 @@
-#ifndef GAME_H
-#define GAME_H
+#ifndef PLAY_TEST_SCREEN_H
+#define PLAY_TEST_SCREEN_H
 
 #include "GameWorld.h"
 #include "Screen.h"
@@ -7,9 +7,9 @@
 
 
 class UIButton;
-class PlayScreen : public Screen {
+class PlayTestScreen : public Screen {
 public:
-	explicit PlayScreen(const LevelDescriptor& levelToPlay, const std::function<void()>& browseLevelsCallback);
+	explicit PlayTestScreen(const LevelDescriptor& levelToPlay);
 
 	void processEvent(const Event& event) override;
 	void update(microseconds dt) override;
@@ -25,4 +25,4 @@ private:
 };
 
 
-#endif // GAME_H
+#endif // PLAY_TEST_SCREEN_H

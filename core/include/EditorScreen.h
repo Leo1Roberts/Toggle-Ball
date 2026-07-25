@@ -53,6 +53,8 @@ public:
 	void update(microseconds dt) override;
 	void render() override;
 
+	[[nodiscard]] const LevelDescriptor* getLevel() const { return level.get(); }
+
 private:
 	void toggle(bool transition = true);
 

@@ -71,6 +71,7 @@ void APIENTRY glDebugOutput(GLenum source,
 
 [[nodiscard]] static KeyCode translateKey(int glfwKey) {
 	switch (glfwKey) {
+	case GLFW_KEY_TAB:		return KeyCode::Tab;
 	case GLFW_KEY_ENTER:	return KeyCode::Enter;
 	case GLFW_KEY_ESCAPE:	return KeyCode::Escape;
 	case GLFW_KEY_SPACE:	return KeyCode::Space;

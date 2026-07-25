@@ -1,11 +1,7 @@
-#include "PlayScreen.h"
+#include "PlayTestScreen.h"
 
-#include "Shader.h"
 #include "Theme.h"
 #include "UIButton.h"
-
-#include <glm/glm.hpp>
-#include <ranges>
 
 const glm::vec3 groundColor = colorToLinear({76, 76, 76});
 const glm::vec3 skyColor = colorToLinear({85, 110, 128});
@@ -15,7 +11,7 @@ constexpr glm::vec3 upDirection{0, 0, 1};
 const glm::vec3 sunDirection = glm::normalize(glm::vec3(2, 2, 3));
 
 
-PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<void()>& browseLevelsCallback)
+PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 	: game(levelToPlay) {
 	auto rootNode = std::make_unique<UINode>();
 
@@ -28,16 +24,6 @@ PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<v
 	};
 	restartButton->setOnClick([&] { game.start(); });
 	rootNode->addChild(std::move(restartButton));
-
-	auto levelButton = std::make_unique<UIButton>(levelToPlay.getName(), Theme::SecondaryOutline);
-	levelButton->layout = {
-		.anchor = Anchor::BottomLeft,
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = 100.f, .height = 60.f,
-		.offset = {20.f, -20.f}
-	};
-	levelButton->setOnClick(browseLevelsCallback);
-	rootNode->addChild(std::move(levelButton));
 
 	auto levelCompleteBackground = std::make_unique<UIButton>();
 	levelCompleteBackground->hide();
@@ -60,34 +46,34 @@ PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<v
 
 	levelCompleteDisplay->addChild(std::move(levelCompleteButton));
 	levelCompleteDisplay->deactivate();
-
+	
 	uiManager.setRootNode(std::move(rootNode));
 
 	game.start();
 }
 
 
-void PlayScreen::processEvent(const Event& event) {
+void PlayTestScreen::processEvent(const Event& event) {
 	if (uiManager.processEvent(event))
 		return;
 
 	game.processEvent(event);
 }
 
-void PlayScreen::update(microseconds dt) {
+void PlayTestScreen::update(microseconds dt) {
 	bool wasComplete = game.levelIsComplete();
 	game.update(dt);
 	if (!wasComplete && game.levelIsComplete())
 		levelCompleteDisplay->activate();
 }
 
-void PlayScreen::render() {
+void PlayTestScreen::render() {
 	game.render();
 	uiManager.render();
 }
 
 
-void PlayScreen::doResize(int width, int height, float dpiScale) {
+void PlayTestScreen::doResize(int width, int height, float dpiScale) {
 	uiManager.resize(width, height, dpiScale);
 	game.resize(width, height);
 }

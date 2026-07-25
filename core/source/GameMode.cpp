@@ -13,7 +13,7 @@ void GameMode::browseLevels() {
 }
 
 void GameMode::playLevel(const std::string& levelName) {
-	playScreen = std::make_unique<PlayScreen>(LevelDescriptor::load(levelName).get(),
+	playScreen = std::make_unique<PlayScreen>(*LevelDescriptor::load(levelName),
 		[&] { this->browseLevels(); });
 	resizeToMatchActiveScreen(playScreen.get());
 	activeScreen = playScreen.get();
