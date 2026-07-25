@@ -96,10 +96,10 @@ void GameWorld::render() {
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	for (auto& o: obstacles)
-		drawObject(o.getMesh(), Textures::white.get(),
-				   o.getKinematicState()->getPosition(),
-				   o.getKinematicState()->getRotation());
+	for (auto& obstacle: obstacles)
+		drawObject(obstacle.getMesh(), Textures::white.get(),
+				   obstacle.getKinematicState()->getPosition(),
+				   obstacle.getKinematicState()->getRotation());
 	glDisable(GL_DEPTH_TEST);
 }
 

@@ -24,9 +24,6 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) {
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
 
 	currentNode = makeUndoNode();
-
-	for (auto& obstacle : obstacles)
-		obstacle.select(); // TODO: remove
 }
 
 
@@ -116,7 +113,8 @@ void EditorScreen::render() {
 		if (obstacle.isSelected()) {
 			Shaders::outline->setVec4("uOutlineColor", col(obstacle.getDescriptor()->getColor(), Settings::Colors.domainOpacity));
 
-			float depth = (float)i - (float)obstacles.size(); // Place domains at different depths to prevent Z-fighting
+			// Place domains at different depths to prevent Z-fighting. Last part keeps the ball outline on top.
+			float depth = ((float)i - (float)obstacles.size()) / (float)obstacles.size();
 			glm::vec3 position = {depth, obstacle.getDomainPlanarPosition()};
 			worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), position);
 			Shaders::outline->setMat4("uProjectionFull", projectionMatrix * viewMatrix * worldMatrix);
@@ -128,13 +126,7 @@ void EditorScreen::render() {
 
 	Shaders::object->use();
 	for (auto& obstacle: obstacles) {
-		float opacity = 1.f;
-		auto motionSpec = obstacle.getDescriptor()->getMotion();
-		if (dynamic_cast<OscillatingPositionSpec*>(motionSpec) ||
-		    dynamic_cast<OscillatingAngleSpec*>(motionSpec))
-			// Includes a small period where the obstacle is completely invisible
-			opacity = 2.5f * std::abs(0.5f - togglePosition.getCurrentPosition()) - 0.2f;
-		Shaders::object->setFloat("uAlpha", opacity);
+		Shaders::object->setFloat("uAlpha", getObstacleOpacity(obstacle));
 
 		drawObject(obstacle.getObstacleMesh(), Textures::white.get(),
 				   obstacle.getKinematicState()->getPosition(),
@@ -147,44 +139,61 @@ void EditorScreen::render() {
 			   level->getBallDescriptor()->getInitialPosition(),
 			   glm::mat3(1));
 
-	// if (togglePosition.getCurrentPosition() == 0.f || togglePosition.getCurrentPosition() == 1.f) {
-	// 	Shaders::outline->use();
-	// 	glDepthFunc(GL_LEQUAL);
-	//
-	// 	for (int i = 0; i < obstacles.size(); i++) {
-	// 		if (obstacles[i].isSelected() && (i != selectionFocus.index || selectionFocus.type != EntityType::Obstacle)) {
-	// 			// if (action != ACTION_NONE && limiting[i])
-	// 			// 	Shaders::outline->setVec4("uOutlineColor", Color::WarningVec4);
-	// 			// else
-	// 			Shaders::outline->setVec4("uOutlineColor", Color::SelectedVec4);
-	//
-	// 			// draw outline [i]
-	// 		}
-	// 	}
-	//
-	// 	if (selectionFocus.type == EntityType::Obstacle) {
-	// 		// if (action != ACTION_NONE && limiting[focus])
-	// 		// 	Shaders::outline->setVec4("uOutlineColor", Color::WarningVec4);
-	// 		// else
-	// 		Shaders::outline->setVec4("uOutlineColor", Color::FocusedVec4);
-	//
-	// 		// draw outline [selectionFocus.index]
-	// 	}
-	//
-	// 	if (ball.isSelected()) {
-	// 		// bool intersecting = checkBallObstacleCollision(&ball, true) >= 0;
-	//
-	// 		// if (intersecting || (action != ACTION_NONE && limiting[MAX_OBSTACLES]))
-	// 		// 	Shaders::outline->setVec4("uOutlineColor", Color::WarningVec4);
-	// 		// else
-	// 		if (selectionFocus.type == EntityType::Ball)
-	// 			Shaders::outline->setVec4("uOutlineColor", Color::FocusedVec4);
-	// 		else
-	// 			Shaders::outline->setVec4("uOutlineColor", Color::SelectedVec4);
-	//
-	// 		// draw ball outline
-	// 	}
-	// }
+
+	Shaders::outline->use();
+	glDepthFunc(GL_LEQUAL);
+	glEnable(GL_BLEND);
+
+	for (int i = 0; i < obstacles.size(); i++) {
+		const auto& obstacle = obstacles[i];
+		if (obstacle.isSelected() && (i != selectionFocus.index || selectionFocus.type != EntityType::Obstacle)) {
+			glm::vec4 outlineColor;
+			// if (action != ACTION_NONE && limiting[i])
+			// 	outlineColor = Color::Warning;
+			// else
+			outlineColor = Color::Selected;
+			outlineColor.a *= getObstacleOpacity(obstacle);
+			Shaders::outline->setVec4("uOutlineColor", outlineColor);
+
+			drawObstacleOutline(obstacle);
+		}
+	}
+
+	if (selectionFocus.type == EntityType::Obstacle) {
+		const auto& obstacle = obstacles[selectionFocus.index];
+		
+		glm::vec4 outlineColor;
+		// if (action != ACTION_NONE && limiting[focus])
+		// 	outlineColor = Color::Warning;
+		// else
+		outlineColor = Color::Focused;
+		outlineColor.a *= getObstacleOpacity(obstacle);
+		Shaders::outline->setVec4("uOutlineColor", outlineColor);
+
+		drawObstacleOutline(obstacle);
+	}
+
+	if (ball.isSelected()) {
+		// bool intersecting = checkBallObstacleCollision(&ball, true) >= 0;
+
+		glm::vec4 outlineColor;
+		// if (intersecting || (action != ACTION_NONE && limiting[MAX_OBSTACLES]))
+		// 	outlineColor = Color::Warning;
+		// else
+		if (selectionFocus.type == EntityType::Ball)
+			outlineColor = Color::Focused;
+		else
+			outlineColor = Color::Selected;
+		Shaders::outline->setVec4("uOutlineColor", outlineColor);
+
+		glm::vec3 ballOutlinePosition = level->getBallDescriptor()->getInitialPosition();
+		ballOutlinePosition.x -= ball.getOutlineRadius();
+		worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), ballOutlinePosition, glm::vec3(ball.getOutlineRadius()));
+		Shaders::outline->setMat4("uProjectionFull", projectionMatrix * viewMatrix * worldMatrix);
+
+		Meshes::ball->draw();
+	}
+	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 }
 
@@ -205,6 +214,18 @@ void EditorScreen::updateObstaclePositions(microseconds dt) {
 }
 
 
+float EditorScreen::getObstacleOpacity(const EditorObstacle& obstacle) const {
+	float opacity = 1.f;
+
+	auto motionSpec = obstacle.getDescriptor()->getMotion();
+	if (dynamic_cast<OscillatingPositionSpec*>(motionSpec) ||
+	    dynamic_cast<OscillatingAngleSpec*>(motionSpec))
+		// Includes a small period where the obstacle is completely invisible
+		opacity = 2.5f * std::abs(0.5f - togglePosition.getCurrentPosition()) - 0.2f;
+
+	return opacity;
+}
+
 void EditorScreen::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 position, const glm::mat3& rotation, glm::vec3 scale) {
 	worldMatrix = buildScaledWorldMatrix(rotation, position, scale);
 
@@ -216,6 +237,13 @@ void EditorScreen::drawObject(const Mesh<ObjectVertex>* model, const Texture* te
 
 	texture->bind(0);
 	model->draw();
+}
+
+void EditorScreen::drawObstacleOutline(const EditorObstacle& obstacle) {
+	worldMatrix = buildScaledWorldMatrix(obstacle.getKinematicState()->getRotation(), obstacle.getKinematicState()->getPosition());
+	Shaders::outline->setMat4("uProjectionFull", projectionMatrix * viewMatrix * worldMatrix);
+
+	obstacle.getOutlineMesh()->draw();
 }
 
 
@@ -285,8 +313,10 @@ void EditorScreen::doResize(int width, int height, float dpiScale) {
 
 	viewPosition = viewOrigin + viewDirection * viewDistance;
 
+	float uiToWorldScale = dpiScale * Settings::Sizes.uiScale * halfHeight * 2.f / height;
+	ball.updateOutlineRadius(uiToWorldScale);
 	for (auto& obstacle : obstacles)
-		obstacle.generateEphemeralMeshes(dpiScale * Settings::Sizes.uiScale * halfHeight * 2.f / height);
+		obstacle.generateEphemeralMeshes(uiToWorldScale);
 
 	projectionMatrix = glm::ortho(halfWidth, -halfWidth, -halfHeight, halfHeight, viewDistance - level->getArenaWidth(), viewDistance + level->getArenaWidth());
 	viewRotationMatrix = buildViewRotationMatrix(-viewDirection);

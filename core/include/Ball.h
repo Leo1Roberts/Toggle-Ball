@@ -6,6 +6,7 @@
 #include "Obstacle.h"
 #include "PhysicsConstants.h"
 #include "Plane.h"
+#include "Settings.h"
 #include "Utilities.h"
 
 class GameObstacle;
@@ -174,6 +175,12 @@ public:
 	[[nodiscard]] bool isSelected() const { return selected; }
 	void select() { selected = true; }
 	void deselect() { selected = false; }
+
+	void updateOutlineRadius(float uiToWorldScale) {
+		outlineRadius = 1.f + Settings::Sizes.outlineWidth * uiToWorldScale;
+	}
+	[[nodiscard]] float getOutlineRadius() const { return outlineRadius; }
+
 	[[nodiscard]] const Texture* getTexture() const { return texture; }
 
 private:
@@ -182,6 +189,8 @@ private:
 	Texture* texture{};
 
 	bool selected = false;
+
+	float outlineRadius = 1.f;
 };
 
 #endif // BALL_H

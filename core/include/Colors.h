@@ -38,12 +38,9 @@ namespace Color {
 	constexpr col Boundary = col(177, 220, 237);
 
 	constexpr col Selected = col(255, 127, 0);
-	const glm::vec4 SelectedVec4 = Selected;
 	constexpr col SelectBox = col(255, 127, 0, 63);
 	constexpr col Focused = col(255, 191, 0);
-	const glm::vec4 FocusedVec4 = Focused;
 	constexpr col Warning = col(224, 0, 44);
-	const glm::vec4 WarningVec4 = Warning;
 
 	constexpr col ObBlobTerminal = col(0, 100, 255);
 	constexpr col ObBlobTerminalHover = col(0, 90, 230);

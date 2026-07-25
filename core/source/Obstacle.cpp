@@ -1483,7 +1483,7 @@ void OscillatingAngleSpec::updateEditorKinematicState(ObstacleKinematicState& ki
 
 
 ObstacleDescriptor::ObstacleDescriptor(const ObstacleDescriptor& other) :
-	goal(other.goal), material(other.material) {
+	goal(other.goal), color(other.color), material(other.material) {
 	if (other.shape)
 		shape = other.shape->clone();
 	if (other.motion)
@@ -1497,6 +1497,7 @@ ObstacleDescriptor& ObstacleDescriptor::operator=(const ObstacleDescriptor& othe
 		if (other.motion)
 			motion = other.motion->clone();
 		goal = other.goal;
+		color = other.color;
 		material = other.material;
 	}
 	return *this;
