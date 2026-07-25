@@ -10,5 +10,5 @@ uniform vec4 uOutlineColor;
 out vec4 outColor;
 
 void main() {
-    outColor = vec4(uOutlineColor.rgb, uOutlineColor.a);// + (fragUV.x + fragNormal.x + fragPos.x + fragColor.x) * 0.000001);
+    outColor = uOutlineColor;
 }

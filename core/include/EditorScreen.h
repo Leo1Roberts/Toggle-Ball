@@ -60,7 +60,7 @@ private:
 
 	void updateObstaclePositions(microseconds dt);
 
-	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 pos, const glm::mat3& rot, glm::vec3 scale = glm::vec3(1.f));
+	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 position, const glm::mat3& rotation, glm::vec3 scale = glm::vec3(1.f));
 
 	[[nodiscard]] std::shared_ptr<UndoNode> makeUndoNode() const;
 	[[nodiscard]] std::shared_ptr<SelectionUndoNode> makeSelectionUndoNode() const;

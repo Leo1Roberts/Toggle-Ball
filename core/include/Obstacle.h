@@ -8,8 +8,6 @@
 #include "Smoother.h"
 #include "Utilities.h"
 
-constexpr float OUTLINE_WIDTH_WORLD = 0.1f; // TODO: REMOVE TEMP TEST
-
 struct BallCollisionInfo;
 class GameBall;
 
@@ -101,7 +99,7 @@ public:
 	virtual void scale(float factor) = 0;
 
 	void generateObstacleMesh(Mesh<ObjectVertex>& obstacleMesh, col color) const;
-	void generateOutlineMesh(Mesh<ObjectVertex>& outlineMesh) const;
+	void generateOutlineMesh(Mesh<ObjectVertex>& outlineMesh, float uiToWorldScale) const;
 	virtual void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
 
 	[[nodiscard]] bool isInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const;
@@ -130,7 +128,6 @@ protected:
 
 	[[nodiscard]] float getBevel() const { return BEVEL_AMOUNT * getMinorRadius(); }
 	[[nodiscard]] float getHalfDepth() const { return getMinorRadius(); }
-	[[nodiscard]] float getOutlineRadius() const { return getMinorRadius() + OUTLINE_WIDTH_WORLD; }
 
 private:
 	float minorRadius; // SSOT
@@ -139,7 +136,7 @@ private:
 	[[nodiscard]] virtual std::string getTypeString() const = 0;
 
 	virtual void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const = 0;
-	virtual void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
+	virtual void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const = 0;
 
 	[[nodiscard]] virtual bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const = 0;
 
@@ -190,7 +187,7 @@ private:
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
-	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
+	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const override;
 
 	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const override;
 	[[nodiscard]] float getMajorRadius() const override { return std::max(leftLength, rightLength); }
@@ -244,7 +241,7 @@ private:
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
-	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
+	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const override;
 
 	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const override;
 
@@ -270,7 +267,7 @@ public:
 
 	virtual void scale(float factor) = 0;
 
-	void generateDomainMesh(Mesh<ObjectVertex>& domainMesh, const AbstractShapeSpec* shapeSpec) const;
+	void generateDomainMesh(Mesh<ObjectVertex>& domainMesh, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const;
 
 	// Initialises the kinematic state
 	virtual void initKinematicState(ObstacleKinematicState& kinematicState) const = 0;
@@ -279,7 +276,8 @@ public:
 	// Updates the (stationary) kinematic state for obstacles in the editor. Purely incremental - kinematicState must be initialised separately.
 	virtual void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const = 0;
 
-	[[nodiscard]] virtual const col& getColor() const = 0;
+	[[nodiscard]] virtual col getColor() const = 0;
+	[[nodiscard]] virtual glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const = 0;
 
 protected:
 	IMotionSpec() = default;
@@ -288,20 +286,22 @@ private:
 	[[nodiscard]] virtual std::string serializeData() const = 0;
 	[[nodiscard]] virtual std::string getTypeString() const = 0;
 
-	virtual void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const = 0;
+	virtual void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const = 0;
 };
 
 class StaticSpec : public IMotionSpec {
 public:
 	StaticSpec(glm::vec2 position, float angle) :
-	    position(planarToWorld(position)),
-	    angle(angle) {}
+	    position(planarToWorld(position)) {
+		setAngle(angle);
+	}
 
 	StaticSpec(const std::string& data);
 
 	~StaticSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return Color::White; }
+	[[nodiscard]] col getColor() const override { return Color::White; }
+	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const override { return worldToPlanar(obstaclePosition); }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<StaticSpec>(*this);
@@ -327,7 +327,7 @@ private:
 	[[nodiscard]] static std::string getTypeStringStatic() { return "static"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
-	void buildDomainMesh(std::vector<ObjectVertex>&, std::vector<Index>&, const AbstractShapeSpec*) const override {}
+	void buildDomainMesh(std::vector<ObjectVertex>&, std::vector<Index>&, const AbstractShapeSpec*, float) const override {}
 
 	[[nodiscard]] glm::vec3 getPosition() const { return position; }
 	[[nodiscard]] float getAngle() const { return angle; }
@@ -337,7 +337,6 @@ private:
 class TogglingPositionSpec : public IMotionSpec {
 public:
 	TogglingPositionSpec(float angle, glm::vec2 positionA, glm::vec2 positionB) :
-	    angle(angle),
 	    positionA(planarToWorld(positionA)),
 	    positionB(planarToWorld(positionB)) {
 		setAngle(angle);
@@ -347,7 +346,8 @@ public:
 
 	~TogglingPositionSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return Color::SoftBlue; }
+	[[nodiscard]] col getColor() const override { return Color::SoftBlue; }
+	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3) const override { return glm::vec2(0.f); }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<TogglingPositionSpec>(*this);
@@ -374,7 +374,7 @@ private:
 	[[nodiscard]] static std::string getTypeStringStatic() { return "t_position"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
-	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
+	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const override;
 
 	[[nodiscard]] float getAngle() const { return angle; }
 	[[nodiscard]] glm::mat3 getRotation() const { return rotation; }
@@ -393,7 +393,8 @@ public:
 
 	~TogglingAngleSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return Color::SoftRed; }
+	[[nodiscard]] col getColor() const override { return Color::SoftRed; }
+	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const override { return worldToPlanar(obstaclePosition); }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<TogglingAngleSpec>(*this);
@@ -417,7 +418,7 @@ private:
 	[[nodiscard]] static std::string getTypeStringStatic() { return "t_angle"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
-	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
+	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const override;
 
 	[[nodiscard]] glm::vec3 getPosition() const { return position; }
 	[[nodiscard]] float getAngleA() const { return angleA; }
@@ -436,7 +437,8 @@ public:
 
 	~SpinningSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return Color::SoftMagenta; }
+	[[nodiscard]] col getColor() const override { return Color::SoftMagenta; }
+	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const override { return worldToPlanar(obstaclePosition); }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<SpinningSpec>(*this);
@@ -461,7 +463,7 @@ private:
 	[[nodiscard]] static std::string getTypeStringStatic() { return "spinning"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
-	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
+	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
 
 	[[nodiscard]] glm::vec3 getPosition() const { return position; }
 	[[nodiscard]] float getInitialAngle() const { return initialAngle; }
@@ -474,15 +476,17 @@ public:
 	OscillatingPositionSpec(float angle, glm::vec2 position1, glm::vec2 position2, float angularFrequencyA, float angularFrequencyB) :
 	    position1(planarToWorld(position1)),
 	    position2(planarToWorld(position2)),
-	    angle(angle),
 	    angularFrequencyA(angularFrequencyA),
-	    angularFrequencyB(angularFrequencyB) {}
+	    angularFrequencyB(angularFrequencyB) {
+		setAngle(angle);
+	}
 
 	OscillatingPositionSpec(const std::string& data);
 
 	~OscillatingPositionSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return Color::SoftCyan; }
+	[[nodiscard]] col getColor() const override { return Color::SoftCyan; }
+	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3) const override { return glm::vec2(0.f); }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<OscillatingPositionSpec>(*this);
@@ -511,7 +515,7 @@ private:
 	[[nodiscard]] static std::string getTypeStringStatic() { return "o_position"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
-	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
+	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
 
 	[[nodiscard]] glm::vec3 getPosition1() const { return position1; }
 	[[nodiscard]] glm::vec3 getPosition2() const { return position2; }
@@ -534,7 +538,8 @@ public:
 
 	~OscillatingAngleSpec() override = default;
 
-	[[nodiscard]] const col& getColor() const override { return Color::SoftYellow; }
+	[[nodiscard]] col getColor() const override { return Color::SoftYellow; }
+	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const override { return worldToPlanar(obstaclePosition); }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<OscillatingAngleSpec>(*this);
@@ -560,7 +565,7 @@ private:
 	[[nodiscard]] static std::string getTypeStringStatic() { return "o_angle"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
-	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const override;
+	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
 
 	[[nodiscard]] glm::vec3 getPosition() const { return position; }
 	[[nodiscard]] float getAngle1() const { return angle1; }
@@ -576,6 +581,7 @@ public:
 	    shape(std::move(shape)),
 	    motion(std::move(motion)),
 	    goal(goal),
+		color(goal ? Color::SoftGreen : this->motion->getColor()),
 		material(MAT_CONCRETE) {}
 
 	ObstacleDescriptor(const ObstacleDescriptor& other);
@@ -586,15 +592,30 @@ public:
 
 	void scale(float factor);
 
+	void generateObstacleMesh(Mesh<ObjectVertex>& obstacleMesh) const {
+		shape->generateObstacleMesh(obstacleMesh, color);
+	}
+	void generateOutlineMesh(Mesh<ObjectVertex>& outlineMesh, float uiToWorldScale) const {
+		shape->generateOutlineMesh(outlineMesh, uiToWorldScale);
+	}
+	void generateDomainMesh(Mesh<ObjectVertex>& domainMesh, float uiToWorldScale) const {
+		motion->generateDomainMesh(domainMesh, shape.get(), uiToWorldScale);
+	}
+
 	[[nodiscard]] IMotionSpec* getMotion() const { return motion.get(); }
 	[[nodiscard]] AbstractShapeSpec* getShape() const { return shape.get(); }
 	[[nodiscard]] bool isGoal() const { return goal; }
+	[[nodiscard]] col getColor() const { return color; }
 	[[nodiscard]] byte getMaterial() const { return material; }
+	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const {
+		return motion->getDomainPlanarPosition(obstaclePosition);
+	}
 
 private:
 	std::unique_ptr<AbstractShapeSpec> shape;
 	std::unique_ptr<IMotionSpec> motion;
 	bool goal{};
+	col color;
 	byte material;
 };
 
@@ -604,7 +625,7 @@ public:
 	explicit GameObstacle(const ObstacleDescriptor* descriptor) :
 	    descriptor(descriptor) {
 		reset();
-		descriptor->getShape()->generateObstacleMesh(mesh, descriptor->isGoal() ? Color::SoftGreen : descriptor->getMotion()->getColor());
+		descriptor->generateObstacleMesh(mesh);
 	}
 
 	~GameObstacle() = default;
@@ -654,9 +675,7 @@ public:
 	explicit EditorObstacle(ObstacleDescriptor* descriptor) :
 	    descriptor(descriptor) {
 		descriptor->getMotion()->initKinematicState(kinematicState);
-		descriptor->getShape()->generateObstacleMesh(obstacleMesh, descriptor->isGoal() ? Color::SoftGreen : descriptor->getMotion()->getColor());
-		// descriptor->getShape()->generateOutlineMesh(outlineMesh);
-		descriptor->getMotion()->generateDomainMesh(domainMesh, descriptor->getShape());
+		descriptor->generateObstacleMesh(obstacleMesh);
 	}
 
 	~EditorObstacle() = default;
@@ -666,6 +685,15 @@ public:
 	EditorObstacle(EditorObstacle&&) = default;
 	EditorObstacle& operator=(EditorObstacle&&) = default;
 
+	void generateEphemeralMeshes(float uiToWorldScale) {
+		descriptor->generateOutlineMesh(outlineMesh, uiToWorldScale);
+		descriptor->generateDomainMesh(domainMesh, uiToWorldScale);
+	}
+	void generateMeshes(float uiToWorldScale) {
+		descriptor->generateObstacleMesh(obstacleMesh);
+		generateEphemeralMeshes(uiToWorldScale);
+	}
+
 	// Only provide numSteps if demonstrating the continuous motion of an obstacle
 	void updateKinematicState(const Smoother& smoother, int numSteps = -1);
 
@@ -674,10 +702,13 @@ public:
 	void deselect() { selected = false; }
 	void setSelected(bool isSelected) { selected = isSelected; }
 
+	[[nodiscard]] const ObstacleDescriptor* getDescriptor() const { return descriptor; }
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
 	[[nodiscard]] const Mesh<ObjectVertex>* getObstacleMesh() const { return &obstacleMesh; }
 	[[nodiscard]] const Mesh<ObjectVertex>* getOutlineMesh() const { return &outlineMesh; }
 	[[nodiscard]] const Mesh<ObjectVertex>* getDomainMesh() const { return &domainMesh; }
+
+	[[nodiscard]] glm::vec2 getDomainPlanarPosition() const { return descriptor->getDomainPlanarPosition(kinematicState.getPosition()); }
 
 private:
 	ObstacleDescriptor* descriptor;

@@ -12,9 +12,6 @@ public:
 	virtual void render() = 0;
 
 	void resize(int screenWidth, int screenHeight, float screenDPIScale) {
-		if (width == screenWidth && height == screenHeight && dpiScale == screenDPIScale)
-			return;
-
 		width = screenWidth;
 		height = screenHeight;
 		aspectRatio = (float)width / (float)height;

@@ -8,6 +8,7 @@
 #include <Shader.h>
 #include <Texture.h>
 #include <GameMode.h>
+#include <EditorMode.h>
 
 extern "C" {
 
@@ -71,7 +72,7 @@ void handle_cmd(android_app *androidApp, int32_t cmd) {
             Textures::load();
             Fonts::load();
 
-            androidApp->userData = new App(std::make_unique<AndroidWindow>(androidApp), std::make_unique<GameMode>());
+            androidApp->userData = new App(std::make_unique<AndroidWindow>(androidApp), std::make_unique<EditorMode>());
         }
     } break;
     case APP_CMD_TERM_WINDOW: {

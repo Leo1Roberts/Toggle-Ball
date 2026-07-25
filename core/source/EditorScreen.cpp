@@ -24,6 +24,9 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) {
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
 
 	currentNode = makeUndoNode();
+
+	for (auto& obstacle : obstacles)
+		obstacle.select(); // TODO: remove
 }
 
 
@@ -103,16 +106,41 @@ void EditorScreen::render() {
 			   backgroundRotation,
 			   {level->getArenaHeight(), level->getArenaWidth(), 1});
 
-	// Shaders::outline->use();
-	// draw domains
-
-	// Shaders::object->use();
+	Shaders::outline->use();
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	for (auto& o: obstacles)
-		drawObject(o.getObstacleMesh(), Textures::white.get(),
-				   o.getKinematicState()->getPosition(),
-				   o.getKinematicState()->getRotation());
+	glEnable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
+	for (int i = 0; i < obstacles.size(); i++) {
+		auto& obstacle = obstacles[i];
+		if (obstacle.isSelected()) {
+			Shaders::outline->setVec4("uOutlineColor", col(obstacle.getDescriptor()->getColor(), Settings::Colors.domainOpacity));
+
+			float depth = (float)i - (float)obstacles.size(); // Place domains at different depths to prevent Z-fighting
+			glm::vec3 position = {depth, obstacle.getDomainPlanarPosition()};
+			worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), position);
+			Shaders::outline->setMat4("uProjectionFull", projectionMatrix * viewMatrix * worldMatrix);
+
+			obstacle.getDomainMesh()->draw();
+		}
+	}
+	glEnable(GL_CULL_FACE);
+
+	Shaders::object->use();
+	for (auto& obstacle: obstacles) {
+		float opacity = 1.f;
+		auto motionSpec = obstacle.getDescriptor()->getMotion();
+		if (dynamic_cast<OscillatingPositionSpec*>(motionSpec) ||
+		    dynamic_cast<OscillatingAngleSpec*>(motionSpec))
+			// Includes a small period where the obstacle is completely invisible
+			opacity = 2.5f * std::abs(0.5f - togglePosition.getCurrentPosition()) - 0.2f;
+		Shaders::object->setFloat("uAlpha", opacity);
+
+		drawObject(obstacle.getObstacleMesh(), Textures::white.get(),
+				   obstacle.getKinematicState()->getPosition(),
+				   obstacle.getKinematicState()->getRotation());
+	}
+	glDisable(GL_BLEND);
 
 	glDepthFunc(GL_ALWAYS);
 	drawObject(Meshes::ball.get(), ball.getTexture(),
@@ -177,11 +205,11 @@ void EditorScreen::updateObstaclePositions(microseconds dt) {
 }
 
 
-void EditorScreen::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 pos, const glm::mat3& rot, glm::vec3 scale) {
-	worldMatrix = buildScaledWorldMatrix(rot, pos, scale);
+void EditorScreen::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 position, const glm::mat3& rotation, glm::vec3 scale) {
+	worldMatrix = buildScaledWorldMatrix(rotation, position, scale);
 
 	glm::mat4 bodyToView = viewMatrix * worldMatrix;
-	glm::mat3 bodyToViewRot = glm::transpose(viewRotationMatrix) * rot;
+	glm::mat3 bodyToViewRot = glm::transpose(viewRotationMatrix) * rotation;
 
 	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRot, false);
 	Shaders::object->setMat4("uBodyToView", bodyToView);
@@ -242,7 +270,7 @@ void EditorScreen::doResize(int width, int height, float dpiScale) {
 		halfWidth = halfHeight * (float)width / (float)height;
 	}
 
-	viewOrigin = {0, 0, level->getArenaHeight() * 0.5f};
+	viewOrigin = {0.f, 0.f, level->getArenaHeight() * 0.5f};
 
 	float
 	ch = std::cos(heading),
@@ -256,6 +284,9 @@ void EditorScreen::doResize(int width, int height, float dpiScale) {
 	viewDistance = std::max(level->getArenaWidth(), level->getArenaHeight()) * 2.f;
 
 	viewPosition = viewOrigin + viewDirection * viewDistance;
+
+	for (auto& obstacle : obstacles)
+		obstacle.generateEphemeralMeshes(dpiScale * Settings::Sizes.uiScale * halfHeight * 2.f / height);
 
 	projectionMatrix = glm::ortho(halfWidth, -halfWidth, -halfHeight, halfHeight, viewDistance - level->getArenaWidth(), viewDistance + level->getArenaWidth());
 	viewRotationMatrix = buildViewRotationMatrix(-viewDirection);

@@ -11,6 +11,8 @@ struct col {
 	constexpr col() = default;
 	constexpr col(byte r, byte g, byte b, byte a = 255)
 		: r(r), g(g), b(b), a(a) {}
+	constexpr col(const col& color, float alpha)
+		: r(color.r), g(color.g), b(color.b), a((byte)(alpha * 255.f)) {}
 	constexpr col(const glm::vec3& v)
 		: r((byte)(v.r * 255.f)), g((byte)(v.g * 255.f)), b((byte)(v.b * 255.f)), a(255) {}
 	constexpr col(const glm::vec4& v)

@@ -113,7 +113,7 @@ void GameWorld::resize(int screenWidth, int screenHeight) {
 		halfWidth = halfHeight * (float)screenWidth / (float)screenHeight;
 	}
 
-	viewOrigin = {0, 0, level.getArenaHeight() * 0.5f};
+	viewOrigin = {0.f, 0.f, level.getArenaHeight() * 0.5f};
 
 	float
 	ch = std::cos(heading),
@@ -168,11 +168,11 @@ void GameWorld::updatePhysics(microseconds dt) {
 }
 
 
-void GameWorld::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 pos, const glm::mat3& rot, glm::vec3 scale) {
-	worldMatrix = buildScaledWorldMatrix(rot, pos, scale);
+void GameWorld::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 position, const glm::mat3& rotation, glm::vec3 scale) {
+	worldMatrix = buildScaledWorldMatrix(rotation, position, scale);
 
 	glm::mat4 bodyToView = viewMatrix * worldMatrix;
-	glm::mat3 bodyToViewRot = glm::transpose(viewRotationMatrix) * rot;
+	glm::mat3 bodyToViewRot = glm::transpose(viewRotationMatrix) * rotation;
 
 	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRot, false);
 	Shaders::object->setMat4("uBodyToView", bodyToView);

@@ -32,7 +32,7 @@ private:
 
 	void setRenderer(IUIRenderer* newRenderer);
 
-	[[nodiscard]] float getScale() const { return dpiScale * Settings::UIScale; }
+	[[nodiscard]] float getScale() const { return dpiScale * Settings::Sizes.uiScale; }
 
 	std::unique_ptr<UINode> rootNode;
 	UINode* focusedNode = nullptr;

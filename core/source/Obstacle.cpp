@@ -6,6 +6,7 @@
 #include "glm/detail/type_quat.hpp"
 #include "glm/gtc/quaternion.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
+#include "Settings.h"
 #include "glm/gtx/norm.hpp"
 
 #include <glm/glm.hpp>
@@ -381,16 +382,18 @@ void ArcSpec::buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>&
 }
 
 
-void AbstractShapeSpec::generateOutlineMesh(Mesh<ObjectVertex>& outlineMesh) const {
+void AbstractShapeSpec::generateOutlineMesh(Mesh<ObjectVertex>& outlineMesh, float uiToWorldScale) const {
 	std::vector<ObjectVertex> vs;
 	std::vector<Index> is;
-	buildOutlineMesh(vs, is);
+	buildOutlineMesh(vs, is, uiToWorldScale);
 	outlineMesh.setData(vs, is);
 }
 
-void SegmentSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const {
+void SegmentSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const {
 	vs.reserve(4 * (SECTORS_PER_SEMICIRCLE + 1));
 	is.reserve(12 * SECTORS_PER_SEMICIRCLE + 12);
+
+	const float outlineRadius = getMinorRadius() + uiToWorldScale * Settings::Sizes.outlineWidth;
 
 	// Caps
 	for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
@@ -399,8 +402,8 @@ void SegmentSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<In
 		float z = std::cos(ang);
 		float yrh = y * getMinorRadius();
 		float zrh = z * getMinorRadius();
-		float yrv = y * getOutlineRadius();
-		float zrv = z * getOutlineRadius();
+		float yrv = y * outlineRadius;
+		float zrv = z * outlineRadius;
 		vs.emplace_back(glm::vec3(0, getRightCap().y + yrh, getRightCap().z + zrh), glm::vec2(), glm::vec3());
 		vs.emplace_back(glm::vec3(0, getRightCap().y + yrv, getRightCap().z + zrv), glm::vec2(), glm::vec3());
 		vs.emplace_back(glm::vec3(0, getLeftCap().y - yrh, getLeftCap().z + zrh), glm::vec2(), glm::vec3());
@@ -439,10 +442,12 @@ void SegmentSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<In
 	is.push_back(1 + SECTORS_PER_SEMICIRCLE * 4);
 }
 
-void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const {
+void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const {
 	const int NUM_SECTORS = (int)std::ceil((float)SECTORS_PER_SEMICIRCLE * getArcAngle() / PI);
 	vs.reserve(4 * (SECTORS_PER_SEMICIRCLE + 1) + 4 * (NUM_SECTORS + 1));
 	is.reserve(12 * SECTORS_PER_SEMICIRCLE + 12 * NUM_SECTORS);
+
+	const float outlineRadius = getMinorRadius() + uiToWorldScale * Settings::Sizes.outlineWidth;
 
 	// Caps
 	for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
@@ -451,8 +456,8 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 		float z = std::cos(ang);
 		float yrh = y * getMinorRadius();
 		float zrh = z * getMinorRadius();
-		float yrv = y * getOutlineRadius();
-		float zrv = z * getOutlineRadius();
+		float yrv = y * outlineRadius;
+		float zrv = z * outlineRadius;
 		vs.emplace_back(glm::vec3(0, getRightCap().y + yrh, getRightCap().z + zrh), glm::vec2(), glm::vec3());
 		vs.emplace_back(glm::vec3(0, getRightCap().y + yrv, getRightCap().z + zrv), glm::vec2(), glm::vec3());
 		vs.emplace_back(glm::vec3(0, getLeftCap().y - yrh, getLeftCap().z + zrh), glm::vec2(), glm::vec3());
@@ -483,10 +488,10 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 		float zroh = z * (getArcRadius() + getMinorRadius());
 		float yrih = y * (getArcRadius() - getMinorRadius());
 		float zrih = z * (getArcRadius() - getMinorRadius());
-		float yrov = y * (getArcRadius() + getOutlineRadius());
-		float zrov = z * (getArcRadius() + getOutlineRadius());
-		float yriv = y * (getArcRadius() - getOutlineRadius());
-		float zriv = z * (getArcRadius() - getOutlineRadius());
+		float yrov = y * (getArcRadius() + outlineRadius);
+		float zrov = z * (getArcRadius() + outlineRadius);
+		float yriv = y * (getArcRadius() - outlineRadius);
+		float zriv = z * (getArcRadius() - outlineRadius);
 		vs.emplace_back(glm::vec3(0, yrih, zrih), glm::vec2(), glm::vec3());
 		vs.emplace_back(glm::vec3(0, yriv, zriv), glm::vec2(), glm::vec3());
 		vs.emplace_back(glm::vec3(0, yroh, zroh), glm::vec2(), glm::vec3());
@@ -762,19 +767,19 @@ void OscillatingPositionSpec::setAngle(float radians) {
 }
 
 
-void IMotionSpec::generateDomainMesh(Mesh<ObjectVertex>& domainMesh, const AbstractShapeSpec* shapeSpec) const {
+void IMotionSpec::generateDomainMesh(Mesh<ObjectVertex>& domainMesh, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const {
 	std::vector<ObjectVertex> vs;
 	std::vector<Index> is;
-	buildDomainMesh(vs, is, shapeSpec);
+	buildDomainMesh(vs, is, shapeSpec, uiToWorldScale);
 	domainMesh.setData(vs, is);
 }
 
-void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const {
+void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const {
 	std::vector<ObjectVertex> vs_shadow;
 	std::vector<Index> is_shadow;
 	shapeSpec->buildShadowMesh(vs_shadow, is_shadow);
 
-	glm::vec3 diff = getPositionA() - getPositionB();
+	glm::vec3 diff = getPositionB() - getPositionA();
 	float line1Length, line2Length;
 	line1Length = line2Length = glm::length(diff);
 	glm::vec3 diffUnit = diff / line1Length;
@@ -823,8 +828,10 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		}
 	} else return;
 
-	int numDots1 = 2 * (((int)(line1Length / OUTLINE_WIDTH_WORLD / 2) + 1) / 2);
-	int numDots2 = 2 * (((int)(line2Length / OUTLINE_WIDTH_WORLD / 2) + 1) / 2);
+	const float dotDiameter = uiToWorldScale * Settings::Sizes.outlineWidth;
+
+	int numDots1 = 2 * (((int)(line1Length / dotDiameter / 2.f) + 1) / 2);
+	int numDots2 = 2 * (((int)(line2Length / dotDiameter / 2.f) + 1) / 2);
 	bool drawDots = numDots1 < 1000 && numDots2 < 1000; // Don't draw dots if there are too many
 
 	size_t vsSize = 2 * vs_shadow.size();
@@ -836,11 +843,11 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 	vs.reserve(vsSize);
 	is.reserve(isSize);
 
-	float dotSpacing = OUTLINE_WIDTH_WORLD * 2.f;
+	float dotSpacing = dotDiameter * 2.f;
 	glm::vec3 dotShift = diffUnit * dotSpacing;
 
-	glm::vec3 start1 = topPointA - diffPerpUnit / 2.f * OUTLINE_WIDTH_WORLD + diffUnit * (line1Length - (dotSpacing * (float)(numDots1 - 1))) / 2.f;
-	glm::vec3 start2 = bottomPointA + diffPerpUnit / 2.f * OUTLINE_WIDTH_WORLD + diffUnit * (line2Length - (dotSpacing * (float)(numDots2 - 1))) / 2.f;
+	glm::vec3 start1 = topPointA - diffPerpUnit / 2.f * dotDiameter + diffUnit * (line1Length - (dotSpacing * (float)(numDots1 - 1))) / 2.f;
+	glm::vec3 start2 = bottomPointA + diffPerpUnit / 2.f * dotDiameter + diffUnit * (line2Length - (dotSpacing * (float)(numDots2 - 1))) / 2.f;
 
 	if (drawDots) {
 		glm::vec3 dotCentre = start1;
@@ -848,7 +855,7 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			vs.emplace_back(dotCentre, glm::vec2(), glm::vec3());
 			for (int i = 0; i < SECTORS_PER_DOT; i++) {
 				float ang = (float)i / (float)SECTORS_PER_DOT * 2.f * PI;
-				vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2.f, glm::vec2(), glm::vec3());
+				vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * dotDiameter / 2.f, glm::vec2(), glm::vec3());
 			}
 
 			int CENTRE_INDEX = d * (SECTORS_PER_DOT + 1);
@@ -869,7 +876,7 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			vs.emplace_back(dotCentre, glm::vec2(), glm::vec3());
 			for (int i = 0; i < SECTORS_PER_DOT; i++) {
 				float ang = (float)i / (float)SECTORS_PER_DOT * 2.f * PI;
-				vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2.f, glm::vec2(), glm::vec3());
+				vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * dotDiameter / 2.f, glm::vec2(), glm::vec3());
 			}
 
 			int CENTRE_INDEX = numDots1 * (SECTORS_PER_DOT + 1) + d * (SECTORS_PER_DOT + 1);
@@ -900,7 +907,7 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 	}
 }
 
-void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const {
+void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const {
 	std::vector<ObjectVertex> vs_shadow;
 	std::vector<Index> is_shadow;
 	shapeSpec->buildShadowMesh(vs_shadow, is_shadow);
@@ -909,10 +916,12 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 	float dotsArc1Radius, dotsArc2Radius;
 	float start1, start2;
 
+	const float dotDiameter = uiToWorldScale * Settings::Sizes.outlineWidth;
+
 	if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
 		dotsArcAngle = std::clamp(getAngleB() - getAngleA(), -2.f * PI, 2.f * PI);
-		dotsArc1Radius = glm::length(segment->getRightCap()) + segment->getMinorRadius() - OUTLINE_WIDTH_WORLD / 2.f;
-		dotsArc2Radius = glm::length(segment->getLeftCap()) + segment->getMinorRadius() - OUTLINE_WIDTH_WORLD / 2.f;
+		dotsArc1Radius = glm::length(segment->getRightCap()) + segment->getMinorRadius() - dotDiameter / 2.f;
+		dotsArc2Radius = glm::length(segment->getLeftCap()) + segment->getMinorRadius() - dotDiameter / 2.f;
 		start1 = getAngleA();
 		start2 = getAngleA() + PI;
 	} else if (auto* arc = dynamic_cast<const ArcSpec*>(shapeSpec)) {
@@ -924,8 +933,8 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 			dotsArcAngle = std::clamp(angDiff - arc->getArcAngle(), 0.f, 2.f * PI - arc->getArcAngle());
 			start1 = start2 = getAngleA() + PI / 2.f + arc->getHalfArcAngle();
 		}
-		dotsArc1Radius = arc->getArcRadius() + arc->getMinorRadius() - OUTLINE_WIDTH_WORLD / 2.f;
-		dotsArc2Radius = arc->getArcRadius() - arc->getMinorRadius() + OUTLINE_WIDTH_WORLD / 2.f;
+		dotsArc1Radius = arc->getArcRadius() + arc->getMinorRadius() - dotDiameter / 2.f;
+		dotsArc2Radius = arc->getArcRadius() - arc->getMinorRadius() + dotDiameter / 2.f;
 	} else return;
 
 	float absArcAngle = std::abs(dotsArcAngle);
@@ -934,8 +943,8 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 	float arc1Length = dotsArc1Radius * absArcAngle;
 	float arc2Length = dotsArc2Radius * absArcAngle;
 
-	int numDots1 = 2 * (((int)(arc1Length / OUTLINE_WIDTH_WORLD / 2) + 1) / 2);
-	int numDots2 = 2 * (((int)(arc2Length / OUTLINE_WIDTH_WORLD / 2) + 1) / 2);
+	int numDots1 = 2 * (((int)(arc1Length / dotDiameter / 2.f) + 1) / 2);
+	int numDots2 = 2 * (((int)(arc2Length / dotDiameter / 2.f) + 1) / 2);
 	bool drawDots = numDots1 < 1000 && numDots2 < 1000; // Don't draw dots if there are too many
 
 	size_t vsSize = 2 * vs_shadow.size();
@@ -947,7 +956,7 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 	vs.reserve(vsSize);
 	is.reserve(isSize);
 
-	float dotSpacing = OUTLINE_WIDTH_WORLD * 2;
+	float dotSpacing = dotDiameter * 2.f;
 	float dotShift1 = sign * dotSpacing / dotsArc1Radius;
 	float dotShift2 = sign * dotSpacing / dotsArc2Radius;
 	start1 += sign * (arc1Length - (dotSpacing * (float)(numDots1 - 1))) / dotsArc1Radius / 2;
@@ -959,7 +968,7 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 		vs.emplace_back(dotCentre, glm::vec2(), glm::vec3());
 		for (int i = 0; i < SECTORS_PER_DOT; i++) {
 			float ang = (float)i / (float)SECTORS_PER_DOT * 2.f * PI;
-			vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2.f, glm::vec2(), glm::vec3());
+			vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * dotDiameter / 2.f, glm::vec2(), glm::vec3());
 		}
 
 		int CENTRE_INDEX = d * (SECTORS_PER_DOT + 1);
@@ -981,7 +990,7 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 		vs.emplace_back(dotCentre, glm::vec2(), glm::vec3());
 		for (int i = 0; i < SECTORS_PER_DOT; i++) {
 			float ang = (float)i / (float)SECTORS_PER_DOT * 2.f * PI;
-			vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * OUTLINE_WIDTH_WORLD / 2.f, glm::vec2(), glm::vec3());
+			vs.emplace_back(dotCentre + glm::vec3(0.f, std::cos(ang), std::sin(ang)) * dotDiameter / 2.f, glm::vec2(), glm::vec3());
 		}
 
 		int CENTRE_INDEX = numDots1 * (SECTORS_PER_DOT + 1) + d * (SECTORS_PER_DOT + 1);
@@ -1011,7 +1020,7 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 	}
 }
 
-void SpinningSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const {
+void SpinningSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const {
 	if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
 		vs.reserve(1 + SECTORS_PER_CIRCLE);
 		is.reserve(SECTORS_PER_CIRCLE * 3);
@@ -1049,7 +1058,7 @@ void SpinningSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<In
 	}
 }
 
-void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const {
+void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const {
 	if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
 		vs.reserve((SECTORS_PER_SEMICIRCLE + 1) * 4 + 2);
 		is.reserve((SECTORS_PER_SEMICIRCLE + 1) * 18);
@@ -1216,7 +1225,7 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 	}
 }
 
-void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec) const {
+void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const {
 	if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
 		bool fullCircle = std::abs(getAngle2() - getAngle1()) >= 2 * PI;
 		float domainStartAngle, domainEndAngle;
