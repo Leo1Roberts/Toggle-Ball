@@ -22,7 +22,7 @@ public:
 	}
 
 protected:
-	void resizeToMatchActiveScreen(Screen* screen) {
+	void resizeToMatchActiveScreen(Screen* screen) const {
 		if (activeScreen)
 			screen->resize(activeScreen->getWidth(), activeScreen->getHeight(), activeScreen->getDPIScale());
 	}

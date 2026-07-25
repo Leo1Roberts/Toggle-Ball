@@ -4,7 +4,7 @@
 #include "EditorMode.h"
 #include "Event.h"
 #include "GameMode.h"
-#include "IWindow.h"
+#include "AbstractWindow.h"
 #include "Mesh.h"
 #include "UIManager.h"
 
@@ -24,21 +24,21 @@ class FPSOverlay;
 
 class App {
 public:
-	explicit App(IWindow* window);
+	explicit App(std::unique_ptr<AbstractWindow> appWindow);
 
 	App(const App&) = delete;
 	App& operator=(const App&) = delete;
 
+	void tick(microseconds dt);
+
+	void resize(int width, int height);
+	void updateDPIScale(float dpi);
+
 	void processEvent(const Event& event);
 
-	void tick(microseconds dt, int width, int height, float dpi);
+	std::unique_ptr<AbstractWindow> window;
 
 private:
-	IWindow* window;
-
-	int windowWidth{}, windowHeight{};
-	float windowDPI{};
-
 	AppMode* activeMode;
 	std::unique_ptr<GameMode> gameMode;
 	std::unique_ptr<EditorMode> editorMode;

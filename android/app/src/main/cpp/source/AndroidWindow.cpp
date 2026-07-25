@@ -22,3 +22,11 @@ void AndroidWindow::toggleFullscreen() {
 	// 5. Cleanly detach the thread
 	app->activity->vm->DetachCurrentThread();
 }
+
+void AndroidWindow::updateWindowConfiguration() {
+    config.width = ANativeWindow_getWidth(app->window);
+    config.height = ANativeWindow_getHeight(app->window);
+    int densityDpi = AConfiguration_getDensity(app->config);
+    if (densityDpi != 0 && densityDpi != ACONFIGURATION_DENSITY_NONE)
+        config.dpiScale = (float)densityDpi / (float)ACONFIGURATION_DENSITY_MEDIUM;
+}

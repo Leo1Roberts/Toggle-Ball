@@ -13,9 +13,6 @@ EGLDisplay eglDisplay;
 EGLSurface eglSurface;
 EGLContext eglContext;
 
-EGLint width, height;
-float dpiScale = 1.f;
-
 /*!
  * Handles commands sent to this Android application
  * @param androidApp the app the commands are coming from
@@ -63,13 +60,9 @@ void handle_cmd(android_app *androidApp, int32_t cmd) {
         eglMakeCurrent(eglDisplay, eglSurface, eglSurface, eglContext);
 
         if (androidApp->userData == nullptr) {
-            AndroidWindow window(androidApp);
-
             AssetManager::init(androidApp->activity->assetManager);
 
-            auto app = std::make_unique<App>(&window);
-
-            androidApp->userData = app.release();
+            androidApp->userData = new App(std::make_unique<AndroidWindow>(androidApp));
         }
     } break;
     case APP_CMD_TERM_WINDOW: {
@@ -82,9 +75,17 @@ void handle_cmd(android_app *androidApp, int32_t cmd) {
             }
         }
     } break;
+    case APP_CMD_WINDOW_RESIZED: {
+        if (androidApp->userData) {
+            auto *app = reinterpret_cast<App *>(androidApp->userData);
+            app->window->updateWindowConfiguration();
+        }
+    }
     case APP_CMD_CONFIG_CHANGED: {
-        int densityDpi = AConfiguration_getDensity(androidApp->config);
-        dpiScale = (float)densityDpi / 160.0f;
+        if (androidApp->userData) {
+            auto *app = reinterpret_cast<App *>(androidApp->userData);
+            app->window->updateWindowConfiguration();
+        }
     } break;
     case APP_CMD_DESTROY: {
         // The entire process is shutting down. Clean up all persistent state.
@@ -180,10 +181,6 @@ void android_main(struct android_app *androidApp) {
 	// Register an event handler for Android events
 	androidApp->onAppCmd = handle_cmd;
 
-    int densityDpi = AConfiguration_getDensity(androidApp->config);
-    if (densityDpi != 0 && densityDpi != ACONFIGURATION_DENSITY_NONE)
-        dpiScale = (float)densityDpi / (float)ACONFIGURATION_DENSITY_MEDIUM;
-
     android_app_set_key_event_filter(androidApp, nullptr);
 	android_app_set_motion_event_filter(androidApp, nullptr);
 
@@ -219,11 +216,8 @@ void android_main(struct android_app *androidApp) {
 
             processInputEvents(androidApp, app);
 
-            eglQuerySurface(eglDisplay, eglSurface, EGL_WIDTH, &width);
-            eglQuerySurface(eglDisplay, eglSurface, EGL_HEIGHT, &height);
-
             microseconds t2 = now();
-            app->tick(t2 - t1, width, height, dpiScale);
+            app->tick(t2 - t1);
             t1 = t2;
 
             if (eglSwapBuffers(eglDisplay, eglSurface) == EGL_FALSE) {

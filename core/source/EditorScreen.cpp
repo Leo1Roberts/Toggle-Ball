@@ -163,11 +163,15 @@ void EditorScreen::render() {
 
 void EditorScreen::toggle(bool transition) {
 	toggled = !toggled;
-	togglePosition.setDestination(toggled, 0.f, transition ? level->getTransitionTime() : 0.f);
+	if (transition)
+		togglePosition.setDestination(toggled, 0.f, level->getTransitionTime());
+	else
+		togglePosition.setPosition(toggled);
 }
 
 
 void EditorScreen::updateObstaclePositions(microseconds dt) {
+	togglePosition.update(toSeconds(dt));
 	for (auto& obstacle: obstacles)
 		obstacle.updateKinematicState(togglePosition);
 }

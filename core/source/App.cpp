@@ -17,16 +17,17 @@ void ScreenVertex::setupLayout() {
 	glEnableVertexAttribArray(1);
 }
 
-App::App(IWindow* window) : window(window) {
+App::App(std::unique_ptr<AbstractWindow> appWindow) : window(std::move(appWindow)) {
 	Settings::load();
 	Meshes::load();
 	Shaders::load();
 	Textures::load();
 	Fonts::load();
 
-	// gameMode = std::make_unique<GameMode>();
-	editorMode = std::make_unique<EditorMode>();
-	activeMode = editorMode.get();
+	gameMode = std::make_unique<GameMode>();
+	activeMode = gameMode.get();
+	// editorMode = std::make_unique<EditorMode>();
+	// activeMode = editorMode.get();
 
 	auto rootNode = std::make_unique<UINode>();
 	auto fps = std::make_unique<FPSOverlay>();
@@ -52,7 +53,40 @@ App::App(IWindow* window) : window(window) {
 	glEnable(GL_SCISSOR_TEST);
 	glEnable(GL_CULL_FACE);
 	glDisable(GL_BLEND);
+
+	activeMode->resize(window->config.width, window->config.height, window->config.dpiScale);
+	overlayUI.resize(window->config.width, window->config.height, window->config.dpiScale);
 }
+
+void App::tick(microseconds dt) {
+	glViewport(0, 0, window->config.width, window->config.height);
+	glScissor(0, 0, window->config.width, window->config.height);
+
+	glClearColor(0.2f, 0.2f, 0.2f, 1);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	if (activeMode)
+		activeMode->tick(dt);
+
+	if (fpsOverlay)
+		fpsOverlay->update(dt);
+
+	overlayUI.render();
+}
+
+
+void App::resize(int width, int height) {
+	window->config.width = width; window->config.height = height;
+	activeMode->resize(window->config.width, window->config.height, window->config.dpiScale);
+	overlayUI.resize(window->config.width, window->config.height, window->config.dpiScale);
+}
+
+void App::updateDPIScale(float dpi) {
+	window->config.dpiScale = dpi;
+	activeMode->resize(window->config.width, window->config.height, window->config.dpiScale);
+	overlayUI.resize(window->config.width, window->config.height, window->config.dpiScale);
+}
+
 
 void App::processEvent(const Event& event) {
 	if (overlayUI.processEvent(event))
@@ -73,29 +107,4 @@ void App::processEvent(const Event& event) {
 	}
 
 	activeMode->processEvent(event);
-}
-
-void App::tick(microseconds dt, int width, int height, float dpi) {
-	glViewport(0, 0, windowWidth, windowHeight);
-	glScissor(0, 0, windowWidth, windowHeight);
-
-	glClearColor(0.2f, 0.2f, 0.2f, 1);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	if (width != windowWidth || height != windowHeight || dpi != windowDPI) {
-		if (activeMode)
-			activeMode->resize(width, height, dpi);
-		overlayUI.resize(width, height, dpi);
-
-		windowWidth = width; windowHeight = height; windowDPI = dpi;
-	}
-
-	if (activeMode)
-		activeMode->tick(dt);
-
-	if (fpsOverlay)
-		fpsOverlay->update(dt);
-
-	overlayUI.resize(windowWidth, windowHeight, windowDPI);
-	overlayUI.render();
 }

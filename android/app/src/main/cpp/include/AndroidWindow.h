@@ -1,14 +1,16 @@
 #ifndef ANDROID_WINDOW_H
 #define ANDROID_WINDOW_H
 
-#include "IWindow.h"
+#include "AbstractWindow.h"
 
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 
 
-class AndroidWindow : public IWindow {
+class AndroidWindow : public AbstractWindow {
 public:
-	AndroidWindow(struct android_app* androidApp) : app(androidApp) {}
+	AndroidWindow(struct android_app* androidApp) : app(androidApp) {
+        AndroidWindow::updateWindowConfiguration();
+	}
 
 	[[nodiscard]] bool isFullscreen() const override {
 		return currentlyFullscreen;
@@ -19,6 +21,8 @@ public:
 	}
 
 	void toggleFullscreen() override;
+
+	void updateWindowConfiguration() override;
 
 private:
 	struct android_app* app;

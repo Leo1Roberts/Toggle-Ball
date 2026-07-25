@@ -5,7 +5,7 @@
 #include "GlfwWindow.h"
 #include "Shader.h"
 
-#include <fenv.h>
+#include <cfenv>
 #include <iostream>
 
 inline unsigned max_unsigned(unsigned a, unsigned b) { return (a > b) ? a : b; }
@@ -113,7 +113,6 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 }
 
 glm::vec2 mousePosition;
-float xScale, yScale;
 
 static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
@@ -125,7 +124,7 @@ static void cursorPosCallback(GLFWwindow* window, double x, double y) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
 #if defined(PLATFORM_LINUX)
-	mousePosition = glm::vec2(x, y) * xScale;
+	mousePosition = glm::vec2(x, y) * app->window->config.dpiScale;
 #else
 	mousePosition = {x, y};
 #endif
@@ -136,6 +135,19 @@ static void scrollCallback(GLFWwindow* window, double xOffset, double yOffset) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
 	app->processEvent(PointerEvent(0, mousePosition, PointerAction::Scroll, PointerButton::Unknown, {xOffset, yOffset}));
+}
+
+
+static void framebufferSizeCallback(GLFWwindow* window, int width, int height) {
+	auto* app = (App*)glfwGetWindowUserPointer(window);
+	if (!app) return;
+	app->resize(width, height);
+}
+
+static void windowContentScaleCallback(GLFWwindow* window, float xScale, float yScale) {
+	auto* app = (App*)glfwGetWindowUserPointer(window);
+	if (!app) return;
+	app->updateDPIScale(xScale);
 }
 
 int main() {
@@ -172,23 +184,21 @@ int main() {
 
 	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	// glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
-	//
-	// glfwSetCharCallback(window, &Game::handleCharInput);
-	// glfwSetCursorEnterCallback(window, &Game::handleCursorEnterEvent);
 
 	glfwSetKeyCallback(rawWindow, keyCallback);
 	glfwSetMouseButtonCallback(rawWindow, mouseButtonCallback);
 	glfwSetCursorPosCallback(rawWindow, cursorPosCallback);
 	glfwSetScrollCallback(rawWindow, scrollCallback);
 
+	glfwSetFramebufferSizeCallback(rawWindow, framebufferSizeCallback);
+	glfwSetWindowContentScaleCallback(rawWindow, windowContentScaleCallback);
+
 	glEnable(GL_DEBUG_OUTPUT);
 	glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 	glDebugMessageCallback(glDebugOutput, nullptr);
 	glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
-	GlfwWindow window(rawWindow);
-
-	App app(&window);
+	App app(std::make_unique<GlfwWindow>(rawWindow));
 
 	glfwSetWindowUserPointer(rawWindow, &app);
 
@@ -197,11 +207,8 @@ int main() {
 	do {
 		glfwPollEvents();
 
-		glfwGetFramebufferSize(rawWindow, &width, &height);
-		glfwGetWindowContentScale(rawWindow, &xScale, &yScale);
-
 		microseconds t2 = now();
-		app.tick(t2 - t1, width, height, xScale);
+		app.tick(t2 - t1);
 		t1 = t2;
 		glfwSwapBuffers(rawWindow);
 	} while (!glfwWindowShouldClose(rawWindow));

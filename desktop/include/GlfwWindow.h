@@ -1,14 +1,16 @@
 #ifndef GLFW_WINDOW_H
 #define GLFW_WINDOW_H
 
-#include "IWindow.h"
+#include "AbstractWindow.h"
 
 #include <GLFW/glfw3.h>
 
 
-class GlfwWindow : public IWindow {
+class GlfwWindow : public AbstractWindow {
 public:
-	explicit GlfwWindow(GLFWwindow* handle) : windowHandle(handle) {}
+	explicit GlfwWindow(GLFWwindow* handle) : windowHandle(handle) {
+		GlfwWindow::updateWindowConfiguration();
+	}
 
 	[[nodiscard]] bool isFullscreen() const override {
 		return currentlyFullscreen;
@@ -19,6 +21,8 @@ public:
 	}
 
 	void toggleFullscreen() override;
+
+	void updateWindowConfiguration() override;
 
 private:
 	GLFWwindow* windowHandle;
