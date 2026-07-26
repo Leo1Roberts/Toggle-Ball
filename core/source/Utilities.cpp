@@ -80,29 +80,6 @@ float clamp(float val, float min, float max, byte* valPos) {
 	return val;
 }
 
-
-glm::vec2 pixelsToXNorm(float x, float y, float width, float height) {
-	float widthInv = 1.f / width;
-	return {
-			x * 2.f * widthInv - 1.f,
-			(-y * 2.f + height) * widthInv
-	};
-}
-
-glm::vec2 pixelsToYNorm(float x, float y, float width, float height) {
-	float heightInv = 1.f / height;
-	return {
-			(x * 2.f - width) * heightInv,
-			-y * 2.f * heightInv + 1.f
-	};
-}
-
-glm::vec2 pixelsToYNorm(glm::vec2 pixels, float width, float height) {
-	return pixelsToYNorm(pixels.x,
-	                     pixels.y,
-	                     width, height);
-}
-
 GLuint loadShader(GLenum shaderType, const std::string& shaderSource) {
 	GLuint shader = glCreateShader(shaderType);
 	if (shader) {

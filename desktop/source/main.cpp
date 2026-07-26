@@ -2,6 +2,7 @@
 
 #include "App.h"
 #include "EditorMode.h"
+#include "GameMode.h"
 #include "PlayScreen.h"
 #include "GlfwWindow.h"
 #include "Shader.h"

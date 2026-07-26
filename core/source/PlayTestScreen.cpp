@@ -18,10 +18,7 @@ PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 	auto levelCompleteBackground = std::make_unique<UIButton>();
 	levelCompleteBackground->hide();
 	levelCompleteDisplay = rootNode->addChild(std::move(levelCompleteBackground));
-	levelCompleteDisplay->setOnClick([&] {
-		// ReSharper disable once CppDFANullDereference
-		levelCompleteDisplay->deactivate();
-	});
+	levelCompleteDisplay->setOnClick([&] { levelCompleteDisplay->deactivate(); });
 
 	auto levelCompleteButton = std::make_unique<UIButton>("Level complete!", Theme::SuccessButton);
 	levelCompleteButton->layout = {

@@ -12,8 +12,15 @@ const glm::vec3 groundColor = colorToLinear({76, 76, 76});
 const glm::vec3 skyColor = colorToLinear({85, 110, 128});
 const glm::vec3 sunColor = colorToLinear({255, 255, 230});
 
+
+constexpr glm::vec3 viewDirection = {-1, 0, 0};
+const glm::mat3 viewRotationMatrix = buildViewRotationMatrix(viewDirection);
+const glm::mat3 worldToViewRotationMatrix = glm::transpose(viewRotationMatrix);
+
 constexpr glm::vec3 upDirection{0, 0, 1};
+const glm::vec3 viewUpDirection = worldToViewRotationMatrix * upDirection;
 const glm::vec3 sunDirection = normalize(glm::vec3(2, 2, 3));
+const glm::vec3 viewSunDirection = worldToViewRotationMatrix * sunDirection;
 
 
 GameWorld::GameWorld(const LevelDescriptor& levelDescriptor) {
@@ -27,6 +34,8 @@ GameWorld::GameWorld(const LevelDescriptor& levelDescriptor) {
 
 	ball = GameBall(level.getBallDescriptor().get());
 	obstacles.append_range(level.getObstacleDescriptors() | std::views::transform([](const auto& d) { return GameObstacle(d.get()); }));
+
+	resetView();
 }
 
 
@@ -104,6 +113,12 @@ void GameWorld::render() {
 }
 
 
+void GameWorld::resetView() {
+	viewOrigin = {0.f, 0.f, level.getArenaHeight() * 0.5f};
+	clippingDistance = std::max(level.getArenaWidth(), level.getArenaHeight()) * 2.f;
+	viewMatrix = buildViewMatrix(viewRotationMatrix, viewOrigin);
+}
+
 void GameWorld::resize(int screenWidth, int screenHeight) {
 	if (level.getArenaWidth() * (float)screenHeight > (float)screenWidth * level.getArenaHeight()) { // Level is wider than screen
 		halfWidth = level.getArenaWidth() * 0.5f;
@@ -113,29 +128,8 @@ void GameWorld::resize(int screenWidth, int screenHeight) {
 		halfWidth = halfHeight * (float)screenWidth / (float)screenHeight;
 	}
 
-	viewOrigin = {0.f, 0.f, level.getArenaHeight() * 0.5f};
-
-	float
-	ch = std::cos(heading),
-	sh = std::sin(heading),
-	cp = std::cos(pitch),
-	sp = std::sin(pitch);
-	viewDirection.x = ch * cp;
-	viewDirection.y = sh * cp;
-	viewDirection.z = sp;
-
-	viewDistance = std::max(level.getArenaWidth(), level.getArenaHeight()) * 2.f;
-
-	viewPosition = viewOrigin + viewDirection * viewDistance;
-
-	projectionMatrix = glm::ortho(halfWidth, -halfWidth, -halfHeight, halfHeight, viewDistance - level.getArenaWidth(), viewDistance + level.getArenaWidth());
-	viewRotationMatrix = buildViewRotationMatrix(-viewDirection);
-	viewMatrix = buildViewMatrix(viewRotationMatrix, viewPosition);
-
-	viewUpDirection = glm::transpose(viewRotationMatrix) * upDirection;
-	viewSunDirection = glm::transpose(viewRotationMatrix) * sunDirection;
+	projectionMatrix = glm::ortho(halfWidth, -halfWidth, -halfHeight, halfHeight, -clippingDistance, clippingDistance);
 }
-
 
 
 void GameWorld::toggle() {
@@ -172,9 +166,9 @@ void GameWorld::drawObject(const Mesh<ObjectVertex>* model, const Texture* textu
 	worldMatrix = buildScaledWorldMatrix(rotation, position, scale);
 
 	glm::mat4 bodyToView = viewMatrix * worldMatrix;
-	glm::mat3 bodyToViewRot = glm::transpose(viewRotationMatrix) * rotation;
+	glm::mat3 bodyToViewRotation = worldToViewRotationMatrix * rotation;
 
-	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRot, false);
+	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRotation, false);
 	Shaders::object->setMat4("uBodyToView", bodyToView);
 
 	texture->bind(0);

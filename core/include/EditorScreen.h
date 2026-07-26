@@ -82,23 +82,13 @@ private:
 	std::shared_ptr<UndoNode> currentNode;
 
 
-	glm::vec3 viewOrigin{0.f};
-	float heading = 0.f, pitch = 0.f;
-	glm::vec3 viewDirection{};
-	float baseViewDistance{};
-	float zoomInv = 1.f;
-	float viewDistance{};
-	glm::vec3 viewPosition{};
-
-	glm::vec3 viewUpDirection{0.f};
-	glm::vec3 viewSunDirection{0.f};
-
-	float halfWidth{}, halfHeight{};
-
-	glm::mat4 worldMatrix{}, viewMatrix{}, projectionMatrix{};
-	glm::mat3 viewRotationMatrix{};
-
 	float centreDotRadius{};
+
+	glm::vec3 viewOrigin{};
+	float clippingDistance{};
+	float zoomInv = 1.f;
+	float halfWidth{}, halfHeight{};
+	glm::mat4 worldMatrix{}, viewMatrix{}, projectionMatrix{};
 
 	void resetView();
 	void updateView();

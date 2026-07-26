@@ -13,8 +13,15 @@ const glm::vec3 groundColor = colorToLinear({76, 76, 76});
 const glm::vec3 skyColor = colorToLinear({85, 110, 128});
 const glm::vec3 sunColor = colorToLinear({255, 255, 230});
 
+
+constexpr glm::vec3 viewDirection = {-1, 0, 0};
+const glm::mat3 viewRotationMatrix = buildViewRotationMatrix(viewDirection);
+const glm::mat3 worldToViewRotationMatrix = glm::transpose(viewRotationMatrix);
+
 constexpr glm::vec3 upDirection{0, 0, 1};
+const glm::vec3 viewUpDirection = worldToViewRotationMatrix * upDirection;
 const glm::vec3 sunDirection = normalize(glm::vec3(2, 2, 3));
+const glm::vec3 viewSunDirection = worldToViewRotationMatrix * sunDirection;
 
 
 EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) {
@@ -238,9 +245,9 @@ void EditorScreen::drawObject(const Mesh<ObjectVertex>* model, const Texture* te
 	worldMatrix = buildScaledWorldMatrix(rotation, position, scale);
 
 	glm::mat4 bodyToView = viewMatrix * worldMatrix;
-	glm::mat3 bodyToViewRot = glm::transpose(viewRotationMatrix) * rotation;
+	glm::mat3 bodyToViewRotation = glm::transpose(viewRotationMatrix) * rotation;
 
-	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRot, false);
+	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRotation, false);
 	Shaders::object->setMat4("uBodyToView", bodyToView);
 
 	texture->bind(0);
@@ -301,9 +308,8 @@ void EditorScreen::redo() {
 
 
 void EditorScreen::resetView() {
-	heading = pitch = 0.f;
 	viewOrigin = {0.f, 0.f, level->getArenaHeight() * 0.5f};
-	baseViewDistance = std::max(level->getArenaWidth(), level->getArenaHeight()) * 2.f;
+	clippingDistance = std::max(level->getArenaWidth(), level->getArenaHeight()) * 2.f;
 	zoomInv = 1.f;
 }
 void EditorScreen::updateView() {
@@ -317,27 +323,10 @@ void EditorScreen::updateView() {
 	halfWidth *= zoomInv;
 	halfHeight *= zoomInv;
 
-	float
-	ch = std::cos(heading),
-	sh = std::sin(heading),
-	cp = std::cos(pitch),
-	sp = std::sin(pitch);
-	viewDirection.x = ch * cp;
-	viewDirection.y = sh * cp;
-	viewDirection.z = sp;
+	projectionMatrix = glm::ortho(halfWidth, -halfWidth, -halfHeight, halfHeight, -clippingDistance, clippingDistance);
+	viewMatrix = buildViewMatrix(viewRotationMatrix, viewOrigin);
 
-	viewDistance = baseViewDistance * zoomInv;
-
-	viewPosition = viewOrigin + viewDirection * viewDistance;
-
-	projectionMatrix = glm::ortho(halfWidth, -halfWidth, -halfHeight, halfHeight, viewDistance - level->getArenaWidth(), viewDistance + level->getArenaWidth());
-	viewRotationMatrix = buildViewRotationMatrix(-viewDirection);
-	viewMatrix = buildViewMatrix(viewRotationMatrix, viewPosition);
-
-	viewUpDirection = glm::transpose(viewRotationMatrix) * upDirection;
-	viewSunDirection = glm::transpose(viewRotationMatrix) * sunDirection;
-
-	float uiToWorldScale = uiManager.getScale() * halfHeight * 2.f / height;
+	float uiToWorldScale = uiManager.getScale() * halfHeight * 2.f / (float)height;
 	centreDotRadius = uiToWorldScale * Settings::Sizes.centreDotRadius;
 	ball.updateOutlineRadius(uiToWorldScale);
 	for (auto& obstacle : obstacles)
@@ -351,21 +340,9 @@ void EditorScreen::doResize() {
 
 
 glm::vec3 EditorScreen::pointerToWorldPosition(glm::vec2 pointerPosition) const {
-	glm::vec2 posYNorm = pixelsToYNorm(pointerPosition, width, height);
-	float
-	ch = std::cos(heading),
-	sh = std::sin(heading),
-	cp = std::cos(pitch),
-	sp = std::sin(pitch);
-
-	glm::vec3 offset;
-	offset.x = posYNorm.x * halfHeight * -sh + posYNorm.y * halfHeight * -sp * ch;
-	offset.y = posYNorm.x * halfHeight * ch + posYNorm.y * halfHeight * -sp * sh;
-	offset.z = posYNorm.y * halfHeight * cp;
-	glm::vec3 mousePos = viewPosition + offset;
-	glm::vec3 mouseDir = viewDirection * -1.f;
-
-	glm::vec3 normal = {1, 0, 0};
-	float d = dot(mousePos, normal) / dot(mouseDir, normal);
-	return mousePos - mouseDir * d;
+	glm::vec4 viewport = glm::vec4(0.f, 0.f, width, height);
+	glm::vec3 screenPosition = glm::vec3(pointerPosition.x, height - pointerPosition.y, 0.f);
+	glm::vec3 worldPosition = glm::unProject(screenPosition, viewMatrix, projectionMatrix, viewport);
+	worldPosition.x = 0.f;
+	return worldPosition;
 }

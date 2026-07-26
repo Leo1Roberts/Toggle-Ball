@@ -37,20 +37,12 @@ private:
 
 	float accumulator{};
 
-
-	glm::vec3 viewOrigin{0.f};
-	float heading = 0.f, pitch = 0.f;
-	glm::vec3 viewDirection{};
-	float viewDistance{};
-	glm::vec3 viewPosition{};
-
-	glm::vec3 viewUpDirection{0.f};
-	glm::vec3 viewSunDirection{0.f};
-
+	glm::vec3 viewOrigin{};
+	float clippingDistance{};
 	float halfWidth{}, halfHeight{};
-
 	glm::mat4 worldMatrix{}, viewMatrix{}, projectionMatrix{};
-	glm::mat3 viewRotationMatrix{};
+
+	void resetView();
 };
 
 
