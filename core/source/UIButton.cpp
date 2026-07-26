@@ -15,17 +15,15 @@ UIResponse UIButton::processEvent(const Event& event) {
 		return UIResponse::Ignored;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
-		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
-			if (key->action == KeyAction::Down) {
-				switch (*actionCode) {
-				case ActionCode::Confirm:
-					if (onClickCallback)
-						onClickCallback();
-					return UIResponse::RequestConfirm;
-				case ActionCode::Cancel:
-					return UIResponse::RequestCancel;
-				default:;
-				}
+		if (key->action == KeyAction::Down) {
+			switch (key->chord.code) {
+			case KeyCode::Enter:
+				if (onClickCallback)
+					onClickCallback();
+				return UIResponse::RequestConfirm;
+			case KeyCode::Escape:
+				return UIResponse::RequestCancel;
+			default:;
 			}
 		}
 	}

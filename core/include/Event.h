@@ -18,6 +18,7 @@ struct PointerEvent {
 	glm::vec2 position;
 	PointerAction action{};
 	PointerButton button{};
+	byte modifiers{};
 	glm::vec2 scroll;
 };
 

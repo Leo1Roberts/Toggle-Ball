@@ -72,13 +72,20 @@ void APIENTRY glDebugOutput(GLenum source,
 
 [[nodiscard]] static KeyCode translateKey(int glfwKey) {
 	switch (glfwKey) {
-	case GLFW_KEY_TAB:		return KeyCode::Tab;
-	case GLFW_KEY_ENTER:	return KeyCode::Enter;
-	case GLFW_KEY_ESCAPE:	return KeyCode::Escape;
-	case GLFW_KEY_SPACE:	return KeyCode::Space;
-	case GLFW_KEY_Z:		return KeyCode::Z;
-	case GLFW_KEY_F11:		return KeyCode::F11;
-	default:				return KeyCode::Unknown;
+	case GLFW_KEY_LEFT_CONTROL:
+	case GLFW_KEY_RIGHT_CONTROL:return KeyCode::Ctrl;
+	case GLFW_KEY_LEFT_SHIFT:
+	case GLFW_KEY_RIGHT_SHIFT:	return KeyCode::Shift;
+	case GLFW_KEY_LEFT_ALT:
+	case GLFW_KEY_RIGHT_ALT:	return KeyCode::Alt;
+
+	case GLFW_KEY_TAB:			return KeyCode::Tab;
+	case GLFW_KEY_ENTER:		return KeyCode::Enter;
+	case GLFW_KEY_ESCAPE:		return KeyCode::Escape;
+	case GLFW_KEY_SPACE:		return KeyCode::Space;
+	case GLFW_KEY_Z:			return KeyCode::Z;
+	case GLFW_KEY_F11:			return KeyCode::F11;
+	default:					return KeyCode::Unknown;
 	}
 }
 
@@ -120,7 +127,7 @@ glm::vec2 mousePosition;
 static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
-	app->processEvent(PointerEvent(0, mousePosition, translateMouseButtonAction(action), translateMouseButton(button)));
+	app->processEvent(PointerEvent(0, mousePosition, translateMouseButtonAction(action), translateMouseButton(button), translateMods(mods)));
 }
 
 static void cursorPosCallback(GLFWwindow* window, double x, double y) {
@@ -137,7 +144,7 @@ static void cursorPosCallback(GLFWwindow* window, double x, double y) {
 static void scrollCallback(GLFWwindow* window, double xOffset, double yOffset) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
-	app->processEvent(PointerEvent(0, mousePosition, PointerAction::Scroll, PointerButton::Unknown, {xOffset, yOffset}));
+	app->processEvent(PointerEvent(0, mousePosition, PointerAction::Scroll, PointerButton::Unknown, 0, {xOffset, yOffset}));
 }
 
 
