@@ -1,10 +1,8 @@
 #include "GameWorld.h"
 
-#include "MatrixUtilities.h"
 #include "Settings.h"
 #include "Shader.h"
 
-#include <glm/glm.hpp>
 #include <ranges>
 
 
@@ -12,15 +10,10 @@ const glm::vec3 groundColor = colorToLinear({76, 76, 76});
 const glm::vec3 skyColor = colorToLinear({85, 110, 128});
 const glm::vec3 sunColor = colorToLinear({255, 255, 230});
 
-
-constexpr glm::vec3 viewDirection = {-1, 0, 0};
-const glm::mat3 viewRotationMatrix = buildViewRotationMatrix(viewDirection);
-const glm::mat3 worldToViewRotationMatrix = glm::transpose(viewRotationMatrix);
-
 constexpr glm::vec3 upDirection{0, 0, 1};
-const glm::vec3 viewUpDirection = worldToViewRotationMatrix * upDirection;
+static glm::vec3 viewUpDirection;
 const glm::vec3 sunDirection = normalize(glm::vec3(2, 2, 3));
-const glm::vec3 viewSunDirection = worldToViewRotationMatrix * sunDirection;
+static glm::vec3 viewSunDirection;
 
 
 GameWorld::GameWorld(const LevelDescriptor& levelDescriptor) {
@@ -35,7 +28,10 @@ GameWorld::GameWorld(const LevelDescriptor& levelDescriptor) {
 	ball = GameBall(level.getBallDescriptor().get());
 	obstacles.append_range(level.getObstacleDescriptors() | std::views::transform([](const auto& d) { return GameObstacle(d.get()); }));
 
-	resetView();
+	camera.reset(level.getArenaWidth(), level.getArenaHeight());
+
+	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
+	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
 }
 
 
@@ -83,13 +79,13 @@ constexpr glm::mat3 backgroundRotation = {
 	1, 0, 0
 };
 
-void GameWorld::render() {
+void GameWorld::render() const {
 	Shaders::object->use();
 
 	Shaders::object->setVec3("uGroundColor", groundColor);
 	Shaders::object->setVec3("uSkyColor", skyColor);
 	Shaders::object->setVec3("uSunColor", sunColor);
-	Shaders::object->setMat4("uProjection", projectionMatrix);
+	Shaders::object->setMat4("uProjection", camera.getProjectionMatrix());
 	Shaders::object->setVec3("uUpDirection", viewUpDirection);
 	Shaders::object->setVec3("uSunDirection", viewSunDirection);
 
@@ -113,22 +109,8 @@ void GameWorld::render() {
 }
 
 
-void GameWorld::resetView() {
-	viewOrigin = {0.f, 0.f, level.getArenaHeight() * 0.5f};
-	clippingDistance = std::max(level.getArenaWidth(), level.getArenaHeight()) * 2.f;
-	viewMatrix = buildViewMatrix(viewRotationMatrix, viewOrigin);
-}
-
 void GameWorld::resize(int screenWidth, int screenHeight) {
-	if (level.getArenaWidth() * (float)screenHeight > (float)screenWidth * level.getArenaHeight()) { // Level is wider than screen
-		halfWidth = level.getArenaWidth() * 0.5f;
-		halfHeight = halfWidth * (float)screenHeight / (float)screenWidth;
-	} else {
-		halfHeight = level.getArenaHeight() * 0.5f;
-		halfWidth = halfHeight * (float)screenWidth / (float)screenHeight;
-	}
-
-	projectionMatrix = glm::ortho(halfWidth, -halfWidth, -halfHeight, halfHeight, -clippingDistance, clippingDistance);
+	camera.update(screenWidth, screenHeight, level.getArenaWidth(), level.getArenaHeight());
 }
 
 
@@ -162,11 +144,11 @@ void GameWorld::updatePhysics(microseconds dt) {
 }
 
 
-void GameWorld::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 position, const glm::mat3& rotation, glm::vec3 scale) {
-	worldMatrix = buildScaledWorldMatrix(rotation, position, scale);
+void GameWorld::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 position, const glm::mat3& rotation, glm::vec3 scale) const {
+	glm::mat4 worldMatrix = buildScaledWorldMatrix(rotation, position, scale);
 
-	glm::mat4 bodyToView = viewMatrix * worldMatrix;
-	glm::mat3 bodyToViewRotation = worldToViewRotationMatrix * rotation;
+	glm::mat4 bodyToView = camera.getViewMatrix() * worldMatrix;
+	glm::mat3 bodyToViewRotation = camera.getWorldToViewRotationMatrix() * rotation;
 
 	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRotation, false);
 	Shaders::object->setMat4("uBodyToView", bodyToView);

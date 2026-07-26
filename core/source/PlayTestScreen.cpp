@@ -3,13 +3,6 @@
 #include "Theme.h"
 #include "UIButton.h"
 
-const glm::vec3 groundColor = colorToLinear({76, 76, 76});
-const glm::vec3 skyColor = colorToLinear({85, 110, 128});
-const glm::vec3 sunColor = colorToLinear({255, 255, 230});
-
-constexpr glm::vec3 upDirection{0, 0, 1};
-const glm::vec3 sunDirection = glm::normalize(glm::vec3(2, 2, 3));
-
 
 PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 	: game(levelToPlay) {
