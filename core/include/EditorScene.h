@@ -52,6 +52,7 @@ public:
 
 	void undo();
 	void redo();
+	void cancelOperation();
 	void commitLevelChange();
 	void commitSelectionChange();
 

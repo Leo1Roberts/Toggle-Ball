@@ -10,18 +10,18 @@ void Camera::reset(float arenaWidth, float arenaHeight) {
 	zoomInv = 1.f;
 }
 
-void Camera::update(int screenWidth, int screenHeight, float arenaWidth, float arenaHeight) {
+void Camera::update(float screenWidth, float screenHeight, float arenaWidth, float arenaHeight) {
 	cache.screenWidth = screenWidth;
 	cache.screenHeight = screenHeight;
 	cache.arenaWidth = arenaWidth;
 	cache.arenaHeight = arenaHeight;
 
-	if (arenaWidth * (float)screenHeight > (float)screenWidth * arenaHeight) { // Level is wider than screen
+	if (arenaWidth * screenHeight > screenWidth * arenaHeight) { // Level is wider than screen
 		halfWidth = arenaWidth * 0.5f;
-		halfHeight = halfWidth * (float)screenHeight / (float)screenWidth;
+		halfHeight = halfWidth * screenHeight / screenWidth;
 	} else {
 		halfHeight = arenaHeight * 0.5f;
-		halfWidth = halfHeight * (float)screenWidth / (float)screenHeight;
+		halfWidth = halfHeight * screenWidth / screenHeight;
 	}
 	halfWidth *= zoomInv;
 	halfHeight *= zoomInv;
@@ -30,6 +30,17 @@ void Camera::update(int screenWidth, int screenHeight, float arenaWidth, float a
 	viewMatrix = buildViewMatrix(viewRotationMatrix, viewOrigin);
 }
 
+
+void Camera::startPan(glm::vec2 pointerPosition) {
+	panPointerPosition = pointerPosition;
+}
+void Camera::updatePan(glm::vec2 pointerPosition) {
+	glm::vec3 panPointerWorldPosition = pointerToWorldPosition(panPointerPosition);
+	glm::vec3 pointerWorldPosition = pointerToWorldPosition(pointerPosition);
+	viewOrigin -= (pointerWorldPosition - panPointerWorldPosition);
+	panPointerPosition = pointerPosition;
+	update(cache.screenWidth, cache.screenHeight, cache.arenaWidth, cache.arenaHeight);
+}
 
 void Camera::zoom(float amount, glm::vec2 pointerPosition) {
 	float multiplier = 1.f / amount;

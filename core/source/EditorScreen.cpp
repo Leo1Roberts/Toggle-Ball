@@ -1,6 +1,7 @@
 #include "main.h"
 #include "EditorScreen.h"
 
+#include "EditorContext.h"
 #include "Settings.h"
 #include "Shader.h"
 
@@ -28,6 +29,13 @@ void EditorScreen::processEvent(const Event& event) {
 	if (uiManager.processEvent(event))
 		return;
 
+	EditorContext context = { &scene, &camera };
+
+	if (activeOperation) {
+		if (activeOperation->processEvent(event, context))
+			return;
+	}
+
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
@@ -49,7 +57,27 @@ void EditorScreen::processEvent(const Event& event) {
 			}
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (pointer->action == PointerAction::Scroll) {
+		switch (pointer->action) {
+		case PointerAction::Down:
+			if (pointer->button == PointerButton::Tertiary) {
+				panning = true;
+				camera.startPan(pointer->position);
+				return;
+			}
+			break;
+		case PointerAction::Move:
+			if (panning) {
+				camera.updatePan(pointer->position);
+				return;
+			}
+			break;
+		case PointerAction::Up:
+			if (pointer->button == PointerButton::Tertiary) {
+				panning = false;
+				return;
+			}
+			break;
+		case PointerAction::Scroll: {
 			float zoomChange = 1.f;
 			if (pointer->scroll.y > 0)
 				zoomChange = 1.2f;
@@ -58,7 +86,12 @@ void EditorScreen::processEvent(const Event& event) {
 			camera.zoom(zoomChange, pointer->position);
 			return;
 		}
+		default:;
+		}
 	}
+
+	if (currentToolMode)
+		currentToolMode->processEvent(event, context);
 }
 
 

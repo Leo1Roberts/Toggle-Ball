@@ -9,8 +9,10 @@
 class Camera {
 public:
 	void reset(float arenaWidth, float arenaHeight);
-	void update(int screenWidth, int screenHeight, float arenaWidth, float arenaHeight);
+	void update(float screenWidth, float screenHeight, float arenaWidth, float arenaHeight);
 
+	void startPan(glm::vec2 pointerPosition);
+	void updatePan(glm::vec2 pointerPosition);
 	void zoom(float amount, glm::vec2 pointerPosition);
 
 	[[nodiscard]] glm::vec3 pointerToWorldPosition(glm::vec2 pointerPosition) const;
@@ -24,6 +26,7 @@ public:
 
 private:
 	glm::vec3 viewOrigin{};
+	glm::vec2 panPointerPosition{};
 	float zoomInv = 1.f;
 
 	float clippingDistance{};

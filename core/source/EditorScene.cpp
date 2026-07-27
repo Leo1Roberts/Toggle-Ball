@@ -50,6 +50,10 @@ void EditorScene::redo() {
 	}
 }
 
+void EditorScene::cancelOperation() {
+	syncLevel();
+	syncSelection();
+}
 void EditorScene::commitLevelChange() {
 	currentNode = std::make_shared<UndoNode>(*level, makeSelectionUndoNode(), currentNode);
 	currentNode->previous->next = currentNode;

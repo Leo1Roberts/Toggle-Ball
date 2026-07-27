@@ -4,9 +4,10 @@
 #include "Camera.h"
 #include "EditorScene.h"
 #include "Obstacle.h"
+#include "Operation.h"
 #include "Level.h"
 #include "Screen.h"
-
+#include "ToolMode.h"
 #include "UIManager.h"
 
 
@@ -27,11 +28,15 @@ private:
 	void drawObstacleOutline(const EditorObstacle& obstacle) const;
 	[[nodiscard]] float getObstacleOpacity(const EditorObstacle& obstacle) const;
 
+	bool panning = false;
 	void updateView();
 
 	EditorScene scene;
 	Camera camera;
 	UIManager uiManager;
+
+	std::unique_ptr<ToolMode> currentToolMode;
+	std::unique_ptr<Operation> activeOperation;
 
 	float centreDotRadius{};
 };
