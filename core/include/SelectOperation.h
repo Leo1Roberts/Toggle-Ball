@@ -15,6 +15,8 @@ public:
 
 	void finish() const final;
 
+	[[nodiscard]] SelectionMode getMode() const { return mode; }
+
 private:
 	void applyModifiers(byte mods) final;
 	bool doProcessEvent(const Event& event) final;
@@ -24,8 +26,8 @@ private:
 	void doCommit() const final { context->scene->commitSelectionChange(); }
 
 	SelectionMode mode = SelectionMode::Replace;
-	bool instant;
 	SelectBox box{};
+	bool instant;
 };
 
 

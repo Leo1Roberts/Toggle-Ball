@@ -6,6 +6,10 @@
 // For use with larger y = higher up
 struct SelectBox {
 	SelectBox() = default;
+
+	explicit SelectBox(glm::vec2 point)
+		: left(point.x), right(point.x), bottom(point.y), top(point.y) {}
+
 	SelectBox(float x1, float x2, float y1, float y2) {
 		if (x1 < x2) {
 			left = x1; right = x2;
@@ -19,9 +23,9 @@ struct SelectBox {
 		}
 	}
 
-	[[nodiscard]] bool touchesCircle(glm::vec2 centre, float radius);
+	[[nodiscard]] bool touchesCircle(glm::vec2 centre, float radius) const;
 
-	float left, right, top, bottom;
+	float left, right, bottom, top;
 };
 
 

@@ -5,9 +5,7 @@
 
 
 SelectOperation::SelectOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, byte mods, bool instant)
-	: Operation(context, trigger, initialPointerPosition), instant(instant) {
-	box.left = box.right = initialPointerPlanarPosition.x;
-	box.top = box.bottom = initialPointerPlanarPosition.y;
+	: Operation(context, trigger, initialPointerPosition), box(initialPointerPlanarPosition), instant(instant) {
 	SelectOperation::applyModifiers(mods);
 	SelectOperation::applyOperation();
 }
