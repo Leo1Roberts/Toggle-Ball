@@ -119,12 +119,12 @@ public:
 	void initKinematicState(BallKinematicState& kinematicState) const;
 
 	[[nodiscard]] byte getType() const { return type; }
-	[[nodiscard]] glm::vec3 getInitialPosition() const { return initialPosition; }
+	[[nodiscard]] glm::vec2 getInitialPosition() const { return initialPosition; }
 	[[nodiscard]] float getRadius() const { return ballProperties[type].radius; }
 
 private:
 	byte type{};
-	glm::vec3 initialPosition{0.f};
+	glm::vec2 initialPosition{0.f};
 };
 
 class GameBall {
@@ -179,7 +179,7 @@ public:
 	void setSelected(bool select) { selected = select; }
 	[[nodiscard]] bool isInSelectBox(SelectBox selectBox) const {
 		return selectBox.touchesCircle(
-			worldToPlanar(descriptor->getInitialPosition()), 1.f);
+			descriptor->getInitialPosition(), 1.f);
 	}
 
 	void updateOutlineRadius(float uiToWorldScale) {

@@ -160,7 +160,7 @@ void EditorScreen::render() {
 
 			// Place domains at different depths to prevent Z-fighting. Last part keeps the ball outline on top.
 			float depth = ((float)i - (float)scene.getObstacles().size()) / (float)scene.getObstacles().size();
-			glm::vec3 position = {depth, obstacle.getDomainPlanarPosition()};
+			glm::vec3 position = {depth, obstacle.getDomainPosition()};
 			glm::mat4 worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), position);
 			Shaders::outline->setMat4("uProjectionFull", camera.getProjectionMatrix() * camera.getViewMatrix() * worldMatrix);
 
@@ -181,7 +181,7 @@ void EditorScreen::render() {
 
 	glDepthFunc(GL_ALWAYS);
 	drawObject(Meshes::ball.get(), scene.getBall()->getTexture(),
-			   scene.getBall()->getDescriptor()->getInitialPosition(),
+			   planarToWorld(scene.getBall()->getDescriptor()->getInitialPosition()),
 			   glm::mat3(1));
 
 
@@ -219,8 +219,7 @@ void EditorScreen::render() {
 			outlineColor = Color::Selected;
 		Shaders::outline->setVec4("uOutlineColor", outlineColor);
 
-		glm::vec3 ballOutlinePosition = scene.getLevel()->getBallDescriptor()->getInitialPosition();
-		ballOutlinePosition.x -= scene.getBall()->getOutlineRadius();
+		glm::vec3 ballOutlinePosition = {-scene.getBall()->getOutlineRadius(), scene.getLevel()->getBallDescriptor()->getInitialPosition()};
 		glm::mat4 worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), ballOutlinePosition, glm::vec3(scene.getBall()->getOutlineRadius()));
 		Shaders::outline->setMat4("uProjectionFull", camera.getProjectionMatrix() * camera.getViewMatrix() * worldMatrix);
 

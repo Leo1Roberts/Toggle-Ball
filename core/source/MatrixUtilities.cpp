@@ -39,7 +39,7 @@ glm::mat4 buildViewMatrix(const glm::mat3& viewRotationMatrix, glm::vec3 viewPos
 
 glm::mat4 fillRotationScaled(const glm::mat3& source, glm::vec3 scale) {
 	glm::mat3 scaled(source[0] * scale.x, source[1] * scale.y, source[2] * scale.z);
-	return {scaled};
+	return glm::mat4(scaled);
 }
 
 glm::mat4 buildScaledWorldMatrix(const glm::mat3& rotation, glm::vec3 position, glm::vec3 scale) {

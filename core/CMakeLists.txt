@@ -36,6 +36,8 @@ target_include_directories(core SYSTEM PUBLIC
 )
 target_include_directories(core PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 
+target_compile_definitions(core PUBLIC GLM_FORCE_EXPLICIT_CTOR)
+
 if(ANDROID)
     target_include_directories(core PUBLIC ${game-activity_INCLUDE_DIRS})
     target_link_libraries(core PUBLIC game-activity::game-activity)

@@ -73,7 +73,7 @@ public:
 private:
 	glm::vec3 position{0.f};
 	float angle = 0.f;
-	glm::mat3 rotation = glm::mat3(1);
+	glm::mat3 rotation = glm::mat3(1.f);
 	glm::vec3 velocity{0.f};
 	float angularVelocity = 0.f;
 	float phase = 0.f;
@@ -102,14 +102,14 @@ public:
 
 	[[nodiscard]] float getMinorRadius() const { return minorRadius; }
 	[[nodiscard]] float getBoundingRadius() const { return getMajorRadius() + getMinorRadius(); }
-	[[nodiscard]] glm::vec3 getLeftCap() const { return leftCap; }
-	[[nodiscard]] glm::vec3 getRightCap() const { return rightCap; }
+	[[nodiscard]] glm::vec2 getLeftCap() const { return leftCap; }
+	[[nodiscard]] glm::vec2 getRightCap() const { return rightCap; }
 	[[nodiscard]] virtual float getLeftCapAngle() const = 0;
 	[[nodiscard]] virtual float getRightCapAngle() const = 0;
 	[[nodiscard]] float getHalfDepth() const { return getMinorRadius(); }
 
 protected:
-	glm::vec3 leftCap{}, rightCap{};
+	glm::vec2 leftCap{}, rightCap{};
 
 	explicit AbstractShapeSpec(float minorRadius) :
 	    minorRadius(minorRadius) {}
@@ -161,8 +161,8 @@ public:
 	}
 	[[nodiscard]] BallCollisionInfo getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) override;
 
-	void setLeftLength(float l);
-	void setRightLength(float l);
+	void setLeftLength(float len);
+	void setRightLength(float len);
 
 	[[nodiscard]] float getLeftCapAngle() const override { return glm::pi<float>(); }
 	[[nodiscard]] float getRightCapAngle() const override { return 0; }
@@ -269,7 +269,7 @@ public:
 	virtual void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const = 0;
 
 	[[nodiscard]] virtual col getColor() const = 0;
-	[[nodiscard]] virtual glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const = 0;
+	[[nodiscard]] virtual glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const = 0;
 
 protected:
 	IMotionSpec() = default;
@@ -284,7 +284,7 @@ private:
 class StaticSpec : public IMotionSpec {
 public:
 	StaticSpec(glm::vec2 position, float angle) :
-	    position(planarToWorld(position)) {
+	    position(position) {
 		setAngle(angle);
 	}
 
@@ -293,14 +293,14 @@ public:
 	~StaticSpec() override = default;
 
 	[[nodiscard]] col getColor() const override { return Color::White; }
-	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const override { return worldToPlanar(obstaclePosition); }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<StaticSpec>(*this);
 	}
 
 	void scale(float factor) override {
-		*this = StaticSpec(worldToPlanar(position) * factor, angle);
+		*this = StaticSpec(position * factor, angle);
 	}
 
 	void setAngle(float radians);
@@ -310,9 +310,9 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState&, const Smoother&) const override {}
 
 private:
-	glm::vec3 position{0.f}; // SSOT
+	glm::vec2 position{0.f}; // SSOT
 	float angle{}; // SSOT
-	glm::mat3 rotation{1.f};
+	glm::mat2 rotation{1.f};
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class IMotionSpec;
@@ -321,16 +321,16 @@ private:
 
 	void buildDomainMesh(std::vector<ObjectVertex>&, std::vector<Index>&, const AbstractShapeSpec*, float) const override {}
 
-	[[nodiscard]] glm::vec3 getPosition() const { return position; }
+	[[nodiscard]] glm::vec2 getPosition() const { return position; }
 	[[nodiscard]] float getAngle() const { return angle; }
-	[[nodiscard]] glm::mat3 getRotation() const { return rotation; }
+	[[nodiscard]] glm::mat2 getRotation() const { return rotation; }
 };
 
 class TogglingPositionSpec : public IMotionSpec {
 public:
 	TogglingPositionSpec(float angle, glm::vec2 positionA, glm::vec2 positionB) :
-	    positionA(planarToWorld(positionA)),
-	    positionB(planarToWorld(positionB)) {
+	    positionA(positionA),
+	    positionB(positionB) {
 		setAngle(angle);
 	}
 
@@ -339,14 +339,14 @@ public:
 	~TogglingPositionSpec() override = default;
 
 	[[nodiscard]] col getColor() const override { return Color::SoftBlue; }
-	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3) const override { return glm::vec2(0.f); }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<TogglingPositionSpec>(*this);
 	}
 
 	void scale(float factor) override {
-		*this = TogglingPositionSpec(angle, worldToPlanar(positionA) * factor, worldToPlanar(positionB) * factor);
+		*this = TogglingPositionSpec(angle, positionA * factor, positionB * factor);
 	}
 
 	void setAngle(float radians);
@@ -357,9 +357,9 @@ public:
 
 private:
 	float angle{}; // SSOT
-	glm::mat3 rotation{1.f};
-	glm::vec3 positionA{0.f}; // SSOT
-	glm::vec3 positionB{0.f}; // SSOT
+	glm::mat2 rotation{1.f};
+	glm::vec2 positionA{0.f}; // SSOT
+	glm::vec2 positionB{0.f}; // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class IMotionSpec;
@@ -369,15 +369,15 @@ private:
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const override;
 
 	[[nodiscard]] float getAngle() const { return angle; }
-	[[nodiscard]] glm::mat3 getRotation() const { return rotation; }
-	[[nodiscard]] glm::vec3 getPositionA() const { return positionA; }
-	[[nodiscard]] glm::vec3 getPositionB() const { return positionB; }
+	[[nodiscard]] glm::mat2 getRotation() const { return rotation; }
+	[[nodiscard]] glm::vec2 getPositionA() const { return positionA; }
+	[[nodiscard]] glm::vec2 getPositionB() const { return positionB; }
 };
 
 class TogglingAngleSpec : public IMotionSpec {
 public:
 	TogglingAngleSpec(glm::vec2 position, float angleA, float angleB) :
-	    position(planarToWorld(position)),
+	    position(position),
 	    angleA(angleA),
 	    angleB(angleB) {}
 
@@ -386,14 +386,14 @@ public:
 	~TogglingAngleSpec() override = default;
 
 	[[nodiscard]] col getColor() const override { return Color::SoftRed; }
-	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const override { return worldToPlanar(obstaclePosition); }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<TogglingAngleSpec>(*this);
 	}
 
 	void scale(float factor) override {
-		*this = TogglingAngleSpec(worldToPlanar(position) * factor, angleA, angleB);
+		*this = TogglingAngleSpec(position * factor, angleA, angleB);
 	}
 
 	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
@@ -401,7 +401,7 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	glm::vec3 position{0.f};  // SSOT
+	glm::vec2 position{0.f};  // SSOT
 	float angleA{}; // SSOT
 	float angleB{}; // SSOT
 
@@ -412,7 +412,7 @@ private:
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const override;
 
-	[[nodiscard]] glm::vec3 getPosition() const { return position; }
+	[[nodiscard]] glm::vec2 getPosition() const { return position; }
 	[[nodiscard]] float getAngleA() const { return angleA; }
 	[[nodiscard]] float getAngleB() const { return angleB; }
 };
@@ -420,7 +420,7 @@ private:
 class SpinningSpec : public IMotionSpec {
 public:
 	SpinningSpec(glm::vec2 position, float initialAngle, float angularVelocityA, float angularVelocityB) :
-	    position(planarToWorld(position)),
+	    position(position),
 	    initialAngle(initialAngle),
 	    angularVelocityA(angularVelocityA),
 	    angularVelocityB(angularVelocityB) {}
@@ -430,14 +430,14 @@ public:
 	~SpinningSpec() override = default;
 
 	[[nodiscard]] col getColor() const override { return Color::SoftMagenta; }
-	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const override { return worldToPlanar(obstaclePosition); }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<SpinningSpec>(*this);
 	}
 
 	void scale(float factor) override {
-		*this = SpinningSpec(worldToPlanar(position) * factor, initialAngle, angularVelocityA, angularVelocityB);
+		*this = SpinningSpec(position * factor, initialAngle, angularVelocityA, angularVelocityB);
 	}
 
 	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
@@ -445,7 +445,7 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother&) const override;
 
 private:
-	glm::vec3 position{0.f};            // SSOT
+	glm::vec2 position{0.f};            // SSOT
 	float initialAngle{};     // SSOT
 	float angularVelocityA{}; // SSOT
 	float angularVelocityB{}; // SSOT
@@ -457,7 +457,7 @@ private:
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
 
-	[[nodiscard]] glm::vec3 getPosition() const { return position; }
+	[[nodiscard]] glm::vec2 getPosition() const { return position; }
 	[[nodiscard]] float getInitialAngle() const { return initialAngle; }
 	[[nodiscard]] float getAngularVelocityA() const { return angularVelocityA; }
 	[[nodiscard]] float getAngularVelocityB() const { return angularVelocityB; }
@@ -466,8 +466,8 @@ private:
 class OscillatingPositionSpec : public IMotionSpec {
 public:
 	OscillatingPositionSpec(float angle, glm::vec2 position1, glm::vec2 position2, float angularFrequencyA, float angularFrequencyB) :
-	    position1(planarToWorld(position1)),
-	    position2(planarToWorld(position2)),
+	    position1(position1),
+	    position2(position2),
 	    angularFrequencyA(angularFrequencyA),
 	    angularFrequencyB(angularFrequencyB) {
 		setAngle(angle);
@@ -478,14 +478,14 @@ public:
 	~OscillatingPositionSpec() override = default;
 
 	[[nodiscard]] col getColor() const override { return Color::SoftCyan; }
-	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3) const override { return glm::vec2(0.f); }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<OscillatingPositionSpec>(*this);
 	}
 
 	void scale(float factor) override {
-		*this = OscillatingPositionSpec(angle, worldToPlanar(position1) * factor, worldToPlanar(position2) * factor, angularFrequencyA, angularFrequencyB);
+		*this = OscillatingPositionSpec(angle, position1 * factor, position2 * factor, angularFrequencyA, angularFrequencyB);
 	}
 
 	void setAngle(float radians);
@@ -495,10 +495,10 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	glm::vec3 position1{0.f}; // SSOT
-	glm::vec3 position2{0.f}; // SSOT
+	glm::vec2 position1{0.f}; // SSOT
+	glm::vec2 position2{0.f}; // SSOT
 	float angle{};  // SSOT
-	glm::mat3 rotation{1.f};
+	glm::mat2 rotation{1.f};
 	float angularFrequencyA{}; // SSOT
 	float angularFrequencyB{}; // SSOT
 
@@ -509,10 +509,10 @@ private:
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
 
-	[[nodiscard]] glm::vec3 getPosition1() const { return position1; }
-	[[nodiscard]] glm::vec3 getPosition2() const { return position2; }
+	[[nodiscard]] glm::vec2 getPosition1() const { return position1; }
+	[[nodiscard]] glm::vec2 getPosition2() const { return position2; }
 	[[nodiscard]] float getAngle() const { return angle; }
-	[[nodiscard]] glm::mat3 getRotation() const { return rotation; }
+	[[nodiscard]] glm::mat2 getRotation() const { return rotation; }
 	[[nodiscard]] float getAngularFrequencyA() const { return angularFrequencyA; }
 	[[nodiscard]] float getAngularFrequencyB() const { return angularFrequencyB; }
 };
@@ -520,7 +520,7 @@ private:
 class OscillatingAngleSpec : public IMotionSpec {
 public:
 	OscillatingAngleSpec(glm::vec2 position, float angle1, float angle2, float angularFrequencyA, float angularFrequencyB) :
-	    position(planarToWorld(position)),
+	    position(position),
 	    angle1(angle1),
 	    angle2(angle2),
 	    angularFrequencyA(angularFrequencyA),
@@ -531,14 +531,14 @@ public:
 	~OscillatingAngleSpec() override = default;
 
 	[[nodiscard]] col getColor() const override { return Color::SoftYellow; }
-	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const override { return worldToPlanar(obstaclePosition); }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<OscillatingAngleSpec>(*this);
 	}
 
 	void scale(float factor) override {
-		*this = OscillatingAngleSpec(worldToPlanar(position) * factor, angle1, angle2, angularFrequencyA, angularFrequencyB);
+		*this = OscillatingAngleSpec(position * factor, angle1, angle2, angularFrequencyA, angularFrequencyB);
 	}
 
 	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
@@ -546,7 +546,7 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	glm::vec3 position{0.f};             // SSOT
+	glm::vec2 position{0.f};             // SSOT
 	float angle1{};            // SSOT
 	float angle2{};            // SSOT
 	float angularFrequencyA{}; // SSOT
@@ -559,7 +559,7 @@ private:
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
 
-	[[nodiscard]] glm::vec3 getPosition() const { return position; }
+	[[nodiscard]] glm::vec2 getPosition() const { return position; }
 	[[nodiscard]] float getAngle1() const { return angle1; }
 	[[nodiscard]] float getAngle2() const { return angle2; }
 	[[nodiscard]] float getAngularFrequencyA() const { return angularFrequencyA; }
@@ -599,8 +599,8 @@ public:
 	[[nodiscard]] bool isGoal() const { return goal; }
 	[[nodiscard]] col getColor() const { return color; }
 	[[nodiscard]] byte getMaterial() const { return material; }
-	[[nodiscard]] glm::vec2 getDomainPlanarPosition(glm::vec3 obstaclePosition) const {
-		return motion->getDomainPlanarPosition(obstaclePosition);
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const {
+		return motion->getDomainPosition(obstaclePosition);
 	}
 
 private:
@@ -633,8 +633,8 @@ public:
 	}
 	void stepKinematicState(const Smoother& smoother);
 
-	bool collideWithLeftCap(GameBall& ball) const { return collideWithCap(ball, descriptor->getShape()->getLeftCap()); }
-	bool collideWithRightCap(GameBall& ball) const { return collideWithCap(ball, descriptor->getShape()->getRightCap()); }
+	bool collideWithLeftCap(GameBall& ball) const { return collideWithCap(ball, planarToWorld(descriptor->getShape()->getLeftCap())); }
+	bool collideWithRightCap(GameBall& ball) const { return collideWithCap(ball, planarToWorld(descriptor->getShape()->getRightCap())); }
 	bool collideWithMidsection(GameBall& ball) const;
 	bool notifyOfContactWithBall(const GameBall& ball);
 
@@ -642,10 +642,10 @@ public:
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
 	[[nodiscard]] const Mesh<ObjectVertex>* getMesh() const { return &mesh; }
 	[[nodiscard]] PlaneDescriptor getLeftCapDividingPlane() const {
-		return getCapDividingPlane(descriptor->getShape()->getLeftCap(), descriptor->getShape()->getLeftCapAngle());
+		return getCapDividingPlane(planarToWorld(descriptor->getShape()->getLeftCap()), descriptor->getShape()->getLeftCapAngle());
 	}
 	[[nodiscard]] PlaneDescriptor getRightCapDividingPlane() const {
-		return getCapDividingPlane(descriptor->getShape()->getRightCap(), descriptor->getShape()->getRightCapAngle());
+		return getCapDividingPlane(planarToWorld(descriptor->getShape()->getRightCap()), descriptor->getShape()->getRightCapAngle());
 	}
 
 private:
@@ -701,7 +701,7 @@ public:
 	[[nodiscard]] const Mesh<ObjectVertex>* getOutlineMesh() const { return &outlineMesh; }
 	[[nodiscard]] const Mesh<ObjectVertex>* getDomainMesh() const { return &domainMesh; }
 
-	[[nodiscard]] glm::vec2 getDomainPlanarPosition() const { return descriptor->getDomainPlanarPosition(kinematicState.getPosition()); }
+	[[nodiscard]] glm::vec2 getDomainPosition() const { return descriptor->getDomainPosition(worldToPlanar(kinematicState.getPosition())); }
 
 private:
 	ObstacleDescriptor* descriptor;
