@@ -23,8 +23,22 @@ enum class KeyCode {
 	Enter,
 	Escape,
 	Space,
-	Z,
-	F11,
+
+	A, B, C, D, E, F, G, H, I, J, K, L, M,
+	N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
+
+	Num0, Num1, Num2, Num3, Num4,
+	Num5, Num6, Num7, Num8, Num9,
+
+	Numpad0, Numpad1, Numpad2, Numpad3, Numpad4,
+	Numpad5, Numpad6, Numpad7, Numpad8, Numpad9,
+
+	F1, F2, F3, F4, F5, F6, F7, F8, F9, F10,
+	F11, F12, F13, F14, F15, F16, F17, F18, F19, F20,
+	F21, F22, F23, F24, F25,
+
+	Up, Down, Left, Right,
+
 	Unknown
 };
 
@@ -107,12 +121,46 @@ private:
 	struct Entry { KeyCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
-		{ KeyCode::Tab,		"TAB" },
-		{ KeyCode::Enter,	"ENTER" },
-		{ KeyCode::Escape,	"ESC" },
-		{ KeyCode::Space,	"SPACE" },
-		{ KeyCode::Z,		"Z" },
-		{ KeyCode::F11,		"F11" },
+	    { KeyCode::Tab,        "TAB" },
+	    { KeyCode::Enter,      "ENTER" },
+	    { KeyCode::Escape,     "ESC" },
+	    { KeyCode::Space,      "SPACE" },
+
+	    { KeyCode::A, "A" }, { KeyCode::B, "B" }, { KeyCode::C, "C" },
+	    { KeyCode::D, "D" }, { KeyCode::E, "E" }, { KeyCode::F, "F" },
+	    { KeyCode::G, "G" }, { KeyCode::H, "H" }, { KeyCode::I, "I" },
+	    { KeyCode::J, "J" }, { KeyCode::K, "K" }, { KeyCode::L, "L" },
+	    { KeyCode::M, "M" }, { KeyCode::N, "N" }, { KeyCode::O, "O" },
+	    { KeyCode::P, "P" }, { KeyCode::Q, "Q" }, { KeyCode::R, "R" },
+	    { KeyCode::S, "S" }, { KeyCode::T, "T" }, { KeyCode::U, "U" },
+	    { KeyCode::V, "V" }, { KeyCode::W, "W" }, { KeyCode::X, "X" },
+	    { KeyCode::Y, "Y" }, { KeyCode::Z, "Z" },
+
+	    { KeyCode::Num0, "0" }, { KeyCode::Num1, "1" }, { KeyCode::Num2, "2" },
+	    { KeyCode::Num3, "3" }, { KeyCode::Num4, "4" }, { KeyCode::Num5, "5" },
+	    { KeyCode::Num6, "6" }, { KeyCode::Num7, "7" }, { KeyCode::Num8, "8" },
+	    { KeyCode::Num9, "9" },
+
+	    { KeyCode::Numpad0, "NUMPAD0" }, { KeyCode::Numpad1, "NUMPAD1" },
+	    { KeyCode::Numpad2, "NUMPAD2" }, { KeyCode::Numpad3, "NUMPAD3" },
+	    { KeyCode::Numpad4, "NUMPAD4" }, { KeyCode::Numpad5, "NUMPAD5" },
+	    { KeyCode::Numpad6, "NUMPAD6" }, { KeyCode::Numpad7, "NUMPAD7" },
+	    { KeyCode::Numpad8, "NUMPAD8" }, { KeyCode::Numpad9, "NUMPAD9" },
+
+	    { KeyCode::F1,  "F1"  }, { KeyCode::F2,  "F2"  }, { KeyCode::F3,  "F3"  },
+	    { KeyCode::F4,  "F4"  }, { KeyCode::F5,  "F5"  }, { KeyCode::F6,  "F6"  },
+	    { KeyCode::F7,  "F7"  }, { KeyCode::F8,  "F8"  }, { KeyCode::F9,  "F9"  },
+	    { KeyCode::F10, "F10" }, { KeyCode::F11, "F11" }, { KeyCode::F12, "F12" },
+	    { KeyCode::F13, "F13" }, { KeyCode::F14, "F14" }, { KeyCode::F15, "F15" },
+	    { KeyCode::F16, "F16" }, { KeyCode::F17, "F17" }, { KeyCode::F18, "F18" },
+	    { KeyCode::F19, "F19" }, { KeyCode::F20, "F20" }, { KeyCode::F21, "F21" },
+	    { KeyCode::F22, "F22" }, { KeyCode::F23, "F23" }, { KeyCode::F24, "F24" },
+	    { KeyCode::F25, "F25" },
+
+	    { KeyCode::Up,    "UP"    },
+	    { KeyCode::Down,  "DOWN"  },
+	    { KeyCode::Left,  "LEFT"  },
+	    { KeyCode::Right, "RIGHT" },
 	};
 };
 
