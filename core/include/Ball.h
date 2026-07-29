@@ -187,6 +187,7 @@ public:
 	}
 	[[nodiscard]] float getOutlineRadius() const { return outlineRadius; }
 
+	[[nodiscard]] BallDescriptor* getDescriptor() { return descriptor; }
 	[[nodiscard]] const Texture* getTexture() const { return texture; }
 
 private:

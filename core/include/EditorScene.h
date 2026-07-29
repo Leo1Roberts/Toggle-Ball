@@ -61,6 +61,7 @@ public:
 	void setSelectionFocus(EntityReference focus);
 	void selectAll();
 	void deselectAll();
+	[[nodiscard]] bool anythingIsSelected() const { return selectionFocus.type != EntityType::None; }
 
 	[[nodiscard]] const LevelDescriptor* getLevel() const { return level.get(); }
 	[[nodiscard]] EditorBall* getBall() { return &ball; }

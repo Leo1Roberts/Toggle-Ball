@@ -9,7 +9,8 @@ enum class SelectionMode { Replace, Add, Subtract };
 
 class SelectOperation : public Operation {
 public:
-	SelectOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, byte mods, bool instant = false);
+	SelectOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, bool instant = false)
+		: Operation(context, trigger, initialPointerPosition), box(initialPointerPlanarPosition), instant(instant) {}
 
 	void renderGizmos() final;
 

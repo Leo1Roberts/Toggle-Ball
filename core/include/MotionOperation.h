@@ -7,14 +7,13 @@
 
 class MotionOperation : public Operation {
 public:
-	MotionOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, byte mods)
-		: Operation(context, trigger, initialPointerPosition) {
-		applyModifiers(mods);
-	}
+	MotionOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
+		: Operation(context, trigger, initialPointerPosition) {}
 
 private:
 	void applyModifiers(byte mods) final { stateless = mods & MOD_ALT; }
 
+	[[nodiscard]] bool canStart() const final { return context->scene->anythingIsSelected(); }
 	void doCancel() const final { context->scene->cancelLevelChange(); }
 	void doCommit() const final { context->scene->commitLevelChange(); }
 

@@ -181,7 +181,7 @@ void EditorScreen::render() {
 
 	glDepthFunc(GL_ALWAYS);
 	drawObject(Meshes::ball.get(), scene.getBall()->getTexture(),
-			   scene.getLevel()->getBallDescriptor()->getInitialPosition(),
+			   scene.getBall()->getDescriptor()->getInitialPosition(),
 			   glm::mat3(1));
 
 

@@ -7,9 +7,11 @@
 void DefaultMode::performPrimaryAction(const PointerEvent& upEvent) {
 	auto selectOperation = SelectOperation(
 		context, TriggerType::PointerPrimary,
-		pointerDownEvent.position, pointerDownEvent.modifiers, true);
-	selectOperation.finish();
-	selectOperation.commit();
+		pointerDownEvent.position, true);
+	if (selectOperation.start(pointerDownEvent.modifiers)) {
+		selectOperation.finish();
+		selectOperation.commit();
+	}
 }
 
 
@@ -27,26 +29,30 @@ Operation* DefaultMode::startPrimaryDragOperation() {
 	}
 
 	if (hit) {
-		auto selectOperation = std::make_unique<SelectOperation>(
+		auto selectOperation = SelectOperation(
 			context, TriggerType::PointerPrimary,
-			pointerDownEvent.position, pointerDownEvent.modifiers, true);
-		selectOperation->finish();
+			pointerDownEvent.position, true);
+		if (selectOperation.start(pointerDownEvent.modifiers))
+			selectOperation.finish();
+		else return nullptr;
 
-		if (selectOperation->getMode() == SelectionMode::Subtract) {
-			selectOperation->cancel();
+		if (selectOperation.getMode() == SelectionMode::Subtract) {
+			selectOperation.cancel();
 			return nullptr;
 		}
 
 		auto translateOperation = std::make_unique<TranslateOperation>(
 			context, TriggerType::PointerPrimary,
-			pointerDownEvent.position, pointerDownEvent.modifiers);
-
-		return context->startOperation(std::move(translateOperation));
+			pointerDownEvent.position);
+		if (translateOperation->start(pointerDownEvent.modifiers))
+			return context->startOperation(std::move(translateOperation));
+		return nullptr;
 	}
 
 	auto selectOperation = std::make_unique<SelectOperation>(
 		context, TriggerType::PointerPrimary,
-		pointerDownEvent.position, pointerDownEvent.modifiers);
-
-	return context->startOperation(std::move(selectOperation));
+		pointerDownEvent.position);
+	if (selectOperation->start(pointerDownEvent.modifiers))
+		return context->startOperation(std::move(selectOperation));
+	return nullptr;
 }

@@ -21,6 +21,14 @@ public:
 
 	virtual void renderGizmos() {}
 
+	[[nodiscard]] bool start(byte mods) {
+		if (canStart()) {
+			applyModifiers(mods);
+			applyOperation();
+			return true;
+		}
+		return false;
+	}
 	void cancel() const {
 		doCancel();
 		context->finishOperation();
@@ -44,6 +52,7 @@ private:
 	virtual bool doProcessEvent(const Event& event) = 0;
 	virtual void applyOperation() = 0;
 
+	[[nodiscard]] virtual bool canStart() const { return true; }
 	virtual void doCancel() const = 0;
 	virtual void doCommit() const = 0;
 };
