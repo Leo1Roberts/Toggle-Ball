@@ -85,8 +85,10 @@ void App::processEvent(const Event& event) {
 				switch (*actionCode) {
 				case ActionCode::Quit:
 					window->close();
+					return;
 				case ActionCode::Fullscreen:
 					window->toggleFullscreen();
+					return;
 				default:;
 				}
 			}

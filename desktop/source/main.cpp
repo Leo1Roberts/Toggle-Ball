@@ -169,7 +169,9 @@ static void windowContentScaleCallback(GLFWwindow* window, float, float) {
 }
 
 int main() {
-	feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW );
+#if defined(PLATFORM_LINUX)
+	feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+#endif
 
 	if (!glfwInit())
 		exit(EXIT_FAILURE);

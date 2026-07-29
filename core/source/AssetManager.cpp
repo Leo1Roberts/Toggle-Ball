@@ -37,8 +37,9 @@ namespace AssetManager {
 			file.seekg(0, std::ios::beg);
 
 			buffer.resize(size);
-			if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
-				buffer.clear();
+			file.read(reinterpret_cast<char*>(buffer.data()), size);
+
+			buffer.resize(file.gcount());
 		}
 #endif
 
