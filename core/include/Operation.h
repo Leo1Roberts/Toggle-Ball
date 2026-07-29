@@ -25,6 +25,7 @@ public:
 		doCancel();
 		context->finishOperation();
 	}
+	virtual void finish() const {}
 	void commit() const {
 		doCommit();
 		context->finishOperation();

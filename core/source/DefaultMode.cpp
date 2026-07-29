@@ -8,6 +8,7 @@ void DefaultMode::performPrimaryAction(const PointerEvent& upEvent) {
 		context, TriggerType::PointerPrimary,
 		pointerDownEvent.position, pointerDownEvent.modifiers, true);
 
+	selectOperation.finish();
 	selectOperation.commit();
 }
 

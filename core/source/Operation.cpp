@@ -9,6 +9,7 @@ bool Operation::processEvent(const Event& event) {
 				return true;
 			}
 			if (key->chord.code == KeyCode::Enter) {
+				finish();
 				commit();
 				return true;
 			}
@@ -30,6 +31,7 @@ bool Operation::processEvent(const Event& event) {
 			}
 			if (trigger == TriggerType::Key) {
 				if (pointer->button == PointerButton::Primary) {
+					finish();
 					commit();
 					return true;
 				}
@@ -41,6 +43,7 @@ bool Operation::processEvent(const Event& event) {
 		} else if (pointer->action == PointerAction::Up) {
 			if ((pointer->button == PointerButton::Primary && trigger == TriggerType::PointerPrimary) ||
 				(pointer->button == PointerButton::Secondary && trigger == TriggerType::PointerSecondary)) {
+				finish();
 				commit();
 				return true;
 			}

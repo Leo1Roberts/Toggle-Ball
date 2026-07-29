@@ -11,15 +11,17 @@ class SelectOperation : public Operation {
 public:
 	SelectOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, byte mods, bool instant = false);
 
-	void renderGizmos() override;
+	void renderGizmos() final;
+
+	void finish() const final;
 
 private:
-	void applyModifiers(byte mods) override;
-	bool doProcessEvent(const Event& event) override;
-	void applyOperation() override;
+	void applyModifiers(byte mods) final;
+	bool doProcessEvent(const Event& event) final;
+	void applyOperation() final;
 
-	void doCancel() const override { context->scene->cancelSelectionChange(); }
-	void doCommit() const override;
+	void doCancel() const final { context->scene->cancelSelectionChange(); }
+	void doCommit() const final { context->scene->commitSelectionChange(); }
 
 	SelectionMode mode = SelectionMode::Replace;
 	bool instant;

@@ -23,56 +23,7 @@ void SelectOperation::renderGizmos() {
 }
 
 
-void SelectOperation::applyModifiers(byte mods) {
-	if (mods & MOD_SHIFT)
-		mode = SelectionMode::Subtract;
-	else if (mods & MOD_CTRL)
-		mode = SelectionMode::Add;
-	else
-		mode = SelectionMode::Replace;
-}
-
-bool SelectOperation::doProcessEvent(const Event& event) {
-	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (pointer->action == PointerAction::Move) {
-			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
-			box = {
-				initialPointerPlanarPosition.x, pointerPlanarPosition.x,
-				initialPointerPlanarPosition.y, pointerPlanarPosition.y,
-			};
-			applyOperation();
-		}
-	}
-
-	return false;
-}
-
-void SelectOperation::applyOperation() {
-	auto ball = context->scene->getBall();
-	auto& obstacles = context->scene->getObstacles();
-	const auto& originalSelection = context->scene->getCurrentNode()->selectionNode->selectionState;
-
-	switch (mode) {
-	case SelectionMode::Replace:
-		ball->setSelected(ball->isInSelectBox(box));
-		for (auto& obstacle : obstacles)
-			obstacle.setSelected(obstacle.isInSelectBox(box));
-		break;
-	case SelectionMode::Add:
-		ball->setSelected(originalSelection.ball || ball->isInSelectBox(box));
-		for (int i = 0; i < obstacles.size(); i++)
-			obstacles[i].setSelected(originalSelection.obstacles[i] || obstacles[i].isInSelectBox(box));
-		break;
-	case SelectionMode::Subtract:
-		ball->setSelected(originalSelection.ball && !ball->isInSelectBox(box));
-		for (int i = 0; i < obstacles.size(); i++)
-			obstacles[i].setSelected(originalSelection.obstacles[i] && !obstacles[i].isInSelectBox(box));
-		break;
-	}
-}
-
-
-void SelectOperation::doCommit() const {
+void SelectOperation::finish() const {
 	auto ball = context->scene->getBall();
 	auto& obstacles = context->scene->getObstacles();
 	auto focus = context->scene->getSelectionFocus();
@@ -129,6 +80,53 @@ void SelectOperation::doCommit() const {
 				}
 		}
 	}
+}
 
-	context->scene->commitSelectionChange();
+
+void SelectOperation::applyModifiers(byte mods) {
+	if (mods & MOD_SHIFT)
+		mode = SelectionMode::Subtract;
+	else if (mods & MOD_CTRL)
+		mode = SelectionMode::Add;
+	else
+		mode = SelectionMode::Replace;
+}
+
+bool SelectOperation::doProcessEvent(const Event& event) {
+	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
+		if (pointer->action == PointerAction::Move) {
+			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
+			box = {
+				initialPointerPlanarPosition.x, pointerPlanarPosition.x,
+				initialPointerPlanarPosition.y, pointerPlanarPosition.y,
+			};
+			applyOperation();
+		}
+	}
+
+	return false;
+}
+
+void SelectOperation::applyOperation() {
+	auto ball = context->scene->getBall();
+	auto& obstacles = context->scene->getObstacles();
+	const auto& originalSelection = context->scene->getCurrentNode()->selectionNode->selectionState;
+
+	switch (mode) {
+	case SelectionMode::Replace:
+		ball->setSelected(ball->isInSelectBox(box));
+		for (auto& obstacle : obstacles)
+			obstacle.setSelected(obstacle.isInSelectBox(box));
+		break;
+	case SelectionMode::Add:
+		ball->setSelected(originalSelection.ball || ball->isInSelectBox(box));
+		for (int i = 0; i < obstacles.size(); i++)
+			obstacles[i].setSelected(originalSelection.obstacles[i] || obstacles[i].isInSelectBox(box));
+		break;
+	case SelectionMode::Subtract:
+		ball->setSelected(originalSelection.ball && !ball->isInSelectBox(box));
+		for (int i = 0; i < obstacles.size(); i++)
+			obstacles[i].setSelected(originalSelection.obstacles[i] && !obstacles[i].isInSelectBox(box));
+		break;
+	}
 }
