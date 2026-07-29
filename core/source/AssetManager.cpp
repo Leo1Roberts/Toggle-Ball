@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 
+
 namespace AssetManager {
 #if defined(PLATFORM_ANDROID)
 	static AAssetManager* androidAssetManager = nullptr;
@@ -14,7 +15,7 @@ namespace AssetManager {
 	constexpr std::string_view ASSETS_PATH = ASSETS_PATH_MACRO;
 #endif
 
-	std::vector<byte> loadAssetToBuffer(const std::string& path) {
+	std::vector<byte> loadAssetToBuffer(const std::string& path, FileType type) {
 		std::vector<byte> buffer;
 
 #if defined(PLATFORM_ANDROID)
@@ -31,7 +32,7 @@ namespace AssetManager {
 #elif defined(PLATFORM_DESKTOP)
 		std::string fullPath = std::string(ASSETS_PATH) + path;
 
-		if (std::ifstream file(fullPath, std::ios::binary | std::ios::ate); file.is_open()) {
+		if (std::ifstream file(fullPath, type == FileType::Binary ? std::ios::binary | std::ios::ate : std::ios::ate); file.is_open()) {
 			const std::streamsize size = file.tellg();
 			file.seekg(0, std::ios::beg);
 
@@ -48,7 +49,7 @@ namespace AssetManager {
 	}
 
 	std::string loadTextFile(const std::string& path) {
-		std::vector<byte> buffer = loadAssetToBuffer(path);
+		std::vector<byte> buffer = loadAssetToBuffer(path, FileType::Text);
 		return {buffer.begin(), buffer.end()};
 	}
 

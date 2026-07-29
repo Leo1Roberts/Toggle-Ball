@@ -1,6 +1,8 @@
 #ifndef OPERATION_H
 #define OPERATION_H
 
+#include <utility>
+
 #include "EditorContext.h"
 #include "Event.h"
 
@@ -30,8 +32,8 @@ public:
 	}
 
 protected:
-	Operation(const EditorContext& context, TriggerType trigger, glm::vec2 initialPointerPosition)
-		: context(context), trigger(trigger), initialPointerPosition(initialPointerPosition) {}
+	Operation(EditorContext context, TriggerType trigger, glm::vec2 initialPointerPosition)
+		: context(std::move(context)), trigger(trigger), initialPointerPosition(initialPointerPosition) {}
 
 	EditorContext context;
 	TriggerType trigger{};

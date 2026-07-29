@@ -10,8 +10,6 @@ KeyBindings::KeyBindings(const std::string& data) {
 	std::string line;
 	
 	while (std::getline(ss, line)) {
-		if (!line.empty() && line.back() == '\r')
-			line.pop_back();
 		if (line.empty() || line[0] == '#') continue;
 
 		size_t delimiterPosition = line.find('=');

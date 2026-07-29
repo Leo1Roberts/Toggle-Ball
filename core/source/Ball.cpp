@@ -57,9 +57,7 @@ void GameBall::applyForces() {
 	kinematicState.position += kinematicState.velocity * PHYSICS_TIMESTEP;
 	float t = glm::length(kinematicState.angularVelocity);
 	if (t > 0.f) {
-		kinematicState.angularVelocity /= t;
-		glm::mat3 deltaRot = glm::mat3_cast(glm::angleAxis(t * PHYSICS_TIMESTEP, kinematicState.angularVelocity));
-		kinematicState.angularVelocity *= t;
+		glm::mat3 deltaRot = glm::mat3_cast(glm::angleAxis(t * PHYSICS_TIMESTEP, kinematicState.angularVelocity / t));
 		kinematicState.rotation = deltaRot * kinematicState.rotation;
 	}
 	
