@@ -3,9 +3,6 @@
 
 #include "Camera.h"
 
-
-#include <utility>
-
 #include "EditorContext.h"
 #include "Event.h"
 
@@ -16,7 +13,6 @@ enum class TriggerType {
 	Key,
 };
 
-struct EditorContext;
 class Operation {
 public:
 	virtual ~Operation() = default;
@@ -27,18 +23,18 @@ public:
 
 	void cancel() const {
 		doCancel();
-		context.finishOperation();
+		context->finishOperation();
 	}
 	void commit() const {
 		doCommit();
-		context.finishOperation();
+		context->finishOperation();
 	}
 
 protected:
-	Operation(EditorContext context, TriggerType trigger, glm::vec2 initialPointerPosition)
-		: context(std::move(context)), trigger(trigger), initialPointerPlanarPosition(context.camera->screenToPlanarPosition(initialPointerPosition)) {}
+	Operation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
+		: context(context), trigger(trigger), initialPointerPlanarPosition(context->camera->screenToPlanarPosition(initialPointerPosition)) {}
 
-	EditorContext context;
+	const EditorContext* context;
 	TriggerType trigger{};
 	glm::vec2 initialPointerPlanarPosition{};
 

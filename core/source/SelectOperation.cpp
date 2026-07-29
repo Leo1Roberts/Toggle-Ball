@@ -4,7 +4,7 @@
 #include "GizmoRenderer.h"
 
 
-SelectOperation::SelectOperation(const EditorContext& context, TriggerType trigger, glm::vec2 initialPointerPosition, byte mods, bool instant)
+SelectOperation::SelectOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, byte mods, bool instant)
 	: Operation(context, trigger, initialPointerPosition), instant(instant) {
 	box.left = box.right = initialPointerPlanarPosition.x;
 	box.top = box.bottom = initialPointerPlanarPosition.y;
@@ -14,7 +14,7 @@ SelectOperation::SelectOperation(const EditorContext& context, TriggerType trigg
 
 
 void SelectOperation::renderGizmos() {
-	context.gizmoRenderer->drawBox(box, {
+	context->gizmoRenderer->drawBox(box, {
 		.fillColor = Color::SelectBox,
 		.strokeColor = Color::Selected,
 		.cornerRadius = 0.f,
@@ -25,7 +25,7 @@ void SelectOperation::renderGizmos() {
 
 void SelectOperation::applyModifiers(byte mods) {
 	if (mods & MOD_SHIFT)
-		mode =  SelectionMode::Subtract;
+		mode = SelectionMode::Subtract;
 	else if (mods & MOD_CTRL)
 		mode = SelectionMode::Add;
 	else
@@ -35,7 +35,7 @@ void SelectOperation::applyModifiers(byte mods) {
 bool SelectOperation::doProcessEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move) {
-			glm::vec2 pointerPlanarPosition = context.camera->screenToPlanarPosition(pointer->position);
+			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
 			box = {
 				initialPointerPlanarPosition.x, pointerPlanarPosition.x,
 				initialPointerPlanarPosition.y, pointerPlanarPosition.y,
@@ -48,9 +48,9 @@ bool SelectOperation::doProcessEvent(const Event& event) {
 }
 
 void SelectOperation::applyOperation() {
-	auto ball = context.scene->getBall();
-	auto& obstacles = context.scene->getObstacles();
-	const auto& originalSelection = context.scene->getCurrentNode()->selectionNode->selectionState;
+	auto ball = context->scene->getBall();
+	auto& obstacles = context->scene->getObstacles();
+	const auto& originalSelection = context->scene->getCurrentNode()->selectionNode->selectionState;
 
 	switch (mode) {
 	case SelectionMode::Replace:
@@ -73,19 +73,19 @@ void SelectOperation::applyOperation() {
 
 
 void SelectOperation::doCommit() const {
-	auto ball = context.scene->getBall();
-	auto& obstacles = context.scene->getObstacles();
-	auto focus = context.scene->getSelectionFocus();
+	auto ball = context->scene->getBall();
+	auto& obstacles = context->scene->getObstacles();
+	auto focus = context->scene->getSelectionFocus();
 
 	if (instant && (mode == SelectionMode::Replace || mode == SelectionMode::Add)) {
-		const auto& originalSelection = context.scene->getCurrentNode()->selectionNode->selectionState;
+		const auto& originalSelection = context->scene->getCurrentNode()->selectionNode->selectionState;
 		bool revertSelection = false;
 
 		if (ball->isInSelectBox(box)) {
 			if (originalSelection.ball || mode == SelectionMode::Add)
 				revertSelection = true;
 			else {
-				context.scene->deselectAll();
+				context->scene->deselectAll();
 				ball->select();
 			}
 			*focus = {EntityType::Ball};
@@ -102,7 +102,7 @@ void SelectOperation::doCommit() const {
 				if (originalSelection.obstacles[topObstacleIndex] || mode == SelectionMode::Add)
 					revertSelection = true;
 				else {
-					context.scene->deselectAll();
+					context->scene->deselectAll();
 					obstacles[topObstacleIndex].select();
 				}
 				*focus = {EntityType::Obstacle, topObstacleIndex};
@@ -130,5 +130,5 @@ void SelectOperation::doCommit() const {
 		}
 	}
 
-	context.scene->commitSelectionChange();
+	context->scene->commitSelectionChange();
 }

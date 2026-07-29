@@ -7,10 +7,9 @@
 
 enum class SelectionMode { Replace, Add, Subtract };
 
-
 class SelectOperation : public Operation {
 public:
-	SelectOperation(const EditorContext& context, TriggerType trigger, glm::vec2 initialPointerPosition, byte mods, bool instant = false);
+	SelectOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, byte mods, bool instant = false);
 
 	void renderGizmos() override;
 
@@ -19,7 +18,7 @@ private:
 	bool doProcessEvent(const Event& event) override;
 	void applyOperation() override;
 
-	void doCancel() const override { context.scene->cancelSelectionChange(); }
+	void doCancel() const override { context->scene->cancelSelectionChange(); }
 	void doCommit() const override;
 
 	SelectionMode mode = SelectionMode::Replace;

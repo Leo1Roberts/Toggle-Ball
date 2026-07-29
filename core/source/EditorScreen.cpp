@@ -28,7 +28,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 			return activeOperation.get();
 		},
 		[this] { activeOperation = nullptr; }),
-	currentToolMode(std::make_unique<DefaultMode>(context)) {
+	currentToolMode(std::make_unique<DefaultMode>(&context)) {
 	camera.reset(scene.getLevel()->getArenaWidth(), scene.getLevel()->getArenaHeight());
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;

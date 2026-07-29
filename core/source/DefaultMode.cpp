@@ -17,5 +17,5 @@ Operation* DefaultMode::startPrimaryDragOperation() {
 		context, TriggerType::PointerPrimary,
 		pointerDownEvent.position, pointerDownEvent.modifiers);
 
-	return context.startOperation(std::move(selectOperation));
+	return context->startOperation(std::move(selectOperation));
 }

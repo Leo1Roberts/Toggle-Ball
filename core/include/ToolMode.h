@@ -17,10 +17,10 @@ public:
 	virtual void renderGizmos() {}
 
 protected:
-	explicit ToolMode(const EditorContext& context)
+	explicit ToolMode(const EditorContext* context)
 		: context(context) {}
 
-	EditorContext context;
+	const EditorContext* context;
 
 	PointerEvent pointerDownEvent;
 

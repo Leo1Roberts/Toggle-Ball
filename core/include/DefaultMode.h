@@ -6,7 +6,7 @@
 
 class DefaultMode : public ToolMode {
 public:
-	explicit DefaultMode(const EditorContext& context)
+	explicit DefaultMode(const EditorContext* context)
 		: ToolMode(context) {}
 
 private:
