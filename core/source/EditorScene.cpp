@@ -52,6 +52,7 @@ void EditorScene::redo() {
 
 void EditorScene::cancelLevelChange() {
 	syncLevel();
+	syncSelection();
 }
 void EditorScene::cancelSelectionChange() {
 	syncSelection();
@@ -59,10 +60,14 @@ void EditorScene::cancelSelectionChange() {
 void EditorScene::commitLevelChange() { // TODO: only commit if actually changed
 	currentNode = std::make_shared<UndoNode>(*level, makeSelectionUndoNode(), currentNode);
 	currentNode->previous->next = currentNode;
+	commitSelectionChange();
 }
 void EditorScene::commitSelectionChange() { // TODO: only commit if actually changed
-	currentNode->selectionNode = makeSelectionUndoNode(currentNode->selectionNode);
-	currentNode->selectionNode->previous->next = currentNode->selectionNode;
+	if (currentNode->selectionNode) {
+		currentNode->selectionNode = makeSelectionUndoNode(currentNode->selectionNode);
+		currentNode->selectionNode->previous->next = currentNode->selectionNode;
+	} else
+		currentNode->selectionNode = makeSelectionUndoNode();
 }
 
 void EditorScene::syncLevel() { // TODO: generate ephemeral meshes
@@ -73,7 +78,7 @@ void EditorScene::syncLevel() { // TODO: generate ephemeral meshes
 	obstacles.assign_range(level->getObstacleDescriptors()
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
 
-
+	syncSelection();
 }
 void EditorScene::syncSelection() {
 	const auto& selection = currentNode->selectionNode->selectionState;
