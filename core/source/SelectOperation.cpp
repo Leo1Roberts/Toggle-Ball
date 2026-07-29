@@ -77,7 +77,7 @@ void SelectOperation::doCommit() const {
 	auto& obstacles = context.scene->getObstacles();
 	auto focus = context.scene->getSelectionFocus();
 
-	if (instant && mode == SelectionMode::Replace || mode == SelectionMode::Add) {
+	if (instant && (mode == SelectionMode::Replace || mode == SelectionMode::Add)) {
 		const auto& originalSelection = context.scene->getCurrentNode()->selectionNode->selectionState;
 		bool revertSelection = false;
 

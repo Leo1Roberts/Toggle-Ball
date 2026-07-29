@@ -46,22 +46,28 @@ void EditorScreen::processEvent(const Event& event) {
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
-			if (key->action == KeyAction::Down) {
-				switch (*actionCode) {
-				case ActionCode::Toggle:
+			switch (*actionCode) {
+			case ActionCode::Toggle:
+				if (key->action == KeyAction::Down) {
 					scene.toggle();
 					return;
-				case ActionCode::InstantToggle:
+				}
+			case ActionCode::InstantToggle:
+				if (key->action == KeyAction::Down) {
 					scene.toggle(false);
 					return;
-				case ActionCode::Undo:
+				}
+			case ActionCode::Undo:
+				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					scene.undo();
 					return;
-				case ActionCode::Redo:
+				}
+			case ActionCode::Redo:
+				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					scene.redo();
 					return;
-				default:;
 				}
+			default:;
 			}
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
