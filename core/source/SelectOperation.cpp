@@ -1,11 +1,11 @@
 #include "SelectOperation.h"
 
+#include "Camera.h"
 #include "GizmoRenderer.h"
 
 
 SelectOperation::SelectOperation(const EditorContext& context, TriggerType trigger, glm::vec2 initialPointerPosition, byte mods, bool instant)
 	: Operation(context, trigger, initialPointerPosition), instant(instant) {
-	initialPointerPlanarPosition = context.camera->screenToPlanarPosition(initialPointerPosition);
 	box.left = box.right = initialPointerPlanarPosition.x;
 	box.top = box.bottom = initialPointerPlanarPosition.y;
 	SelectOperation::applyModifiers(mods);
@@ -82,13 +82,13 @@ void SelectOperation::doCommit() const {
 		bool revertSelection = false;
 
 		if (ball->isInSelectBox(box)) {
-			*focus = {EntityType::Ball};
 			if (originalSelection.ball || mode == SelectionMode::Add)
 				revertSelection = true;
 			else {
 				context.scene->deselectAll();
 				ball->select();
 			}
+			*focus = {EntityType::Ball};
 		} else {
 			int topObstacleIndex = -1;
 			float maxHalfDepth = 0.f;
@@ -99,14 +99,15 @@ void SelectOperation::doCommit() const {
 				}
 			}
 			if (topObstacleIndex >= 0) {
-				*focus = {EntityType::Obstacle, topObstacleIndex};
 				if (originalSelection.obstacles[topObstacleIndex] || mode == SelectionMode::Add)
 					revertSelection = true;
 				else {
 					context.scene->deselectAll();
 					obstacles[topObstacleIndex].select();
 				}
-			}
+				*focus = {EntityType::Obstacle, topObstacleIndex};
+			} else
+				*focus = {EntityType::None};
 		}
 
 		if (revertSelection) {

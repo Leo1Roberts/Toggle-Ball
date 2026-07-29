@@ -1,6 +1,9 @@
 #ifndef OPERATION_H
 #define OPERATION_H
 
+#include "Camera.h"
+
+
 #include <utility>
 
 #include "EditorContext.h"
@@ -33,11 +36,11 @@ public:
 
 protected:
 	Operation(EditorContext context, TriggerType trigger, glm::vec2 initialPointerPosition)
-		: context(std::move(context)), trigger(trigger), initialPointerPosition(initialPointerPosition) {}
+		: context(std::move(context)), trigger(trigger), initialPointerPlanarPosition(context.camera->screenToPlanarPosition(initialPointerPosition)) {}
 
 	EditorContext context;
 	TriggerType trigger{};
-	glm::vec2 initialPointerPosition{};
+	glm::vec2 initialPointerPlanarPosition{};
 
 private:
 	virtual void applyModifiers(byte mods) = 0;

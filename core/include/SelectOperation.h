@@ -1,7 +1,6 @@
 #ifndef SELECT_OPERATION_H
 #define SELECT_OPERATION_H
 
-#include "Camera.h"
 #include "EditorScene.h"
 #include "Operation.h"
 
@@ -23,7 +22,6 @@ private:
 	void doCancel() const override { context.scene->cancelSelectionChange(); }
 	void doCommit() const override;
 
-	glm::vec2 initialPointerPlanarPosition{};
 	SelectionMode mode = SelectionMode::Replace;
 	bool instant;
 	SelectBox box{};
