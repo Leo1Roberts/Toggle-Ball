@@ -57,6 +57,18 @@ void EditorScreen::processEvent(const Event& event) {
 					scene.toggle(false);
 					return;
 				}
+			case ActionCode::SelectAll:
+				if (key->action == KeyAction::Down) {
+					scene.selectAll();
+					scene.commitSelectionChange();
+					return;
+				}
+			case ActionCode::DeselectAll:
+				if (key->action == KeyAction::Down) {
+					scene.deselectAll();
+					scene.commitSelectionChange();
+					return;
+				}
 			case ActionCode::Undo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					scene.undo();

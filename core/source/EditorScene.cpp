@@ -97,3 +97,17 @@ std::shared_ptr<SelectionUndoNode> EditorScene::makeSelectionUndoNode(const std:
 void EditorScene::setSelectionFocus(EntityReference focus) {
 	selectionFocus = focus;
 }
+
+void EditorScene::selectAll() {
+	ball.select();
+	for (auto& obstacle: obstacles)
+		obstacle.select();
+	if (selectionFocus.type == EntityType::None)
+		selectionFocus = {EntityType::Ball};
+}
+void EditorScene::deselectAll() {
+	ball.deselect();
+	for (auto& obstacle: obstacles)
+		obstacle.deselect();
+	selectionFocus = {EntityType::None};
+}

@@ -66,6 +66,9 @@ enum class ActionCode {
 	Toggle,
 	InstantToggle,
 
+	SelectAll,
+	DeselectAll,
+
 	Undo,
 	Redo,
 };
@@ -91,13 +94,15 @@ private:
 	struct Entry { ActionCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
-		{ ActionCode::Quit,			"Quit" },
-		{ ActionCode::Fullscreen,	"Fullscreen" },
-		{ ActionCode::TestLevel,	"Test level" },
-		{ ActionCode::Toggle,		"Toggle" },
-		{ ActionCode::InstantToggle,"Instant toggle" },
-		{ ActionCode::Undo,			"Undo" },
-		{ ActionCode::Redo,			"Redo" },
+		{ ActionCode::Quit,          "Quit" },
+		{ ActionCode::Fullscreen,    "Fullscreen" },
+		{ ActionCode::TestLevel,     "Test level" },
+		{ ActionCode::Toggle,        "Toggle" },
+		{ ActionCode::InstantToggle, "Instant toggle" },
+		{ ActionCode::SelectAll,     "Select all" },
+		{ ActionCode::DeselectAll,   "Deselect all" },
+		{ ActionCode::Undo,          "Undo" },
+		{ ActionCode::Redo,          "Redo" },
 	};
 };
 

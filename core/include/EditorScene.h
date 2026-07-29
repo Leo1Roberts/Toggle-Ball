@@ -59,6 +59,8 @@ public:
 	void commitSelectionChange();
 
 	void setSelectionFocus(EntityReference focus);
+	void selectAll();
+	void deselectAll();
 
 	[[nodiscard]] const LevelDescriptor* getLevel() const { return level.get(); }
 	[[nodiscard]] EditorBall* getBall() { return &ball; }

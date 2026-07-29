@@ -86,9 +86,8 @@ void SelectOperation::doCommit() const {
 			if (originalSelection.ball || mode == SelectionMode::Add)
 				revertSelection = true;
 			else {
+				context.scene->deselectAll();
 				ball->select();
-				for (auto& obstacle : obstacles)
-					obstacle.deselect();
 			}
 		} else {
 			int topObstacleIndex = -1;
@@ -104,9 +103,7 @@ void SelectOperation::doCommit() const {
 				if (originalSelection.obstacles[topObstacleIndex] || mode == SelectionMode::Add)
 					revertSelection = true;
 				else {
-					ball->deselect();
-					for (auto& obstacle : obstacles)
-						obstacle.deselect();
+					context.scene->deselectAll();
 					obstacles[topObstacleIndex].select();
 				}
 			}
