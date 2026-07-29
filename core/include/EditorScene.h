@@ -46,7 +46,7 @@ struct UndoNode {
 
 class EditorScene {
 public:
-	explicit EditorScene(std::unique_ptr<LevelDescriptor> levelToEdit);
+	EditorScene(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& syncLevelCallback);
 
 	void update(microseconds dt);
 	void toggle(bool transition = true);
@@ -72,6 +72,7 @@ public:
 
 private:
 	void syncLevel();
+	std::function<void()> syncLevelCallback;
 	void syncSelection();
 	[[nodiscard]] std::shared_ptr<SelectionUndoNode> makeSelectionUndoNode(const std::shared_ptr<SelectionUndoNode>& previous = nullptr) const;
 

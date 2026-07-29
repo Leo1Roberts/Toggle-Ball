@@ -3,9 +3,9 @@
 #include <ranges>
 
 
-EditorScene::EditorScene(std::unique_ptr<LevelDescriptor> levelToEdit) {
-	level = std::move(levelToEdit);
-	ball = EditorBall(level->getBallDescriptor().get());
+EditorScene::EditorScene(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& syncLevelCallback)
+	: syncLevelCallback(syncLevelCallback), level(std::move(levelToEdit)), ball(level->getBallDescriptor().get()) {
+
 	obstacles.append_range(level->getObstacleDescriptors()
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
 
@@ -60,7 +60,6 @@ void EditorScene::cancelSelectionChange() {
 void EditorScene::commitLevelChange() { // TODO: only commit if actually changed
 	currentNode = std::make_shared<UndoNode>(*level, makeSelectionUndoNode(), currentNode);
 	currentNode->previous->next = currentNode;
-	commitSelectionChange();
 }
 void EditorScene::commitSelectionChange() { // TODO: only commit if actually changed
 	if (currentNode->selectionNode) {
@@ -77,6 +76,8 @@ void EditorScene::syncLevel() { // TODO: generate ephemeral meshes
 
 	obstacles.assign_range(level->getObstacleDescriptors()
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
+
+	syncLevelCallback();
 
 	syncSelection();
 }

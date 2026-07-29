@@ -20,7 +20,9 @@ static glm::vec3 viewSunDirection;
 
 
 EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
-	scene(std::move(levelToEdit)),
+	scene(
+		std::move(levelToEdit),
+		[this] { updateEphemeralMeshes(); }),
 	context(
 		&scene, &camera, &gizmoRenderer,
 		[this](std::unique_ptr<Operation> operation) {
@@ -110,7 +112,7 @@ void EditorScreen::processEvent(const Event& event) {
 			else if (pointer->scroll.y < 0)
 				zoomChange = 1.f / 1.2f;
 			camera.zoom(zoomChange, pointer->position);
-			updateView();
+			updateEphemeralMeshes();
 			return;
 		}
 		default:;
@@ -270,16 +272,14 @@ void EditorScreen::drawObstacleOutline(const EditorObstacle& obstacle) const {
 	obstacle.getOutlineMesh()->draw();
 
 	glDisable(GL_DEPTH_TEST);
-	worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), obstacle.getKinematicState()->getPosition(), glm::vec3(centreDotRadius));
+	worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), obstacle.getKinematicState()->getPosition(), glm::vec3(uiToWorldScale * Settings::Sizes.centreDotRadius));
 	Shaders::outline->setMat4("uProjectionFull", camera.getProjectionMatrix() * camera.getViewMatrix() * worldMatrix);
 	Meshes::ball->draw();
 	glEnable(GL_DEPTH_TEST);
 }
 
 
-void EditorScreen::updateView() {
-	uiToWorldScale = uiManager.getScale() * camera.getHalfHeight() * 2.f / (float)height;
-	centreDotRadius = uiToWorldScale * Settings::Sizes.centreDotRadius;
+void EditorScreen::updateEphemeralMeshes() {
 	scene.getBall()->updateOutlineRadius(uiToWorldScale);
 	for (auto& obstacle : scene.getObstacles())
 		obstacle.generateEphemeralMeshes(uiToWorldScale);
@@ -288,5 +288,6 @@ void EditorScreen::updateView() {
 void EditorScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
 	camera.update((float)width, (float)height, scene.getLevel()->getArenaWidth(), scene.getLevel()->getArenaHeight());
-	updateView();
+	uiToWorldScale = uiManager.getScale() * camera.getHalfHeight() * 2.f / (float)height;
+	updateEphemeralMeshes();
 }

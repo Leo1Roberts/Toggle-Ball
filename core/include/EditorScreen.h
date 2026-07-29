@@ -31,7 +31,7 @@ private:
 
 	bool panning = false;
 	float uiToWorldScale{};
-	void updateView();
+	void updateEphemeralMeshes();
 
 	EditorScene scene;
 	Camera camera;
@@ -41,8 +41,6 @@ private:
 
 	std::unique_ptr<ToolMode> currentToolMode;
 	std::unique_ptr<Operation> activeOperation;
-
-	float centreDotRadius{};
 };
 
 #endif // EDITOR_H
