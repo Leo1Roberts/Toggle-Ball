@@ -24,6 +24,7 @@ public:
 	void render();
 
 	[[nodiscard]] float getScale() const { return dpiScale * Settings::Sizes.uiScale; }
+	[[nodiscard]] const glm::mat4& getProjectionMatrix() const { return projectionMatrix; }
 
 private:
 	[[nodiscard]] static UINode* findNodePointedTo(UINode* currentNode, glm::vec2 pointerPosition);
@@ -40,7 +41,7 @@ private:
 	std::unordered_map<uint32_t, UINode*> capturedNodes;
 
 	float dpiScale = 1.f;
-	glm::mat4 projectionMatrix = {};
+	glm::mat4 projectionMatrix{};
 
 	IUIRenderer* activeRenderer = nullptr;
 	UIPanelRenderer panelRenderer;

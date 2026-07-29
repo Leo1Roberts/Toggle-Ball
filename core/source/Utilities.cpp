@@ -1,6 +1,9 @@
 #include "main.h"
 #include "Utilities.h"
 
+#include "glm/ext/scalar_constants.hpp"
+#include "glm/gtc/constants.hpp"
+
 #include <chrono>
 #include <cmath>
 #include <algorithm>
@@ -37,16 +40,16 @@ microseconds now() {
 }
 
 float wrapAngle(float radians) {
-	radians = fmodf(radians, PI * 2.f);
-	if (radians <= -PI)
-		radians += PI * 2.f;
-	else if (radians > PI)
-		radians -= PI * 2.f;
+	radians = fmodf(radians, glm::two_pi<float>());
+	if (radians <= -glm::pi<float>())
+		radians += glm::two_pi<float>();
+	else if (radians > glm::pi<float>())
+		radians -= glm::two_pi<float>();
 	return radians;
 }
 
 float angleToDisplay(float angle) {
-	angle *= -180.f / PI;
+	angle *= -180.f / glm::pi<float>();
 	if (angle == 0.f) angle = 0.f; // Remove -0
 	return std::round(angle * 100.f) * 0.01f;
 }
@@ -59,8 +62,9 @@ float wrapDisplayAngle(float displayAngle) {
 }
 
 float displayToAngle(float displayAngle) {
-	return displayAngle * PI / -180.f;
+	return displayAngle * glm::pi<float>() / -180.f;
 }
+
 
 float clamp(float val, float min, float max, byte* valPos) {
 	if (max < min)

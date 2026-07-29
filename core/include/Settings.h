@@ -10,7 +10,7 @@ struct SizePreferences {
 	float uiScale = 1.f;
 
 	// Sizes given in pixels (before scaling)
-	float outlineWidth = 4;
+	float outlineWidth = 3;
 	float centreDotRadius = 3;
 };
 

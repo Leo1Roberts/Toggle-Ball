@@ -10,14 +10,15 @@
 enum class EntityType { None, Ball, Obstacle };
 struct EntityReference {
 	EntityType type = EntityType::None;
-	unsigned short index = 0;
+	int index = 0;
 
 	bool operator==(const EntityReference&) const = default;
 };
 
 struct SelectionState {
 	EntityReference focus;
-	std::vector<EntityReference> selection;
+	bool ball;
+	std::vector<bool> obstacles;
 };
 
 
@@ -52,7 +53,8 @@ public:
 
 	void undo();
 	void redo();
-	void cancelOperation();
+	void cancelLevelChange();
+	void cancelSelectionChange();
 	void commitLevelChange();
 	void commitSelectionChange();
 
@@ -62,7 +64,8 @@ public:
 	[[nodiscard]] EditorBall* getBall() { return &ball; }
 	[[nodiscard]] std::vector<EditorObstacle>& getObstacles() { return obstacles; }
 	[[nodiscard]] float getTogglePosition() const { return togglePosition.getCurrentPosition(); }
-	[[nodiscard]] EntityReference getSelectionFocus() const { return selectionFocus; }
+	[[nodiscard]] EntityReference* getSelectionFocus() { return &selectionFocus; }
+	[[nodiscard]] UndoNode* getCurrentNode() const { return currentNode.get(); }
 
 private:
 	void syncLevel();
@@ -73,10 +76,11 @@ private:
 	EditorBall ball;
 	std::vector<EditorObstacle> obstacles;
 
+	EntityReference selectionFocus = {EntityType::None};
+
 	bool toggled = false;
 	Smoother togglePosition{};
 
-	EntityReference selectionFocus;
 	std::shared_ptr<UndoNode> currentNode;
 };
 

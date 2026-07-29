@@ -3,6 +3,7 @@
 
 #include "Camera.h"
 #include "EditorScene.h"
+#include "GizmoRenderer.h"
 #include "Obstacle.h"
 #include "Operation.h"
 #include "Level.h"
@@ -29,11 +30,14 @@ private:
 	[[nodiscard]] float getObstacleOpacity(const EditorObstacle& obstacle) const;
 
 	bool panning = false;
+	float uiToWorldScale{};
 	void updateView();
 
 	EditorScene scene;
 	Camera camera;
 	UIManager uiManager;
+	GizmoRenderer gizmoRenderer{&uiManager, &camera};
+	EditorContext context;
 
 	std::unique_ptr<ToolMode> currentToolMode;
 	std::unique_ptr<Operation> activeOperation;

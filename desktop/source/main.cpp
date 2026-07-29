@@ -60,12 +60,20 @@ void APIENTRY glDebugOutput(GLenum source,
 }
 
 
-[[nodiscard]] static byte translateMods(int glfwMods) {
+[[nodiscard]] static byte getUpdatedMods(GLFWwindow* window) {
 	byte mods = MOD_NONE;
 
-	if (glfwMods & GLFW_MOD_CONTROL) mods |= MOD_CTRL;
-	if (glfwMods & GLFW_MOD_SHIFT)   mods |= MOD_SHIFT;
-	if (glfwMods & GLFW_MOD_ALT)     mods |= MOD_ALT;
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS ||
+		glfwGetKey(window, GLFW_KEY_RIGHT_CONTROL) == GLFW_PRESS)
+		mods |= MOD_CTRL;
+
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS ||
+		glfwGetKey(window, GLFW_KEY_RIGHT_SHIFT) == GLFW_PRESS)
+		mods |= MOD_SHIFT;
+
+	if (glfwGetKey(window, GLFW_KEY_LEFT_ALT) == GLFW_PRESS ||
+		glfwGetKey(window, GLFW_KEY_RIGHT_ALT) == GLFW_PRESS)
+		mods |= MOD_ALT;
 
 	return mods;
 }
@@ -101,7 +109,7 @@ void APIENTRY glDebugOutput(GLenum source,
 static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
-	app->processEvent(KeyEvent({translateKey(key), translateMods(mods)}, translateKeyAction(action)));
+	app->processEvent(KeyEvent({translateKey(key), getUpdatedMods(window)}, translateKeyAction(action)));
 }
 
 
@@ -127,7 +135,7 @@ glm::vec2 mousePosition;
 static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
-	app->processEvent(PointerEvent(0, mousePosition, translateMouseButtonAction(action), translateMouseButton(button), translateMods(mods)));
+	app->processEvent(PointerEvent(0, mousePosition, translateMouseButtonAction(action), translateMouseButton(button), getUpdatedMods(window)));
 }
 
 static void cursorPosCallback(GLFWwindow* window, double x, double y) {

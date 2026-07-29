@@ -41,6 +41,7 @@ public:
 
 	virtual UIResponse processEvent(const Event& event) { return UIResponse::Ignored; }
 
+	void setAbsoluteBounds(Rectangle bounds) { absoluteBounds = bounds; }
 	[[nodiscard]] Rectangle getAbsoluteBounds() const { return absoluteBounds; }
 
 	virtual void submitRender(UIManager& manager) {}

@@ -1,6 +1,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
+#include "SelectBox.h"
 #include "Colors.h"
 #include "main.h"
 

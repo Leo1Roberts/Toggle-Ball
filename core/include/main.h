@@ -23,7 +23,6 @@
 using byte = unsigned char;
 using microseconds = unsigned long;
 
-constexpr float PI = 3.14159265359f;
 constexpr float PHYSICS_TIMESTEP = 0.001f;
 
 #endif // MAIN_H

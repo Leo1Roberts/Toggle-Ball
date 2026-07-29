@@ -1,6 +1,7 @@
 #include "main.h"
 #include "EditorScreen.h"
 
+#include "DefaultMode.h"
 #include "EditorContext.h"
 #include "Settings.h"
 #include "Shader.h"
@@ -18,7 +19,16 @@ const glm::vec3 sunDirection = normalize(glm::vec3(2, 2, 3));
 static glm::vec3 viewSunDirection;
 
 
-EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) : scene(std::move(levelToEdit)) {
+EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
+	scene(std::move(levelToEdit)),
+	context(
+		&scene, &camera, &gizmoRenderer,
+		[this](std::unique_ptr<Operation> operation) {
+			activeOperation = std::move(operation);
+			return activeOperation.get();
+		},
+		[this] { activeOperation = nullptr; }),
+	currentToolMode(std::make_unique<DefaultMode>(context)) {
 	camera.reset(scene.getLevel()->getArenaWidth(), scene.getLevel()->getArenaHeight());
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
@@ -29,10 +39,8 @@ void EditorScreen::processEvent(const Event& event) {
 	if (uiManager.processEvent(event))
 		return;
 
-	EditorContext context = { &scene, &camera };
-
 	if (activeOperation) {
-		if (activeOperation->processEvent(event, context))
+		if (activeOperation->processEvent(event))
 			return;
 	}
 
@@ -84,6 +92,7 @@ void EditorScreen::processEvent(const Event& event) {
 			else if (pointer->scroll.y < 0)
 				zoomChange = 1.f / 1.2f;
 			camera.zoom(zoomChange, pointer->position);
+			updateView();
 			return;
 		}
 		default:;
@@ -91,7 +100,7 @@ void EditorScreen::processEvent(const Event& event) {
 	}
 
 	if (currentToolMode)
-		currentToolMode->processEvent(event, context);
+		currentToolMode->processEvent(event);
 }
 
 
@@ -164,12 +173,8 @@ void EditorScreen::render() {
 
 	for (int i = 0; i < scene.getObstacles().size(); i++) {
 		const auto& obstacle = scene.getObstacles()[i];
-		if (obstacle.isSelected() && (i != scene.getSelectionFocus().index || scene.getSelectionFocus().type != EntityType::Obstacle)) {
-			glm::vec4 outlineColor;
-			// if (action != ACTION_NONE && limiting[i])
-			// 	outlineColor = Color::Warning;
-			// else
-			outlineColor = Color::Selected;
+		if (obstacle.isSelected() && (i != scene.getSelectionFocus()->index || scene.getSelectionFocus()->type != EntityType::Obstacle)) {
+			glm::vec4 outlineColor = Color::Selected;
 			outlineColor.a *= getObstacleOpacity(obstacle);
 			Shaders::outline->setVec4("uOutlineColor", outlineColor);
 
@@ -177,28 +182,20 @@ void EditorScreen::render() {
 		}
 	}
 
-	if (scene.getSelectionFocus().type == EntityType::Obstacle) {
-		const auto& obstacle = scene.getObstacles()[scene.getSelectionFocus().index];
-		
-		glm::vec4 outlineColor;
-		// if (action != ACTION_NONE && limiting[focus])
-		// 	outlineColor = Color::Warning;
-		// else
-		outlineColor = Color::Focused;
-		outlineColor.a *= getObstacleOpacity(obstacle);
-		Shaders::outline->setVec4("uOutlineColor", outlineColor);
+	if (scene.getSelectionFocus()->type == EntityType::Obstacle) {
+		const auto& obstacle = scene.getObstacles()[scene.getSelectionFocus()->index];
+		if (obstacle.isSelected()) {
+			glm::vec4 outlineColor = Color::Focused;
+			outlineColor.a *= getObstacleOpacity(obstacle);
+			Shaders::outline->setVec4("uOutlineColor", outlineColor);
 
-		drawObstacleOutline(obstacle);
+			drawObstacleOutline(obstacle);
+		}
 	}
 
 	if (scene.getBall()->isSelected()) {
-		// bool intersecting = checkBallObstacleCollision(&ball, true) >= 0;
-
 		glm::vec4 outlineColor;
-		// if (intersecting || (action != ACTION_NONE && limiting[MAX_OBSTACLES]))
-		// 	outlineColor = Color::Warning;
-		// else
-		if (scene.getSelectionFocus().type == EntityType::Ball)
+		if (scene.getSelectionFocus()->type == EntityType::Ball)
 			outlineColor = Color::Focused;
 		else
 			outlineColor = Color::Selected;
@@ -211,8 +208,17 @@ void EditorScreen::render() {
 
 		Meshes::ball->draw();
 	}
-	glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+
+	if (activeOperation)
+		activeOperation->renderGizmos();
+	else if (currentToolMode)
+		currentToolMode->renderGizmos();
+
+	uiManager.render();
+
+	glDisable(GL_BLEND);
 }
 
 
@@ -255,9 +261,7 @@ void EditorScreen::drawObstacleOutline(const EditorObstacle& obstacle) const {
 
 
 void EditorScreen::updateView() {
-	camera.update(width, height, scene.getLevel()->getArenaWidth(), scene.getLevel()->getArenaHeight());
-
-	float uiToWorldScale = uiManager.getScale() * camera.getHalfHeight() * 2.f / (float)height;
+	uiToWorldScale = uiManager.getScale() * camera.getHalfHeight() * 2.f / (float)height;
 	centreDotRadius = uiToWorldScale * Settings::Sizes.centreDotRadius;
 	scene.getBall()->updateOutlineRadius(uiToWorldScale);
 	for (auto& obstacle : scene.getObstacles())
@@ -266,5 +270,6 @@ void EditorScreen::updateView() {
 
 void EditorScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
+	camera.update((float)width, (float)height, scene.getLevel()->getArenaWidth(), scene.getLevel()->getArenaHeight());
 	updateView();
 }

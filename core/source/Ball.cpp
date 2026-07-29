@@ -40,7 +40,7 @@ void BallDescriptor::initKinematicState(BallKinematicState& kinematicState) cons
 
 void GameBall::addNaturalForces() {
 	forces.force += glm::vec3(0.f, 0.f, GRAVITY * properties->mass);
-	forces.force -= 0.5f * AIR_DENSITY * properties->dragCoefficient * PI * properties->radius * properties->radius * glm::length(kinematicState.velocity) * kinematicState.velocity;
+	forces.force -= 0.5f * AIR_DENSITY * properties->dragCoefficient * glm::pi<float>() * properties->radius * properties->radius * glm::length(kinematicState.velocity) * kinematicState.velocity;
 }
 
 void GameBall::applyForces() {

@@ -2,25 +2,17 @@
 #define OBSTACLE_H
 
 #include "Ball.h"
+#include "SelectBox.h"
 #include "Mesh.h"
 #include "PhysicsConstants.h"
 #include "Plane.h"
 #include "Smoother.h"
 #include "Utilities.h"
+#include "glm/ext/scalar_constants.hpp"
 
 struct BallCollisionInfo;
 class GameBall;
-
-enum class SelectionType {
-	Replace,
-	Add,
-	Subtract
-};
-
-struct SelectBox {
-	float top, bottom, left, right;
-	SelectionType selectionType;
-};
+struct SelectBox;
 
 // TODO: move the following constants to somewhere better
 
@@ -40,8 +32,8 @@ constexpr float MAXIMUM_MINOR_RADIUS = 50;
 
 constexpr float MAXIMUM_MAJOR_RADIUS = 200;
 
-constexpr float MINIMUM_ANGLE = -5 * PI; // -900°
-constexpr float MAXIMUM_ANGLE = 5 * PI;  // 900°
+constexpr float MINIMUM_ANGLE = -5 * glm::pi<float>(); // -900°
+constexpr float MAXIMUM_ANGLE = 5 * glm::pi<float>();  // 900°
 
 constexpr float MINIMUM_RPM = -120;
 constexpr float MAXIMUM_RPM = 120;
@@ -80,11 +72,11 @@ public:
 
 private:
 	glm::vec3 position{0.f};
-	float angle{};
+	float angle = 0.f;
 	glm::mat3 rotation = glm::mat3(1);
 	glm::vec3 velocity{0.f};
-	float angularVelocity{};
-	float phase{};
+	float angularVelocity = 0.f;
+	float phase = 0.f;
 };
 
 class AbstractShapeSpec {
@@ -102,7 +94,7 @@ public:
 	void generateOutlineMesh(Mesh<ObjectVertex>& outlineMesh, float uiToWorldScale) const;
 	virtual void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
 
-	[[nodiscard]] bool isInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const;
+	[[nodiscard]] bool isInSelectBox(const ObstacleKinematicState& s, SelectBox box) const;
 
 	[[nodiscard]] virtual bool pointIsBetweenCaps(float leftPlaneDistance, float rightPlaneDistance) const = 0;
 	// Only sets all members if .collision == true
@@ -114,6 +106,7 @@ public:
 	[[nodiscard]] glm::vec3 getRightCap() const { return rightCap; }
 	[[nodiscard]] virtual float getLeftCapAngle() const = 0;
 	[[nodiscard]] virtual float getRightCapAngle() const = 0;
+	[[nodiscard]] float getHalfDepth() const { return getMinorRadius(); }
 
 protected:
 	glm::vec3 leftCap{}, rightCap{};
@@ -127,7 +120,6 @@ protected:
 	AbstractShapeSpec& operator=(AbstractShapeSpec&&) = default;
 
 	[[nodiscard]] float getBevel() const { return BEVEL_AMOUNT * getMinorRadius(); }
-	[[nodiscard]] float getHalfDepth() const { return getMinorRadius(); }
 
 private:
 	float minorRadius; // SSOT
@@ -138,7 +130,7 @@ private:
 	virtual void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const = 0;
 	virtual void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const = 0;
 
-	[[nodiscard]] virtual bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const = 0;
+	[[nodiscard]] virtual bool midsectionIsInSelectBox(const ObstacleKinematicState& s, SelectBox box) const = 0;
 
 	[[nodiscard]] virtual float getMajorRadius() const = 0;
 };
@@ -172,7 +164,7 @@ public:
 	void setLeftLength(float l);
 	void setRightLength(float l);
 
-	[[nodiscard]] float getLeftCapAngle() const override { return PI; }
+	[[nodiscard]] float getLeftCapAngle() const override { return glm::pi<float>(); }
 	[[nodiscard]] float getRightCapAngle() const override { return 0; }
 	[[nodiscard]] float getLeftLength() const { return leftLength; }
 	[[nodiscard]] float getRightLength() const { return rightLength; }
@@ -189,7 +181,7 @@ private:
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const override;
 
-	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const override;
+	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, SelectBox box) const override;
 	[[nodiscard]] float getMajorRadius() const override { return std::max(leftLength, rightLength); }
 	[[nodiscard]] PlaneDescriptor getTopPlane(const ObstacleKinematicState& kinematicState) const;
 };
@@ -217,18 +209,18 @@ public:
 	void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 
 	[[nodiscard]] bool pointIsBetweenCaps(float leftPlaneDistance, float rightPlaneDistance) const override {
-		return getArcAngle() <= PI && (leftPlaneDistance <= 0 && rightPlaneDistance <= 0) ||
-			   getArcAngle() >  PI && (leftPlaneDistance <= 0 || rightPlaneDistance <= 0);
+		return getArcAngle() <= glm::pi<float>() && (leftPlaneDistance <= 0 && rightPlaneDistance <= 0) ||
+			   getArcAngle() >  glm::pi<float>() && (leftPlaneDistance <= 0 || rightPlaneDistance <= 0);
 	}
 	[[nodiscard]] BallCollisionInfo getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) override;
 
 	void setArcAngle(float radians);
 	void setArcRadius(float r);
 
-	[[nodiscard]] float getLeftCapAngle() const override { return getHalfArcAngle() + PI; }
+	[[nodiscard]] float getLeftCapAngle() const override { return getHalfArcAngle() + glm::pi<float>(); }
 	[[nodiscard]] float getRightCapAngle() const override { return -getHalfArcAngle(); }
 	[[nodiscard]] float getArcAngle() const { return arcAngle; }
-	[[nodiscard]] float getHalfArcAngle() const { return arcAngle / 2; }
+	[[nodiscard]] float getHalfArcAngle() const { return arcAngle / 2.f; }
 	[[nodiscard]] float getArcRadius() const { return arcRadius; }
 
 private:
@@ -243,7 +235,7 @@ private:
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const override;
 
-	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, const SelectBox& box) const override;
+	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, SelectBox box) const override;
 
 	void setCaps();
 
@@ -700,7 +692,8 @@ public:
 	[[nodiscard]] bool isSelected() const { return selected; }
 	void select() { selected = true; }
 	void deselect() { selected = false; }
-	void setSelected(bool isSelected) { selected = isSelected; }
+	void setSelected(bool select) { selected = select; }
+	[[nodiscard]] bool isInSelectBox(SelectBox box) const { return descriptor->getShape()->isInSelectBox(kinematicState, box); }
 
 	[[nodiscard]] const ObstacleDescriptor* getDescriptor() const { return descriptor; }
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }

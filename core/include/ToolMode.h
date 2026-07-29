@@ -2,7 +2,9 @@
 #define TOOL_MODE_H
 
 
+#include "EditorContext.h"
 #include "Event.h"
+#include "Operation.h"
 
 struct EditorContext;
 
@@ -10,19 +12,39 @@ class ToolMode {
 public:
 	virtual ~ToolMode() = default;
 
-	bool processEvent(const Event& event, EditorContext& editor);
+	bool processEvent(const Event& event);
+
+	virtual void renderGizmos() {}
+
+protected:
+	explicit ToolMode(const EditorContext& context)
+		: context(context) {}
+
+	EditorContext context;
+
+	PointerEvent pointerDownEvent;
 
 private:
+	virtual bool doProcessEvent(const Event& event) { return false; }
+
 	// Pointer down and up on the same spot
-	virtual void performPrimaryAction(EditorContext& editor, const PointerEvent& upEvent) = 0;
-	virtual void performSecondaryAction(EditorContext& editor, const PointerEvent& upEvent) = 0;
+	virtual void performPrimaryAction(const PointerEvent& upEvent) = 0;
+	virtual void performSecondaryAction(const PointerEvent& upEvent) {}
+
 	// Pointer down and started to move
-	virtual void startPrimaryDrag(EditorContext& editor, glm::vec2 pointerDownPosition, const PointerEvent& moveEvent) = 0;
-	virtual void startSecondaryDrag(EditorContext& editor, glm::vec2 pointerDownPosition, const PointerEvent& moveEvent) = 0;
+	void startPrimaryDrag(const PointerEvent& moveEvent) {
+		if (auto operation = startPrimaryDragOperation())
+			operation->processEvent(moveEvent);
+	}
+	void startSecondaryDrag(const PointerEvent& moveEvent) {
+		if (auto operation = startSecondaryDragOperation())
+			operation->processEvent(moveEvent);
+	}
+	virtual Operation* startPrimaryDragOperation() { return nullptr; }
+	virtual Operation* startSecondaryDragOperation() { return nullptr; }
 
 	bool pointerPrimaryDown = false;
 	bool pointerSecondaryDown = false;
-	glm::vec2 pointerDownPosition{};
 };
 
 

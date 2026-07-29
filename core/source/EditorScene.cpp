@@ -50,43 +50,47 @@ void EditorScene::redo() {
 	}
 }
 
-void EditorScene::cancelOperation() {
+void EditorScene::cancelLevelChange() {
 	syncLevel();
+}
+void EditorScene::cancelSelectionChange() {
 	syncSelection();
 }
-void EditorScene::commitLevelChange() {
+void EditorScene::commitLevelChange() { // TODO: only commit if actually changed
 	currentNode = std::make_shared<UndoNode>(*level, makeSelectionUndoNode(), currentNode);
 	currentNode->previous->next = currentNode;
 }
-void EditorScene::commitSelectionChange() {
+void EditorScene::commitSelectionChange() { // TODO: only commit if actually changed
 	currentNode->selectionNode = makeSelectionUndoNode(currentNode->selectionNode);
 	currentNode->selectionNode->previous->next = currentNode->selectionNode;
 }
 
-void EditorScene::syncLevel() {
+void EditorScene::syncLevel() { // TODO: generate ephemeral meshes
 	*level = currentNode->level;
 
 	ball = EditorBall(level->getBallDescriptor().get());
 
 	obstacles.assign_range(level->getObstacleDescriptors()
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
+
+
 }
 void EditorScene::syncSelection() {
-	selectionFocus = currentNode->selectionNode->selectionState.focus;
-	for (const auto& selectedEntity : currentNode->selectionNode->selectionState.selection)
-		if (selectedEntity.type == EntityType::Obstacle)
-			obstacles[selectedEntity.index].select();
+	const auto& selection = currentNode->selectionNode->selectionState;
+	selectionFocus = selection.focus;
+	ball.setSelected(selection.ball);
+	for (int i = 0; i < obstacles.size(); i++)
+		obstacles[i].setSelected(selection.obstacles[i]);
 }
 
 std::shared_ptr<SelectionUndoNode> EditorScene::makeSelectionUndoNode(const std::shared_ptr<SelectionUndoNode>& previous) const {
-	std::vector<EntityReference> selection;
-	if (ball.isSelected())
-		selection.emplace_back(EntityType::Ball);
-	for (int i = 0; i < obstacles.size(); i++)
-		if (obstacles[i].isSelected())
-			selection.emplace_back(EntityType::Obstacle, i);
-
-	return std::make_shared<SelectionUndoNode>(SelectionState(selectionFocus, selection), previous);
+	return std::make_shared<SelectionUndoNode>(SelectionState(
+		selectionFocus,
+		ball.isSelected(),
+		obstacles
+			| std::views::transform([](const auto& o) { return o.isSelected(); })
+			| std::ranges::to<std::vector<bool>>()),
+		previous);
 }
 
 

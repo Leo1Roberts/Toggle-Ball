@@ -1,5 +1,6 @@
 #include "Camera.h"
 
+#include "Utilities.h"
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_projection.hpp"
 
@@ -35,9 +36,9 @@ void Camera::startPan(glm::vec2 pointerPosition) {
 	panPointerPosition = pointerPosition;
 }
 void Camera::updatePan(glm::vec2 pointerPosition) {
-	glm::vec3 panPointerWorldPosition = pointerToWorldPosition(panPointerPosition);
-	glm::vec3 pointerWorldPosition = pointerToWorldPosition(pointerPosition);
-	viewOrigin -= (pointerWorldPosition - panPointerWorldPosition);
+	glm::vec2 panPointerPlanarPosition = screenToPlanarPosition(panPointerPosition);
+	glm::vec2 pointerPlanarPosition = screenToPlanarPosition(pointerPosition);
+	viewOrigin -= planarToWorld(pointerPlanarPosition - panPointerPlanarPosition);
 	panPointerPosition = pointerPosition;
 	update(cache.screenWidth, cache.screenHeight, cache.arenaWidth, cache.arenaHeight);
 }
@@ -45,15 +46,18 @@ void Camera::updatePan(glm::vec2 pointerPosition) {
 void Camera::zoom(float amount, glm::vec2 pointerPosition) {
 	float multiplier = 1.f / amount;
 	zoomInv *= multiplier;
-	viewOrigin = viewOrigin * multiplier + pointerToWorldPosition(pointerPosition) * (1 - multiplier);
+	viewOrigin = viewOrigin * multiplier + planarToWorld(screenToPlanarPosition(pointerPosition) * (1 - multiplier));
 	update(cache.screenWidth, cache.screenHeight, cache.arenaWidth, cache.arenaHeight);
 }
 
 
-glm::vec3 Camera::pointerToWorldPosition(glm::vec2 pointerPosition) const {
+glm::vec2 Camera::screenToPlanarPosition(glm::vec2 screenPosition) const {
 	glm::vec4 viewport = glm::vec4(0.f, 0.f, cache.screenWidth, cache.screenHeight);
-	glm::vec3 screenPosition = glm::vec3(pointerPosition.x, cache.screenHeight - pointerPosition.y, 0.f);
-	glm::vec3 worldPosition = glm::unProject(screenPosition, viewMatrix, projectionMatrix, viewport);
-	worldPosition.x = 0.f;
-	return worldPosition;
+	glm::vec3 flippedScreenPosition = glm::vec3(screenPosition.x, cache.screenHeight - screenPosition.y, 0.f);
+	return worldToPlanar(glm::unProject(flippedScreenPosition, viewMatrix, projectionMatrix, viewport));;
+}
+glm::vec2 Camera::planarToScreenPosition(glm::vec2 planarPosition) const {
+	glm::vec4 viewport = glm::vec4(0.f, 0.f, cache.screenWidth, cache.screenHeight);
+	glm::vec3 projectedPosition = glm::project(planarToWorld(planarPosition), viewMatrix, projectionMatrix, viewport);
+	return { projectedPosition.x, cache.screenHeight - projectedPosition.y };
 }

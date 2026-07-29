@@ -1,12 +1,13 @@
 #ifndef BALL_H
 #define BALL_H
 
-#include "Texture.h"
+#include "SelectBox.h"
 #include "Mesh.h"
 #include "Obstacle.h"
 #include "PhysicsConstants.h"
 #include "Plane.h"
 #include "Settings.h"
+#include "Texture.h"
 #include "Utilities.h"
 
 class GameObstacle;
@@ -175,6 +176,11 @@ public:
 	[[nodiscard]] bool isSelected() const { return selected; }
 	void select() { selected = true; }
 	void deselect() { selected = false; }
+	void setSelected(bool select) { selected = select; }
+	[[nodiscard]] bool isInSelectBox(SelectBox selectBox) const {
+		return selectBox.touchesCircle(
+			worldToPlanar(descriptor->getInitialPosition()), 1.f);
+	}
 
 	void updateOutlineRadius(float uiToWorldScale) {
 		outlineRadius = 1.f + Settings::Sizes.outlineWidth * uiToWorldScale;

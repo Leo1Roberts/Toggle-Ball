@@ -15,7 +15,8 @@ public:
 	void updatePan(glm::vec2 pointerPosition);
 	void zoom(float amount, glm::vec2 pointerPosition);
 
-	[[nodiscard]] glm::vec3 pointerToWorldPosition(glm::vec2 pointerPosition) const;
+	[[nodiscard]] glm::vec2 screenToPlanarPosition(glm::vec2 screenPosition) const;
+	[[nodiscard]] glm::vec2 planarToScreenPosition(glm::vec2 planarPosition) const;
 
 	[[nodiscard]] float getHalfHeight() const { return halfHeight; }
 	[[nodiscard]] const glm::mat4& getViewMatrix() const { return viewMatrix; }
