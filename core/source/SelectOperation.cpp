@@ -35,8 +35,8 @@ void SelectOperation::finish() const {
 			int topObstacleIndex = -1;
 			float maxHalfDepth = 0.f;
 			for (int i = 0; i < obstacles.size(); i++) {
-				if (obstacles[i].isInSelectBox(box) && obstacles[i].getDescriptor()->getShape()->getHalfDepth() >= maxHalfDepth) {
-					maxHalfDepth = obstacles[i].getDescriptor()->getShape()->getHalfDepth();
+				if (obstacles[i].isInSelectBox(box) && obstacles[i].getDescriptor()->shape->getHalfDepth() >= maxHalfDepth) {
+					maxHalfDepth = obstacles[i].getDescriptor()->shape->getHalfDepth();
 					topObstacleIndex = i;
 				}
 			}
@@ -83,7 +83,7 @@ void SelectOperation::applyModifiers(byte mods) {
 		mode = SelectionMode::Replace;
 }
 
-bool SelectOperation::doProcessEvent(const Event& event) {
+void SelectOperation::doProcessEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move) {
 			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
@@ -94,8 +94,6 @@ bool SelectOperation::doProcessEvent(const Event& event) {
 			applyOperation();
 		}
 	}
-
-	return false;
 }
 
 void SelectOperation::applyOperation() {

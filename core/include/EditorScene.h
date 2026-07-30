@@ -66,6 +66,7 @@ public:
 	[[nodiscard]] const LevelDescriptor* getLevel() const { return level.get(); }
 	[[nodiscard]] EditorBall* getBall() { return &ball; }
 	[[nodiscard]] std::vector<EditorObstacle>& getObstacles() { return obstacles; }
+	[[nodiscard]] bool isToggled() const { return toggled; }
 	[[nodiscard]] float getTogglePosition() const { return togglePosition.getCurrentPosition(); }
 	[[nodiscard]] EntityReference* getSelectionFocus() { return &selectionFocus; }
 	[[nodiscard]] UndoNode* getCurrentNode() const { return currentNode.get(); }

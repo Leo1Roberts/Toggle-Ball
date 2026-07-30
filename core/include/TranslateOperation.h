@@ -1,23 +1,24 @@
 #ifndef TRANSLATE_OPERATION_H
 #define TRANSLATE_OPERATION_H
 
-#include "MotionOperation.h"
+#include "TransformOperation.h"
 #include "Operation.h"
 
 
-class TranslateOperation : public MotionOperation {
+class TranslateOperation : public TransformOperation {
 public:
 	TranslateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
-		: MotionOperation(context, trigger, initialPointerPosition) {}
+		: TransformOperation(context, trigger, initialPointerPosition) {}
 
 private:
-	bool doProcessEvent(const Event& event) override;
+	void doProcessEvent(const Event& event) override;
 	void applyOperation() override;
+
+	void setMode(glm::vec2 requestedAxis);
 
 	bool lockToAxis = false;
 	glm::vec2 baseAxis{};
 	bool localRead = false;
-	bool localWrite = false;
 	glm::vec2 rawTranslation{0.f};
 };
 

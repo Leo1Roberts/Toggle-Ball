@@ -44,7 +44,7 @@ PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<v
 	});
 	rootNode->addChild(std::move(restartButton));
 
-	auto levelButton = std::make_unique<UIButton>(levelToPlay.getName(), Theme::SecondaryOutline);
+	auto levelButton = std::make_unique<UIButton>(levelToPlay.name, Theme::SecondaryOutline);
 	levelButton->layout = {
 		.anchor = Anchor::BottomLeft,
 		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,

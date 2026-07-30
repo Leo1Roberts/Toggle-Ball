@@ -1,17 +1,17 @@
 #include "Operation.h"
 
 
-bool Operation::processEvent(const Event& event) {
+void Operation::processEvent(const Event& event) {
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (key->action == KeyAction::Down) {
 			if (key->chord.code == KeyCode::Escape) {
 				cancel();
-				return true;
+				return;
 			}
 			if (key->chord.code == KeyCode::Enter) {
 				finish();
 				commit();
-				return true;
+				return;
 			}
 		}
 		switch (key->chord.code) {
@@ -27,17 +27,17 @@ bool Operation::processEvent(const Event& event) {
 			if ((pointer->button == PointerButton::Primary && trigger == TriggerType::PointerSecondary) ||
 				(pointer->button == PointerButton::Secondary && trigger == TriggerType::PointerPrimary)) {
 				cancel();
-				return true;
+				return;
 			}
 			if (trigger == TriggerType::Key) {
 				if (pointer->button == PointerButton::Primary) {
 					finish();
 					commit();
-					return true;
+					return;
 				}
 				if (pointer->button == PointerButton::Secondary) {
 					cancel();
-					return true;
+					return;
 				}
 			}
 		} else if (pointer->action == PointerAction::Up) {
@@ -45,10 +45,10 @@ bool Operation::processEvent(const Event& event) {
 				(pointer->button == PointerButton::Secondary && trigger == TriggerType::PointerSecondary)) {
 				finish();
 				commit();
-				return true;
+				return;
 			}
 		}
 	}
 
-	return doProcessEvent(event);
+	doProcessEvent(event);
 }

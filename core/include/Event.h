@@ -8,9 +8,6 @@
 #include <variant>
 
 
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-
-
 struct KeyEvent { KeyChord chord; KeyAction action; };
 struct CharEvent { unsigned int character; };
 struct PointerEvent {

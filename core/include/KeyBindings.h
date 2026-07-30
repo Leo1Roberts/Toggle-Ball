@@ -66,11 +66,18 @@ enum class ActionCode {
 	Toggle,
 	InstantToggle,
 
+	Undo,
+	Redo,
+
 	SelectAll,
 	DeselectAll,
 
-	Undo,
-	Redo,
+	Translate,
+	Rotate,
+	Scale,
+
+	LockToXAxis,
+	LockToYAxis,
 };
 
 
@@ -99,10 +106,15 @@ private:
 		{ ActionCode::TestLevel,     "Test level" },
 		{ ActionCode::Toggle,        "Toggle" },
 		{ ActionCode::InstantToggle, "Instant toggle" },
-		{ ActionCode::SelectAll,     "Select all" },
-		{ ActionCode::DeselectAll,   "Deselect all" },
 		{ ActionCode::Undo,          "Undo" },
 		{ ActionCode::Redo,          "Redo" },
+		{ ActionCode::SelectAll,     "Select all" },
+		{ ActionCode::DeselectAll,   "Deselect all" },
+		{ ActionCode::Translate,     "Translate" },
+		{ ActionCode::Rotate,        "Rotate" },
+		{ ActionCode::Scale,         "Scale" },
+		{ ActionCode::LockToXAxis,   "Lock to X axis" },
+		{ ActionCode::LockToYAxis,   "Lock to Y axis" },
 	};
 };
 

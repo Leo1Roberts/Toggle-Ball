@@ -16,13 +16,7 @@
 #include <iomanip>
 #include <sstream>
 
-static glm::mat2 angleToRotation2D(float radians) {
-	float c = std::cos(radians);
-	float s = std::sin(radians);
-	return glm::mat2
-		( c,  s,
-		 -s,  c );
-}
+
 static glm::mat3 angleToRotation3D(float radians) {
 	return glm::mat3_cast(glm::angleAxis(radians, OBSTACLE_ROTATION_AXIS));
 }
@@ -1573,7 +1567,7 @@ ObstacleDescriptor::ObstacleDescriptor(const std::string& data) {
 std::string ObstacleDescriptor::serialize() const {
 	std::ostringstream ss;
 
-	ss << shape->serialize() << "|" << motion->serialize() << "|" << isGoal();
+	ss << shape->serialize() << "|" << motion->serialize() << "|" << goal;
 
 	return ss.str();
 }
@@ -1633,7 +1627,7 @@ BallCollisionInfo ArcSpec::getMidsectionCollision(const ObstacleKinematicState& 
 
 
 void GameObstacle::stepKinematicState(const Smoother& smoother) {
-	descriptor->getMotion()->stepKinematicState(kinematicState, smoother);
+	descriptor->motion->stepKinematicState(kinematicState, smoother);
 }
 
 
@@ -1642,17 +1636,17 @@ bool GameObstacle::collideWithCap(GameBall& ball, glm::vec3 cap) const {
 	glm::vec3 capToBall = ball.getKinematicState()->position - capPosition;
 	float distanceToBallSq = glm::length2(capToBall);
 
-	float radii = ball.getProperties()->radius + descriptor->getShape()->getMinorRadius();
+	float radii = ball.getProperties()->radius + descriptor->shape->getMinorRadius();
 	if (distanceToBallSq < radii * radii && distanceToBallSq > 0.000001f) {
 		float distanceToBall = std::sqrt(distanceToBallSq);
-		ball.collideWithPointOnObstacle(*this, capToBall / distanceToBall, distanceToBall - descriptor->getShape()->getMinorRadius());
+		ball.collideWithPointOnObstacle(*this, capToBall / distanceToBall, distanceToBall - descriptor->shape->getMinorRadius());
 		return true;
 	}
 	return false;
 }
 
 bool GameObstacle::collideWithMidsection(GameBall& ball) const {
-	BallCollisionInfo collision = descriptor->getShape()->getMidsectionCollision(kinematicState, ball);
+	BallCollisionInfo collision = descriptor->shape->getMidsectionCollision(kinematicState, ball);
 	if (collision.colliding)
 		ball.collideWithPointOnObstacle(*this, collision.normal, collision.separation);
 	return collision.colliding;
@@ -1675,8 +1669,29 @@ PlaneDescriptor GameObstacle::getCapDividingPlane(glm::vec3 cap, float capAngle)
 
 void EditorObstacle::updateKinematicState(const Smoother& smoother, int numSteps) {
 	if (numSteps < 0) // Just set 'stationary' attributes
-		descriptor->getMotion()->updateEditorKinematicState(kinematicState, smoother);
+		descriptor->motion->updateEditorKinematicState(kinematicState, smoother);
 	else // Demonstrate motion
 		while (numSteps--)
-			descriptor->getMotion()->stepKinematicState(kinematicState, smoother);
+			descriptor->motion->stepKinematicState(kinematicState, smoother);
+}
+
+
+
+void TogglingPositionSpec::translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) {
+	auto baseSpec = (const TogglingPositionSpec*)base;
+	positionA = baseSpec->positionA;
+	positionB = baseSpec->positionB;
+	if (!toggled || stateless)
+		positionA += vector;
+	if (toggled || stateless)
+		positionB += vector;
+}
+void OscillatingPositionSpec::translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) {
+	auto baseSpec = (const OscillatingPositionSpec*)base;
+	position1 = baseSpec->position1;
+	position2 = baseSpec->position2;
+	if (!toggled || stateless)
+		position1 += vector;
+	if (toggled || stateless)
+		position2 += vector;
 }

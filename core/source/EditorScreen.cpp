@@ -5,6 +5,7 @@
 #include "EditorContext.h"
 #include "Settings.h"
 #include "Shader.h"
+#include "TranslateOperation.h"
 
 #include <ranges>
 
@@ -24,27 +25,32 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		std::move(levelToEdit),
 		[this] { updateEphemeralMeshes(); }),
 	context(
-		&scene, &camera, &gizmoRenderer,
+		&scene, &camera, &gizmoRenderer, &uiToWorldScale,
 		[this](std::unique_ptr<Operation> operation) {
 			activeOperation = std::move(operation);
 			return activeOperation.get();
 		},
 		[this] { activeOperation = nullptr; }),
 	currentToolMode(std::make_unique<DefaultMode>(&context)) {
-	camera.reset(scene.getLevel()->getArenaWidth(), scene.getLevel()->getArenaHeight());
+	camera.reset(scene.getLevel()->arenaWidth, scene.getLevel()->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
 }
 
 
 void EditorScreen::processEvent(const Event& event) {
-	if (uiManager.processEvent(event))
-		return;
+	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
+		if (pointer->id == 0)
+			mainPointerPosition = pointer->position;
+	}
 
 	if (activeOperation) {
-		if (activeOperation->processEvent(event))
-			return;
+		activeOperation->processEvent(event);
+		return;
 	}
+
+	if (uiManager.processEvent(event))
+		return;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
@@ -79,6 +85,13 @@ void EditorScreen::processEvent(const Event& event) {
 			case ActionCode::Redo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					scene.redo();
+					return;
+				}
+			case ActionCode::Translate:
+				if (key->action == KeyAction::Down) {
+					activeOperation = std::make_unique<TranslateOperation>(&context, TriggerType::Key, mainPointerPosition);
+					if (!activeOperation->start(key->chord.modifiers))
+						activeOperation = nullptr;
 					return;
 				}
 			default:;
@@ -119,7 +132,7 @@ void EditorScreen::processEvent(const Event& event) {
 		}
 	}
 
-	if (currentToolMode)
+	if (currentToolMode && scene.getTogglePosition() == scene.isToggled())
 		currentToolMode->processEvent(event);
 }
 
@@ -146,9 +159,9 @@ void EditorScreen::render() {
 	Shaders::object->setVec3("uSunDirection", viewSunDirection);
 
 	drawObject(Meshes::plane.get(), Textures::white.get(),
-			   {-1.f, 0, scene.getLevel()->getArenaHeight() / 2.f},
+			   {-1.f, 0, scene.getLevel()->arenaHeight / 2.f},
 			   backgroundRotation,
-			   {scene.getLevel()->getArenaHeight(), scene.getLevel()->getArenaWidth(), 1});
+			   {scene.getLevel()->arenaHeight, scene.getLevel()->arenaWidth, 1});
 
 	Shaders::outline->use();
 	glEnable(GL_DEPTH_TEST);
@@ -158,7 +171,7 @@ void EditorScreen::render() {
 	for (int i = 0; i < scene.getObstacles().size(); i++) {
 		const auto& obstacle = scene.getObstacles()[i];
 		if (obstacle.isSelected()) {
-			Shaders::outline->setVec4("uOutlineColor", col(obstacle.getDescriptor()->getColor(), Settings::Colors.domainOpacity));
+			Shaders::outline->setVec4("uOutlineColor", col(obstacle.getDescriptor()->color, Settings::Colors.domainOpacity));
 
 			// Place domains at different depths to prevent Z-fighting. Last part keeps the ball outline on top.
 			float depth = ((float)i - (float)scene.getObstacles().size()) / (float)scene.getObstacles().size();
@@ -183,7 +196,7 @@ void EditorScreen::render() {
 
 	glDepthFunc(GL_ALWAYS);
 	drawObject(Meshes::ball.get(), scene.getBall()->getTexture(),
-			   planarToWorld(scene.getBall()->getDescriptor()->getInitialPosition()),
+			   planarToWorld(scene.getBall()->getDescriptor()->initialPosition),
 			   glm::mat3(1));
 
 
@@ -221,7 +234,7 @@ void EditorScreen::render() {
 			outlineColor = Color::Selected;
 		Shaders::outline->setVec4("uOutlineColor", outlineColor);
 
-		glm::vec3 ballOutlinePosition = {-scene.getBall()->getOutlineRadius(), scene.getLevel()->getBallDescriptor()->getInitialPosition()};
+		glm::vec3 ballOutlinePosition = {-scene.getBall()->getOutlineRadius(), scene.getLevel()->ballDescriptor->initialPosition};
 		glm::mat4 worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), ballOutlinePosition, glm::vec3(scene.getBall()->getOutlineRadius()));
 		Shaders::outline->setMat4("uProjectionFull", camera.getProjectionMatrix() * camera.getViewMatrix() * worldMatrix);
 
@@ -244,7 +257,7 @@ void EditorScreen::render() {
 float EditorScreen::getObstacleOpacity(const EditorObstacle& obstacle) const {
 	float opacity = 1.f;
 
-	auto motionSpec = obstacle.getDescriptor()->getMotion();
+	auto motionSpec = obstacle.getDescriptor()->motion.get();
 	if (dynamic_cast<OscillatingPositionSpec*>(motionSpec) ||
 	    dynamic_cast<OscillatingAngleSpec*>(motionSpec))
 		// Includes a small period where the obstacle is completely invisible
@@ -287,7 +300,7 @@ void EditorScreen::updateEphemeralMeshes() {
 
 void EditorScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
-	camera.update((float)width, (float)height, scene.getLevel()->getArenaWidth(), scene.getLevel()->getArenaHeight());
+	camera.update((float)width, (float)height, scene.getLevel()->arenaWidth, scene.getLevel()->arenaHeight);
 	uiToWorldScale = uiManager.getScale() * camera.getHalfHeight() * 2.f / (float)height;
 	updateEphemeralMeshes();
 }

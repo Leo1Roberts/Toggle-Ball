@@ -33,6 +33,8 @@ private:
 	float uiToWorldScale{};
 	void updateEphemeralMeshes();
 
+	glm::vec2 mainPointerPosition{};
+
 	EditorScene scene;
 	Camera camera;
 	UIManager uiManager;

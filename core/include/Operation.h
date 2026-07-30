@@ -17,7 +17,7 @@ class Operation {
 public:
 	virtual ~Operation() = default;
 
-	bool processEvent(const Event& event);
+	void processEvent(const Event& event);
 
 	virtual void renderGizmos() {}
 
@@ -49,7 +49,7 @@ protected:
 
 private:
 	virtual void applyModifiers(byte mods) = 0;
-	virtual bool doProcessEvent(const Event& event) = 0;
+	virtual void doProcessEvent(const Event& event) = 0;
 	virtual void applyOperation() = 0;
 
 	[[nodiscard]] virtual bool canStart() const { return true; }

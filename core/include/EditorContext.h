@@ -14,6 +14,7 @@ struct EditorContext {
 	EditorScene* scene;
 	const Camera* camera;
 	GizmoRenderer* gizmoRenderer;
+	const float* uiToWorldScale;
 
 	std::function <Operation*(std::unique_ptr<Operation>)> startOperation;
 	std::function <void()> finishOperation;

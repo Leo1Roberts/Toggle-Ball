@@ -47,6 +47,14 @@ constexpr int SECTORS_PER_DOT = 8;
 constexpr float BEVEL_AMOUNT = 0.1f;
 
 
+inline glm::mat2 angleToRotation2D(float radians) {
+	float c = std::cos(radians);
+	float s = std::sin(radians);
+	return { c,  s,
+			-s,  c };
+}
+
+
 class ObstacleKinematicState {
 public:
 	ObstacleKinematicState() = default;
@@ -268,6 +276,9 @@ public:
 	// Updates the (stationary) kinematic state for obstacles in the editor. Purely incremental - kinematicState must be initialised separately.
 	virtual void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const = 0;
 
+
+	virtual void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) = 0;
+
 	[[nodiscard]] virtual col getColor() const = 0;
 	[[nodiscard]] virtual glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const = 0;
 
@@ -288,9 +299,13 @@ public:
 		setAngle(angle);
 	}
 
-	StaticSpec(const std::string& data);
+	explicit StaticSpec(const std::string& data);
 
 	~StaticSpec() override = default;
+
+	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
+		position = ((const StaticSpec*)base)->position + vector;
+	}
 
 	[[nodiscard]] col getColor() const override { return Color::White; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
@@ -334,9 +349,11 @@ public:
 		setAngle(angle);
 	}
 
-	TogglingPositionSpec(const std::string& data);
+	explicit TogglingPositionSpec(const std::string& data);
 
 	~TogglingPositionSpec() override = default;
+
+	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
 
 	[[nodiscard]] col getColor() const override { return Color::SoftBlue; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
@@ -381,9 +398,13 @@ public:
 	    angleA(angleA),
 	    angleB(angleB) {}
 
-	TogglingAngleSpec(const std::string& data);
+	explicit TogglingAngleSpec(const std::string& data);
 
 	~TogglingAngleSpec() override = default;
+
+	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
+		position = ((const TogglingAngleSpec*)base)->position + vector;
+	}
 
 	[[nodiscard]] col getColor() const override { return Color::SoftRed; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
@@ -425,9 +446,13 @@ public:
 	    angularVelocityA(angularVelocityA),
 	    angularVelocityB(angularVelocityB) {}
 
-	SpinningSpec(const std::string& data);
+	explicit SpinningSpec(const std::string& data);
 
 	~SpinningSpec() override = default;
+
+	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
+		position = ((const SpinningSpec*)base)->position + vector;
+	}
 
 	[[nodiscard]] col getColor() const override { return Color::SoftMagenta; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
@@ -473,9 +498,11 @@ public:
 		setAngle(angle);
 	}
 
-	OscillatingPositionSpec(const std::string& data);
+	explicit OscillatingPositionSpec(const std::string& data);
 
 	~OscillatingPositionSpec() override = default;
+
+	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
 
 	[[nodiscard]] col getColor() const override { return Color::SoftCyan; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
@@ -530,6 +557,10 @@ public:
 
 	~OscillatingAngleSpec() override = default;
 
+	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
+		position = ((const OscillatingAngleSpec*)base)->position + vector;
+	}
+
 	[[nodiscard]] col getColor() const override { return Color::SoftYellow; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
@@ -567,8 +598,7 @@ private:
 };
 
 
-class ObstacleDescriptor {
-public:
+struct ObstacleDescriptor {
 	ObstacleDescriptor(std::unique_ptr<AbstractShapeSpec> shape, std::unique_ptr<IMotionSpec> motion, bool goal = false) :
 	    shape(std::move(shape)),
 	    motion(std::move(motion)),
@@ -594,19 +624,13 @@ public:
 		motion->generateDomainMesh(domainMesh, shape.get(), uiToWorldScale);
 	}
 
-	[[nodiscard]] IMotionSpec* getMotion() const { return motion.get(); }
-	[[nodiscard]] AbstractShapeSpec* getShape() const { return shape.get(); }
-	[[nodiscard]] bool isGoal() const { return goal; }
-	[[nodiscard]] col getColor() const { return color; }
-	[[nodiscard]] byte getMaterial() const { return material; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const {
 		return motion->getDomainPosition(obstaclePosition);
 	}
 
-private:
 	std::unique_ptr<AbstractShapeSpec> shape;
 	std::unique_ptr<IMotionSpec> motion;
-	bool goal{};
+	bool goal = false;
 	col color;
 	byte material;
 };
@@ -628,13 +652,13 @@ public:
 	GameObstacle& operator=(GameObstacle&&) = default;
 
 	void reset() {
-		descriptor->getMotion()->initKinematicState(kinematicState);
+		descriptor->motion->initKinematicState(kinematicState);
 		goalContactTimer = 0;
 	}
 	void stepKinematicState(const Smoother& smoother);
 
-	bool collideWithLeftCap(GameBall& ball) const { return collideWithCap(ball, planarToWorld(descriptor->getShape()->getLeftCap())); }
-	bool collideWithRightCap(GameBall& ball) const { return collideWithCap(ball, planarToWorld(descriptor->getShape()->getRightCap())); }
+	bool collideWithLeftCap(GameBall& ball) const { return collideWithCap(ball, planarToWorld(descriptor->shape->getLeftCap())); }
+	bool collideWithRightCap(GameBall& ball) const { return collideWithCap(ball, planarToWorld(descriptor->shape->getRightCap())); }
 	bool collideWithMidsection(GameBall& ball) const;
 	bool notifyOfContactWithBall(const GameBall& ball);
 
@@ -642,10 +666,10 @@ public:
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
 	[[nodiscard]] const Mesh<ObjectVertex>* getMesh() const { return &mesh; }
 	[[nodiscard]] PlaneDescriptor getLeftCapDividingPlane() const {
-		return getCapDividingPlane(planarToWorld(descriptor->getShape()->getLeftCap()), descriptor->getShape()->getLeftCapAngle());
+		return getCapDividingPlane(planarToWorld(descriptor->shape->getLeftCap()), descriptor->shape->getLeftCapAngle());
 	}
 	[[nodiscard]] PlaneDescriptor getRightCapDividingPlane() const {
-		return getCapDividingPlane(planarToWorld(descriptor->getShape()->getRightCap()), descriptor->getShape()->getRightCapAngle());
+		return getCapDividingPlane(planarToWorld(descriptor->shape->getRightCap()), descriptor->shape->getRightCapAngle());
 	}
 
 private:
@@ -666,7 +690,7 @@ class EditorObstacle {
 public:
 	explicit EditorObstacle(ObstacleDescriptor* descriptor) :
 	    descriptor(descriptor) {
-		descriptor->getMotion()->initKinematicState(kinematicState);
+		initKinematicState();
 		descriptor->generateObstacleMesh(obstacleMesh);
 	}
 
@@ -677,23 +701,31 @@ public:
 	EditorObstacle(EditorObstacle&&) = default;
 	EditorObstacle& operator=(EditorObstacle&&) = default;
 
-	void generateEphemeralMeshes(float uiToWorldScale) {
-		descriptor->generateOutlineMesh(outlineMesh, uiToWorldScale);
-		descriptor->generateDomainMesh(domainMesh, uiToWorldScale);
-	}
 	void generateMeshes(float uiToWorldScale) {
 		descriptor->generateObstacleMesh(obstacleMesh);
 		generateEphemeralMeshes(uiToWorldScale);
 	}
+	void generateEphemeralMeshes(float uiToWorldScale) {
+		descriptor->generateOutlineMesh(outlineMesh, uiToWorldScale);
+		generateDomainMesh(uiToWorldScale);
+	}
+	void generateDomainMesh(float uiToWorldScale) {
+		descriptor->generateDomainMesh(domainMesh, uiToWorldScale);
+	}
 
+	void initKinematicState() { descriptor->motion->initKinematicState(kinematicState); }
 	// Only provide numSteps if demonstrating the continuous motion of an obstacle
 	void updateKinematicState(const Smoother& smoother, int numSteps = -1);
+
+	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const ObstacleDescriptor* base) {
+		descriptor->motion->translateBy(vector, stateless, toggled, base->motion.get());
+	}
 
 	[[nodiscard]] bool isSelected() const { return selected; }
 	void select() { selected = true; }
 	void deselect() { selected = false; }
 	void setSelected(bool select) { selected = select; }
-	[[nodiscard]] bool isInSelectBox(SelectBox box) const { return descriptor->getShape()->isInSelectBox(kinematicState, box); }
+	[[nodiscard]] bool isInSelectBox(SelectBox box) const { return descriptor->shape->isInSelectBox(kinematicState, box); }
 
 	[[nodiscard]] const ObstacleDescriptor* getDescriptor() const { return descriptor; }
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }

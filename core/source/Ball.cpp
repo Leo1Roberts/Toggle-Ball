@@ -31,7 +31,7 @@ std::string BallDescriptor::serialize() const {
 
 
 void BallDescriptor::initKinematicState(BallKinematicState& kinematicState) const {
-	kinematicState.position = planarToWorld(getInitialPosition());
+	kinematicState.position = planarToWorld(initialPosition);
 	kinematicState.rotation = glm::mat3(1);
 	kinematicState.velocity = kinematicState.angularVelocity = glm::vec3(0.f);
 }
@@ -112,7 +112,7 @@ bool GameBall::collideWithObstacle(GameObstacle& obstacle) {
 	bool colliding = false;
 
 	float outerSeparationSq = glm::length2(kinematicState.position - obstacle.getKinematicState()->getPosition());
-	float outerRadii = properties->radius + obstacle.getDescriptor()->getShape()->getBoundingRadius();
+	float outerRadii = properties->radius + obstacle.getDescriptor()->shape->getBoundingRadius();
 
 	if (outerSeparationSq < outerRadii * outerRadii) { // Within bounding circle
 		PlaneDescriptor leftPlane = obstacle.getLeftCapDividingPlane();
@@ -120,7 +120,7 @@ bool GameBall::collideWithObstacle(GameObstacle& obstacle) {
 		float leftPlaneDistance = dot(leftPlane.normal, kinematicState.position) - leftPlane.dotProduct;
 		float rightPlaneDistance = dot(rightPlane.normal, kinematicState.position) - rightPlane.dotProduct;
 
-		if (obstacle.getDescriptor()->getShape()->pointIsBetweenCaps(leftPlaneDistance, rightPlaneDistance))
+		if (obstacle.getDescriptor()->shape->pointIsBetweenCaps(leftPlaneDistance, rightPlaneDistance))
 			colliding |= obstacle.collideWithMidsection(*this);
 		else {
 			if (leftPlaneDistance > 0)
@@ -151,7 +151,7 @@ void GameBall::collideWithPointOnObstacle(const GameObstacle& obstacle, glm::vec
 	glm::vec3 pointParallelVelocity = pointVelocity - normal * pointPerpendicularSpeed;
 	float pointParallelSpeedSq = glm::length2(pointParallelVelocity);
 	if (pointParallelSpeedSq > 0.00000001f) { // Apply friction if sliding
-		glm::vec3 friction = pointParallelVelocity * -(FRICTION_COEFFICIENTS[properties->material][obstacle.getDescriptor()->getMaterial()] * totalForce / std::sqrt(pointParallelSpeedSq));
+		glm::vec3 friction = pointParallelVelocity * -(FRICTION_COEFFICIENTS[properties->material][obstacle.getDescriptor()->material] * totalForce / std::sqrt(pointParallelSpeedSq));
 		glm::vec3 maxFriction = pointParallelVelocity * -(properties->mass * properties->momentOfInertia / (PHYSICS_TIMESTEP * (properties->momentOfInertia + properties->mass * separation * separation)));
 		if (glm::length2(friction) > glm::length2(maxFriction))
 			friction = maxFriction;
@@ -164,7 +164,7 @@ void GameBall::collideWithPointOnObstacle(const GameObstacle& obstacle, glm::vec
 		glm::vec3 relativeBallParallelVelocity = relativeBallVelocity - normal * dot(normal, relativeBallVelocity);
 		float relativeBallParallelSpeedSq = glm::length2(relativeBallParallelVelocity);
 		if (relativeBallParallelSpeedSq > 0.00000001f) {
-			glm::vec3 rollingResistance = relativeBallParallelVelocity * -(glm::length(force) * ROLLING_RESISTANCE_COEFFICIENTS[properties->material][obstacle.getDescriptor()->getMaterial()] / std::sqrt(relativeBallParallelSpeedSq));
+			glm::vec3 rollingResistance = relativeBallParallelVelocity * -(glm::length(force) * ROLLING_RESISTANCE_COEFFICIENTS[properties->material][obstacle.getDescriptor()->material] / std::sqrt(relativeBallParallelSpeedSq));
 			glm::vec3 maxRollingResistance = relativeBallParallelVelocity * -(properties->mass / PHYSICS_TIMESTEP);
 			if (glm::length2(rollingResistance) > glm::length2(maxRollingResistance))
 				rollingResistance = maxRollingResistance;

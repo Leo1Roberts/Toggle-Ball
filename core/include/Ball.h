@@ -103,8 +103,7 @@ static Texture* getBallTexture(byte ballType) {
 
 
 
-class BallDescriptor {
-public:
+struct BallDescriptor {
 	constexpr BallDescriptor(byte type, glm::vec2 initialPosition) :
 		type(type),
 		initialPosition(planarToWorld(initialPosition)) {}
@@ -118,11 +117,8 @@ public:
 
 	void initKinematicState(BallKinematicState& kinematicState) const;
 
-	[[nodiscard]] byte getType() const { return type; }
-	[[nodiscard]] glm::vec2 getInitialPosition() const { return initialPosition; }
 	[[nodiscard]] float getRadius() const { return ballProperties[type].radius; }
 
-private:
 	byte type{};
 	glm::vec2 initialPosition{0.f};
 };
@@ -133,8 +129,8 @@ public:
 
 	explicit GameBall(const BallDescriptor* descriptor) :
 		descriptor(descriptor),
-		properties(&ballProperties[descriptor->getType()]),
-		texture(getBallTexture(descriptor->getType())) {}
+		properties(&ballProperties[descriptor->type]),
+		texture(getBallTexture(descriptor->type)) {}
 
 	void reset() { descriptor->initKinematicState(kinematicState); }
 	void addNaturalForces();
@@ -171,15 +167,14 @@ public:
 
 	explicit EditorBall(BallDescriptor* descriptor) :
 		descriptor(descriptor),
-		texture(getBallTexture(descriptor->getType())) {}
+		texture(getBallTexture(descriptor->type)) {}
 
 	[[nodiscard]] bool isSelected() const { return selected; }
 	void select() { selected = true; }
 	void deselect() { selected = false; }
 	void setSelected(bool select) { selected = select; }
 	[[nodiscard]] bool isInSelectBox(SelectBox selectBox) const {
-		return selectBox.touchesCircle(
-			descriptor->getInitialPosition(), 1.f);
+		return selectBox.touchesCircle(descriptor->initialPosition, 1.f);
 	}
 
 	void updateOutlineRadius(float uiToWorldScale) {
@@ -187,7 +182,11 @@ public:
 	}
 	[[nodiscard]] float getOutlineRadius() const { return outlineRadius; }
 
-	[[nodiscard]] BallDescriptor* getDescriptor() { return descriptor; }
+	void translateBy(glm::vec2 vector, const BallDescriptor* base) {
+		descriptor->initialPosition = base->initialPosition + vector;
+	}
+
+	[[nodiscard]] const BallDescriptor* getDescriptor() const { return descriptor; }
 	[[nodiscard]] const Texture* getTexture() const { return texture; }
 
 private:

@@ -4,9 +4,9 @@
 
 
 EditorScene::EditorScene(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& syncLevelCallback)
-	: syncLevelCallback(syncLevelCallback), level(std::move(levelToEdit)), ball(level->getBallDescriptor().get()) {
+	: syncLevelCallback(syncLevelCallback), level(std::move(levelToEdit)), ball(level->ballDescriptor.get()) {
 
-	obstacles.append_range(level->getObstacleDescriptors()
+	obstacles.append_range(level->obstacleDescriptors
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
 
 	currentNode = std::make_shared<UndoNode>(*level, makeSelectionUndoNode());
@@ -23,7 +23,7 @@ void EditorScene::update(microseconds dt) {
 void EditorScene::toggle(bool transition) {
 	toggled = !toggled;
 	if (transition)
-		togglePosition.setDestination(toggled, 0.f, level->getTransitionTime());
+		togglePosition.setDestination(toggled, 0.f, level->transitionTime);
 	else
 		togglePosition.setPosition(toggled);
 }
@@ -69,12 +69,12 @@ void EditorScene::commitSelectionChange() { // TODO: only commit if actually cha
 		currentNode->selectionNode = makeSelectionUndoNode();
 }
 
-void EditorScene::syncLevel() { // TODO: generate ephemeral meshes
+void EditorScene::syncLevel() {
 	*level = currentNode->level;
 
-	ball = EditorBall(level->getBallDescriptor().get());
+	ball = EditorBall(level->ballDescriptor.get());
 
-	obstacles.assign_range(level->getObstacleDescriptors()
+	obstacles.assign_range(level->obstacleDescriptors
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
 
 	syncLevelCallback();

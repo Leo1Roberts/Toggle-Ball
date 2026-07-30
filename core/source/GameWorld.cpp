@@ -20,15 +20,15 @@ GameWorld::GameWorld(const LevelDescriptor& levelDescriptor) {
 	level = levelDescriptor;
 	level.scale();
 
-	arenaBounds[0] = {{0, 1, 0}, {0, -level.getArenaWidth() * 0.5f, 0}}; // Left
-	arenaBounds[1] = {{0, -1, 0}, {0, level.getArenaWidth() * 0.5f, 0}}; // Right
-	arenaBounds[2] = {{0, 0, -1}, {0, 0, level.getArenaHeight()}};       // Top
+	arenaBounds[0] = {{0, 1, 0}, {0, -level.arenaWidth * 0.5f, 0}}; // Left
+	arenaBounds[1] = {{0, -1, 0}, {0, level.arenaWidth * 0.5f, 0}}; // Right
+	arenaBounds[2] = {{0, 0, -1}, {0, 0, level.arenaHeight}};       // Top
 	arenaBounds[3] = {{0, 0, 1}, {0, 0, 0}};                             // Bottom
 
-	ball = GameBall(level.getBallDescriptor().get());
-	obstacles.append_range(level.getObstacleDescriptors() | std::views::transform([](const auto& d) { return GameObstacle(d.get()); }));
+	ball = GameBall(level.ballDescriptor.get());
+	obstacles.append_range(level.obstacleDescriptors | std::views::transform([](const auto& d) { return GameObstacle(d.get()); }));
 
-	camera.reset(level.getArenaWidth(), level.getArenaHeight());
+	camera.reset(level.arenaWidth, level.arenaHeight);
 
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
@@ -90,9 +90,9 @@ void GameWorld::render() const {
 	Shaders::object->setVec3("uSunDirection", viewSunDirection);
 
 	drawObject(Meshes::plane.get(), Textures::white.get(),
-			   {-1.f, 0, level.getArenaHeight() / 2.f},
+			   {-1.f, 0, level.arenaHeight / 2.f},
 			   backgroundRotation,
-			   {level.getArenaHeight(), level.getArenaWidth(), 1});
+			   {level.arenaHeight, level.arenaWidth, 1});
 
 	drawObject(Meshes::ball.get(), ball.getTexture(),
 			   ball.getKinematicState()->position,
@@ -110,13 +110,13 @@ void GameWorld::render() const {
 
 
 void GameWorld::resize(int screenWidth, int screenHeight) {
-	camera.update(screenWidth, screenHeight, level.getArenaWidth(), level.getArenaHeight());
+	camera.update(screenWidth, screenHeight, level.arenaWidth, level.arenaHeight);
 }
 
 
 void GameWorld::toggle() {
 	toggled = !toggled;
-	togglePosition.setDestination(toggled, 0.f, level.getTransitionTime());
+	togglePosition.setDestination(toggled, 0.f, level.transitionTime);
 }
 
 
@@ -135,7 +135,7 @@ void GameWorld::updatePhysics(microseconds dt) {
 			ball.collideWithPlane(plane);
 
 		for (auto& obstacle: obstacles)
-			levelComplete |= ball.collideWithObstacle(obstacle) && obstacle.getDescriptor()->isGoal();
+			levelComplete |= ball.collideWithObstacle(obstacle) && obstacle.getDescriptor()->goal;
 
 		ball.applyForces();
 
