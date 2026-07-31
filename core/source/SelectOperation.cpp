@@ -48,7 +48,7 @@ void SelectOperation::finish() const {
 					obstacles[topObstacleIndex].select();
 				}
 				*focus = {EntityType::Obstacle, topObstacleIndex};
-			} else
+			} else if (mode == SelectionMode::Replace)
 				*focus = {EntityType::None};
 		}
 
