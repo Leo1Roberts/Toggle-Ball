@@ -20,7 +20,7 @@ public:
 
 private:
 	void applyModifiers(byte mods) final;
-	void doProcessEvent(const Event& event) final;
+	bool doProcessEvent(const Event& event) final;
 	void applyOperation() final;
 
 	void doCancel() const final { context->scene->cancelSelectionChange(); }

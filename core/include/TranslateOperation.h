@@ -11,7 +11,7 @@ public:
 		: TransformOperation(context, trigger, initialPointerPosition) {}
 
 private:
-	void doProcessEvent(const Event& event) override;
+	bool doProcessEvent(const Event& event) override;
 	void applyOperation() override;
 
 	void setMode(glm::vec2 requestedAxis);

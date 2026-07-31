@@ -83,7 +83,7 @@ void SelectOperation::applyModifiers(byte mods) {
 		mode = SelectionMode::Replace;
 }
 
-void SelectOperation::doProcessEvent(const Event& event) {
+bool SelectOperation::doProcessEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move) {
 			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
@@ -92,8 +92,10 @@ void SelectOperation::doProcessEvent(const Event& event) {
 				initialPointerPlanarPosition.y, pointerPlanarPosition.y,
 			};
 			applyOperation();
+			return false; // Allow pointer move events to pass through
 		}
 	}
+	return false;
 }
 
 void SelectOperation::applyOperation() {

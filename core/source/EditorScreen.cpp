@@ -44,10 +44,8 @@ void EditorScreen::processEvent(const Event& event) {
 			mainPointerPosition = pointer->position;
 	}
 
-	if (activeOperation) {
-		activeOperation->processEvent(event);
+	if (activeOperation && activeOperation->processEvent(event))
 		return;
-	}
 
 	if (uiManager.processEvent(event))
 		return;
@@ -59,41 +57,41 @@ void EditorScreen::processEvent(const Event& event) {
 				if (key->action == KeyAction::Down) {
 					scene.toggle();
 					return;
-				}
+				} break;
 			case ActionCode::InstantToggle:
 				if (key->action == KeyAction::Down) {
 					scene.toggle(false);
 					return;
-				}
+				} break;
 			case ActionCode::SelectAll:
 				if (key->action == KeyAction::Down) {
 					scene.selectAll();
 					scene.commitSelectionChange();
 					return;
-				}
+				} break;
 			case ActionCode::DeselectAll:
 				if (key->action == KeyAction::Down) {
 					scene.deselectAll();
 					scene.commitSelectionChange();
 					return;
-				}
+				} break;
 			case ActionCode::Undo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					scene.undo();
 					return;
-				}
+				} break;
 			case ActionCode::Redo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					scene.redo();
 					return;
-				}
+				} break;
 			case ActionCode::Translate:
 				if (key->action == KeyAction::Down) {
 					activeOperation = std::make_unique<TranslateOperation>(&context, TriggerType::Key, mainPointerPosition);
 					if (!activeOperation->start(key->chord.modifiers))
 						activeOperation = nullptr;
 					return;
-				}
+				} break;
 			default:;
 			}
 		}
@@ -104,20 +102,17 @@ void EditorScreen::processEvent(const Event& event) {
 				panning = true;
 				camera.startPan(pointer->position);
 				return;
-			}
-			break;
+			} break;
 		case PointerAction::Move:
 			if (panning) {
 				camera.updatePan(pointer->position);
 				return;
-			}
-			break;
+			} break;
 		case PointerAction::Up:
 			if (pointer->button == PointerButton::Tertiary) {
 				panning = false;
 				return;
-			}
-			break;
+			} break;
 		case PointerAction::Scroll: {
 			float zoomChange = 1.f;
 			if (pointer->scroll.y > 0)

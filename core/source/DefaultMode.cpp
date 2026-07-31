@@ -4,6 +4,11 @@
 #include "TranslateOperation.h"
 
 
+bool DefaultMode::doProcessEvent(const Event& event) {
+	return false;
+}
+
+
 void DefaultMode::performPrimaryAction(const PointerEvent& upEvent) {
 	auto selectOperation = SelectOperation(
 		context, TriggerType::PointerPrimary,

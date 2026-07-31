@@ -7,17 +7,17 @@ namespace Axis {
 }
 
 
-void TranslateOperation::doProcessEvent(const Event& event) {
+bool TranslateOperation::doProcessEvent(const Event& event) {
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (key->action == KeyAction::Down) {
 			if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 				switch (*actionCode) {
 				case ActionCode::LockToXAxis:
 					setMode(Axis::X);
-					break;
+					return true;
 				case ActionCode::LockToYAxis:
 					setMode(Axis::Y);
-					break;
+					return true;
 				default:;
 				}
 			}
@@ -27,8 +27,10 @@ void TranslateOperation::doProcessEvent(const Event& event) {
 			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
 			rawTranslation = pointerPlanarPosition - initialPointerPlanarPosition;
 			applyOperation();
+			return false; // Allow pointer move events to pass through
 		}
 	}
+	return false;
 }
 
 

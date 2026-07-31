@@ -10,6 +10,8 @@ public:
 		: ToolMode(context) {}
 
 private:
+	bool doProcessEvent(const Event& event) override;
+
 	void performPrimaryAction(const PointerEvent& upEvent) override;
 
 	Operation* startPrimaryDragOperation() override;
