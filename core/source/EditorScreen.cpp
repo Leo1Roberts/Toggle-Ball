@@ -132,7 +132,7 @@ void EditorScreen::processEvent(const Event& event) {
 		}
 	}
 
-	if (currentToolMode && scene.getTogglePosition() == scene.isToggled())
+	if (currentToolMode && (int)scene.getTogglePosition() == scene.isToggled())
 		currentToolMode->processEvent(event);
 }
 
@@ -234,8 +234,7 @@ void EditorScreen::render() {
 			outlineColor = Color::Selected;
 		Shaders::outline->setVec4("uOutlineColor", outlineColor);
 
-		glm::vec3 ballOutlinePosition = {-scene.getBall()->getOutlineRadius(), scene.getLevel()->ballDescriptor->initialPosition};
-		glm::mat4 worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), ballOutlinePosition, glm::vec3(scene.getBall()->getOutlineRadius()));
+		glm::mat4 worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), planarToWorld(scene.getLevel()->ballDescriptor->initialPosition), planarToWorld(glm::vec2(scene.getBall()->getOutlineRadius())));
 		Shaders::outline->setMat4("uProjectionFull", camera.getProjectionMatrix() * camera.getViewMatrix() * worldMatrix);
 
 		Meshes::ball->draw();
@@ -293,6 +292,7 @@ void EditorScreen::drawObstacleOutline(const EditorObstacle& obstacle) const {
 
 
 void EditorScreen::updateEphemeralMeshes() {
+	uiToWorldScale = uiManager.getScale() * camera.getHalfHeight() * 2.f / (float)height;
 	scene.getBall()->updateOutlineRadius(uiToWorldScale);
 	for (auto& obstacle : scene.getObstacles())
 		obstacle.generateEphemeralMeshes(uiToWorldScale);
@@ -301,6 +301,5 @@ void EditorScreen::updateEphemeralMeshes() {
 void EditorScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
 	camera.update((float)width, (float)height, scene.getLevel()->arenaWidth, scene.getLevel()->arenaHeight);
-	uiToWorldScale = uiManager.getScale() * camera.getHalfHeight() * 2.f / (float)height;
 	updateEphemeralMeshes();
 }
