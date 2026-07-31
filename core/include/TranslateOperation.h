@@ -16,9 +16,10 @@ private:
 
 	void setMode(glm::vec2 requestedAxis);
 
-	bool lockToAxis = false;
+	enum class ConstraintType { None, GlobalAxis, LocalAxis };
+
+	ConstraintType constraint = ConstraintType::None;
 	glm::vec2 baseAxis{};
-	bool localRead = false;
 	glm::vec2 rawTranslation{0.f};
 };
 

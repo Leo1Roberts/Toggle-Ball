@@ -75,9 +75,9 @@ void SelectOperation::finish() const {
 
 
 void SelectOperation::applyModifiers(byte mods) {
-	if (mods & MOD_SHIFT)
+	if (mods & MOD_SHIFT && !(mods & MOD_CTRL))
 		mode = SelectionMode::Subtract;
-	else if (mods & MOD_CTRL)
+	else if (mods & MOD_CTRL && !(mods & MOD_SHIFT))
 		mode = SelectionMode::Add;
 	else
 		mode = SelectionMode::Replace;

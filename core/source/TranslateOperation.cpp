@@ -36,44 +36,39 @@ void TranslateOperation::applyOperation() {
 	auto ball = context->scene->getBall();
 	auto& obstacles = context->scene->getObstacles();
 
-	float magnitude;
+	if (rawTranslation == glm::vec2(0.f)) return;
+
+	auto focus = context->scene->getSelectionFocus();
+	float focusAngle = 0.f;
+	if (focus->type == EntityType::Obstacle)
+		focusAngle = obstacles[focus->index].getKinematicState()->getAngle();
+
 	glm::vec2 direction;
-	if (lockToAxis) {
-		glm::vec2 readAxis;
-		if (localRead) {
-			auto focus = context->scene->getSelectionFocus();
-			if (focus->type == EntityType::Ball)
-				readAxis = baseAxis;
-			else if (focus->type == EntityType::Obstacle) {
-				float angle = obstacles[focus->index].getKinematicState()->getAngle();
-				readAxis = angleToRotation2D(angle) * baseAxis;
-			}
-			direction = local ? baseAxis : readAxis;
-		} else
-			direction = readAxis = baseAxis;
+	if (constraint == ConstraintType::None)
+		direction = normalize(rawTranslation);
+	else if (!local && constraint == ConstraintType::GlobalAxis)
+		direction = baseAxis;
+	else
+		direction = angleToRotation2D(focusAngle) * baseAxis;
 
-		magnitude = glm::dot(rawTranslation, readAxis);
-	} else {
-		magnitude = glm::length(rawTranslation);
-		if (magnitude > 0.f)
-			direction = rawTranslation / magnitude;
-	}
-
-	if (magnitude == 0.f)
-		return;
+	float magnitude = glm::dot(rawTranslation, direction);
+	if (magnitude == 0.f) return; // Perpendicular
 
 	glm::vec2 translation;
 	if (!local)
 		translation = direction * magnitude;
 
-	if (ball->isSelected())
+	if (ball->isSelected()) {
+		if (local)
+			translation = (angleToRotation2D(-focusAngle) * direction) * magnitude;
 		ball->translateBy(translation, context->scene->getCurrentNode()->level.ballDescriptor.get());
+	}
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
 			if (local)
-				translation = (angleToRotation2D(obstacle.getKinematicState()->getAngle()) * direction) * magnitude;
+				translation = (angleToRotation2D(obstacle.getKinematicState()->getAngle() - focusAngle) * direction) * magnitude;
 
 			obstacle.translateBy(translation, stateless, context->scene->isToggled(),
 				context->scene->getCurrentNode()->level.obstacleDescriptors[i].get());
@@ -86,12 +81,15 @@ void TranslateOperation::applyOperation() {
 
 
 void TranslateOperation::setMode(glm::vec2 requestedAxis) {
-	if (!lockToAxis || (!localRead && baseAxis != requestedAxis)) {
-		lockToAxis = true;
+	if (constraint == ConstraintType::None || (constraint == ConstraintType::GlobalAxis && baseAxis != requestedAxis)) {
+		constraint = ConstraintType::GlobalAxis;
 		baseAxis = requestedAxis;
-	} else if (!localRead || baseAxis != requestedAxis) {
-		localRead = true;
+	} else if (context->scene->getSelectionFocus()->type == EntityType::Obstacle &&
+		((!local && constraint == ConstraintType::GlobalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::LocalAxis && baseAxis != requestedAxis))) {
+		constraint = ConstraintType::LocalAxis;
 		baseAxis = requestedAxis;
 	} else
-		localRead = lockToAxis = false;
+		constraint = ConstraintType::None;
+
+	applyOperation();
 }
