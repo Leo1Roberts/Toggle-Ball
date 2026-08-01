@@ -19,6 +19,8 @@ struct SelectionState {
 	EntityReference focus;
 	bool ball;
 	std::vector<bool> obstacles;
+
+	bool operator==(const SelectionState&) const = default;
 };
 
 
@@ -75,7 +77,7 @@ private:
 	void syncLevel();
 	std::function<void()> syncLevelCallback;
 	void syncSelection();
-	[[nodiscard]] std::shared_ptr<SelectionUndoNode> makeSelectionUndoNode(const std::shared_ptr<SelectionUndoNode>& previous = nullptr) const;
+	[[nodiscard]] SelectionState getSelectionState() const;
 
 	std::unique_ptr<LevelDescriptor> level;
 	EditorBall ball;

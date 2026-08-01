@@ -117,6 +117,14 @@ void ArcSpec::setCaps() {
 }
 
 
+bool AbstractShapeSpec::operator==(const AbstractShapeSpec& other) const {
+	if (typeid(*this) != typeid(other))
+		return false;
+
+	return minorRadius == other.minorRadius && equals(other);
+}
+
+
 void AbstractShapeSpec::generateObstacleMesh(Mesh<ObjectVertex>& obstacleMesh, col color) const {
 	std::vector<ObjectVertex> vs;
 	std::vector<Index> is;
@@ -790,6 +798,14 @@ OscillatingAngleSpec::OscillatingAngleSpec(const std::string& data) {
 	char c;
 	if (!(ss >> position.x >> c >> position.y >> c >> angle1 >> c >> angle2 >> c >> angularFrequencyA >> c >> angularFrequencyB))
 		throw std::invalid_argument("Invalid oscillating angle motion data format");
+}
+
+
+bool IMotionSpec::operator==(const IMotionSpec& other) const {
+	if (typeid(*this) != typeid(other))
+		return false;
+
+	return equals(other);
 }
 
 
@@ -1570,6 +1586,16 @@ std::string ObstacleDescriptor::serialize() const {
 	ss << shape->serialize() << "|" << motion->serialize() << "|" << goal;
 
 	return ss.str();
+}
+
+
+bool ObstacleDescriptor::operator==(const ObstacleDescriptor& other) const {
+	return
+	*shape == *other.shape &&
+	*motion == *other.motion &&
+	goal == other.goal &&
+	color == other.color &&
+	material == other.material;
 }
 
 

@@ -111,6 +111,8 @@ struct BallDescriptor {
 	BallDescriptor(const std::string& data, float version);
 	[[nodiscard]] std::string serialize() const;
 
+	bool operator==(const BallDescriptor&) const = default;
+
 	void scale() {
 		initialPosition *= getRadius();
 	}

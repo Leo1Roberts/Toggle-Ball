@@ -17,6 +17,8 @@ struct LevelDescriptor {
 
 	explicit LevelDescriptor(const std::string& data);
 
+	bool operator==(const LevelDescriptor& other) const;
+
 	static std::unique_ptr<LevelDescriptor> load(const std::string& name) {
 		auto level = std::make_unique<LevelDescriptor>(AssetManager::loadTextFile("levels/" + name + ".lvl"));
 		level->setName(name);

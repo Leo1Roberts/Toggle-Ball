@@ -96,6 +96,8 @@ public:
 	[[nodiscard]] std::string serialize() const;
 	static std::unique_ptr<AbstractShapeSpec> deserialize(const std::string& data);
 
+	bool operator==(const AbstractShapeSpec& other) const;
+
 	virtual void scale(float factor) = 0;
 
 	void generateObstacleMesh(Mesh<ObjectVertex>& obstacleMesh, col color) const;
@@ -134,6 +136,8 @@ private:
 
 	[[nodiscard]] virtual std::string serializeData() const = 0;
 	[[nodiscard]] virtual std::string getTypeString() const = 0;
+
+	[[nodiscard]] virtual bool equals(const AbstractShapeSpec& other) const = 0;
 
 	virtual void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const = 0;
 	virtual void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const = 0;
@@ -185,6 +189,11 @@ private:
 	friend class AbstractShapeSpec;
 	[[nodiscard]] static std::string getTypeStringStatic() { return "segment"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
+
+	[[nodiscard]] bool equals(const AbstractShapeSpec& other) const override {
+		auto otherSegment = (const SegmentSpec&)other;
+		return leftLength == otherSegment.leftLength && rightLength == otherSegment.rightLength;
+	}
 
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const override;
@@ -240,6 +249,11 @@ private:
 	[[nodiscard]] static std::string getTypeStringStatic() { return "arc"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
+	[[nodiscard]] bool equals(const AbstractShapeSpec& other) const override {
+		auto otherArc = (const ArcSpec&)other;
+		return arcAngle == otherArc.arcAngle && arcRadius == otherArc.arcRadius;
+	}
+
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const override;
 
@@ -265,6 +279,8 @@ public:
 	[[nodiscard]] std::string serialize() const;
 	static std::unique_ptr<IMotionSpec> deserialize(const std::string& data);
 
+	bool operator==(const IMotionSpec& other) const;
+
 	virtual void scale(float factor) = 0;
 
 	void generateDomainMesh(Mesh<ObjectVertex>& domainMesh, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const;
@@ -288,6 +304,8 @@ protected:
 private:
 	[[nodiscard]] virtual std::string serializeData() const = 0;
 	[[nodiscard]] virtual std::string getTypeString() const = 0;
+
+	[[nodiscard]] virtual bool equals(const IMotionSpec& other) const = 0;
 
 	virtual void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const = 0;
 };
@@ -333,6 +351,11 @@ private:
 	friend class IMotionSpec;
 	[[nodiscard]] static std::string getTypeStringStatic() { return "static"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
+
+	[[nodiscard]] bool equals(const IMotionSpec& other) const override {
+		auto otherStaticSpec = (const StaticSpec&)other;
+		return position == otherStaticSpec.position && angle == otherStaticSpec.angle;
+	}
 
 	void buildDomainMesh(std::vector<ObjectVertex>&, std::vector<Index>&, const AbstractShapeSpec*, float) const override {}
 
@@ -383,6 +406,11 @@ private:
 	[[nodiscard]] static std::string getTypeStringStatic() { return "t_position"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
+	[[nodiscard]] bool equals(const IMotionSpec& other) const override {
+		auto otherTogglingPositionSpec = (const TogglingPositionSpec&)other;
+		return angle == otherTogglingPositionSpec.angle && positionA == otherTogglingPositionSpec.positionA && positionB == otherTogglingPositionSpec.positionB;
+	}
+
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const override;
 
 	[[nodiscard]] float getAngle() const { return angle; }
@@ -431,6 +459,11 @@ private:
 	[[nodiscard]] static std::string getTypeStringStatic() { return "t_angle"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
+	[[nodiscard]] bool equals(const IMotionSpec& other) const override {
+		auto otherTogglingAngleSpec = (const TogglingAngleSpec&)other;
+		return position == otherTogglingAngleSpec.position && angleA == otherTogglingAngleSpec.angleA && angleB == otherTogglingAngleSpec.angleB;
+	}
+
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const override;
 
 	[[nodiscard]] glm::vec2 getPosition() const { return position; }
@@ -470,7 +503,7 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother&) const override;
 
 private:
-	glm::vec2 position{0.f};            // SSOT
+	glm::vec2 position{0.f};  // SSOT
 	float initialAngle{};     // SSOT
 	float angularVelocityA{}; // SSOT
 	float angularVelocityB{}; // SSOT
@@ -479,6 +512,13 @@ private:
 	friend class IMotionSpec;
 	[[nodiscard]] static std::string getTypeStringStatic() { return "spinning"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
+
+	[[nodiscard]] bool equals(const IMotionSpec& other) const override {
+		auto otherSpinningSpec = (const SpinningSpec&)other;
+		return
+			position == otherSpinningSpec.position && initialAngle == otherSpinningSpec.initialAngle &&
+			angularVelocityA == otherSpinningSpec.angularVelocityA && angularVelocityB == otherSpinningSpec.angularVelocityB;
+	}
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
 
@@ -522,9 +562,9 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 private:
-	glm::vec2 position1{0.f}; // SSOT
-	glm::vec2 position2{0.f}; // SSOT
-	float angle{};  // SSOT
+	glm::vec2 position1{0.f};  // SSOT
+	glm::vec2 position2{0.f};  // SSOT
+	float angle{};             // SSOT
 	glm::mat2 rotation{1.f};
 	float angularFrequencyA{}; // SSOT
 	float angularFrequencyB{}; // SSOT
@@ -533,6 +573,14 @@ private:
 	friend class IMotionSpec;
 	[[nodiscard]] static std::string getTypeStringStatic() { return "o_position"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
+
+	[[nodiscard]] bool equals(const IMotionSpec& other) const override {
+		auto otherOscillatingPositionSpec = (const OscillatingPositionSpec&)other;
+		return
+			position1 == otherOscillatingPositionSpec.position1 && position2 == otherOscillatingPositionSpec.position2 &&
+			angle == otherOscillatingPositionSpec.angle &&
+			angularFrequencyA == otherOscillatingPositionSpec.angularFrequencyA && angularFrequencyB == otherOscillatingPositionSpec.angularFrequencyB;
+	}
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
 
@@ -588,6 +636,14 @@ private:
 	[[nodiscard]] static std::string getTypeStringStatic() { return "o_angle"; }
 	[[nodiscard]] std::string getTypeString() const override { return getTypeStringStatic(); }
 
+	[[nodiscard]] bool equals(const IMotionSpec& other) const override {
+		auto otherOscillatingAngleSpec = (const OscillatingAngleSpec&)other;
+		return
+			position == otherOscillatingAngleSpec.position &&
+			angle1 == otherOscillatingAngleSpec.angle1 && angle2 == otherOscillatingAngleSpec.angle2 &&
+			angularFrequencyA == otherOscillatingAngleSpec.angularFrequencyA && angularFrequencyB == otherOscillatingAngleSpec.angularFrequencyB;
+	}
+
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
 
 	[[nodiscard]] glm::vec2 getPosition() const { return position; }
@@ -611,6 +667,8 @@ struct ObstacleDescriptor {
 
 	ObstacleDescriptor(const std::string& data);
 	[[nodiscard]] std::string serialize() const;
+
+	bool operator==(const ObstacleDescriptor& other) const;
 
 	void scale(float factor);
 

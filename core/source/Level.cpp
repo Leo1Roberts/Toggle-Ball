@@ -133,6 +133,23 @@ LevelDescriptor::LevelDescriptor(const std::string& data) {
 }
 
 
+bool LevelDescriptor::operator==(const LevelDescriptor& other) const {
+	if (name != other.name ||
+		arenaWidth != other.arenaWidth ||
+		arenaHeight != other.arenaHeight ||
+		transitionTime != other.transitionTime ||
+		*ballDescriptor != *other.ballDescriptor ||
+		obstacleDescriptors.size() != other.obstacleDescriptors.size())
+		return false;
+
+	for (int i = 0; i < obstacleDescriptors.size(); i++)
+		if (*obstacleDescriptors[i] != *other.obstacleDescriptors[i])
+			return false;
+
+	return true;
+}
+
+
 void LevelDescriptor::scale() {
 	ballDescriptor->scale();
 	float factor = ballDescriptor->getRadius();

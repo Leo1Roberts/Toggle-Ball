@@ -9,7 +9,7 @@ EditorScene::EditorScene(std::unique_ptr<LevelDescriptor> levelToEdit, const std
 	obstacles.append_range(level->obstacleDescriptors
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
 
-	currentNode = std::make_shared<UndoNode>(*level, makeSelectionUndoNode());
+	currentNode = std::make_shared<UndoNode>(*level, std::make_shared<SelectionUndoNode>(getSelectionState()));
 }
 
 
@@ -57,16 +57,21 @@ void EditorScene::cancelLevelChange() {
 void EditorScene::cancelSelectionChange() {
 	syncSelection();
 }
-void EditorScene::commitLevelChange() { // TODO: only commit if actually changed
-	currentNode = std::make_shared<UndoNode>(*level, makeSelectionUndoNode(), currentNode);
-	currentNode->previous->next = currentNode;
+void EditorScene::commitLevelChange() {
+	if (*level != currentNode->level) {
+		currentNode = std::make_shared<UndoNode>(*level, std::make_shared<SelectionUndoNode>(getSelectionState()), currentNode);
+		currentNode->previous->next = currentNode;
+	}
 }
-void EditorScene::commitSelectionChange() { // TODO: only commit if actually changed
+void EditorScene::commitSelectionChange() {
 	if (currentNode->selectionNode) {
-		currentNode->selectionNode = makeSelectionUndoNode(currentNode->selectionNode);
-		currentNode->selectionNode->previous->next = currentNode->selectionNode;
+		SelectionState newSelection = getSelectionState();
+		if (currentNode->selectionNode->selectionState != newSelection) {
+			currentNode->selectionNode = std::make_shared<SelectionUndoNode>(newSelection, currentNode->selectionNode);
+			currentNode->selectionNode->previous->next = currentNode->selectionNode;
+		}
 	} else
-		currentNode->selectionNode = makeSelectionUndoNode();
+		currentNode->selectionNode = std::make_shared<SelectionUndoNode>(getSelectionState());
 }
 
 void EditorScene::syncLevel() {
@@ -89,14 +94,14 @@ void EditorScene::syncSelection() {
 		obstacles[i].setSelected(selection.obstacles[i]);
 }
 
-std::shared_ptr<SelectionUndoNode> EditorScene::makeSelectionUndoNode(const std::shared_ptr<SelectionUndoNode>& previous) const {
-	return std::make_shared<SelectionUndoNode>(SelectionState(
+SelectionState EditorScene::getSelectionState() const {
+	return {
 		selectionFocus,
 		ball.isSelected(),
 		obstacles
 			| std::views::transform([](const auto& o) { return o.isSelected(); })
-			| std::ranges::to<std::vector<bool>>()),
-		previous);
+			| std::ranges::to<std::vector<bool>>()
+	};
 }
 
 
