@@ -5,6 +5,16 @@
 
 
 bool DefaultMode::doProcessEvent(const Event& event) {
+	if (auto key = std::get_if<KeyEvent>(&event)) {
+		if (key->action == KeyAction::Down) {
+			if (TranslateOperation::keyToTranslationVector(key->chord.code)) {
+				auto translateOperation = std::make_unique<TranslateOperation>(context, TriggerType::ActionKey);
+				if (translateOperation->start(key->chord.modifiers))
+					context->startOperation(std::move(translateOperation))->processEvent(event);
+				return true;
+			}
+		}
+	}
 	return false;
 }
 

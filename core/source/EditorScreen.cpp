@@ -77,6 +77,10 @@ void EditorScreen::processEvent(const Event& event) {
 				} break;
 			case ActionCode::Undo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
+					if (activeOperation) {
+						activeOperation->finish();
+						activeOperation->commit();
+					}
 					scene.undo();
 					return;
 				} break;
@@ -87,7 +91,7 @@ void EditorScreen::processEvent(const Event& event) {
 				} break;
 			case ActionCode::Translate:
 				if (key->action == KeyAction::Down) {
-					activeOperation = std::make_unique<TranslateOperation>(&context, TriggerType::Key, mainPointerPosition);
+					activeOperation = std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, mainPointerPosition);
 					if (!activeOperation->start(key->chord.modifiers))
 						activeOperation = nullptr;
 					return;

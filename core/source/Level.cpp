@@ -90,7 +90,7 @@ LevelDescriptor::LevelDescriptor(const std::string& data) {
 				if (isStraightString == "true")
 					shapeSpec = std::make_unique<SegmentSpec>(minorRadius, -end.x, start.x);
 				else if (isStraightString == "false") {
-					float arcRadius = glm::length(start);
+					float arcRadius = length(start);
 					shapeSpec = std::make_unique<ArcSpec>(minorRadius, 2 * std::acos(start.y / arcRadius), arcRadius);
 				} else
 					throw std::invalid_argument("Invalid obstacle data format");

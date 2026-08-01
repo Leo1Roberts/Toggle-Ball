@@ -7,8 +7,10 @@
 
 class TranslateOperation : public TransformOperation {
 public:
-	TranslateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
+	TranslateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
 		: TransformOperation(context, trigger, initialPointerPosition) {}
+
+	static std::optional<glm::vec2> keyToTranslationVector(KeyCode key);
 
 private:
 	bool doProcessEvent(const Event& event) override;

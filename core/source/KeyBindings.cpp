@@ -22,8 +22,8 @@ KeyBindings::KeyBindings(const std::string& data) {
 		auto chord = parseChord(keyString);
 		auto action = ActionRegistry::fromString(actionString);
 
-		if (chord.has_value() && action.has_value())
-			bindings[chord.value()] = action.value();
+		if (chord && action)
+			bindings[*chord] = *action;
 		else
 			throw std::invalid_argument("Unknown action/key: " + actionString + "=" += keyString);
 	}
@@ -61,10 +61,9 @@ std::optional<KeyChord> KeyBindings::parseChord(std::string_view string) {
 	}
 
 	std::string_view baseKeyString = string.substr(start);
-	auto keyCode = KeyRegistry::fromString(baseKeyString);
 
-	if (keyCode.has_value()) {
-		chord.code = keyCode.value();
+	if (auto keyCode = KeyRegistry::fromString(baseKeyString)) {
+		chord.code = *keyCode;
 		return chord;
 	}
 

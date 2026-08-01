@@ -10,7 +10,8 @@
 enum class TriggerType {
 	PointerPrimary,
 	PointerSecondary,
-	Key,
+	TriggerKey,
+	ActionKey,
 };
 
 class Operation {

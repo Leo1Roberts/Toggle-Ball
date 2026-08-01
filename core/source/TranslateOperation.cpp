@@ -4,13 +4,35 @@
 namespace Axis {
 	glm::vec2 X{1.f, 0.f};
 	glm::vec2 Y{0.f, 1.f};
+} // namespace Axis
+
+
+std::optional<glm::vec2> TranslateOperation::keyToTranslationVector(KeyCode key) {
+	switch (key) {
+	case KeyCode::Left:  return glm::vec2(-1.f, 0.f);
+	case KeyCode::Right: return glm::vec2( 1.f, 0.f);
+	case KeyCode::Up:    return glm::vec2( 0.f, 1.f);
+	case KeyCode::Down:  return glm::vec2( 0.f,-1.f);
+	default:             return std::nullopt;
+	}
 }
 
 
 bool TranslateOperation::doProcessEvent(const Event& event) {
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
-		if (key->action == KeyAction::Down) {
-			if (auto actionCode = Settings::Bindings->translate(key->chord)) {
+		if (trigger == TriggerType::ActionKey) {
+			if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
+				if (auto vector = keyToTranslationVector(key->chord.code)) {
+					rawTranslation += *vector;
+					applyOperation();
+					return true;
+				}
+			}
+			return false;
+		}
+
+		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
+			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
 				case ActionCode::LockToXAxis:
 					setMode(Axis::X);
@@ -18,12 +40,13 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 				case ActionCode::LockToYAxis:
 					setMode(Axis::Y);
 					return true;
-				default:;
+				default:
+					return false;
 				}
 			}
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (pointer->id == 0 && pointer->action == PointerAction::Move) {
+		if (trigger != TriggerType::ActionKey && pointer->id == 0 && pointer->action == PointerAction::Move) {
 			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
 			rawTranslation = pointerPlanarPosition - initialPointerPlanarPosition;
 			applyOperation();
@@ -38,30 +61,36 @@ void TranslateOperation::applyOperation() {
 	auto ball = context->scene->getBall();
 	auto& obstacles = context->scene->getObstacles();
 
-	if (rawTranslation == glm::vec2(0.f)) return;
-
 	auto focus = context->scene->getSelectionFocus();
 	float focusAngle = 0.f;
 	if (focus->type == EntityType::Obstacle)
 		focusAngle = obstacles[focus->index].getKinematicState()->getAngle();
 
 	glm::vec2 direction;
-	if (constraint == ConstraintType::None)
-		direction = normalize(rawTranslation);
-	else if (!local && constraint == ConstraintType::GlobalAxis)
-		direction = baseAxis;
-	else
-		direction = angleToRotation2D(focusAngle) * baseAxis;
-
-	float magnitude = glm::dot(rawTranslation, direction);
-	if (magnitude == 0.f) return; // Perpendicular
-
+	float magnitude = 0.f;
 	glm::vec2 translation;
-	if (!local)
-		translation = direction * magnitude;
+
+	if (trigger == TriggerType::ActionKey)
+		translation = rawTranslation;
+	else {
+		if (constraint == ConstraintType::None) {
+			if (rawTranslation == glm::vec2(0.f))
+				direction = glm::vec2(0.f);
+			else
+				direction = normalize(rawTranslation);
+		} else if (!local && constraint == ConstraintType::GlobalAxis)
+			direction = baseAxis;
+		else
+			direction = angleToRotation2D(focusAngle) * baseAxis;
+
+		magnitude = dot(rawTranslation, direction);
+
+		if (!local)
+			translation = direction * magnitude;
+	}
 
 	if (ball->isSelected()) {
-		if (local)
+		if (local && trigger != TriggerType::ActionKey)
 			translation = (angleToRotation2D(-focusAngle) * direction) * magnitude;
 		ball->translateBy(translation, context->scene->getCurrentNode()->level.ballDescriptor.get());
 	}
@@ -69,7 +98,7 @@ void TranslateOperation::applyOperation() {
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			if (local)
+			if (local && trigger != TriggerType::ActionKey)
 				translation = (angleToRotation2D(obstacle.getKinematicState()->getAngle() - focusAngle) * direction) * magnitude;
 
 			obstacle.translateBy(translation, stateless, context->scene->isToggled(),

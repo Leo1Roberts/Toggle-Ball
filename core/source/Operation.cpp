@@ -29,15 +29,15 @@ bool Operation::processEvent(const Event& event) {
 				cancel();
 				return true;
 			}
-			if (trigger == TriggerType::Key) {
+			if (trigger == TriggerType::TriggerKey || trigger == TriggerType::ActionKey) {
 				if (pointer->button == PointerButton::Primary) {
 					finish();
 					commit();
-					return true;
+					return trigger == TriggerType::TriggerKey;
 				}
 				if (pointer->button == PointerButton::Secondary) {
 					cancel();
-					return true;
+					return trigger == TriggerType::TriggerKey;
 				}
 			}
 		} else if (pointer->action == PointerAction::Up) {

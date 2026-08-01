@@ -40,22 +40,22 @@ void BallDescriptor::initKinematicState(BallKinematicState& kinematicState) cons
 
 void GameBall::addNaturalForces() {
 	forces.force += glm::vec3(0.f, 0.f, GRAVITY * properties->mass);
-	forces.force -= 0.5f * AIR_DENSITY * properties->dragCoefficient * glm::pi<float>() * properties->radius * properties->radius * glm::length(kinematicState.velocity) * kinematicState.velocity;
+	forces.force -= 0.5f * AIR_DENSITY * properties->dragCoefficient * glm::pi<float>() * properties->radius * properties->radius * length(kinematicState.velocity) * kinematicState.velocity;
 }
 
 void GameBall::applyForces() {
-	if (glm::length2(forces.force) > 0.00000001f) {
+	if (length2(forces.force) > 0.00000001f) {
 		glm::vec3 acc = forces.force / properties->mass;
 		kinematicState.velocity += acc * PHYSICS_TIMESTEP;
 	}
 
-	if (glm::length2(forces.torque) > 0.00000001f) {
+	if (length2(forces.torque) > 0.00000001f) {
 		glm::vec3 angularAcceleration = forces.torque / properties->momentOfInertia;
 		kinematicState.angularVelocity += angularAcceleration * PHYSICS_TIMESTEP;
 	}
 
 	kinematicState.position += kinematicState.velocity * PHYSICS_TIMESTEP;
-	float t = glm::length(kinematicState.angularVelocity);
+	float t = length(kinematicState.angularVelocity);
 	if (t > 0.f) {
 		glm::mat3 deltaRot = glm::mat3_cast(glm::angleAxis(t * PHYSICS_TIMESTEP, kinematicState.angularVelocity / t));
 		kinematicState.rotation = deltaRot * kinematicState.rotation;
@@ -81,11 +81,11 @@ void GameBall::collideWithPlane(const PlaneDescriptor& plane) { // SIMILAR TO co
 		forces.force += force;
 
 		glm::vec3 pointParallelVelocity = pointVelocity - plane.normal * pointPerpendicularSpeed;
-		float pointParallelSpeedSq = glm::length2(pointParallelVelocity);
+		float pointParallelSpeedSq = length2(pointParallelVelocity);
 		if (pointParallelSpeedSq > 0.00000001f) {
 			glm::vec3 friction = pointParallelVelocity * (FRICTION_COEFFICIENTS[properties->material][MAT_CONCRETE] * totalForce / -std::sqrt(pointParallelSpeedSq));
 			glm::vec3 maxFriction = pointParallelVelocity * -(properties->mass * properties->momentOfInertia / (PHYSICS_TIMESTEP * (properties->momentOfInertia + properties->mass * separation * separation)));
-			if (glm::length2(friction) > glm::length2(maxFriction))
+			if (length2(friction) > length2(maxFriction))
 				friction = maxFriction;
 
 			forces.force += friction;
@@ -95,11 +95,11 @@ void GameBall::collideWithPlane(const PlaneDescriptor& plane) { // SIMILAR TO co
 			// glm::vec3 spin = plane.normal * dot(plane.normal, kinematicState.angularVelocity);
 			// spin.unit();
 			// kinematicState.torque -= spin * FRICTION_COEFFICIENTS[properties->material][MAT_CONCRETE] * totalForce * std::cos(std::asin(separation / properties->radius)) * properties->radius * 0.5f;
-			float speedSq = glm::length2(kinematicState.velocity);
+			float speedSq = length2(kinematicState.velocity);
 			if (speedSq > 0.0000001f) {
-				glm::vec3 rollingResistance = kinematicState.velocity * (glm::length(force) * ROLLING_RESISTANCE_COEFFICIENTS[properties->material][MAT_CONCRETE] / -std::sqrt(speedSq));
+				glm::vec3 rollingResistance = kinematicState.velocity * (length(force) * ROLLING_RESISTANCE_COEFFICIENTS[properties->material][MAT_CONCRETE] / -std::sqrt(speedSq));
 				glm::vec3 maxRollingResistance = kinematicState.velocity * -(properties->mass / PHYSICS_TIMESTEP);
-				if (glm::length2(rollingResistance) > glm::length2(maxRollingResistance))
+				if (length2(rollingResistance) > length2(maxRollingResistance))
 					rollingResistance = maxRollingResistance;
 
 				forces.force += rollingResistance;
@@ -111,7 +111,7 @@ void GameBall::collideWithPlane(const PlaneDescriptor& plane) { // SIMILAR TO co
 bool GameBall::collideWithObstacle(GameObstacle& obstacle) {
 	bool colliding = false;
 
-	float outerSeparationSq = glm::length2(kinematicState.position - obstacle.getKinematicState()->getPosition());
+	float outerSeparationSq = length2(kinematicState.position - obstacle.getKinematicState()->getPosition());
 	float outerRadii = properties->radius + obstacle.getDescriptor()->shape->getBoundingRadius();
 
 	if (outerSeparationSq < outerRadii * outerRadii) { // Within bounding circle
@@ -149,11 +149,11 @@ void GameBall::collideWithPointOnObstacle(const GameObstacle& obstacle, glm::vec
 	forces.force += force;
 
 	glm::vec3 pointParallelVelocity = pointVelocity - normal * pointPerpendicularSpeed;
-	float pointParallelSpeedSq = glm::length2(pointParallelVelocity);
+	float pointParallelSpeedSq = length2(pointParallelVelocity);
 	if (pointParallelSpeedSq > 0.00000001f) { // Apply friction if sliding
 		glm::vec3 friction = pointParallelVelocity * -(FRICTION_COEFFICIENTS[properties->material][obstacle.getDescriptor()->material] * totalForce / std::sqrt(pointParallelSpeedSq));
 		glm::vec3 maxFriction = pointParallelVelocity * -(properties->mass * properties->momentOfInertia / (PHYSICS_TIMESTEP * (properties->momentOfInertia + properties->mass * separation * separation)));
-		if (glm::length2(friction) > glm::length2(maxFriction))
+		if (length2(friction) > length2(maxFriction))
 			friction = maxFriction;
 
 		forces.force += friction;
@@ -162,11 +162,11 @@ void GameBall::collideWithPointOnObstacle(const GameObstacle& obstacle, glm::vec
 	if (pointParallelSpeedSq <= 0.0001f) { // Apply rolling resistance if rolling
 		glm::vec3 relativeBallVelocity = kinematicState.velocity - obstaclePointVelocity;
 		glm::vec3 relativeBallParallelVelocity = relativeBallVelocity - normal * dot(normal, relativeBallVelocity);
-		float relativeBallParallelSpeedSq = glm::length2(relativeBallParallelVelocity);
+		float relativeBallParallelSpeedSq = length2(relativeBallParallelVelocity);
 		if (relativeBallParallelSpeedSq > 0.00000001f) {
-			glm::vec3 rollingResistance = relativeBallParallelVelocity * -(glm::length(force) * ROLLING_RESISTANCE_COEFFICIENTS[properties->material][obstacle.getDescriptor()->material] / std::sqrt(relativeBallParallelSpeedSq));
+			glm::vec3 rollingResistance = relativeBallParallelVelocity * -(length(force) * ROLLING_RESISTANCE_COEFFICIENTS[properties->material][obstacle.getDescriptor()->material] / std::sqrt(relativeBallParallelSpeedSq));
 			glm::vec3 maxRollingResistance = relativeBallParallelVelocity * -(properties->mass / PHYSICS_TIMESTEP);
-			if (glm::length2(rollingResistance) > glm::length2(maxRollingResistance))
+			if (length2(rollingResistance) > length2(maxRollingResistance))
 				rollingResistance = maxRollingResistance;
 
 			forces.force += rollingResistance;

@@ -623,7 +623,7 @@ bool SegmentSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, Selec
 	glm::vec2 rightCapPos = worldToPlanar(s.getPosition() + s.getRotation() * planarToWorld(getRightCap()));
 
 	glm::vec2 leftToRight = rightCapPos - leftCapPos;
-	float lengthSq = glm::length2(leftToRight);
+	float lengthSq = length2(leftToRight);
 	if (lengthSq == 0.f) return false;
 
     glm::vec2 upOffset = worldToPlanar(s.getRotation() * planarToWorld({0.f, getMinorRadius()}));
@@ -636,8 +636,8 @@ bool SegmentSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, Selec
     glm::vec2 boxCentre = {(box.left + box.right) * 0.5f, (box.bottom + box.top) * 0.5f};
     glm::vec2 leftCapToBox = boxCentre - leftCapPos;
 
-    float x = glm::dot(leftCapToBox, leftToRight) / lengthSq; // Projection along length
-    float y = glm::dot(leftCapToBox, upOffset) / glm::length2(upOffset); // Projection along width
+    float x = dot(leftCapToBox, leftToRight) / lengthSq; // Projection along length
+    float y = dot(leftCapToBox, upOffset) / length2(upOffset); // Projection along width
 
     return x >= 0.f && x <= 1.f && std::abs(y) <= 1.f;
 }
@@ -657,7 +657,7 @@ bool ArcSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, SelectBox
     // Check if the box is fully inside the midsection
     glm::vec2 boxCentre = {(box.left + box.right) * 0.5f, (box.bottom + box.top) * 0.5f};
     glm::vec2 centreToBox = boxCentre - centre;
-    float centreToBoxDistance = glm::length(centreToBox);
+    float centreToBoxDistance = length(centreToBox);
 
     return centreToBoxDistance >= rInner && centreToBoxDistance <= rOuter &&
     	   angleIsInArc(centreToBox, centreAngle, getHalfArcAngle(), fullCircle);
@@ -823,7 +823,7 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 
 	glm::vec2 diff = getPositionB() - getPositionA();
 	float line1Length, line2Length;
-	line1Length = line2Length = glm::length(diff);
+	line1Length = line2Length = length(diff);
 	if (line1Length > 0.001f) {
 		glm::vec2 diffUnit = diff / line1Length;
 		float diffAngle = std::atan2(diff.y, diff.x);
@@ -964,8 +964,8 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 
 	if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
 		dotsArcAngle = std::clamp(getAngleB() - getAngleA(), -glm::two_pi<float>(), glm::two_pi<float>());
-		dotsArc1Radius = glm::length(segment->getRightCap()) + segment->getMinorRadius() - dotDiameter / 2.f;
-		dotsArc2Radius = glm::length(segment->getLeftCap()) + segment->getMinorRadius() - dotDiameter / 2.f;
+		dotsArc1Radius = length(segment->getRightCap()) + segment->getMinorRadius() - dotDiameter / 2.f;
+		dotsArc2Radius = length(segment->getLeftCap()) + segment->getMinorRadius() - dotDiameter / 2.f;
 		start1 = getAngleA();
 		start2 = getAngleA() + glm::pi<float>();
 	} else if (auto* arc = dynamic_cast<const ArcSpec*>(shapeSpec)) {
@@ -1337,8 +1337,8 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		if (NUM_SECTORS != 0) {
 			vs.emplace_back(glm::vec3(), glm::vec2(), glm::vec3());
 
-			const float startRadius = glm::length(segment->getRightCap()) + segment->getMinorRadius();
-			const float endRadius = glm::length(segment->getLeftCap()) + segment->getMinorRadius();
+			const float startRadius = length(segment->getRightCap()) + segment->getMinorRadius();
+			const float endRadius = length(segment->getLeftCap()) + segment->getMinorRadius();
 			for (int i = 0; i <= NUM_SECTORS; i++) {
 				float ang = domainStartAngle + (float)i / (float)NUM_SECTORS * (domainEndAngle - domainStartAngle);
 				glm::vec2 dir = {std::cos(ang), std::sin(ang)};
@@ -1587,12 +1587,12 @@ PlaneDescriptor SegmentSpec::getTopPlane(const ObstacleKinematicState& kinematic
 
 BallCollisionInfo SegmentSpec::getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) {
 	PlaneDescriptor plane = getTopPlane(kinematicState);
-	float separation = glm::dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
+	float separation = dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
 	if (separation < -getMinorRadius()) {
 		plane.normal.y = -plane.normal.y;
 		plane.normal.z = -plane.normal.z;
 		plane.dotProduct = getMinorRadius() * 2.f - plane.dotProduct;
-		separation = glm::dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
+		separation = dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
 	}
 
 	if (separation > 0.f && separation < ball.getProperties()->radius)
@@ -1604,7 +1604,7 @@ BallCollisionInfo SegmentSpec::getMidsectionCollision(const ObstacleKinematicSta
 BallCollisionInfo ArcSpec::getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) {
 	glm::vec3 centreToBall = ball.getKinematicState()->position - kinematicState.getPosition();
 	float
-	distanceToBallSq = glm::length2(centreToBall),
+	distanceToBallSq = length2(centreToBall),
 	innerRadius = getMajorRadius() - getMinorRadius(),
 	outerRadius = getMajorRadius() + getMinorRadius(),
 	innerRadii = innerRadius - ball.getProperties()->radius,
@@ -1634,7 +1634,7 @@ void GameObstacle::stepKinematicState(const Smoother& smoother) {
 bool GameObstacle::collideWithCap(GameBall& ball, glm::vec3 cap) const {
 	glm::vec3 capPosition = kinematicState.getPosition() + kinematicState.getRotation() * cap;
 	glm::vec3 capToBall = ball.getKinematicState()->position - capPosition;
-	float distanceToBallSq = glm::length2(capToBall);
+	float distanceToBallSq = length2(capToBall);
 
 	float radii = ball.getProperties()->radius + descriptor->shape->getMinorRadius();
 	if (distanceToBallSq < radii * radii && distanceToBallSq > 0.000001f) {
@@ -1655,7 +1655,7 @@ bool GameObstacle::collideWithMidsection(GameBall& ball) const {
 constexpr float SUCCEED_TIME = 0.5f;
 bool GameObstacle::notifyOfContactWithBall(const GameBall& ball) {
 	goalContactTimer += PHYSICS_TIMESTEP;
-	return goalContactTimer >= SUCCEED_TIME && glm::length2(ball.getKinematicState()->velocity) < 0.000001f;
+	return goalContactTimer >= SUCCEED_TIME && length2(ball.getKinematicState()->velocity) < 0.000001f;
 }
 
 
