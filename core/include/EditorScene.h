@@ -65,25 +65,21 @@ public:
 	void deselectAll();
 	[[nodiscard]] bool anythingIsSelected() const { return selectionFocus.type != EntityType::None; }
 
-	[[nodiscard]] const LevelDescriptor* getLevel() const { return level.get(); }
-	[[nodiscard]] EditorBall* getBall() { return &ball; }
-	[[nodiscard]] std::vector<EditorObstacle>& getObstacles() { return obstacles; }
 	[[nodiscard]] bool isToggled() const { return toggled; }
 	[[nodiscard]] float getTogglePosition() const { return togglePosition.getCurrentPosition(); }
-	[[nodiscard]] EntityReference* getSelectionFocus() { return &selectionFocus; }
 	[[nodiscard]] UndoNode* getCurrentNode() const { return currentNode.get(); }
-
-private:
-	void syncLevel();
-	std::function<void()> syncLevelCallback;
-	void syncSelection();
-	[[nodiscard]] SelectionState getSelectionState() const;
 
 	std::unique_ptr<LevelDescriptor> level;
 	EditorBall ball;
 	std::vector<EditorObstacle> obstacles;
 
 	EntityReference selectionFocus = {EntityType::None};
+
+private:
+	void syncLevel();
+	std::function<void()> syncLevelCallback;
+	void syncSelection();
+	[[nodiscard]] SelectionState getSelectionState() const;
 
 	bool toggled = false;
 	Smoother togglePosition{};

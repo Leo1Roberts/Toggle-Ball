@@ -1,6 +1,7 @@
 #include "UIButton.h"
 
 #include "Settings.h"
+#include "UIText.h"
 
 UIButton::UIButton(const std::string& labelText, const ButtonStyle& bStyle)
 	: UIPanel(bStyle.normalPanel), buttonStyle(bStyle) {
@@ -26,9 +27,7 @@ UIResponse UIButton::processEvent(const Event& event) {
 			default:;
 			}
 		}
-	}
-
-	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
+	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->button == PointerButton::Primary) {
 			switch (pointer->action) {
 			case PointerAction::Down:
@@ -46,8 +45,7 @@ UIResponse UIButton::processEvent(const Event& event) {
 						onClickCallback();
 				}
 				return UIResponse::Consumed;
-			default:
-				break;
+			default:;
 			}
 		}
 	}
@@ -60,7 +58,6 @@ void UIButton::onPointerEntered() {
 	hovered = true;
 	updateVisualState();
 }
-
 void UIButton::onPointerExited() {
 	hovered = false;
 	updateVisualState();
@@ -68,14 +65,14 @@ void UIButton::onPointerExited() {
 
 
 void UIButton::updateVisualState() {
-	if (state == ButtonState::Disabled) return;
-
-	if (pressed && hovered)
-		state = ButtonState::Pressed;
-	else if (hovered)
-		state = ButtonState::Hovered;
-	else
-		state = ButtonState::Normal;
+	if (state != ButtonState::Disabled) {
+		if (pressed && hovered)
+			state = ButtonState::Pressed;
+		else if (hovered)
+			state = ButtonState::Hovered;
+		else
+			state = ButtonState::Normal;
+	}
 	
 	switch (state) {
 	case ButtonState::Normal:   panelStyle = buttonStyle.normalPanel;   break;

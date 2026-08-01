@@ -20,7 +20,7 @@ public:
 	void update(microseconds dt) override;
 	void render() override;
 
-	[[nodiscard]] const LevelDescriptor* getLevel() const { return scene.getLevel(); }
+	[[nodiscard]] const LevelDescriptor* getLevel() const { return scene.level.get(); }
 
 private:
 	void doResize() override;

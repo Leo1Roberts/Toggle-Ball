@@ -38,4 +38,19 @@ struct ButtonStyle {
 	TextStyle disabledText;
 };
 
+struct TextBoxStyle {
+	PanelStyle normalPanel;
+	PanelStyle hoveredPanel;
+	PanelStyle focusedPanel;
+	PanelStyle disabledPanel;
+
+	TextStyle normalText;
+	TextStyle hoveredText;
+	TextStyle focusedText;
+	TextStyle highlightedText;
+	TextStyle disabledText;
+
+	col highlight = Color::SoftBlue;
+};
+
 #endif // UI_STYLE_H

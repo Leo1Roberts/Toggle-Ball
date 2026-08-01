@@ -170,6 +170,13 @@ public:
 	explicit EditorBall(BallDescriptor* descriptor) :
 		descriptor(descriptor),
 		texture(getBallTexture(descriptor->type)) {}
+	
+	~EditorBall() = default;
+
+	EditorBall(const EditorBall& other) = delete;
+	EditorBall& operator=(const EditorBall&) = delete;
+	EditorBall(EditorBall&&) = default;
+	EditorBall& operator=(EditorBall&&) = default;
 
 	[[nodiscard]] bool isSelected() const { return selected; }
 	void select() { selected = true; }
@@ -188,12 +195,11 @@ public:
 		descriptor->initialPosition = base->initialPosition + vector;
 	}
 
-	[[nodiscard]] const BallDescriptor* getDescriptor() const { return descriptor; }
 	[[nodiscard]] const Texture* getTexture() const { return texture; }
 
-private:
 	BallDescriptor* descriptor{};
 
+private:
 	Texture* texture{};
 
 	bool selected = false;

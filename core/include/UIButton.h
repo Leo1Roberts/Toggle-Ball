@@ -2,7 +2,6 @@
 #define UI_BUTTON_H
 
 #include "UIPanel.h"
-#include "UIText.h"
 
 
 enum class ButtonState {
@@ -12,6 +11,7 @@ enum class ButtonState {
 	Disabled
 };
 
+class UIText;
 class UIButton : public UIPanel {
 public:
 	explicit UIButton(const std::string& labelText = "", const ButtonStyle& bStyle = {});
@@ -25,8 +25,6 @@ public:
 
 	void disable() { state = ButtonState::Disabled; updateVisualState(); }
 	void enable() { state = ButtonState::Normal; updateVisualState(); }
-
-	void setStyle(const ButtonStyle& style) { buttonStyle = style; updateVisualState(); }
 
 	[[nodiscard]] bool isFocusable() const override {
 		return state != ButtonState::Disabled && isVisible() && isActive();

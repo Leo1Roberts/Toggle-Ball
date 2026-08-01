@@ -197,6 +197,75 @@ namespace Theme {
 			.alignVertical = TextAlignVertical::Middle
 		}
 	};
+
+	inline constexpr TextBoxStyle PrimaryTextBox {
+        // --- Panel States ---
+        .normalPanel = {
+            .fillColor = {14, 16, 20, 255},      // Very dark inset background
+            .strokeColor = {48, 52, 64, 255},    // Muted border matches DarkCard
+            .cornerRadius = 8.0f,
+            .strokeWidth = 1.0f
+        },
+        .hoveredPanel = {
+            .fillColor = {18, 20, 26, 255},      // Slightly lighter on hover
+            .strokeColor = {70, 76, 92, 255},    // Brighter border on hover
+            .cornerRadius = 8.0f,
+            .strokeWidth = 1.0f
+        },
+        .focusedPanel = {
+            .fillColor = {14, 16, 20, 255},      // Keep inset background
+            .strokeColor = {88, 101, 242, 255},  // Crisp Indigo focus ring
+            .cornerRadius = 8.0f,
+            .strokeWidth = 1.5f                  // Slightly thicker to pop
+        },
+        .disabledPanel = {
+            .fillColor = {24, 26, 32, 128},      // Dimmed greyed-out
+            .strokeColor = {48, 52, 64, 128},
+            .cornerRadius = 8.0f,
+            .strokeWidth = 1.0f
+        },
+
+        // --- Text States ---
+        // Note: Text inputs usually want Left alignment instead of Centre
+        .normalText = {
+            .font = FontId::CourierNew,
+            .fontSize = 20.f,
+            .color = {220, 225, 235, 255},
+            .alignHorizontal = TextAlignHorizontal::Left,
+            .alignVertical = TextAlignVertical::Middle
+        },
+        .hoveredText = {
+            .font = FontId::CourierNew,
+            .fontSize = 20.f,
+            .color = Color::White,
+            .alignHorizontal = TextAlignHorizontal::Left,
+            .alignVertical = TextAlignVertical::Middle
+        },
+        .focusedText = {
+            .font = FontId::CourierNew,
+            .fontSize = 20.f,
+            .color = Color::White,
+            .alignHorizontal = TextAlignHorizontal::Left,
+            .alignVertical = TextAlignVertical::Middle
+        },
+        .highlightedText = {
+            .font = FontId::CourierNew,
+            .fontSize = 20.f,
+            .color = Color::White,               // Keeps high contrast against highlight
+            .alignHorizontal = TextAlignHorizontal::Left,
+            .alignVertical = TextAlignVertical::Middle
+        },
+        .disabledText = {
+            .font = FontId::CourierNew,
+            .fontSize = 20.f,
+            .color = {100, 100, 100, 255},       // Muted grey
+            .alignHorizontal = TextAlignHorizontal::Left,
+            .alignVertical = TextAlignVertical::Middle
+        },
+
+        // --- Selection / Cursor ---
+        .highlight = {88, 101, 242, 140}         // Translucent Indigo for text selection
+    };
 }
 
 

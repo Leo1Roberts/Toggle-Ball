@@ -11,8 +11,8 @@ public:
 	using Validator = std::function<bool(char, const std::string&)>;
 	static bool Float(char c, const std::string& buffer = "");
 
-	explicit TextInputBuffer(const Validator& charIsValid, TextInputMode mode = TextInputMode::Rich)
-		: charIsValid(charIsValid), mode(mode) {}
+	explicit TextInputBuffer(const Validator& validator, TextInputMode mode = TextInputMode::Rich)
+		: charIsValid(validator), mode(mode) {}
 
 	bool processEvent(const Event& event);
 

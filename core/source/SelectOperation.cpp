@@ -15,9 +15,9 @@ void SelectOperation::renderGizmos() {
 
 
 void SelectOperation::finish() const {
-	auto ball = context->scene->getBall();
-	auto& obstacles = context->scene->getObstacles();
-	auto focus = context->scene->getSelectionFocus();
+	auto ball = &context->scene->ball;
+	auto& obstacles = context->scene->obstacles;
+	auto focus = &context->scene->selectionFocus;
 
 	if (instant && (mode == SelectionMode::Replace || mode == SelectionMode::Add)) {
 		const auto& originalSelection = context->scene->getCurrentNode()->selectionNode->selectionState;
@@ -35,8 +35,8 @@ void SelectOperation::finish() const {
 			int topObstacleIndex = -1;
 			float maxHalfDepth = 0.f;
 			for (int i = 0; i < obstacles.size(); i++) {
-				if (obstacles[i].isInSelectBox(box) && obstacles[i].getDescriptor()->shape->getHalfDepth() >= maxHalfDepth) {
-					maxHalfDepth = obstacles[i].getDescriptor()->shape->getHalfDepth();
+				if (obstacles[i].isInSelectBox(box) && obstacles[i].descriptor->shape->getHalfDepth() >= maxHalfDepth) {
+					maxHalfDepth = obstacles[i].descriptor->shape->getHalfDepth();
 					topObstacleIndex = i;
 				}
 			}
@@ -99,8 +99,8 @@ bool SelectOperation::doProcessEvent(const Event& event) {
 }
 
 void SelectOperation::applyOperation() {
-	auto ball = context->scene->getBall();
-	auto& obstacles = context->scene->getObstacles();
+	auto ball = &context->scene->ball;
+	auto& obstacles = context->scene->obstacles;
 	const auto& originalSelection = context->scene->getCurrentNode()->selectionNode->selectionState;
 
 	switch (mode) {

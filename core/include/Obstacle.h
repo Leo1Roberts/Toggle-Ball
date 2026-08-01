@@ -295,6 +295,8 @@ public:
 
 	virtual void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) = 0;
 
+	virtual void setPositionX(float x, bool stateless, bool toggled) = 0;
+
 	[[nodiscard]] virtual col getColor() const = 0;
 	[[nodiscard]] virtual glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const = 0;
 
@@ -324,6 +326,8 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const StaticSpec*)base)->position + vector;
 	}
+
+	void setPositionX(float x, bool, bool) override { position.x = x; }
 
 	[[nodiscard]] col getColor() const override { return Color::White; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
@@ -377,6 +381,8 @@ public:
 	~TogglingPositionSpec() override = default;
 
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
+
+	void setPositionX(float x, bool stateless, bool toggled) override;
 
 	[[nodiscard]] col getColor() const override { return Color::SoftBlue; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
@@ -434,6 +440,8 @@ public:
 		position = ((const TogglingAngleSpec*)base)->position + vector;
 	}
 
+	void setPositionX(float x, bool, bool) override { position.x = x; }
+
 	[[nodiscard]] col getColor() const override { return Color::SoftRed; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
@@ -486,6 +494,8 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const SpinningSpec*)base)->position + vector;
 	}
+
+	void setPositionX(float x, bool, bool) override { position.x = x; }
 
 	[[nodiscard]] col getColor() const override { return Color::SoftMagenta; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
@@ -543,6 +553,8 @@ public:
 	~OscillatingPositionSpec() override = default;
 
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
+
+	void setPositionX(float x, bool stateless, bool toggled) override;
 
 	[[nodiscard]] col getColor() const override { return Color::SoftCyan; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
@@ -608,6 +620,8 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const OscillatingAngleSpec*)base)->position + vector;
 	}
+
+	void setPositionX(float x, bool, bool) override { position.x = x; }
 
 	[[nodiscard]] col getColor() const override { return Color::SoftYellow; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
@@ -779,13 +793,14 @@ public:
 		descriptor->motion->translateBy(vector, stateless, toggled, base->motion.get());
 	}
 
+	void setPositionX(float x, bool stateless, bool toggled) { descriptor->motion->setPositionX(x, stateless, toggled); }
+
 	[[nodiscard]] bool isSelected() const { return selected; }
 	void select() { selected = true; }
 	void deselect() { selected = false; }
 	void setSelected(bool select) { selected = select; }
 	[[nodiscard]] bool isInSelectBox(SelectBox box) const { return descriptor->shape->isInSelectBox(kinematicState, box); }
 
-	[[nodiscard]] const ObstacleDescriptor* getDescriptor() const { return descriptor; }
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
 	[[nodiscard]] const Mesh<ObjectVertex>* getObstacleMesh() const { return &obstacleMesh; }
 	[[nodiscard]] const Mesh<ObjectVertex>* getOutlineMesh() const { return &outlineMesh; }
@@ -793,9 +808,9 @@ public:
 
 	[[nodiscard]] glm::vec2 getDomainPosition() const { return descriptor->getDomainPosition(worldToPlanar(kinematicState.getPosition())); }
 
-private:
 	ObstacleDescriptor* descriptor;
 
+private:
 	ObstacleKinematicState kinematicState;
 
 	bool selected = false;

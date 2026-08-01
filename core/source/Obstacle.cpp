@@ -1721,3 +1721,17 @@ void OscillatingPositionSpec::translateBy(glm::vec2 vector, bool stateless, bool
 	if (toggled || stateless)
 		position2 += vector;
 }
+
+
+void TogglingPositionSpec::setPositionX(float x, bool stateless, bool toggled) {
+	if (!toggled || stateless)
+		positionA.x = x;
+	if (toggled || stateless)
+		positionB.x = x;
+}
+void OscillatingPositionSpec::setPositionX(float x, bool stateless, bool toggled) {
+	if (!toggled || stateless)
+		position1.x = x;
+	if (toggled || stateless)
+		position2.x = x;
+}

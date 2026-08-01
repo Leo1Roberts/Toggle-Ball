@@ -69,10 +69,10 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 
 
 void TranslateOperation::applyOperation() {
-	auto ball = context->scene->getBall();
-	auto& obstacles = context->scene->getObstacles();
+	auto ball = &context->scene->ball;
+	auto& obstacles = context->scene->obstacles;
 
-	auto focus = context->scene->getSelectionFocus();
+	auto focus = &context->scene->selectionFocus;
 	float focusAngle = 0.f;
 	if (focus->type == EntityType::Obstacle)
 		focusAngle = obstacles[focus->index].getKinematicState()->getAngle();
@@ -129,7 +129,7 @@ void TranslateOperation::setMode(glm::vec2 requestedAxis) {
 	if (constraint == ConstraintType::None || (typing && constraint == ConstraintType::LocalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::GlobalAxis && baseAxis != requestedAxis)) {
 		constraint = ConstraintType::GlobalAxis;
 		baseAxis = requestedAxis;
-	} else if (context->scene->getSelectionFocus()->type == EntityType::Obstacle &&
+	} else if (context->scene->selectionFocus.type == EntityType::Obstacle &&
 		((!context->quickSettings->transformLocally && constraint == ConstraintType::GlobalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::LocalAxis && baseAxis != requestedAxis))) {
 		constraint = ConstraintType::LocalAxis;
 		baseAxis = requestedAxis;

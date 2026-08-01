@@ -33,10 +33,10 @@ void DefaultMode::performPrimaryAction(const PointerEvent& upEvent) {
 Operation* DefaultMode::startPrimaryDragOperation() {
 	bool hit = false;
 	auto hitTestBox = SelectBox(context->camera->screenToPlanarPosition(pointerDownEvent.position));
-	if (context->scene->getBall()->isInSelectBox(hitTestBox))
+	if (context->scene->ball.isInSelectBox(hitTestBox))
 		hit = true;
 	else {
-		for (const auto& obstacle : context->scene->getObstacles())
+		for (const auto& obstacle : context->scene->obstacles)
 			if (obstacle.isInSelectBox(hitTestBox)) {
 				hit = true;
 				break;

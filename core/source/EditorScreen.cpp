@@ -5,7 +5,9 @@
 #include "EditorContext.h"
 #include "Settings.h"
 #include "Shader.h"
+#include "Theme.h"
 #include "TranslateOperation.h"
+#include "UiTextBox.h"
 
 #include <ranges>
 
@@ -32,9 +34,36 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		},
 		[this] { activeOperation = nullptr; }),
 	currentToolMode(std::make_unique<DefaultMode>(&context)) {
-	camera.reset(scene.getLevel()->arenaWidth, scene.getLevel()->arenaHeight);
+	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
+
+	auto rootNode = std::make_unique<UINode>();
+
+	auto positionXTextBox = std::make_unique<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox);
+	positionXTextBox->layout = {
+		.anchor = Anchor::TopRight,
+		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
+		.width = 100.f, .height = 40.f,
+		.offset = {-25.f, 30.f}
+	};
+	positionXTextBox->setOnCancel([this] { scene.cancelLevelChange(); });
+	positionXTextBox->setOnConfirm([this](const UITextBox&) { scene.commitLevelChange(); });
+	positionXTextBox->setOnTextChange([this](const UITextBox& textBox) {
+		float value = textBox.getValue<float>();
+		if (scene.ball.isSelected())
+			scene.ball.descriptor->initialPosition.x = value;
+		for (auto& obstacle : scene.obstacles)
+			if (obstacle.isSelected()) {
+				obstacle.setPositionX(value, quickSettings.transformBothStates, scene.isToggled());
+				obstacle.initKinematicState();
+				obstacle.generateDomainMesh(uiToWorldScale);
+			}
+	});
+
+	rootNode->addChild(std::move(positionXTextBox));
+
+	uiManager.setRootNode(std::move(rootNode));
 }
 
 
@@ -172,22 +201,22 @@ void EditorScreen::render() {
 	Shaders::object->setVec3("uSunDirection", viewSunDirection);
 
 	drawObject(Meshes::plane.get(), Textures::white.get(),
-			   {-1.f, 0, scene.getLevel()->arenaHeight / 2.f},
+			   {-1.f, 0, scene.level->arenaHeight / 2.f},
 			   backgroundRotation,
-			   {scene.getLevel()->arenaHeight, scene.getLevel()->arenaWidth, 1});
+			   {scene.level->arenaHeight, scene.level->arenaWidth, 1});
 
 	Shaders::outline->use();
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
-	for (int i = 0; i < scene.getObstacles().size(); i++) {
-		const auto& obstacle = scene.getObstacles()[i];
+	for (int i = 0; i < scene.obstacles.size(); i++) {
+		const auto& obstacle = scene.obstacles[i];
 		if (obstacle.isSelected()) {
-			Shaders::outline->setVec4("uOutlineColor", col(obstacle.getDescriptor()->color, Settings::Colors.domainOpacity));
+			Shaders::outline->setVec4("uOutlineColor", col(obstacle.descriptor->color, Settings::Colors.domainOpacity));
 
 			// Place domains at different depths to prevent Z-fighting. Last part keeps the ball outline on top.
-			float depth = ((float)i - (float)scene.getObstacles().size()) / (float)scene.getObstacles().size();
+			float depth = ((float)i - (float)scene.obstacles.size()) / (float)scene.obstacles.size();
 			glm::vec3 position = {depth, obstacle.getDomainPosition()};
 			glm::mat4 worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), position);
 			Shaders::outline->setMat4("uProjectionFull", camera.getProjectionMatrix() * camera.getViewMatrix() * worldMatrix);
@@ -198,7 +227,7 @@ void EditorScreen::render() {
 	glEnable(GL_CULL_FACE);
 
 	Shaders::object->use();
-	for (const auto& obstacle: scene.getObstacles()) {
+	for (const auto& obstacle: scene.obstacles) {
 		Shaders::object->setFloat("uAlpha", getObstacleOpacity(obstacle));
 
 		drawObject(obstacle.getObstacleMesh(), Textures::white.get(),
@@ -208,8 +237,8 @@ void EditorScreen::render() {
 	glDisable(GL_BLEND);
 
 	glDepthFunc(GL_ALWAYS);
-	drawObject(Meshes::ball.get(), scene.getBall()->getTexture(),
-			   planarToWorld(scene.getBall()->getDescriptor()->initialPosition),
+	drawObject(Meshes::ball.get(), scene.ball.getTexture(),
+			   planarToWorld(scene.ball.descriptor->initialPosition),
 			   glm::mat3(1));
 
 
@@ -217,9 +246,9 @@ void EditorScreen::render() {
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_BLEND);
 
-	for (int i = 0; i < scene.getObstacles().size(); i++) {
-		const auto& obstacle = scene.getObstacles()[i];
-		if (obstacle.isSelected() && (i != scene.getSelectionFocus()->index || scene.getSelectionFocus()->type != EntityType::Obstacle)) {
+	for (int i = 0; i < scene.obstacles.size(); i++) {
+		const auto& obstacle = scene.obstacles[i];
+		if (obstacle.isSelected() && (i != scene.selectionFocus.index || scene.selectionFocus.type != EntityType::Obstacle)) {
 			glm::vec4 outlineColor = Color::Selected;
 			outlineColor.a *= getObstacleOpacity(obstacle);
 			Shaders::outline->setVec4("uOutlineColor", outlineColor);
@@ -228,8 +257,8 @@ void EditorScreen::render() {
 		}
 	}
 
-	if (scene.getSelectionFocus()->type == EntityType::Obstacle) {
-		const auto& obstacle = scene.getObstacles()[scene.getSelectionFocus()->index];
+	if (scene.selectionFocus.type == EntityType::Obstacle) {
+		const auto& obstacle = scene.obstacles[scene.selectionFocus.index];
 		if (obstacle.isSelected()) {
 			glm::vec4 outlineColor = Color::Focused;
 			outlineColor.a *= getObstacleOpacity(obstacle);
@@ -239,15 +268,15 @@ void EditorScreen::render() {
 		}
 	}
 
-	if (scene.getBall()->isSelected()) {
+	if (scene.ball.isSelected()) {
 		glm::vec4 outlineColor;
-		if (scene.getSelectionFocus()->type == EntityType::Ball)
+		if (scene.selectionFocus.type == EntityType::Ball)
 			outlineColor = Color::Focused;
 		else
 			outlineColor = Color::Selected;
 		Shaders::outline->setVec4("uOutlineColor", outlineColor);
 
-		glm::mat4 worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), planarToWorld(scene.getLevel()->ballDescriptor->initialPosition), planarToWorld(glm::vec2(scene.getBall()->getOutlineRadius())));
+		glm::mat4 worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), planarToWorld(scene.level->ballDescriptor->initialPosition), planarToWorld(glm::vec2(scene.ball.getOutlineRadius())));
 		Shaders::outline->setMat4("uProjectionFull", camera.getProjectionMatrix() * camera.getViewMatrix() * worldMatrix);
 
 		Meshes::ball->draw();
@@ -269,7 +298,7 @@ void EditorScreen::render() {
 float EditorScreen::getObstacleOpacity(const EditorObstacle& obstacle) const {
 	float opacity = 1.f;
 
-	auto motionSpec = obstacle.getDescriptor()->motion.get();
+	auto motionSpec = obstacle.descriptor->motion.get();
 	if (dynamic_cast<OscillatingPositionSpec*>(motionSpec) ||
 	    dynamic_cast<OscillatingAngleSpec*>(motionSpec))
 		// Includes a small period where the obstacle is completely invisible
@@ -306,13 +335,13 @@ void EditorScreen::drawObstacleOutline(const EditorObstacle& obstacle) const {
 
 void EditorScreen::updateEphemeralMeshes() {
 	uiToWorldScale = uiManager.getScale() * camera.getHalfHeight() * 2.f / (float)height;
-	scene.getBall()->updateOutlineRadius(uiToWorldScale);
-	for (auto& obstacle : scene.getObstacles())
+	scene.ball.updateOutlineRadius(uiToWorldScale);
+	for (auto& obstacle : scene.obstacles)
 		obstacle.generateEphemeralMeshes(uiToWorldScale);
 }
 
 void EditorScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
-	camera.update((float)width, (float)height, scene.getLevel()->arenaWidth, scene.getLevel()->arenaHeight);
+	camera.update((float)width, (float)height, scene.level->arenaWidth, scene.level->arenaHeight);
 	updateEphemeralMeshes();
 }
