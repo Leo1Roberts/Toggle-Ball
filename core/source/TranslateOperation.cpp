@@ -19,6 +19,11 @@ std::optional<glm::vec2> TranslateOperation::keyToTranslationVector(KeyCode key)
 
 
 bool TranslateOperation::doProcessEvent(const Event& event) {
+	if (typing && textInput.processEvent(event)) {
+		applyOperation(); // Get value later - rawTranslation is not suitable
+		return true;
+	}
+
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (trigger == TriggerType::ActionKey) {
 			if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
@@ -52,6 +57,12 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 			applyOperation();
 			return false; // Allow pointer move events to pass through
 		}
+	} else if (auto* c = std::get_if<char>(&event)) {
+		if (!typing && TextInputBuffer::Float(*c) && constraint != ConstraintType::None) {
+			typing = true;
+			if (textInput.processEvent(*c))
+				applyOperation(); // Get value later - rawTranslation is not suitable
+		}
 	}
 	return false;
 }
@@ -78,19 +89,22 @@ void TranslateOperation::applyOperation() {
 				direction = glm::vec2(0.f);
 			else
 				direction = normalize(rawTranslation);
-		} else if (!local && constraint == ConstraintType::GlobalAxis)
+		} else if (!context->quickSettings->transformLocally && constraint == ConstraintType::GlobalAxis)
 			direction = baseAxis;
 		else
 			direction = angleToRotation2D(focusAngle) * baseAxis;
 
-		magnitude = dot(rawTranslation, direction);
+		if (typing)
+			magnitude = textInput.getValue<float>();
+		else
+			magnitude = dot(rawTranslation, direction);
 
-		if (!local)
+		if (!context->quickSettings->transformLocally)
 			translation = direction * magnitude;
 	}
 
 	if (ball->isSelected()) {
-		if (local && trigger != TriggerType::ActionKey)
+		if (context->quickSettings->transformLocally && trigger != TriggerType::ActionKey)
 			translation = (angleToRotation2D(-focusAngle) * direction) * magnitude;
 		ball->translateBy(translation, context->scene->getCurrentNode()->level.ballDescriptor.get());
 	}
@@ -98,10 +112,10 @@ void TranslateOperation::applyOperation() {
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			if (local && trigger != TriggerType::ActionKey)
+			if (context->quickSettings->transformLocally && trigger != TriggerType::ActionKey)
 				translation = (angleToRotation2D(obstacle.getKinematicState()->getAngle() - focusAngle) * direction) * magnitude;
 
-			obstacle.translateBy(translation, stateless, context->scene->isToggled(),
+			obstacle.translateBy(translation, context->quickSettings->transformBothStates, context->scene->isToggled(),
 				context->scene->getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
@@ -112,11 +126,11 @@ void TranslateOperation::applyOperation() {
 
 
 void TranslateOperation::setMode(glm::vec2 requestedAxis) {
-	if (constraint == ConstraintType::None || (constraint == ConstraintType::GlobalAxis && baseAxis != requestedAxis)) {
+	if (constraint == ConstraintType::None || (typing && constraint == ConstraintType::LocalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::GlobalAxis && baseAxis != requestedAxis)) {
 		constraint = ConstraintType::GlobalAxis;
 		baseAxis = requestedAxis;
 	} else if (context->scene->getSelectionFocus()->type == EntityType::Obstacle &&
-		((!local && constraint == ConstraintType::GlobalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::LocalAxis && baseAxis != requestedAxis))) {
+		((!context->quickSettings->transformLocally && constraint == ConstraintType::GlobalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::LocalAxis && baseAxis != requestedAxis))) {
 		constraint = ConstraintType::LocalAxis;
 		baseAxis = requestedAxis;
 	} else

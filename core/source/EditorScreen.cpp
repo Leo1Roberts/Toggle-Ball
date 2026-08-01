@@ -25,7 +25,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		std::move(levelToEdit),
 		[this] { updateEphemeralMeshes(); }),
 	context(
-		&scene, &camera, &gizmoRenderer, &uiToWorldScale,
+		&quickSettings, &scene, &camera, &gizmoRenderer, &uiToWorldScale,
 		[this](std::unique_ptr<Operation> operation) {
 			activeOperation = std::move(operation);
 			return activeOperation.get();
@@ -94,6 +94,20 @@ void EditorScreen::processEvent(const Event& event) {
 					activeOperation = std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, mainPointerPosition);
 					if (!activeOperation->start(key->chord.modifiers))
 						activeOperation = nullptr;
+					return;
+				} break;
+			case ActionCode::ToggleTransformBothStates:
+				if (key->action == KeyAction::Down) {
+					quickSettings.transformBothStates = !quickSettings.transformBothStates;
+					if (activeOperation)
+						activeOperation->onQuickSettingsChanged();
+					return;
+				} break;
+			case ActionCode::ToggleTransformLocally:
+				if (key->action == KeyAction::Down) {
+					quickSettings.transformLocally = !quickSettings.transformLocally;
+					if (activeOperation)
+						activeOperation->onQuickSettingsChanged();
 					return;
 				} break;
 			default:;

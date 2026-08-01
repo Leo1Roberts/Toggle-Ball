@@ -10,7 +10,13 @@ class GizmoRenderer;
 class Camera;
 class EditorScene;
 
+struct EditorQuickSettings {
+	bool transformBothStates = false;
+	bool transformLocally = false;
+};
+
 struct EditorContext {
+	EditorQuickSettings* quickSettings;
 	EditorScene* scene;
 	const Camera* camera;
 	GizmoRenderer* gizmoRenderer;

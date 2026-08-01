@@ -20,9 +20,8 @@ enum ModifierFlags : byte {
 enum class KeyCode {
 	Ctrl, Shift, Alt,
 	Tab,
-	Enter,
-	Escape,
-	Space,
+	Enter, Escape,
+	Space, Backspace,
 
 	A, B, C, D, E, F, G, H, I, J, K, L, M,
 	N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
@@ -38,6 +37,7 @@ enum class KeyCode {
 	F21, F22, F23, F24, F25,
 
 	Up, Down, Left, Right,
+	Home, End, PageUp, PageDown,
 
 	Unknown
 };
@@ -78,6 +78,9 @@ enum class ActionCode {
 
 	LockToXAxis,
 	LockToYAxis,
+
+	ToggleTransformBothStates,
+	ToggleTransformLocally,
 };
 
 
@@ -101,20 +104,22 @@ private:
 	struct Entry { ActionCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
-		{ ActionCode::Quit,          "Quit" },
-		{ ActionCode::Fullscreen,    "Fullscreen" },
-		{ ActionCode::TestLevel,     "Test level" },
-		{ ActionCode::Toggle,        "Toggle" },
-		{ ActionCode::InstantToggle, "Instant toggle" },
-		{ ActionCode::Undo,          "Undo" },
-		{ ActionCode::Redo,          "Redo" },
-		{ ActionCode::SelectAll,     "Select all" },
-		{ ActionCode::DeselectAll,   "Deselect all" },
-		{ ActionCode::Translate,     "Translate" },
-		{ ActionCode::Rotate,        "Rotate" },
-		{ ActionCode::Scale,         "Scale" },
-		{ ActionCode::LockToXAxis,   "Constrain to X axis" },
-		{ ActionCode::LockToYAxis,   "Constrain to Y axis" },
+		{ ActionCode::Quit,                      "Quit"                         },
+		{ ActionCode::Fullscreen,                "Fullscreen"                   },
+		{ ActionCode::TestLevel,                 "Test level"                   },
+		{ ActionCode::Toggle,                    "Toggle"                       },
+		{ ActionCode::InstantToggle,             "Instant toggle"               },
+		{ ActionCode::Undo,                      "Undo"                         },
+		{ ActionCode::Redo,                      "Redo"                         },
+		{ ActionCode::SelectAll,                 "Select all"                   },
+		{ ActionCode::DeselectAll,               "Deselect all"                 },
+		{ ActionCode::Translate,                 "Translate"                    },
+		{ ActionCode::Rotate,                    "Rotate"                       },
+		{ ActionCode::Scale,                     "Scale"                        },
+		{ ActionCode::LockToXAxis,               "Constrain to X axis"          },
+		{ ActionCode::LockToYAxis,               "Constrain to Y axis"          },
+		{ ActionCode::ToggleTransformBothStates, "Toggle transform both states" },
+		{ ActionCode::ToggleTransformLocally,    "Toggle transform locally"     },
 	};
 };
 
@@ -138,10 +143,11 @@ private:
 	struct Entry { KeyCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
-	    { KeyCode::Tab,        "TAB" },
-	    { KeyCode::Enter,      "ENTER" },
-	    { KeyCode::Escape,     "ESC" },
-	    { KeyCode::Space,      "SPACE" },
+	    { KeyCode::Tab,       "TAB"       },
+	    { KeyCode::Enter,     "ENTER"     },
+	    { KeyCode::Escape,    "ESC"       },
+	    { KeyCode::Space,     "SPACE"     },
+	    { KeyCode::Backspace, "BACKSPACE" },
 
 	    { KeyCode::A, "A" }, { KeyCode::B, "B" }, { KeyCode::C, "C" },
 	    { KeyCode::D, "D" }, { KeyCode::E, "E" }, { KeyCode::F, "F" },
@@ -174,10 +180,14 @@ private:
 	    { KeyCode::F22, "F22" }, { KeyCode::F23, "F23" }, { KeyCode::F24, "F24" },
 	    { KeyCode::F25, "F25" },
 
-	    { KeyCode::Up,    "UP"    },
-	    { KeyCode::Down,  "DOWN"  },
-	    { KeyCode::Left,  "LEFT"  },
-	    { KeyCode::Right, "RIGHT" },
+	    { KeyCode::Up,       "UP"        },
+	    { KeyCode::Down,     "DOWN"      },
+	    { KeyCode::Left,     "LEFT"      },
+	    { KeyCode::Right,    "RIGHT"     },
+	    { KeyCode::Home,     "HOME"      },
+	    { KeyCode::End,      "END"       },
+	    { KeyCode::PageUp,   "PAGE UP"   },
+	    { KeyCode::PageDown, "PAGE DOWN" },
 	};
 };
 

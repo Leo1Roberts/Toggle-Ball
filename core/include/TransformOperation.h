@@ -1,8 +1,9 @@
-#ifndef MOTION_OPERATION_H
-#define MOTION_OPERATION_H
+#ifndef TRANSFORM_OPERATION_H
+#define TRANSFORM_OPERATION_H
 
 #include "EditorScene.h"
 #include "Operation.h"
+#include "TextInputBuffer.h"
 
 
 class TransformOperation : public Operation {
@@ -11,14 +12,11 @@ public:
 		: Operation(context, trigger, initialPointerPosition) {}
 
 protected:
-	bool stateless = false;
-	bool local = false;
+	bool typing = false;
+	TextInputBuffer textInput{TextInputBuffer::Float, TextInputMode::Simple};
 
 private:
-	void applyModifiers(byte mods) final {
-		stateless = mods & MOD_ALT;
-		local = mods & MOD_CTRL && mods & MOD_SHIFT;
-	}
+	void applyModifiers(byte mods) final {}
 
 	[[nodiscard]] bool canStart() const final { return context->scene->anythingIsSelected(); }
 	void doCancel() const final { context->scene->cancelLevelChange(); }
@@ -26,4 +24,4 @@ private:
 };
 
 
-#endif // MOTION_OPERATION_H
+#endif // TRANSFORM_OPERATION_H

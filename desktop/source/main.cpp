@@ -87,10 +87,11 @@ void APIENTRY glDebugOutput(GLenum source,
 	case GLFW_KEY_LEFT_ALT:
 	case GLFW_KEY_RIGHT_ALT:     return KeyCode::Alt;
 
-	case GLFW_KEY_TAB:    return KeyCode::Tab;
-	case GLFW_KEY_ENTER:  return KeyCode::Enter;
-	case GLFW_KEY_ESCAPE: return KeyCode::Escape;
-	case GLFW_KEY_SPACE:  return KeyCode::Space;
+	case GLFW_KEY_TAB:       return KeyCode::Tab;
+	case GLFW_KEY_ENTER:     return KeyCode::Enter;
+	case GLFW_KEY_ESCAPE:    return KeyCode::Escape;
+	case GLFW_KEY_SPACE:     return KeyCode::Space;
+	case GLFW_KEY_BACKSPACE: return KeyCode::Backspace;
 
 	case GLFW_KEY_A: return KeyCode::A;
 	case GLFW_KEY_B: return KeyCode::B;
@@ -167,10 +168,14 @@ void APIENTRY glDebugOutput(GLenum source,
 	case GLFW_KEY_F24: return KeyCode::F24;
 	case GLFW_KEY_F25: return KeyCode::F25;
 
-	case GLFW_KEY_UP:    return KeyCode::Up;
-	case GLFW_KEY_DOWN:  return KeyCode::Down;
-	case GLFW_KEY_LEFT:  return KeyCode::Left;
-	case GLFW_KEY_RIGHT: return KeyCode::Right;
+	case GLFW_KEY_UP:        return KeyCode::Up;
+	case GLFW_KEY_DOWN:      return KeyCode::Down;
+	case GLFW_KEY_LEFT:      return KeyCode::Left;
+	case GLFW_KEY_RIGHT:     return KeyCode::Right;
+	case GLFW_KEY_HOME:      return KeyCode::Home;
+	case GLFW_KEY_END:       return KeyCode::End;
+	case GLFW_KEY_PAGE_UP:   return KeyCode::PageUp;
+	case GLFW_KEY_PAGE_DOWN: return KeyCode::PageDown;
 
 	default: return KeyCode::Unknown;
 	}
@@ -189,6 +194,14 @@ static void keyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
 	app->processEvent(KeyEvent({translateKey(key), getUpdatedMods(window)}, translateKeyAction(action)));
+}
+
+
+static void charCallback(GLFWwindow* window, unsigned int codepoint) {
+	auto* app = (App*)glfwGetWindowUserPointer(window);
+	if (!app) return;
+	if (codepoint <= CHAR_MAX) // Ignore fancy Unicode characters
+		app->processEvent((char)codepoint);
 }
 
 
@@ -285,6 +298,7 @@ int main() {
 	// glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 
 	glfwSetKeyCallback(rawWindow, keyCallback);
+	glfwSetCharCallback(rawWindow, charCallback);
 	glfwSetMouseButtonCallback(rawWindow, mouseButtonCallback);
 	glfwSetCursorPosCallback(rawWindow, cursorPosCallback);
 	glfwSetScrollCallback(rawWindow, scrollCallback);

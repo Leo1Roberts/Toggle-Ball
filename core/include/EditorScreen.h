@@ -35,6 +35,7 @@ private:
 
 	glm::vec2 mainPointerPosition{};
 
+	EditorQuickSettings quickSettings;
 	EditorScene scene;
 	Camera camera;
 	UIManager uiManager;

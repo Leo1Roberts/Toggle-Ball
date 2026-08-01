@@ -9,7 +9,6 @@
 
 
 struct KeyEvent { KeyChord chord; KeyAction action; };
-struct CharEvent { unsigned int character; };
 struct PointerEvent {
 	int id{};
 	glm::vec2 position;
@@ -21,7 +20,7 @@ struct PointerEvent {
 
 using Event = std::variant<
 	KeyEvent,
-	CharEvent,
+	char,
 	PointerEvent
 >;
 

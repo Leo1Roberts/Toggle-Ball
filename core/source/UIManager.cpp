@@ -35,7 +35,7 @@ void UIManager::changeFocus(UINode* newFocus, bool cancel) {
 
 bool UIManager::processEvent(const Event& event) {
 	if (std::holds_alternative<KeyEvent>(event) ||
-		std::holds_alternative<CharEvent>(event)) {
+		std::holds_alternative<char>(event)) {
 		if (focusedNode) {
 			switch (focusedNode->processEvent(event)) {
 			case UIResponse::Ignored:

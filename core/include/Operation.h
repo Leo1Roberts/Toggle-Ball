@@ -40,6 +40,8 @@ public:
 		context->finishOperation();
 	}
 
+	void onQuickSettingsChanged() { applyOperation(); }
+
 protected:
 	Operation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
 		: context(context), trigger(trigger), initialPointerPlanarPosition(context->camera->screenToPlanarPosition(initialPointerPosition)) {}
