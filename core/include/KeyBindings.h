@@ -113,8 +113,8 @@ private:
 		{ ActionCode::Translate,     "Translate" },
 		{ ActionCode::Rotate,        "Rotate" },
 		{ ActionCode::Scale,         "Scale" },
-		{ ActionCode::LockToXAxis,   "Lock to X axis" },
-		{ ActionCode::LockToYAxis,   "Lock to Y axis" },
+		{ ActionCode::LockToXAxis,   "Constrain to X axis" },
+		{ ActionCode::LockToYAxis,   "Constrain to Y axis" },
 	};
 };
 
