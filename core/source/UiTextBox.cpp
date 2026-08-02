@@ -4,12 +4,16 @@
 UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle)
 	: UIPanel(bStyle.normalPanel), textBoxStyle(bStyle), inputBuffer(validator) {
 	highlightNode = addChild(std::make_unique<UIPanel>(textBoxStyle.highlight));
+	highlightNode->setHitTestable(false);
+
 	textNode = addChild(std::make_unique<UIText>("", textBoxStyle.normalText));
 	textNode->layout = {
 		.anchor = Anchor::CentreLeft,
 		.offset = {10.f, 0.f}
 	};
+
 	cursorNode = addChild(std::make_unique<UIPanel>(textBoxStyle.cursor));
+	cursorNode->setHitTestable(false);
 
 	updateCursorAndHighlight();
 	updateStyle();
@@ -45,7 +49,9 @@ UIResponse UITextBox::processEvent(const Event& event) {
 			switch (pointer->action) {
 			case PointerAction::Down:
 				pressed = true;
-				inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position.x));
+				inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position.x), pointer->modifiers & MOD_SHIFT);
+				if (pointer->causedFocusChange)
+					inputBuffer.selectAll();
 				cursorInactiveTime = 0;
 				updateCursorAndHighlight();
 				updateStyle();
@@ -61,7 +67,7 @@ UIResponse UITextBox::processEvent(const Event& event) {
 		}
 
 		if (pressed && pointer->action == PointerAction::Move) {
-			inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position.x));
+			inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position.x), true);
 			cursorInactiveTime = 0;
 			updateCursorAndHighlight();
 			updateStyle();
@@ -76,10 +82,13 @@ UIResponse UITextBox::processEvent(const Event& event) {
 void UITextBox::onFocusGained() {
 	focused = true;
 	cursorInactiveTime = 0;
+	inputBuffer.selectAll();
 	updateStyle();
 }
 void UITextBox::onFocusLost(bool cancel) {
 	focused = false;
+	inputBuffer.deselectAll();
+	updateCursorAndHighlight();
 	updateStyle();
 	if (cancel) {
 		if (onCancelCallback)

@@ -107,7 +107,13 @@ bool TextInputBuffer::processEvent(const Event& event) {
 
 void TextInputBuffer::moveCursorTo(int index, bool highlight) {
 	if (highlight) {
-		int anchor = (cursorIndex == selectionStartIndex) ? selectionEndIndex : selectionStartIndex;
+		int anchor;
+		if (cursorIndex == selectionStartIndex)
+			anchor = selectionEndIndex;
+		else if (cursorIndex == selectionEndIndex)
+			anchor = selectionStartIndex;
+		else
+			anchor = selectionStartIndex = selectionEndIndex = cursorIndex;
 		selectionStartIndex = std::min(anchor, index);
 		selectionEndIndex = std::max(anchor, index);
 	} else {

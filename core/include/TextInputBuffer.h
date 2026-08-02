@@ -19,7 +19,7 @@ public:
 	void clear() { buffer.clear(); }
 
 	void moveCursorTo(int index, bool highlight = false);
-	void selectAll() { selectionStartIndex = 0; selectionEndIndex = cursorIndex = buffer.length(); }
+	void selectAll() { selectionStartIndex = 0; selectionEndIndex = buffer.length(); }
 	void deselectAll() { selectionStartIndex = selectionEndIndex = cursorIndex; }
 	void eraseSelection() {
 		buffer.erase(buffer.begin() + selectionStartIndex, buffer.begin() + selectionEndIndex);

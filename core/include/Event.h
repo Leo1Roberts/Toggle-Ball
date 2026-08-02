@@ -16,6 +16,7 @@ struct PointerEvent {
 	PointerButton button{};
 	byte modifiers{};
 	glm::vec2 scroll;
+	bool causedFocusChange = false;
 };
 
 using Event = std::variant<

@@ -55,6 +55,8 @@ public:
 	void activate() { active = true; }
 	void deactivate() { active = false; }
 
+	void setHitTestable(bool canBeHit) { hitTestable = canBeHit; }
+
 	[[nodiscard]] const UINode* getParent() const { return parent; }
 	[[nodiscard]] const std::vector<std::unique_ptr<UINode>>& getChildren() const { return children; }
 	[[nodiscard]] bool isVisible() const { return visible; }
