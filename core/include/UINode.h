@@ -30,7 +30,7 @@ public:
 		return ptr;
 	}
 
-	virtual void updateLayout(Rectangle parentBounds);
+	virtual void updateBounds(Rectangle parentBounds);
 
 	[[nodiscard]] bool contains(glm::vec2 point) const;
 
@@ -40,6 +40,10 @@ public:
 	virtual void onPointerExited() {}
 
 	virtual UIResponse processEvent(const Event& event) { return UIResponse::Ignored; }
+	void update(microseconds dt) {
+		doUpdate(dt);
+		for (auto& child : children) child->update(dt);
+	}
 
 	void setAbsoluteBounds(Rectangle bounds) { absoluteBounds = bounds; }
 	[[nodiscard]] Rectangle getAbsoluteBounds() const { return absoluteBounds; }
@@ -66,6 +70,8 @@ protected:
 	bool hitTestable = true;
 
 private:
+	virtual void doUpdate(microseconds dt) {}
+
 	Rectangle absoluteBounds;
 
 	UINode* parent = nullptr;

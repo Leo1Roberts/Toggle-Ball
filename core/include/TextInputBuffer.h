@@ -21,6 +21,8 @@ public:
 	template <typename T>
 	T getValue() const;
 
+	[[nodiscard]] int getCursorIndex() const { return cursorIndex; }
+
 private:
 	Validator charIsValid;
 	TextInputMode mode;

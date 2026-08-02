@@ -55,8 +55,7 @@ void App::tick(microseconds dt) {
 	if (content)
 		content->tick(dt);
 
-	if (fpsOverlay)
-		fpsOverlay->update(dt);
+	overlayUI.update(dt);
 
 	overlayUI.render();
 }

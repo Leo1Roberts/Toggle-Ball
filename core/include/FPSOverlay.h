@@ -10,11 +10,11 @@ class FPSOverlay : public UINode {
 public:
 	FPSOverlay();
 
-	void update(microseconds dt);
-
 private:
+	void doUpdate(microseconds dt) override;
+
 	UIText* labelNode = nullptr;
-	microseconds timeAccumulator{0};
+	microseconds timeAccumulator = 0;
 	int frameCount = 0;
 };
 

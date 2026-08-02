@@ -3,6 +3,7 @@
 
 #include "TextInputBuffer.h"
 #include "UIPanel.h"
+#include "UIText.h"
 
 
 enum class TextBoxState {
@@ -13,7 +14,6 @@ enum class TextBoxState {
 	Disabled
 };
 
-class UIText;
 class UITextBox : public UIPanel {
 public:
 	explicit UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle = {});
@@ -38,6 +38,8 @@ public:
 	[[nodiscard]] bool isFocusable() const override { return isVisible() && isActive(); }
 
 private:
+	void doUpdate(microseconds dt) override;
+
 	bool focused = false;
 	bool hovered = false;
 	bool pressed = false;
@@ -46,14 +48,18 @@ private:
 	TextBoxStyle textBoxStyle;
 
 	UIText* textNode = nullptr;
+	UIPanel* cursorNode = nullptr;
 	TextInputBuffer inputBuffer;
 
 	std::function<void()> onCancelCallback;
 	std::function<void(const UITextBox&)> onConfirmCallback;
 	std::function<void(const UITextBox&)> onTextChangedCallback;
 
-	void updateText();
+	void updateText() { textNode->text = inputBuffer.getValue<std::string>(); }
+	void updateCursorPosition();
 	void updateVisualState();
+
+	microseconds cursorInactiveTime = 0;
 };
 
 

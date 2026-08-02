@@ -1,7 +1,5 @@
 #include "UiTextBox.h"
 
-#include "UIText.h"
-
 
 UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle)
 	: UIPanel(bStyle.normalPanel), textBoxStyle(bStyle), inputBuffer(validator) {
@@ -10,6 +8,9 @@ UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxS
 		.anchor = Anchor::CentreLeft,
 		.offset = {10.f, 0.f}
 	};
+	cursorNode = addChild(std::make_unique<UIPanel>(textBoxStyle.cursor));
+
+	updateCursorPosition();
 	updateVisualState();
 }
 
@@ -20,8 +21,11 @@ UIResponse UITextBox::processEvent(const Event& event) {
 
 	if (inputBuffer.processEvent(event)) {
 		updateText();
-		if (onTextChangedCallback)
+		updateCursorPosition();
+		if (onTextChangedCallback) {
+			cursorInactiveTime = 0;
 			onTextChangedCallback(*this);
+		}
 		return UIResponse::Consumed;
 	}
 
@@ -61,6 +65,7 @@ UIResponse UITextBox::processEvent(const Event& event) {
 
 void UITextBox::onFocusGained() {
 	focused = true;
+	cursorInactiveTime = 0;
 	updateVisualState();
 }
 void UITextBox::onFocusLost(bool cancel) {
@@ -86,8 +91,31 @@ void UITextBox::onPointerExited() {
 }
 
 
-void UITextBox::updateText() {
-	textNode->text = inputBuffer.getValue<std::string>();
+void UITextBox::doUpdate(microseconds dt) {
+	cursorInactiveTime += dt;
+	if (focused && (cursorInactiveTime / 500000 % 2 || cursorInactiveTime < 500000))
+		cursorNode->show();
+	else
+		cursorNode->hide();
+}
+
+
+void UITextBox::updateCursorPosition() {
+	float cursorWidth = 1.f;
+
+	glm::vec2 offset = textNode->layout.offset;
+	offset.x +=
+		textNode->measure(inputBuffer.getCursorIndex()).x
+		- 0.5f * cursorWidth;
+
+	cursorNode->layout = {
+		.anchor = Anchor::CentreLeft,
+		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
+		.width = cursorWidth, .height = textNode->textStyle.fontSize,
+		.offset = offset
+	};
+
+	cursorNode->updateBounds(getAbsoluteBounds());
 }
 
 void UITextBox::updateVisualState() {

@@ -1,7 +1,7 @@
 #include "UINode.h"
 
 
-void UINode::updateLayout(Rectangle parentBounds) {
+void UINode::updateBounds(Rectangle parentBounds) {
 	float ax = 0.f;
 	float ay = 0.f;
 
@@ -34,7 +34,7 @@ void UINode::updateLayout(Rectangle parentBounds) {
 	}
 
 	for (auto& child: children)
-		child->updateLayout(absoluteBounds);
+		child->updateBounds(absoluteBounds);
 }
 
 bool UINode::contains(glm::vec2 point) const {

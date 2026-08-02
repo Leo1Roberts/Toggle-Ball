@@ -50,7 +50,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	positionXTextBox->setOnCancel([this] { scene.cancelLevelChange(); });
 	positionXTextBox->setOnConfirm([this](const UITextBox&) { scene.commitLevelChange(); });
 	positionXTextBox->setOnTextChange([this](const UITextBox& textBox) {
-		float value = textBox.getValue<float>();
+		auto value = textBox.getValue<float>();
 		if (scene.ball.isSelected())
 			scene.ball.descriptor->initialPosition.x = value;
 		for (auto& obstacle : scene.obstacles)
@@ -181,6 +181,7 @@ void EditorScreen::processEvent(const Event& event) {
 
 void EditorScreen::update(microseconds dt) {
 	scene.update(dt);
+	uiManager.update(dt);
 }
 
 

@@ -15,7 +15,7 @@ void UIManager::resize(int screenWidth, int screenHeight, float screenDPIScale) 
 			.x = 0.f, .y = 0.f,
 			.width = logicalSize.x, .height = logicalSize.y,
 		};
-		rootNode->updateLayout(screenBounds);
+		rootNode->updateBounds(screenBounds);
 	}
 }
 

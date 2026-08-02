@@ -22,25 +22,26 @@ void UIText::submitRender(UIManager& manager) {
 
 
 
-glm::vec2 UIText::measure() const {
+glm::vec2 UIText::measure(int numChars) const {
 	if (text.empty()) return {0.f, 0.f};
+	if (!numChars)
+		numChars = (int)text.length();
 
 	auto font = Fonts::get(textStyle.font);
 	auto typeface = font->typeface;
 
 	float width = 0.f;
-	int length = (int)text.length();
 	float scaleFactor = textStyle.fontSize / typeface->size;
 
-	for (int i = 0; i < length; i++) {
+	for (int i = 0; i < numChars; i++) {
 		char c = text[i];
 		if (c == ' ') {
-			width += font->wordSpacing * scaleFactor; // Assuming you kept your Font struct logic
+			width += font->wordSpacing * scaleFactor;
 			continue;
 		}
 
 		CharBounds cb = typeface->charLocations[c];
-		if (cb.right == 0) cb = typeface->charLocations['?'];
+		if (cb.right == 0.f) cb = typeface->charLocations['?'];
 
 		float charWidth = cb.right - cb.left;
 

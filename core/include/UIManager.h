@@ -17,11 +17,13 @@ public:
 
 	bool processEvent(const Event& event);
 
-	void setRootNode(std::unique_ptr<UINode> node) { rootNode = std::move(node); }
+	void update(microseconds dt) { if (rootNode) rootNode->update(dt); }
 
 	void submitPanel(const UIPanel* panel);
 	void submitText(const UIText* text);
 	void render();
+
+	void setRootNode(std::unique_ptr<UINode> node) { rootNode = std::move(node); }
 
 	[[nodiscard]] float getScale() const { return dpiScale * Settings::Sizes.uiScale; }
 	[[nodiscard]] const glm::mat4& getProjectionMatrix() const { return projectionMatrix; }

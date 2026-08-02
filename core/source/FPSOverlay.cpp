@@ -21,7 +21,7 @@ FPSOverlay::FPSOverlay() {
 }
 
 
-void FPSOverlay::update(microseconds dt) {
+void FPSOverlay::doUpdate(microseconds dt) {
 	timeAccumulator += dt;
 	frameCount++;
 

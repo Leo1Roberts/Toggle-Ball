@@ -50,6 +50,7 @@ struct TextBoxStyle {
 	TextStyle highlightedText;
 	TextStyle disabledText;
 
+	PanelStyle cursor;
 	col highlight = Color::SoftBlue;
 };
 
