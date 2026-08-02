@@ -92,6 +92,7 @@ void APIENTRY glDebugOutput(GLenum source,
 	case GLFW_KEY_ESCAPE:    return KeyCode::Escape;
 	case GLFW_KEY_SPACE:     return KeyCode::Space;
 	case GLFW_KEY_BACKSPACE: return KeyCode::Backspace;
+	case GLFW_KEY_DELETE:    return KeyCode::Delete;
 
 	case GLFW_KEY_A: return KeyCode::A;
 	case GLFW_KEY_B: return KeyCode::B;

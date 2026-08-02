@@ -21,7 +21,7 @@ enum class KeyCode {
 	Ctrl, Shift, Alt,
 	Tab,
 	Enter, Escape,
-	Space, Backspace,
+	Space, Backspace, Delete,
 
 	A, B, C, D, E, F, G, H, I, J, K, L, M,
 	N, O, P, Q, R, S, T, U, V, W, X, Y, Z,
@@ -145,9 +145,10 @@ private:
 	static constexpr Entry entries[] = {
 	    { KeyCode::Tab,       "TAB"       },
 	    { KeyCode::Enter,     "ENTER"     },
-	    { KeyCode::Escape,    "ESC"       },
+	    { KeyCode::Escape,    "ESCAPE"       },
 	    { KeyCode::Space,     "SPACE"     },
 	    { KeyCode::Backspace, "BACKSPACE" },
+	    { KeyCode::Delete,    "DELETE" },
 
 	    { KeyCode::A, "A" }, { KeyCode::B, "B" }, { KeyCode::C, "C" },
 	    { KeyCode::D, "D" }, { KeyCode::E, "E" }, { KeyCode::F, "F" },
