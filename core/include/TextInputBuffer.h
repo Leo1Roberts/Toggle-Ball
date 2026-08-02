@@ -21,17 +21,16 @@ public:
 	template <typename T>
 	T getValue() const;
 
-	[[nodiscard]] int getCursorIndex() const { return cursorIndex; }
+	int cursorIndex = 0;
 
 private:
 	Validator charIsValid;
 	TextInputMode mode;
 	std::string buffer;
-	int cursorIndex = 0;
 };
 
 template <>
-inline std::string TextInputBuffer::getValue<std::string>() const { return buffer; }
+inline const std::string& TextInputBuffer::getValue<const std::string&>() const { return buffer; }
 template <>
 inline float TextInputBuffer::getValue<float>() const {
 	try { return std::stof(buffer); }

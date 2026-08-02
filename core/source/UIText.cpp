@@ -22,10 +22,10 @@ void UIText::submitRender(UIManager& manager) {
 
 
 
-glm::vec2 UIText::measure(int numChars) const {
+glm::vec2 UIText::measure(int from, int to) const {
 	if (text.empty()) return {0.f, 0.f};
-	if (!numChars)
-		numChars = (int)text.length();
+	if (to < 0)
+		to = (int)text.length();
 
 	auto font = Fonts::get(textStyle.font);
 	auto typeface = font->typeface;
@@ -33,7 +33,7 @@ glm::vec2 UIText::measure(int numChars) const {
 	float width = 0.f;
 	float scaleFactor = textStyle.fontSize / typeface->size;
 
-	for (int i = 0; i < numChars; i++) {
+	for (int i = from; i < to; i++) {
 		char c = text[i];
 		if (c == ' ') {
 			width += font->wordSpacing * scaleFactor;
@@ -78,7 +78,7 @@ void UITextRenderer::addText(const UIText* textNode) {
 
 	const auto& bounds = textNode->getAbsoluteBounds();
 
-	glm::vec2 textSize = textNode->measure();
+	glm::vec2 textSize = textNode->measure(0);
 
 	float xPos = bounds.x;
 	switch (textNode->textStyle.alignHorizontal) {

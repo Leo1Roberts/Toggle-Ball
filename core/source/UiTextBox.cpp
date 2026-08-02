@@ -42,8 +42,11 @@ UIResponse UITextBox::processEvent(const Event& event) {
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->button == PointerButton::Primary) {
 			switch (pointer->action) {
-			case PointerAction::Down: // TODO: move text cursor
+			case PointerAction::Down:
 				pressed = true;
+				inputBuffer.cursorIndex = getPointedCursorIndex(pointer->position.x);
+				cursorInactiveTime = 0;
+				updateCursorPosition();
 				updateVisualState();
 				return UIResponse::Consumed;
 			case PointerAction::Move:
@@ -100,12 +103,24 @@ void UITextBox::doUpdate(microseconds dt) {
 }
 
 
+int UITextBox::getPointedCursorIndex(float pointerX) const {
+	const auto& text = inputBuffer.getValue<const std::string&>();
+	float cursorIndex = text.length();
+	for (int i = 0; i < text.length(); i++)
+		if (pointerX < textNode->getAbsoluteBounds().x + textNode->measure(0, i + 1).x - 0.5f * textNode->measure(i, i + 1).x) {
+			cursorIndex = i;
+			break;
+		}
+	return cursorIndex;
+}
+
+
 void UITextBox::updateCursorPosition() {
 	float cursorWidth = 1.f;
 
 	glm::vec2 offset = textNode->layout.offset;
 	offset.x +=
-		textNode->measure(inputBuffer.getCursorIndex()).x
+		textNode->measure(0, inputBuffer.cursorIndex).x
 		- 0.5f * cursorWidth;
 
 	cursorNode->layout = {

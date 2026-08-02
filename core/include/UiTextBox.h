@@ -40,6 +40,8 @@ public:
 private:
 	void doUpdate(microseconds dt) override;
 
+	int getPointedCursorIndex(float pointerX) const;
+
 	bool focused = false;
 	bool hovered = false;
 	bool pressed = false;
@@ -55,7 +57,7 @@ private:
 	std::function<void(const UITextBox&)> onConfirmCallback;
 	std::function<void(const UITextBox&)> onTextChangedCallback;
 
-	void updateText() { textNode->text = inputBuffer.getValue<std::string>(); }
+	void updateText() { textNode->text = inputBuffer.getValue<const std::string&>(); }
 	void updateCursorPosition();
 	void updateVisualState();
 

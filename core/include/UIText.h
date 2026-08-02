@@ -30,7 +30,7 @@ public:
 
 	void submitRender(UIManager& manager) override;
 
-	[[nodiscard]] glm::vec2 measure(int numChars = 0) const;
+	[[nodiscard]] glm::vec2 measure(int from, int to = -1) const;
 
 	std::string text;
 	TextStyle textStyle;

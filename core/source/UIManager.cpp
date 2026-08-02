@@ -100,7 +100,7 @@ bool UIManager::processEvent(const Event& event) {
 			if (pointer.action == PointerAction::Down && pointer.button == PointerButton::Primary)
 				changeFocus(targetNode->isFocusable() ? targetNode : nullptr, false);
 
-			switch (targetNode->processEvent(event)) {
+			switch (targetNode->processEvent(pointer)) {
 			case UIResponse::Ignored:
 			case UIResponse::Consumed:
 				break;
