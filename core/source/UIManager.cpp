@@ -20,9 +20,9 @@ void UIManager::resize(int screenWidth, int screenHeight, float screenDPIScale) 
 }
 
 
-void UIManager::changeFocus(UINode* newFocus, bool cancel) {
+bool UIManager::changeFocus(UINode* newFocus, bool cancel) {
 	if (focusedNode == newFocus)
-		return;
+		return false;
 	if (focusedNode)
 		focusedNode->onFocusLost(cancel);
 
@@ -30,6 +30,8 @@ void UIManager::changeFocus(UINode* newFocus, bool cancel) {
 
 	if (focusedNode)
 		focusedNode->onFocusGained();
+
+	return true;
 }
 
 
@@ -97,10 +99,9 @@ bool UIManager::processEvent(const Event& event) {
 		// Dispatch event to target node
 
 		if (targetNode) {
-			if (pointer.action == PointerAction::Down && pointer.button == PointerButton::Primary) {
-				changeFocus(targetNode->isFocusable() ? targetNode : nullptr, false);
-				pointer.causedFocusChange = true;
-			}
+			if (pointer.action == PointerAction::Down && pointer.button == PointerButton::Primary)
+				if (changeFocus(targetNode->isFocusable() ? targetNode : nullptr, false))
+					pointer.causedFocusChange = true;
 
 			switch (targetNode->processEvent(pointer)) {
 			case UIResponse::Ignored:

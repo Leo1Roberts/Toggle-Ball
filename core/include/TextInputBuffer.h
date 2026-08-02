@@ -34,6 +34,11 @@ public:
 	[[nodiscard]] int getSelectionEndIndex() const { return selectionEndIndex; }
 
 private:
+	enum class CharClass { Word, Whitespace, Punctuation };
+
+	[[nodiscard]] static CharClass getCharClass(char c);
+	[[nodiscard]] int getWordJumpCursorIndex(bool left) const;
+
 	Validator charIsValid;
 	TextInputMode mode;
 	std::string buffer;

@@ -13,7 +13,7 @@ class UIManager {
 public:
 	void resize(int screenWidth, int screenHeight, float screenDPIScale);
 
-	void changeFocus(UINode* newFocus, bool cancel);
+	bool changeFocus(UINode* newFocus, bool cancel);
 
 	bool processEvent(const Event& event);
 

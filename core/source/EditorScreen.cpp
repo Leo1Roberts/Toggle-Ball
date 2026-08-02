@@ -44,7 +44,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	positionXTextBox->layout = {
 		.anchor = Anchor::TopRight,
 		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = 100.f, .height = 40.f,
+		.width = 250.f, .height = 40.f,
 		.offset = {-25.f, 30.f}
 	};
 	positionXTextBox->setOnCancel([this] { scene.cancelLevelChange(); });

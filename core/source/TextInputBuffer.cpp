@@ -25,8 +25,8 @@ bool TextInputBuffer::processEvent(const Event& event) {
 				if (selectionStartIndex != selectionEndIndex)
 					eraseSelection();
 				else if (cursorIndex > 0) {
-					buffer.erase(buffer.begin() + (cursorIndex - 1), buffer.begin() + cursorIndex);
-					moveCursorTo(cursorIndex - 1);
+					moveCursorTo(key->chord.modifiers & MOD_CTRL ? getWordJumpCursorIndex(true) : cursorIndex - 1, true);
+					eraseSelection();
 				} else if (key->action == KeyAction::Repeat)
 					return false;
 				return true;
@@ -55,9 +55,10 @@ bool TextInputBuffer::processEvent(const Event& event) {
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					if (selectionStartIndex != selectionEndIndex)
 						eraseSelection();
-					else if (cursorIndex < buffer.size())
-						buffer.erase(buffer.begin() + cursorIndex, buffer.begin() + (cursorIndex + 1));
-					else if (key->action == KeyAction::Repeat)
+					else if (cursorIndex < buffer.size()) {
+						moveCursorTo(key->chord.modifiers & MOD_CTRL ? getWordJumpCursorIndex(false) : cursorIndex + 1, true);
+						eraseSelection();
+					} else if (key->action == KeyAction::Repeat)
 						return false;
 					return true;
 				}
@@ -66,7 +67,8 @@ bool TextInputBuffer::processEvent(const Event& event) {
 					if (selectionStartIndex != selectionEndIndex && !(key->chord.modifiers & MOD_SHIFT))
 						moveCursorTo(selectionStartIndex, key->chord.modifiers & MOD_SHIFT);
 					else if (cursorIndex > 0)
-						moveCursorTo(cursorIndex - 1, key->chord.modifiers & MOD_SHIFT);
+						moveCursorTo(key->chord.modifiers & MOD_CTRL ? getWordJumpCursorIndex(true) : cursorIndex - 1,
+							key->chord.modifiers & MOD_SHIFT);
 					else if (key->action == KeyAction::Repeat)
 						return false;
 					return true;
@@ -76,7 +78,8 @@ bool TextInputBuffer::processEvent(const Event& event) {
 					if (selectionStartIndex != selectionEndIndex && !(key->chord.modifiers & MOD_SHIFT))
 						moveCursorTo(selectionEndIndex, key->chord.modifiers & MOD_SHIFT);
 					else if (cursorIndex < buffer.size())
-						moveCursorTo(cursorIndex + 1, key->chord.modifiers & MOD_SHIFT);
+						moveCursorTo(key->chord.modifiers & MOD_CTRL ? getWordJumpCursorIndex(false) : cursorIndex + 1,
+							key->chord.modifiers & MOD_SHIFT);
 					else if (key->action == KeyAction::Repeat)
 						return false;
 					return true;
@@ -122,4 +125,45 @@ void TextInputBuffer::moveCursorTo(int index, bool highlight) {
 	}
 
 	cursorIndex = index;
+}
+
+
+TextInputBuffer::CharClass TextInputBuffer::getCharClass(char c) {
+	if (std::isspace(c))
+		return CharClass::Whitespace;
+	if (std::isalnum(c) || c == '_')
+		return CharClass::Word;
+
+	return CharClass::Punctuation;
+}
+int TextInputBuffer::getWordJumpCursorIndex(bool left) const {
+	int n = buffer.length();
+	int index = cursorIndex;
+
+	if (left) { // Jump one word to the left
+		if (index == 0) return 0;
+
+		while (index > 0 && getCharClass(buffer[index - 1]) == CharClass::Whitespace)
+			index--;
+
+		if (index > 0) {
+			CharClass targetClass = getCharClass(buffer[index - 1]);
+			while (index > 0 && getCharClass(buffer[index - 1]) == targetClass)
+				index--;
+		}
+	} else { // Jump one word to the right
+		if (index == n) return n;
+
+		CharClass startClass = getCharClass(buffer[index]);
+
+		while (index < n && getCharClass(buffer[index]) == startClass)
+			index++;
+
+		if (startClass != CharClass::Whitespace) {
+			while (index < n && getCharClass(buffer[index]) == CharClass::Whitespace)
+				index++;
+		}
+	}
+
+	return index;
 }
