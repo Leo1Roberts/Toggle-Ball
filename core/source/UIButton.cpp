@@ -7,7 +7,7 @@ UIButton::UIButton(const std::string& labelText, const ButtonStyle& bStyle)
 	: UIPanel(bStyle.normalPanel), buttonStyle(bStyle) {
 	if (!labelText.empty())
 		labelNode = addChild(std::make_unique<UIText>(labelText, buttonStyle.normalText));
-	updateVisualState();
+	updateStyle();
 }
 
 
@@ -32,12 +32,12 @@ UIResponse UIButton::processEvent(const Event& event) {
 			switch (pointer->action) {
 			case PointerAction::Down:
 				pressed = true;
-				updateVisualState();
+				updateStyle();
 				return UIResponse::Consumed;
 			case PointerAction::Up:
 				if (pressed) {
 					pressed = false;
-					updateVisualState();
+					updateStyle();
 
 					if (hovered && onClickCallback)
 						onClickCallback();
@@ -54,15 +54,15 @@ UIResponse UIButton::processEvent(const Event& event) {
 
 void UIButton::onPointerEntered() {
 	hovered = true;
-	updateVisualState();
+	updateStyle();
 }
 void UIButton::onPointerExited() {
 	hovered = false;
-	updateVisualState();
+	updateStyle();
 }
 
 
-void UIButton::updateVisualState() {
+void UIButton::updateStyle() {
 	if (state != ButtonState::Disabled) {
 		if (pressed && hovered)
 			state = ButtonState::Pressed;

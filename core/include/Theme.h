@@ -265,7 +265,7 @@ namespace Theme {
 
         // --- Selection / Cursor ---
 		.cursor = {},
-        .highlight = {88, 101, 242, 140}         // Translucent Indigo for text selection
+        .highlight = { .fillColor = {88, 101, 242, 140} }    // Translucent Indigo for text selection
     };
 }
 

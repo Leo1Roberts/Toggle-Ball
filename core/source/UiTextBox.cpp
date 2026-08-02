@@ -3,6 +3,7 @@
 
 UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle)
 	: UIPanel(bStyle.normalPanel), textBoxStyle(bStyle), inputBuffer(validator) {
+	highlightNode = addChild(std::make_unique<UIPanel>(textBoxStyle.highlight));
 	textNode = addChild(std::make_unique<UIText>("", textBoxStyle.normalText));
 	textNode->layout = {
 		.anchor = Anchor::CentreLeft,
@@ -10,8 +11,8 @@ UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxS
 	};
 	cursorNode = addChild(std::make_unique<UIPanel>(textBoxStyle.cursor));
 
-	updateCursorPosition();
-	updateVisualState();
+	updateCursorAndHighlight();
+	updateStyle();
 }
 
 
@@ -21,7 +22,7 @@ UIResponse UITextBox::processEvent(const Event& event) {
 
 	if (inputBuffer.processEvent(event)) {
 		updateText();
-		updateCursorPosition();
+		updateCursorAndHighlight();
 		if (onTextChangedCallback) {
 			cursorInactiveTime = 0;
 			onTextChangedCallback(*this);
@@ -44,15 +45,15 @@ UIResponse UITextBox::processEvent(const Event& event) {
 			switch (pointer->action) {
 			case PointerAction::Down:
 				pressed = true;
-				inputBuffer.cursorIndex = getPointedCursorIndex(pointer->position.x);
+				inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position.x));
 				cursorInactiveTime = 0;
-				updateCursorPosition();
-				updateVisualState();
+				updateCursorAndHighlight();
+				updateStyle();
 				return UIResponse::Consumed;
 			case PointerAction::Up:
 				if (pressed) {
 					pressed = false;
-					updateVisualState();
+					updateStyle();
 				}
 				return UIResponse::Consumed;
 			default:;
@@ -60,10 +61,10 @@ UIResponse UITextBox::processEvent(const Event& event) {
 		}
 
 		if (pressed && pointer->action == PointerAction::Move) {
-			inputBuffer.cursorIndex = getPointedCursorIndex(pointer->position.x);
+			inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position.x));
 			cursorInactiveTime = 0;
-			updateCursorPosition();
-			updateVisualState();
+			updateCursorAndHighlight();
+			updateStyle();
 			return UIResponse::Consumed;
 		}
 	}
@@ -75,11 +76,11 @@ UIResponse UITextBox::processEvent(const Event& event) {
 void UITextBox::onFocusGained() {
 	focused = true;
 	cursorInactiveTime = 0;
-	updateVisualState();
+	updateStyle();
 }
 void UITextBox::onFocusLost(bool cancel) {
 	focused = false;
-	updateVisualState();
+	updateStyle();
 	if (cancel) {
 		if (onCancelCallback)
 			onCancelCallback();
@@ -92,11 +93,11 @@ void UITextBox::onFocusLost(bool cancel) {
 
 void UITextBox::onPointerEntered() {
 	hovered = true;
-	updateVisualState();
+	updateStyle();
 }
 void UITextBox::onPointerExited() {
 	hovered = false;
-	updateVisualState();
+	updateStyle();
 }
 
 
@@ -121,25 +122,35 @@ int UITextBox::getPointedCursorIndex(float pointerX) const {
 }
 
 
-void UITextBox::updateCursorPosition() {
-	float cursorWidth = 1.f;
+void UITextBox::updateCursorAndHighlight() {
+	glm::vec2 start = textNode->layout.offset;;
+	glm::vec2 offset = start;
+	offset.x += textNode->measure(0, inputBuffer.getSelectionStartIndex()).x;
 
-	glm::vec2 offset = textNode->layout.offset;
-	offset.x +=
-		textNode->measure(0, inputBuffer.cursorIndex).x
-		- 0.5f * cursorWidth;
+	highlightNode->layout = {
+		.anchor = Anchor::CentreLeft,
+		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
+		.width = textNode->measure(inputBuffer.getSelectionStartIndex(), inputBuffer.getSelectionEndIndex()).x,
+		.height = textNode->textStyle.fontSize,
+		.offset = offset
+	};
+
+	highlightNode->updateBounds(getAbsoluteBounds());
+
+	offset = start;
+	offset.x += textNode->measure(0, inputBuffer.getCursorIndex()).x;
 
 	cursorNode->layout = {
 		.anchor = Anchor::CentreLeft,
 		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = cursorWidth, .height = textNode->textStyle.fontSize,
+		.width = 1.f, .height = textNode->textStyle.fontSize,
 		.offset = offset
 	};
 
 	cursorNode->updateBounds(getAbsoluteBounds());
 }
 
-void UITextBox::updateVisualState() {
+void UITextBox::updateStyle() {
 	if (state != TextBoxState::Disabled) {
 		if (focused)
 			state = TextBoxState::Focused;

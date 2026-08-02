@@ -29,8 +29,8 @@ public:
 	void onPointerEntered() override;
 	void onPointerExited() override;
 
-	void disable() { state = TextBoxState::Disabled; updateVisualState(); }
-	void enable() { state = TextBoxState::Normal; updateVisualState(); }
+	void disable() { state = TextBoxState::Disabled; updateStyle(); }
+	void enable() { state = TextBoxState::Normal; updateStyle(); }
 
 	template <typename T>
 	T getValue() const { return inputBuffer.getValue<T>(); }
@@ -51,6 +51,7 @@ private:
 
 	UIText* textNode = nullptr;
 	UIPanel* cursorNode = nullptr;
+	UIPanel* highlightNode = nullptr;
 	TextInputBuffer inputBuffer;
 
 	std::function<void()> onCancelCallback;
@@ -58,8 +59,8 @@ private:
 	std::function<void(const UITextBox&)> onTextChangedCallback;
 
 	void updateText() { textNode->text = inputBuffer.getValue<const std::string&>(); }
-	void updateCursorPosition();
-	void updateVisualState();
+	void updateCursorAndHighlight();
+	void updateStyle();
 
 	microseconds cursorInactiveTime = 0;
 };

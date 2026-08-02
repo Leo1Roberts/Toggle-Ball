@@ -23,8 +23,8 @@ public:
 	void onPointerEntered() override;
 	void onPointerExited() override;
 
-	void disable() { state = ButtonState::Disabled; updateVisualState(); }
-	void enable() { state = ButtonState::Normal; updateVisualState(); }
+	void disable() { state = ButtonState::Disabled; updateStyle(); }
+	void enable() { state = ButtonState::Normal; updateStyle(); }
 
 	[[nodiscard]] bool isFocusable() const override {
 		return state != ButtonState::Disabled && isVisible() && isActive();
@@ -40,7 +40,7 @@ private:
 	UIText* labelNode = nullptr;
 	std::function<void()> onClickCallback;
 
-	void updateVisualState();
+	void updateStyle();
 };
 
 

@@ -18,15 +18,29 @@ public:
 
 	void clear() { buffer.clear(); }
 
+	void moveCursorTo(int index, bool highlight = false);
+	void selectAll() { selectionStartIndex = 0; selectionEndIndex = cursorIndex = buffer.length(); }
+	void deselectAll() { selectionStartIndex = selectionEndIndex = cursorIndex; }
+	void eraseSelection() {
+		buffer.erase(buffer.begin() + selectionStartIndex, buffer.begin() + selectionEndIndex);
+		moveCursorTo(selectionStartIndex);
+	}
+
 	template <typename T>
 	T getValue() const;
 
-	int cursorIndex = 0;
+	[[nodiscard]] int getCursorIndex() const { return cursorIndex; }
+	[[nodiscard]] int getSelectionStartIndex() const { return selectionStartIndex; }
+	[[nodiscard]] int getSelectionEndIndex() const { return selectionEndIndex; }
 
 private:
 	Validator charIsValid;
 	TextInputMode mode;
 	std::string buffer;
+
+	int cursorIndex = 0;
+	int selectionStartIndex = 0;
+	int selectionEndIndex = 0;
 };
 
 template <>

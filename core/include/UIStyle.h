@@ -51,7 +51,7 @@ struct TextBoxStyle {
 	TextStyle disabledText;
 
 	PanelStyle cursor;
-	col highlight = Color::SoftBlue;
+	PanelStyle highlight;
 };
 
 #endif // UI_STYLE_H
