@@ -8,8 +8,8 @@ enum class TextInputMode { Simple, Rich };
 
 class TextInputBuffer {
 public:
-	using Validator = std::function<bool(char, const std::string&)>;
-	static bool Float(char c, const std::string& buffer = "");
+	using Validator = std::function<bool(char, int, const std::string&)>;
+	static bool Float(char c, int cursor = 0, const std::string& buffer = "");
 
 	explicit TextInputBuffer(const Validator& validator, TextInputMode mode = TextInputMode::Rich)
 		: charIsValid(validator), mode(mode) {}

@@ -2,17 +2,17 @@
 
 #include "Settings.h"
 
-bool TextInputBuffer::Float(char c, const std::string& buffer) {
-	if (std::isdigit(c)) return true;
-	if (c == '-' && buffer.empty()) return true; // Only allow minus at the start
-	if (c == '.' && buffer.find('.') == std::string::npos) return true; // Only one decimal point
+bool TextInputBuffer::Float(char c, int cursor, const std::string& buffer) {
+	if (std::isdigit(c) && buffer.find('-', cursor) == std::string::npos) return true;
+	if (c == '-' && cursor == 0 && buffer.find('-') == std::string::npos) return true;
+	if (c == '.' && buffer.find('.') == std::string::npos && buffer.find('-', cursor) == std::string::npos) return true;
 	return false;
 }
 
 
 bool TextInputBuffer::processEvent(const Event& event) {
 	if (auto* c = std::get_if<char>(&event)) {
-		if (charIsValid(*c, buffer)) {
+		if (charIsValid(*c, cursorIndex, buffer)) {
 			eraseSelection();
 			buffer.insert(buffer.begin() + cursorIndex, *c);
 			moveCursorTo(cursorIndex + 1);
