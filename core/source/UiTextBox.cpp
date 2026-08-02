@@ -49,8 +49,6 @@ UIResponse UITextBox::processEvent(const Event& event) {
 				updateCursorPosition();
 				updateVisualState();
 				return UIResponse::Consumed;
-			case PointerAction::Move:
-				return UIResponse::Consumed;
 			case PointerAction::Up:
 				if (pressed) {
 					pressed = false;
@@ -59,6 +57,14 @@ UIResponse UITextBox::processEvent(const Event& event) {
 				return UIResponse::Consumed;
 			default:;
 			}
+		}
+
+		if (pressed && pointer->action == PointerAction::Move) {
+			inputBuffer.cursorIndex = getPointedCursorIndex(pointer->position.x);
+			cursorInactiveTime = 0;
+			updateCursorPosition();
+			updateVisualState();
+			return UIResponse::Consumed;
 		}
 	}
 

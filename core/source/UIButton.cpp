@@ -34,8 +34,6 @@ UIResponse UIButton::processEvent(const Event& event) {
 				pressed = true;
 				updateVisualState();
 				return UIResponse::Consumed;
-			case PointerAction::Move:
-				return UIResponse::Consumed;
 			case PointerAction::Up:
 				if (pressed) {
 					pressed = false;
