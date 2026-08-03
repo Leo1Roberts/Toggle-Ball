@@ -18,22 +18,67 @@ struct CharVertex {
 	static void setupLayout();
 };
 
+struct TextGlyph {
+	glm::vec2 pos; // Relative position within UITextNode
+	glm::vec2 size;
+	glm::vec2 uvLeftTop;
+	glm::vec2 uvRightBottom;
+};
+
+struct TextLayout {
+	glm::vec2 totalSize{};
+	// For UI interation
+	std::vector<glm::vec2> cursorPositions; // Absolute position
+	std::vector<float> charAdvances;
+	// For rendering
+	std::vector<TextGlyph> glyphs;
+
+	void reset() {
+		totalSize = {};
+		cursorPositions.clear();
+		charAdvances.clear();
+		glyphs.clear();
+	}
+};
+
 
 struct Font;
 
 class UIText : public UINode {
 public:
 	explicit UIText(std::string text, const TextStyle& style = {})
-		: text(std::move(text)), textStyle(style) {
+		: textStyle(style), text(std::move(text)) {
 		hitTestable = false;
+		updateTextLayout();
+	}
+
+	void updateBounds(Rectangle parentBounds) override {
+		UINode::updateBounds(parentBounds);
+		updateTextLayout();
 	}
 
 	void submitRender(UIManager& manager) override;
 
-	[[nodiscard]] glm::vec2 measure(int from, int to = -1) const;
+	void updateTextLayout();
 
-	std::string text;
+	[[nodiscard]] glm::vec2 getCursorPosition(int index) const { return textLayout.cursorPositions[index]; }
+	// Returns the index of the closest (cursor ? cursor : character)
+	[[nodiscard]] int getIndexAtPosition(glm::vec2 localPos, bool cursor) const;
+	[[nodiscard]] std::vector<Rectangle> getHighlightRects(int start, int end) const;
+
 	TextStyle textStyle;
+
+	void setText(const std::string& newText) {
+		text = newText;
+		updateTextLayout();
+	}
+
+	[[nodiscard]] const std::string& getText() const { return text; }
+	[[nodiscard]] const TextLayout& getTextLayout() const { return textLayout; }
+
+private:
+	std::string text;
+	TextLayout textLayout;
 };
 
 

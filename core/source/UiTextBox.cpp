@@ -3,17 +3,16 @@
 
 UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle)
 	: UIPanel(bStyle.normalPanel), textBoxStyle(bStyle), inputBuffer(validator) {
-	highlightNode = addChild(std::make_unique<UIPanel>(textBoxStyle.highlight));
-	highlightNode->setHitTestable(false);
+	highlightContainer = addChild(std::make_unique<UINode>());
+	highlightContainer->setHitTestable(false);
 
 	textNode = addChild(std::make_unique<UIText>("", textBoxStyle.normalText));
-	textNode->layout = {
+	highlightContainer->layout = textNode->layout = {
 		.anchor = Anchor::CentreLeft,
 		.offset = {10.f, 0.f}
 	};
 
-	cursorNode = addChild(std::make_unique<UIPanel>(textBoxStyle.cursor));
-	cursorNode->setHitTestable(false);
+	cursorNode = textNode->addChild(std::make_unique<UIPanel>(textBoxStyle.cursor));
 
 	updateCursorAndHighlight();
 	updateStyle();
@@ -49,7 +48,7 @@ UIResponse UITextBox::processEvent(const Event& event) {
 			switch (pointer->action) {
 			case PointerAction::Down:
 				pressed = true;
-				inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position.x), pointer->modifiers & MOD_SHIFT);
+				inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position), pointer->modifiers & MOD_SHIFT);
 				if (pointer->causedFocusChange)
 					inputBuffer.selectAll();
 				cursorInactiveTime = 0;
@@ -67,7 +66,7 @@ UIResponse UITextBox::processEvent(const Event& event) {
 		}
 
 		if (pressed && pointer->action == PointerAction::Move) {
-			inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position.x), true);
+			inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position), true);
 			cursorInactiveTime = 0;
 			updateCursorAndHighlight();
 			updateStyle();
@@ -119,44 +118,35 @@ void UITextBox::doUpdate(microseconds dt) {
 }
 
 
-int UITextBox::getPointedCursorIndex(float pointerX) const {
-	const auto& text = inputBuffer.getValue<const std::string&>();
-	float cursorIndex = text.length();
-	for (int i = 0; i < text.length(); i++)
-		if (pointerX < textNode->getAbsoluteBounds().x + textNode->measure(0, i + 1).x - 0.5f * textNode->measure(i, i + 1).x) {
-			cursorIndex = i;
-			break;
-		}
-	return cursorIndex;
+int UITextBox::getPointedCursorIndex(glm::vec2 pointerPos) const {
+	return textNode->getIndexAtPosition(pointerPos - textNode->getAbsoluteBounds().position, true);
 }
 
 
 void UITextBox::updateCursorAndHighlight() {
-	glm::vec2 start = textNode->layout.offset;;
-	glm::vec2 offset = start;
-	offset.x += textNode->measure(0, inputBuffer.getSelectionStartIndex()).x;
+	highlightContainer->clearChildren();
+	for (const auto& highlightRect : textNode->getHighlightRects(inputBuffer.getSelectionStartIndex(), inputBuffer.getSelectionEndIndex())) {
+		auto highlightNode = highlightContainer->addChild(std::make_unique<UIPanel>(textBoxStyle.highlight));
+		highlightNode->layout = {
+			.anchor = Anchor::TopLeft,
+			.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
+			.width = highlightRect.width, .height = highlightRect.height,
+			.offset = highlightRect.position
+		};
+		highlightNode->updateBounds(highlightNode->getParent()->getAbsoluteBounds());
+	}
 
-	highlightNode->layout = {
-		.anchor = Anchor::CentreLeft,
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = textNode->measure(inputBuffer.getSelectionStartIndex(), inputBuffer.getSelectionEndIndex()).x,
-		.height = textNode->textStyle.fontSize,
-		.offset = offset
-	};
-
-	highlightNode->updateBounds(getAbsoluteBounds());
-
-	offset = start;
-	offset.x += textNode->measure(0, inputBuffer.getCursorIndex()).x;
-
+	float cursorWidth = 1.f;
+	glm::vec2 pos = textNode->getCursorPosition(inputBuffer.getCursorIndex());
+	pos.x -= cursorWidth / 2.f;
 	cursorNode->layout = {
-		.anchor = Anchor::CentreLeft,
+		.anchor = Anchor::TopLeft,
 		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = 1.f, .height = textNode->textStyle.fontSize,
-		.offset = offset
+		.width = cursorWidth, .height = textNode->textStyle.fontSize,
+		.offset = pos
 	};
 
-	cursorNode->updateBounds(getAbsoluteBounds());
+	cursorNode->updateBounds(cursorNode->getParent()->getAbsoluteBounds());
 }
 
 void UITextBox::updateStyle() {

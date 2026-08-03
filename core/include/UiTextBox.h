@@ -40,7 +40,7 @@ public:
 private:
 	void doUpdate(microseconds dt) override;
 
-	int getPointedCursorIndex(float pointerX) const;
+	[[nodiscard]] int getPointedCursorIndex(glm::vec2 pointerPos) const;
 
 	bool focused = false;
 	bool hovered = false;
@@ -51,14 +51,14 @@ private:
 
 	UIText* textNode = nullptr;
 	UIPanel* cursorNode = nullptr;
-	UIPanel* highlightNode = nullptr;
+	UINode* highlightContainer = nullptr;
 	TextInputBuffer inputBuffer;
 
 	std::function<void()> onCancelCallback;
 	std::function<void(const UITextBox&)> onConfirmCallback;
 	std::function<void(const UITextBox&)> onTextChangedCallback;
 
-	void updateText() { textNode->text = inputBuffer.getValue<const std::string&>(); }
+	void updateText() { textNode->setText(inputBuffer.getValue<const std::string&>()); }
 	void updateCursorAndHighlight();
 	void updateStyle();
 

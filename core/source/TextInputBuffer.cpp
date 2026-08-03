@@ -97,7 +97,7 @@ bool TextInputBuffer::processEvent(const Event& event) {
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					if (cursorIndex == buffer.length() && key->action == KeyAction::Repeat)
 						return false;
-					moveCursorTo(buffer.length(), key->chord.modifiers & MOD_SHIFT);
+					moveCursorTo((int)buffer.length(), key->chord.modifiers & MOD_SHIFT);
 					return true;
 				}
 			default:;
@@ -137,7 +137,7 @@ TextInputBuffer::CharClass TextInputBuffer::getCharClass(char c) {
 	return CharClass::Punctuation;
 }
 int TextInputBuffer::getWordJumpCursorIndex(bool left) const {
-	int n = buffer.length();
+	int n = (int)buffer.length();
 	int index = cursorIndex;
 
 	if (left) { // Jump one word to the left

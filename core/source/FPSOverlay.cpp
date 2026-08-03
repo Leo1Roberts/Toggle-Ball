@@ -30,7 +30,7 @@ void FPSOverlay::doUpdate(microseconds dt) {
 		int fps = (int)std::round((float)frameCount / seconds);
 
 		std::string fpsString = std::format("{:3}", fps);
-		labelNode->text = fpsString + " fps";
+		labelNode->setText(fpsString + " fps");
 
 		timeAccumulator = 0;
 		frameCount = 0;

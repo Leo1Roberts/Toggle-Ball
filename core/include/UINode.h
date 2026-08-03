@@ -29,6 +29,7 @@ public:
 		children.push_back(std::move(child));
 		return ptr;
 	}
+	void clearChildren() { children.clear(); }
 
 	virtual void updateBounds(Rectangle parentBounds);
 

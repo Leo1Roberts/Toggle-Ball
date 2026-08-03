@@ -28,6 +28,7 @@ struct Font {
 	bool monoSpaced = false;
 	float charSpacing = 0.f;
 	float wordSpacing = 0.f;
+	float lineSpacing = 0.f;
 };
 
 enum class FontId : byte {
