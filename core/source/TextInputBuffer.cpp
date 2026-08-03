@@ -136,6 +136,7 @@ TextInputBuffer::CharClass TextInputBuffer::getCharClass(char c) {
 
 	return CharClass::Punctuation;
 }
+
 int TextInputBuffer::getWordJumpCursorIndex(bool left) const {
 	int n = (int)buffer.length();
 	int index = cursorIndex;
@@ -166,4 +167,21 @@ int TextInputBuffer::getWordJumpCursorIndex(bool left) const {
 	}
 
 	return index;
+}
+
+void TextInputBuffer::selectWord(int charIndex) {
+	if (buffer.empty()) return;
+
+	auto targetClass = getCharClass(buffer[charIndex]);
+
+	int start = charIndex;
+	while (start > 0 && getCharClass(buffer[start - 1]) == targetClass)
+		start--;
+
+	int end = charIndex;
+	while (end < buffer.length() && getCharClass(buffer[end]) == targetClass)
+		end++;
+
+	selectionStartIndex = start;
+	cursorIndex = selectionEndIndex = end;
 }

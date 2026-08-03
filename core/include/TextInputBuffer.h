@@ -1,6 +1,8 @@
 #ifndef TEXT_INPUT_BUFFER_H
 #define TEXT_INPUT_BUFFER_H
 
+#include <utility>
+
 #include "Event.h"
 
 enum class TextInputMode { Simple, Rich };
@@ -11,15 +13,16 @@ public:
 	using Validator = std::function<bool(char, int, const std::string&)>;
 	static bool Float(char c, int cursor = 0, const std::string& buffer = "");
 
-	explicit TextInputBuffer(const Validator& validator, TextInputMode mode = TextInputMode::Rich)
-		: charIsValid(validator), mode(mode) {}
+	explicit TextInputBuffer(Validator validator, TextInputMode mode = TextInputMode::Rich)
+		: charIsValid(std::move(validator)), mode(mode) {}
 
 	bool processEvent(const Event& event);
 
 	void clear() { buffer.clear(); }
 
 	void moveCursorTo(int index, bool highlight = false);
-	void selectAll() { selectionStartIndex = 0; selectionEndIndex = buffer.length(); }
+	void selectWord(int charIndex);
+	void selectAll() { selectionStartIndex = 0; selectionEndIndex = (int)buffer.length(); }
 	void deselectAll() { selectionStartIndex = selectionEndIndex = cursorIndex; }
 	void eraseSelection() {
 		buffer.erase(buffer.begin() + selectionStartIndex, buffer.begin() + selectionEndIndex);

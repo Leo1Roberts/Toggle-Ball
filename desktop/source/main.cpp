@@ -224,11 +224,34 @@ static void charCallback(GLFWwindow* window, unsigned int codepoint) {
 }
 
 glm::vec2 mousePosition;
+int clickCount = 0;
+microseconds clickTime = 0;
+glm::vec2 clickPosition;
 
 static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
-	app->processEvent(PointerEvent(0, mousePosition, translateMouseButtonAction(action), translateMouseButton(button), getUpdatedMods(window)));
+
+	auto actionT = translateMouseButtonAction(action);
+	auto buttonT = translateMouseButton(button);
+
+	if (actionT == PointerAction::Down) {
+		if (buttonT == PointerButton::Primary) {
+			microseconds time = now();
+			if (mousePosition == clickPosition && toSeconds(time - clickTime) < 0.5f) // Double/triple click registration period
+				clickCount = 1 + clickCount % 3;
+			else {
+				clickCount = 1;
+				clickPosition = mousePosition;
+			}
+			clickTime = time;
+		} else
+			clickCount = 1;
+	}
+
+	app->processEvent(PointerEvent(
+		0, mousePosition, actionT, buttonT,
+		getUpdatedMods(window), {}, false, clickCount));
 }
 
 static void cursorPosCallback(GLFWwindow* window, double x, double y) {

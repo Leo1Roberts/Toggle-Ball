@@ -17,6 +17,7 @@ struct PointerEvent {
 	byte modifiers{};
 	glm::vec2 scroll;
 	bool causedFocusChange = false;
+	int pointerDownCount = 0;
 };
 
 using Event = std::variant<

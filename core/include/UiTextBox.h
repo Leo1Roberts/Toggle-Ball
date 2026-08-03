@@ -41,6 +41,7 @@ private:
 	void doUpdate(microseconds dt) override;
 
 	[[nodiscard]] int getPointedCursorIndex(glm::vec2 pointerPos) const;
+	[[nodiscard]] int getPointedCharacterIndex(glm::vec2 pointerPos) const;
 
 	bool focused = false;
 	bool hovered = false;

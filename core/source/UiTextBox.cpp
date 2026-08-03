@@ -49,7 +49,12 @@ UIResponse UITextBox::processEvent(const Event& event) {
 			case PointerAction::Down:
 				pressed = true;
 				inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position), pointer->modifiers & MOD_SHIFT);
+
 				if (pointer->causedFocusChange)
+					inputBuffer.selectAll();
+				else if (pointer->pointerDownCount == 2)
+					inputBuffer.selectWord(getPointedCharacterIndex(pointer->position));
+				else if (pointer->pointerDownCount == 3)
 					inputBuffer.selectAll();
 				cursorInactiveTime = 0;
 				updateCursorAndHighlight();
@@ -120,6 +125,9 @@ void UITextBox::doUpdate(microseconds dt) {
 
 int UITextBox::getPointedCursorIndex(glm::vec2 pointerPos) const {
 	return textNode->getIndexAtPosition(pointerPos - textNode->getAbsoluteBounds().position, true);
+}
+int UITextBox::getPointedCharacterIndex(glm::vec2 pointerPos) const {
+	return textNode->getIndexAtPosition(pointerPos - textNode->getAbsoluteBounds().position, false);
 }
 
 
