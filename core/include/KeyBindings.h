@@ -61,26 +61,23 @@ enum class ActionCode {
 	Quit,
 	Fullscreen,
 
+	Copy, Paste,
+
 	TestLevel,
 
-	Toggle,
-	InstantToggle,
+	Toggle, InstantToggle,
 
-	Undo,
-	Redo,
+	Undo, Redo,
 
-	SelectAll,
-	DeselectAll,
+	SelectAll, DeselectAll,
 
 	Translate,
 	Rotate,
 	Scale,
 
-	LockToXAxis,
-	LockToYAxis,
+	LockToXAxis, LockToYAxis,
 
-	ToggleTransformBothStates,
-	ToggleTransformLocally,
+	ToggleTransformBothStates, ToggleTransformLocally,
 };
 
 
@@ -106,6 +103,8 @@ private:
 	static constexpr Entry entries[] = {
 		{ ActionCode::Quit,                      "Quit"                         },
 		{ ActionCode::Fullscreen,                "Fullscreen"                   },
+		{ ActionCode::Copy,                      "Copy"                         },
+		{ ActionCode::Paste,                     "Paste"                        },
 		{ ActionCode::TestLevel,                 "Test level"                   },
 		{ ActionCode::Toggle,                    "Toggle"                       },
 		{ ActionCode::InstantToggle,             "Instant toggle"               },

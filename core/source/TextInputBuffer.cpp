@@ -1,6 +1,7 @@
 #include "TextInputBuffer.h"
 
 #include "Settings.h"
+#include "System.h"
 
 bool TextInputBuffer::Float(char c, int cursor, const std::string& buffer) {
 	if (std::isdigit(c) && buffer.find('-', cursor) == std::string::npos) return true;
@@ -20,6 +21,30 @@ bool TextInputBuffer::processEvent(const Event& event) {
 		return true;
 	}
 	if (auto key = std::get_if<KeyEvent>(&event)) {
+		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
+			switch (*actionCode) {
+			case ActionCode::Copy:
+				if (key->action == KeyAction::Down) {
+					if (selectionStartIndex == selectionEndIndex)
+						System::setClipboardText(buffer);
+					else
+						System::setClipboardText(buffer.substr(selectionStartIndex, selectionEndIndex - selectionStartIndex));
+					return true;
+				}
+			case ActionCode::Paste:
+				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
+					eraseSelection();
+					for (char c : System::getClipboardText())
+						if (charIsValid(c, cursorIndex, buffer)) {
+							buffer.insert(buffer.begin() + cursorIndex, c);
+							moveCursorTo(cursorIndex + 1);
+						}
+					return true;
+				}
+			default:;
+			}
+		}
+		
 		if (key->chord.code == KeyCode::Backspace) {
 			if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 				if (selectionStartIndex != selectionEndIndex)
