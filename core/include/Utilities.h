@@ -1,9 +1,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-#include "SelectBox.h"
 #include "Colors.h"
-#include "main.h"
 
 #include <glm/glm.hpp>
 #include <string_view>
@@ -15,6 +13,13 @@
 [[nodiscard]] long now_ms();
 [[nodiscard]] microseconds now();
 [[nodiscard]] inline float toSeconds(microseconds t) { return (float)t / 1000000.f; }
+
+inline glm::mat2 angleToRotation2D(float radians) {
+	float c = std::cos(radians);
+	float s = std::sin(radians);
+	return { c,  s,
+			-s,  c };
+}
 
 [[nodiscard]] float wrapAngle(float radians); // Wraps angle to range (-PI, PI]
 [[nodiscard]] float angleToDisplay(float angle);
@@ -40,7 +45,5 @@ float clamp(float val, float min, float max, byte* valPos);
 [[nodiscard]] glm::vec2 pixelsToYNorm(float x, float y, float width, float height);
 
 [[nodiscard]] glm::vec2 pixelsToYNorm(glm::vec2 pixels, float width, float height);
-
-[[nodiscard]] GLuint loadShader(GLenum shaderType, const std::string& shaderSource);
 
 #endif // UTILITIES_H

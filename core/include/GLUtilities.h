@@ -1,7 +1,7 @@
 #ifndef GL_UTILITIES_H
 #define GL_UTILITIES_H
 
-#include "main.h"
+#include "OpenGL.h"
 
 struct BufferDeleter {
 	void operator()(GLsizei n, const GLuint* ids) const { glDeleteBuffers(n, ids); }

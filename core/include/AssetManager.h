@@ -1,8 +1,12 @@
 #ifndef ASSET_MANAGER_H
 #define ASSET_MANAGER_H
 
-#include "main.h"
+#include "TypeAliases.h"
 
+#if defined(PLATFORM_ANDROID)
+#include <android/asset_manager.h>
+#endif
+#include <string>
 #include <vector>
 
 namespace AssetManager {

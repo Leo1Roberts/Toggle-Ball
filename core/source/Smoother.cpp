@@ -1,9 +1,8 @@
-#include "main.h"
 #include "Smoother.h"
-
 
 #include <glm/glm.hpp>
 #include <algorithm>
+#include <cstring>
 
 void Smoother::reset() {
 	memset(this, 0, sizeof(Smoother));

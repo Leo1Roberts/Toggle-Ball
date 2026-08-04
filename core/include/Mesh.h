@@ -1,13 +1,11 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include "main.h"
 #include "Colors.h"
 #include "GLUtilities.h"
 
 #include <glm/glm.hpp>
 #include <memory>
-#include <vector>
 
 using Index = unsigned short; // Needs to match glDrawElements 'type' argument
 

@@ -1,10 +1,9 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include "main.h"
 #include "GLUtilities.h"
-#include "glm/gtc/type_ptr.hpp"
 
+#include "glm/gtc/type_ptr.hpp"
 #include <glm/glm.hpp>
 #include <memory>
 

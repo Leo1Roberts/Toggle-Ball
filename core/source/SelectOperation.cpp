@@ -1,6 +1,6 @@
 #include "SelectOperation.h"
 
-#include "Camera.h"
+#include "EditorObstacle.h"
 #include "GizmoRenderer.h"
 
 

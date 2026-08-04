@@ -1,8 +1,7 @@
 #ifndef FONT_H
 #define FONT_H
 
-#include "main.h"
-
+#include "TypeAliases.h"
 
 #include <memory>
 

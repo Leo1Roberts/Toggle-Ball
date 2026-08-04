@@ -1,4 +1,4 @@
-#include "main.h"
+#include "TypeAliases.h"
 #include "Utilities.h"
 
 #include "glm/ext/scalar_constants.hpp"
@@ -82,33 +82,4 @@ float clamp(float val, float min, float max, byte* valPos) {
 		*valPos = VP_INSIDE;
 
 	return val;
-}
-
-GLuint loadShader(GLenum shaderType, const std::string& shaderSource) {
-	GLuint shader = glCreateShader(shaderType);
-	if (shader) {
-		auto* shaderRawString = const_cast<GLchar*>(shaderSource.c_str());
-		auto shaderLength = static_cast<GLint>(shaderSource.length());
-		glShaderSource(shader, 1, &shaderRawString, &shaderLength);
-		glCompileShader(shader);
-
-		GLint shaderCompiled = 0;
-		glGetShaderiv(shader, GL_COMPILE_STATUS, &shaderCompiled);
-
-		// If the shader doesn't compile, log the result to the terminal for debugging
-		if (!shaderCompiled) {
-			GLint infoLength = 0;
-			glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLength);
-
-			if (infoLength) {
-				auto* infoLog = new GLchar[infoLength];
-				glGetShaderInfoLog(shader, infoLength, nullptr, infoLog);
-				delete[] infoLog;
-			}
-
-			glDeleteShader(shader);
-			shader = 0;
-		}
-	}
-	return shader;
 }

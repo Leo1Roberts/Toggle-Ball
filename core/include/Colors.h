@@ -1,7 +1,7 @@
 #ifndef COLORS_H
 #define COLORS_H
 
-#include "main.h"
+#include "TypeAliases.h"
 
 #include <glm/glm.hpp>
 

@@ -1,10 +1,11 @@
 #ifndef APP_H
 #define APP_H
 
-#include "Event.h"
-#include "AbstractWindow.h"
-#include "Mesh.h"
 #include "UIManager.h"
+
+class AbstractWindow;
+class AppMode;
+class FPSOverlay;
 
 
 struct ScreenVertex {
@@ -18,8 +19,6 @@ struct ScreenVertex {
 };
 
 
-class FPSOverlay;
-class AppMode;
 
 class App {
 public:

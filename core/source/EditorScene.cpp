@@ -4,7 +4,7 @@
 
 
 EditorScene::EditorScene(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& syncLevelCallback)
-	: syncLevelCallback(syncLevelCallback), level(std::move(levelToEdit)), ball(level->ballDescriptor.get()) {
+	: level(std::move(levelToEdit)), ball(level->ballDescriptor.get()), syncLevelCallback(syncLevelCallback) {
 
 	obstacles.append_range(level->obstacleDescriptors
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));

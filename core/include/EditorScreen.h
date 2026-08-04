@@ -2,11 +2,10 @@
 #define EDITOR_H
 
 #include "Camera.h"
+#include "EditorContext.h"
 #include "EditorScene.h"
 #include "GizmoRenderer.h"
-#include "Obstacle.h"
 #include "Operation.h"
-#include "Level.h"
 #include "Screen.h"
 #include "ToolMode.h"
 #include "UIManager.h"

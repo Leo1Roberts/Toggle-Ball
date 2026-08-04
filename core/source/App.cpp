@@ -1,11 +1,9 @@
 #include "App.h"
 
+#include "AbstractWindow.h"
 #include "AppMode.h"
-#include "AssetManager.h"
 #include "FPSOverlay.h"
-#include "Settings.h"
-#include "Shader.h"
-#include <ranges>
+
 
 void ScreenVertex::setupLayout() {
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(ScreenVertex), (void*)offsetof(ScreenVertex, pos));

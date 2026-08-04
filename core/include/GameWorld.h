@@ -3,7 +3,10 @@
 
 #include "Camera.h"
 #include "Event.h"
+#include "GameBall.h"
 #include "Level.h"
+#include "GameObstacle.h"
+#include "Smoother.h"
 
 
 class GameWorld {

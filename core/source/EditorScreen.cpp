@@ -1,15 +1,11 @@
-#include "main.h"
 #include "EditorScreen.h"
 
 #include "DefaultMode.h"
-#include "EditorContext.h"
+#include "EditorObstacle.h"
 #include "Settings.h"
 #include "Shader.h"
 #include "Theme.h"
 #include "TranslateOperation.h"
-#include "UiTextBox.h"
-
-#include <ranges>
 
 
 const glm::vec3 groundColor = colorToLinear({76, 76, 76});

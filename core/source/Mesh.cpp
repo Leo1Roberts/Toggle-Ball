@@ -1,4 +1,4 @@
-#include "main.h"
+#include "TypeAliases.h"
 #include "Mesh.h"
 
 #include "AssetManager.h"

@@ -1,10 +1,10 @@
 #ifndef EDITOR_SCENE_H
 #define EDITOR_SCENE_H
 
+#include "EditorBall.h"
+#include "EditorObstacle.h"
 #include "Level.h"
-
-#include <memory>
-#include <vector>
+#include "Smoother.h"
 
 
 enum class EntityType { None, Ball, Obstacle };

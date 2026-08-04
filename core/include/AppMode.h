@@ -2,10 +2,7 @@
 #define APP_MODE_H
 
 #include "Screen.h"
-#include "main.h"
 
-
-class Screen;
 
 class AppMode {
 public:

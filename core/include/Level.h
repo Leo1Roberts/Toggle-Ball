@@ -2,8 +2,9 @@
 #define LEVEL_H
 
 #include "AssetManager.h"
-#include "Obstacle.h"
-#include "Ball.h"
+#include "BallDescriptor.h"
+#include "ObstacleDescriptor.h"
+
 
 struct LevelDescriptor {
 	LevelDescriptor() :

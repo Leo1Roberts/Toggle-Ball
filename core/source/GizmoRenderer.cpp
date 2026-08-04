@@ -1,7 +1,7 @@
 #include "GizmoRenderer.h"
 
 #include "Camera.h"
-#include "Obstacle.h"
+#include "SelectBox.h"
 #include "UIManager.h"
 
 

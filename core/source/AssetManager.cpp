@@ -1,5 +1,4 @@
 #include "AssetManager.h"
-#include "main.h"
 
 #include <filesystem>
 #include <fstream>

@@ -1,11 +1,8 @@
-#include "main.h"
-#include "Obstacle.h"
 #include "Level.h"
 
-#include <cmath>
+#include <algorithm>
 #include <iomanip>
 #include <sstream>
-#include <algorithm>
 
 LevelDescriptor::LevelDescriptor(const LevelDescriptor& other) :
 	arenaWidth(other.arenaWidth),
