@@ -1,17 +1,16 @@
 #include "AndroidWindow.h"
+#include "App.h"
+#include "utilities/AssetManager.h"
+#include "opengl/Shader.h"
+#include "opengl/Texture.h"
+#include "game/GameMode.h"
+#include "editor/EditorMode.h"
 
 #include <game-activity/GameActivity.cpp>
+#include <game-activity/native_app_glue/android_native_app_glue.c>
 #include <game-text-input/gametextinput.cpp>
-#include <App.h>
-#include <AssetManager.h>
-#include <Shader.h>
-#include <Texture.h>
-#include <GameMode.h>
-#include <EditorMode.h>
 
 extern "C" {
-
-#include <game-activity/native_app_glue/android_native_app_glue.c>
 
 EGLDisplay eglDisplay;
 EGLSurface eglSurface;

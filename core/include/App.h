@@ -1,7 +1,7 @@
 #ifndef APP_H
 #define APP_H
 
-#include "UIManager.h"
+#include "ui/UIManager.h"
 
 class AbstractWindow;
 class AppMode;

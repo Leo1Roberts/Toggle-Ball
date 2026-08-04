@@ -1,7 +1,7 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
-#include "Event.h"
+#include "io/Event.h"
 
 class Screen {
 public:

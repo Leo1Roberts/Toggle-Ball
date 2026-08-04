@@ -1,5 +1,6 @@
 #include "Settings.h"
-#include "AssetManager.h"
+#include "utilities/AssetManager.h"
+
 
 namespace Settings {
 	std::unique_ptr<KeyBindings> Bindings;

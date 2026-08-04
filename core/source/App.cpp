@@ -1,8 +1,8 @@
 #include "App.h"
 
-#include "AbstractWindow.h"
+#include "system/AbstractWindow.h"
 #include "AppMode.h"
-#include "FPSOverlay.h"
+#include "ui/FPSOverlay.h"
 
 
 void ScreenVertex::setupLayout() {

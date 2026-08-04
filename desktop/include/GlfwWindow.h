@@ -1,7 +1,7 @@
 #ifndef GLFW_WINDOW_H
 #define GLFW_WINDOW_H
 
-#include "AbstractWindow.h"
+#include "../../core/include/system/AbstractWindow.h"
 
 #include <GLFW/glfw3.h>
 

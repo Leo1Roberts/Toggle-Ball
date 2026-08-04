@@ -1,8 +1,8 @@
-#include "App.h"
-#include "EditorMode.h"
-#include "GameMode.h"
+#include "../../core/include/App.h"
+#include "../../core/include/editor/EditorMode.h"
+#include "../../core/include/game/GameMode.h"
 #include "GlfwWindow.h"
-#include "Shader.h"
+#include "../../core/include/opengl/Shader.h"
 
 #include <cfenv>
 #include <iostream>

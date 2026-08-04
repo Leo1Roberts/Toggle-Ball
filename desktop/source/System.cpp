@@ -1,4 +1,4 @@
-#include "System.h"
+#include "../../core/include/system/System.h"
 
 #include <GLFW/glfw3.h>
 

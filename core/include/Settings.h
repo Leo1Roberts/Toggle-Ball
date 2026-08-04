@@ -1,7 +1,7 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include "KeyBindings.h"
+#include "io/KeyBindings.h"
 
 #include <memory>
 

@@ -1,7 +1,7 @@
 #ifndef ANDROID_WINDOW_H
 #define ANDROID_WINDOW_H
 
-#include "AbstractWindow.h"
+#include "system/AbstractWindow.h"
 
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 
