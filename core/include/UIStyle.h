@@ -47,7 +47,6 @@ struct TextBoxStyle {
 	TextStyle normalText;
 	TextStyle hoveredText;
 	TextStyle focusedText;
-	TextStyle highlightedText;
 	TextStyle disabledText;
 
 	PanelStyle cursor;

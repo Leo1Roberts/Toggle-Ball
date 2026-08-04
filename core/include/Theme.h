@@ -231,35 +231,28 @@ namespace Theme {
             .font = FontId::CourierNew,
             .fontSize = 20.f,
             .color = {220, 225, 235, 255},
-            .alignHorizontal = TextAlignHorizontal::Left,
+            .alignHorizontal = TextAlignHorizontal::Centre,
             .alignVertical = TextAlignVertical::Middle
         },
         .hoveredText = {
             .font = FontId::CourierNew,
             .fontSize = 20.f,
             .color = Color::White,
-            .alignHorizontal = TextAlignHorizontal::Left,
+            .alignHorizontal = TextAlignHorizontal::Centre,
             .alignVertical = TextAlignVertical::Middle
         },
         .focusedText = {
             .font = FontId::CourierNew,
             .fontSize = 20.f,
             .color = Color::White,
-            .alignHorizontal = TextAlignHorizontal::Left,
-            .alignVertical = TextAlignVertical::Middle
-        },
-        .highlightedText = {
-            .font = FontId::CourierNew,
-            .fontSize = 20.f,
-            .color = Color::White,               // Keeps high contrast against highlight
-            .alignHorizontal = TextAlignHorizontal::Left,
+            .alignHorizontal = TextAlignHorizontal::Centre,
             .alignVertical = TextAlignVertical::Middle
         },
         .disabledText = {
             .font = FontId::CourierNew,
             .fontSize = 20.f,
             .color = {100, 100, 100, 255},       // Muted grey
-            .alignHorizontal = TextAlignHorizontal::Left,
+            .alignHorizontal = TextAlignHorizontal::Centre,
             .alignVertical = TextAlignVertical::Middle
         },
 

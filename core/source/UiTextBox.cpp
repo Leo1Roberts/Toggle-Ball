@@ -14,7 +14,6 @@ UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxS
 
 	cursorNode = textNode->addChild(std::make_unique<UIPanel>(textBoxStyle.cursor));
 
-	updateCursorAndHighlight();
 	updateStyle();
 }
 
@@ -50,14 +49,12 @@ UIResponse UITextBox::processEvent(const Event& event) {
 				pressed = true;
 				inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position), pointer->modifiers & MOD_SHIFT);
 
-				if (pointer->causedFocusChange)
+				if (pointer->causedFocusChange || pointer->pointerDownCount == 3)
 					inputBuffer.selectAll();
 				else if (pointer->pointerDownCount == 2)
 					inputBuffer.selectWord(getPointedCharacterIndex(pointer->position));
-				else if (pointer->pointerDownCount == 3)
-					inputBuffer.selectAll();
+
 				cursorInactiveTime = 0;
-				updateCursorAndHighlight();
 				updateStyle();
 				return UIResponse::Consumed;
 			case PointerAction::Up:
@@ -73,7 +70,6 @@ UIResponse UITextBox::processEvent(const Event& event) {
 		if (pressed && pointer->action == PointerAction::Move) {
 			inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position), true);
 			cursorInactiveTime = 0;
-			updateCursorAndHighlight();
 			updateStyle();
 			return UIResponse::Consumed;
 		}
@@ -92,7 +88,6 @@ void UITextBox::onFocusGained() {
 void UITextBox::onFocusLost(bool cancel) {
 	focused = false;
 	inputBuffer.deselectAll();
-	updateCursorAndHighlight();
 	updateStyle();
 	if (cancel) {
 		if (onCancelCallback)
@@ -185,5 +180,7 @@ void UITextBox::updateStyle() {
 		case TextBoxState::Focused:  textNode->textStyle = textBoxStyle.focusedText;  break;
 		case TextBoxState::Disabled: textNode->textStyle = textBoxStyle.disabledText; break;
 		}
+		textNode->updateTextLayout();
+		updateCursorAndHighlight();
 	}
 }
