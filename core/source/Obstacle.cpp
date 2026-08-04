@@ -17,6 +17,12 @@
 #include <sstream>
 
 
+constexpr int SECTORS_PER_SEMICIRCLE = 64;
+constexpr int SECTORS_PER_CIRCLE = SECTORS_PER_SEMICIRCLE * 2;
+constexpr int SECTORS_PER_DOT = 8;
+constexpr float BEVEL_AMOUNT = 0.1f;
+
+
 static glm::mat3 angleToRotation3D(float radians) {
 	return glm::mat3_cast(glm::angleAxis(radians, OBSTACLE_ROTATION_AXIS));
 }
@@ -90,6 +96,9 @@ ArcSpec::ArcSpec(float minorRadius, const std::string& data) :
 	if (!(ss >> arcAngle >> c >> arcRadius))
 		throw std::invalid_argument("Invalid arc shape data format");
 }
+
+
+float AbstractShapeSpec::getBevel() const { return BEVEL_AMOUNT * getMinorRadius(); }
 
 
 void SegmentSpec::setLeftLength(float len) {
@@ -1720,18 +1729,4 @@ void OscillatingPositionSpec::translateBy(glm::vec2 vector, bool stateless, bool
 		position1 += vector;
 	if (toggled || stateless)
 		position2 += vector;
-}
-
-
-void TogglingPositionSpec::setPositionX(float x, bool stateless, bool toggled) {
-	if (!toggled || stateless)
-		positionA.x = x;
-	if (toggled || stateless)
-		positionB.x = x;
-}
-void OscillatingPositionSpec::setPositionX(float x, bool stateless, bool toggled) {
-	if (!toggled || stateless)
-		position1.x = x;
-	if (toggled || stateless)
-		position2.x = x;
 }

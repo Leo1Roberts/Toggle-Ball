@@ -14,38 +14,6 @@ struct BallCollisionInfo;
 class GameBall;
 struct SelectBox;
 
-// TODO: move the following constants to somewhere better
-
-constexpr float MINIMUM_ARENA_SIZE = 5;
-constexpr float MAXIMUM_ARENA_SIZE = 200;
-
-constexpr float MINIMUM_POS_X = -MAXIMUM_ARENA_SIZE * 0.7f;
-constexpr float MAXIMUM_POS_X = MAXIMUM_ARENA_SIZE * 0.7f;
-constexpr float MINIMUM_POS_Y = -MAXIMUM_ARENA_SIZE * 0.2f;
-constexpr float MAXIMUM_POS_Y = MAXIMUM_ARENA_SIZE * 1.2f;
-
-constexpr float MINIMUM_TRANSITION_TIME = 0.1f;
-constexpr float MAXIMUM_TRANSITION_TIME = 20;
-
-constexpr float MINIMUM_MINOR_RADIUS = 0.25f;
-constexpr float MAXIMUM_MINOR_RADIUS = 50;
-
-constexpr float MAXIMUM_MAJOR_RADIUS = 200;
-
-constexpr float MINIMUM_ANGLE = -5 * glm::pi<float>(); // -900°
-constexpr float MAXIMUM_ANGLE = 5 * glm::pi<float>();  // 900°
-
-constexpr float MINIMUM_RPM = -120;
-constexpr float MAXIMUM_RPM = 120;
-
-constexpr float MINIMUM_OPM = MINIMUM_RPM * 0.5f;
-constexpr float MAXIMUM_OPM = MAXIMUM_RPM * 0.5f;
-
-constexpr int SECTORS_PER_SEMICIRCLE = 64;
-constexpr int SECTORS_PER_CIRCLE = SECTORS_PER_SEMICIRCLE * 2;
-constexpr int SECTORS_PER_DOT = 8;
-constexpr float BEVEL_AMOUNT = 0.1f;
-
 
 inline glm::mat2 angleToRotation2D(float radians) {
 	float c = std::cos(radians);
@@ -129,7 +97,7 @@ protected:
 	AbstractShapeSpec(AbstractShapeSpec&&) = default;
 	AbstractShapeSpec& operator=(AbstractShapeSpec&&) = default;
 
-	[[nodiscard]] float getBevel() const { return BEVEL_AMOUNT * getMinorRadius(); }
+	[[nodiscard]] float getBevel() const;
 
 private:
 	float minorRadius; // SSOT
@@ -265,6 +233,7 @@ private:
 };
 
 
+
 class IMotionSpec {
 public:
 	virtual ~IMotionSpec() = default;
@@ -295,8 +264,6 @@ public:
 
 	virtual void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) = 0;
 
-	virtual void setPositionX(float x, bool stateless, bool toggled) = 0;
-
 	[[nodiscard]] virtual col getColor() const = 0;
 	[[nodiscard]] virtual glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const = 0;
 
@@ -326,8 +293,6 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const StaticSpec*)base)->position + vector;
 	}
-
-	void setPositionX(float x, bool, bool) override { position.x = x; }
 
 	[[nodiscard]] col getColor() const override { return Color::White; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
@@ -381,8 +346,6 @@ public:
 	~TogglingPositionSpec() override = default;
 
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
-
-	void setPositionX(float x, bool stateless, bool toggled) override;
 
 	[[nodiscard]] col getColor() const override { return Color::SoftBlue; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
@@ -440,8 +403,6 @@ public:
 		position = ((const TogglingAngleSpec*)base)->position + vector;
 	}
 
-	void setPositionX(float x, bool, bool) override { position.x = x; }
-
 	[[nodiscard]] col getColor() const override { return Color::SoftRed; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
@@ -494,8 +455,6 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const SpinningSpec*)base)->position + vector;
 	}
-
-	void setPositionX(float x, bool, bool) override { position.x = x; }
 
 	[[nodiscard]] col getColor() const override { return Color::SoftMagenta; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
@@ -553,8 +512,6 @@ public:
 	~OscillatingPositionSpec() override = default;
 
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
-
-	void setPositionX(float x, bool stateless, bool toggled) override;
 
 	[[nodiscard]] col getColor() const override { return Color::SoftCyan; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
@@ -620,8 +577,6 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const OscillatingAngleSpec*)base)->position + vector;
 	}
-
-	void setPositionX(float x, bool, bool) override { position.x = x; }
 
 	[[nodiscard]] col getColor() const override { return Color::SoftYellow; }
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
@@ -792,8 +747,6 @@ public:
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const ObstacleDescriptor* base) {
 		descriptor->motion->translateBy(vector, stateless, toggled, base->motion.get());
 	}
-
-	void setPositionX(float x, bool stateless, bool toggled) { descriptor->motion->setPositionX(x, stateless, toggled); }
 
 	[[nodiscard]] bool isSelected() const { return selected; }
 	void select() { selected = true; }

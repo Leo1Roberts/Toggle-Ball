@@ -37,33 +37,6 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
-
-	auto rootNode = std::make_unique<UINode>();
-
-	auto positionXTextBox = std::make_unique<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox);
-	positionXTextBox->layout = {
-		.anchor = Anchor::TopRight,
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = 250.f, .height = 40.f,
-		.offset = {-25.f, 30.f}
-	};
-	positionXTextBox->setOnCancel([this] { scene.cancelLevelChange(); });
-	positionXTextBox->setOnConfirm([this](const UITextBox&) { scene.commitLevelChange(); });
-	positionXTextBox->setOnTextChange([this](const UITextBox& textBox) {
-		auto value = textBox.getValue<float>();
-		if (scene.ball.isSelected())
-			scene.ball.descriptor->initialPosition.x = value;
-		for (auto& obstacle : scene.obstacles)
-			if (obstacle.isSelected()) {
-				obstacle.setPositionX(value, quickSettings.transformBothStates, scene.isToggled());
-				obstacle.initKinematicState();
-				obstacle.generateDomainMesh(uiToWorldScale);
-			}
-	});
-
-	rootNode->addChild(std::move(positionXTextBox));
-
-	uiManager.setRootNode(std::move(rootNode));
 }
 
 
