@@ -8,6 +8,22 @@ class ObstacleKinematicState;
 class Smoother;
 
 
+enum class MotionSpecProperty {
+	Position_X, Position_Y,
+	Position1_X,Position1_Y, Position2_X,Position2_Y,
+
+	Angle,
+	InitialAngle,
+	Angle1, Angle2,
+
+	AngularVelocity,
+
+	AngularFrequency,
+};
+
+struct MotionSpecPropertyDescriptor { MotionSpecProperty property; bool stateful; };
+
+
 class IMotionSpec {
 public:
 	virtual ~IMotionSpec() = default;
@@ -38,6 +54,10 @@ public:
 
 	virtual void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) = 0;
 
+	[[nodiscard]] constexpr virtual std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const = 0;
+	[[nodiscard]] virtual float getProperty(MotionSpecProperty property, bool toggled = false) const = 0;
+	virtual void setProperty(float value, MotionSpecProperty property, bool toggled = false) = 0;
+
 	[[nodiscard]] virtual col getColor() const = 0;
 	[[nodiscard]] virtual glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const = 0;
 
@@ -63,28 +83,52 @@ public:
 
 	explicit StaticSpec(const std::string& data);
 
-	~StaticSpec() override = default;
-
-	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
-		position = ((const StaticSpec*)base)->position + vector;
-	}
-
-	[[nodiscard]] col getColor() const override { return Color::White; }
-	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
-
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<StaticSpec>(*this);
 	}
+
+	~StaticSpec() override = default;
 
 	void scale(float factor) override {
 		*this = StaticSpec(position * factor, angle);
 	}
 
-	void setAngle(float radians);
-
 	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
 	void stepKinematicState(ObstacleKinematicState&, const Smoother&) const override {}
 	void updateEditorKinematicState(ObstacleKinematicState&, const Smoother&) const override {}
+
+	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
+		position = ((const StaticSpec*)base)->position + vector;
+	}
+
+	void setAngle(float radians);
+
+	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
+		return {
+			{ MotionSpecProperty::Position_X, false },
+			{ MotionSpecProperty::Position_Y, false },
+			{ MotionSpecProperty::Angle,      false },
+		};
+	}
+	[[nodiscard]] float getProperty(MotionSpecProperty property, bool) const override {
+		switch (property) {
+		case MotionSpecProperty::Position_X: return position.x;
+		case MotionSpecProperty::Position_Y: return position.y;
+		case MotionSpecProperty::Angle:      return angle;
+		default: return NAN;
+		}
+	}
+	void setProperty(float value, MotionSpecProperty property, bool) override {
+		switch (property) {
+		case MotionSpecProperty::Position_X: position.x = value; break;
+		case MotionSpecProperty::Position_Y: position.y = value; break;
+		case MotionSpecProperty::Angle:      setAngle(value); break;
+		default:;
+		}
+	}
+
+	[[nodiscard]] col getColor() const override { return Color::White; }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
 private:
 	glm::vec2 position{0.f}; // SSOT
@@ -118,26 +162,50 @@ public:
 
 	explicit TogglingPositionSpec(const std::string& data);
 
-	~TogglingPositionSpec() override = default;
-
-	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
-
-	[[nodiscard]] col getColor() const override { return Color::SoftBlue; }
-	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
-
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<TogglingPositionSpec>(*this);
 	}
+
+	~TogglingPositionSpec() override = default;
 
 	void scale(float factor) override {
 		*this = TogglingPositionSpec(angle, positionA * factor, positionB * factor);
 	}
 
-	void setAngle(float radians);
-
 	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
 	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
+
+	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
+
+	void setAngle(float radians);
+
+	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
+		return {
+			{ MotionSpecProperty::Position_X, true  },
+			{ MotionSpecProperty::Position_Y, true  },
+			{ MotionSpecProperty::Angle,      false },
+		};
+	}
+	[[nodiscard]] float getProperty(MotionSpecProperty property, bool toggled) const override {
+		switch (property) {
+		case MotionSpecProperty::Position_X: return toggled ? positionB.x : positionA.x;
+		case MotionSpecProperty::Position_Y: return toggled ? positionB.y : positionA.y;
+		case MotionSpecProperty::Angle:      return angle;
+		default: return NAN;
+		}
+	}
+	void setProperty(float value, MotionSpecProperty property, bool toggled) override {
+		switch (property) {
+		case MotionSpecProperty::Position_X: if (toggled) positionB.x = value; else positionA.x = value; break;
+		case MotionSpecProperty::Position_Y: if (toggled) positionB.y = value; else positionA.y = value; break;
+		case MotionSpecProperty::Angle:      setAngle(value); break;
+		default:;
+		}
+	}
+
+	[[nodiscard]] col getColor() const override { return Color::SoftBlue; }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
 
 private:
 	float angle{}; // SSOT
@@ -172,18 +240,11 @@ public:
 
 	explicit TogglingAngleSpec(const std::string& data);
 
-	~TogglingAngleSpec() override = default;
-
-	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
-		position = ((const TogglingAngleSpec*)base)->position + vector;
-	}
-
-	[[nodiscard]] col getColor() const override { return Color::SoftRed; }
-	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
-
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<TogglingAngleSpec>(*this);
 	}
+
+	~TogglingAngleSpec() override = default;
 
 	void scale(float factor) override {
 		*this = TogglingAngleSpec(position * factor, angleA, angleB);
@@ -192,6 +253,37 @@ public:
 	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
 	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
+
+	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
+		position = ((const TogglingAngleSpec*)base)->position + vector;
+	}
+
+	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
+		return {
+			{ MotionSpecProperty::Position_X, false },
+			{ MotionSpecProperty::Position_Y, false },
+			{ MotionSpecProperty::Angle,      true  },
+		};
+	}
+	[[nodiscard]] float getProperty(MotionSpecProperty property, bool toggled) const override {
+		switch (property) {
+		case MotionSpecProperty::Position_X: return position.x;
+		case MotionSpecProperty::Position_Y: return position.y;
+		case MotionSpecProperty::Angle:      return toggled ? angleB : angleA;
+		default: return NAN;
+		}
+	}
+	void setProperty(float value, MotionSpecProperty property, bool toggled) override {
+		switch (property) {
+		case MotionSpecProperty::Position_X: position.x = value; break;
+		case MotionSpecProperty::Position_Y: position.y = value; break;
+		case MotionSpecProperty::Angle:      if (toggled) angleB = value; else angleA = value; break;
+		default:;
+		}
+	}
+
+	[[nodiscard]] col getColor() const override { return Color::SoftRed; }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
 private:
 	glm::vec2 position{0.f};  // SSOT
@@ -225,18 +317,11 @@ public:
 
 	explicit SpinningSpec(const std::string& data);
 
-	~SpinningSpec() override = default;
-
-	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
-		position = ((const SpinningSpec*)base)->position + vector;
-	}
-
-	[[nodiscard]] col getColor() const override { return Color::SoftMagenta; }
-	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
-
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<SpinningSpec>(*this);
 	}
+
+	~SpinningSpec() override = default;
 
 	void scale(float factor) override {
 		*this = SpinningSpec(position * factor, initialAngle, angularVelocityA, angularVelocityB);
@@ -245,6 +330,40 @@ public:
 	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
 	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother&) const override;
+
+	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
+		position = ((const SpinningSpec*)base)->position + vector;
+	}
+
+	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
+		return {
+			{ MotionSpecProperty::Position_X,      false },
+			{ MotionSpecProperty::Position_Y,      false },
+			{ MotionSpecProperty::InitialAngle,    false },
+			{ MotionSpecProperty::AngularVelocity, true  },
+		};
+	}
+	[[nodiscard]] float getProperty(MotionSpecProperty property, bool toggled) const override {
+		switch (property) {
+		case MotionSpecProperty::Position_X:      return position.x;
+		case MotionSpecProperty::Position_Y:      return position.y;
+		case MotionSpecProperty::InitialAngle:    return initialAngle;
+		case MotionSpecProperty::AngularVelocity: return toggled ? angularVelocityB : angularVelocityA;
+		default: return NAN;
+		}
+	}
+	void setProperty(float value, MotionSpecProperty property, bool toggled) override {
+		switch (property) {
+		case MotionSpecProperty::Position_X:      position.x = value; break;
+		case MotionSpecProperty::Position_Y:      position.y = value; break;
+		case MotionSpecProperty::InitialAngle:    initialAngle = value; break;
+		case MotionSpecProperty::AngularVelocity: if (toggled) angularVelocityB = value; else angularVelocityA = value; break;
+		default:;
+		}
+	}
+
+	[[nodiscard]] col getColor() const override { return Color::SoftMagenta; }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
 private:
 	glm::vec2 position{0.f};  // SSOT
@@ -284,26 +403,59 @@ public:
 
 	explicit OscillatingPositionSpec(const std::string& data);
 
-	~OscillatingPositionSpec() override = default;
-
-	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
-
-	[[nodiscard]] col getColor() const override { return Color::SoftCyan; }
-	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
-
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<OscillatingPositionSpec>(*this);
 	}
+
+	~OscillatingPositionSpec() override = default;
 
 	void scale(float factor) override {
 		*this = OscillatingPositionSpec(angle, position1 * factor, position2 * factor, angularFrequencyA, angularFrequencyB);
 	}
 
-	void setAngle(float radians);
-
 	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
 	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
+
+	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
+
+	void setAngle(float radians);
+
+	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
+		return {
+			{ MotionSpecProperty::Position1_X,      false },
+			{ MotionSpecProperty::Position1_Y,      false },
+			{ MotionSpecProperty::Position2_X,      false },
+			{ MotionSpecProperty::Position2_Y,      false },
+			{ MotionSpecProperty::Angle,            false },
+			{ MotionSpecProperty::AngularFrequency, true  },
+		};
+	}
+	[[nodiscard]] float getProperty(MotionSpecProperty property, bool toggled) const override {
+		switch (property) {
+		case MotionSpecProperty::Position1_X:      return position1.x;
+		case MotionSpecProperty::Position1_Y:      return position1.y;
+		case MotionSpecProperty::Position2_X:      return position2.x;
+		case MotionSpecProperty::Position2_Y:      return position2.y;
+		case MotionSpecProperty::Angle:            return angle;
+		case MotionSpecProperty::AngularFrequency: return toggled ? angularFrequencyB : angularFrequencyA;
+		default: return NAN;
+		}
+	}
+	void setProperty(float value, MotionSpecProperty property, bool toggled) override {
+		switch (property) {
+		case MotionSpecProperty::Position1_X:      position1.x = value; break;
+		case MotionSpecProperty::Position1_Y:      position1.y = value; break;
+		case MotionSpecProperty::Position2_X:      position2.x = value; break;
+		case MotionSpecProperty::Position2_Y:      position2.y = value; break;
+		case MotionSpecProperty::Angle:            setAngle(value); break;
+		case MotionSpecProperty::AngularFrequency: if (toggled) angularFrequencyB = value; else angularFrequencyA = value; break;
+		default:;
+		}
+	}
+
+	[[nodiscard]] col getColor() const override { return Color::SoftCyan; }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
 
 private:
 	glm::vec2 position1{0.f};  // SSOT
@@ -347,18 +499,11 @@ public:
 
 	OscillatingAngleSpec(const std::string& data);
 
-	~OscillatingAngleSpec() override = default;
-
-	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
-		position = ((const OscillatingAngleSpec*)base)->position + vector;
-	}
-
-	[[nodiscard]] col getColor() const override { return Color::SoftYellow; }
-	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
-
 	[[nodiscard]] std::unique_ptr<IMotionSpec> clone() const override {
 		return std::make_unique<OscillatingAngleSpec>(*this);
 	}
+
+	~OscillatingAngleSpec() override = default;
 
 	void scale(float factor) override {
 		*this = OscillatingAngleSpec(position * factor, angle1, angle2, angularFrequencyA, angularFrequencyB);
@@ -367,6 +512,43 @@ public:
 	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
 	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
+
+	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
+		position = ((const OscillatingAngleSpec*)base)->position + vector;
+	}
+
+	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
+		return {
+			{ MotionSpecProperty::Position_X,       false },
+			{ MotionSpecProperty::Position_Y,       false },
+			{ MotionSpecProperty::Angle1,           false },
+			{ MotionSpecProperty::Angle2,           false },
+			{ MotionSpecProperty::AngularFrequency, true  },
+		};
+	}
+	[[nodiscard]] float getProperty(MotionSpecProperty property, bool toggled) const override {
+		switch (property) {
+		case MotionSpecProperty::Position_X:       return position.x;
+		case MotionSpecProperty::Position_Y:       return position.y;
+		case MotionSpecProperty::Angle1:           return angle1;
+		case MotionSpecProperty::Angle2:           return angle2;
+		case MotionSpecProperty::AngularFrequency: return toggled ? angularFrequencyB : angularFrequencyA;
+		default: return NAN;
+		}
+	}
+	void setProperty(float value, MotionSpecProperty property, bool toggled) override {
+		switch (property) {
+		case MotionSpecProperty::Position_X:       position.x = value; break;
+		case MotionSpecProperty::Position_Y:       position.y = value; break;
+		case MotionSpecProperty::Angle1:           angle1 = value; break;
+		case MotionSpecProperty::Angle2:           angle2 = value; break;
+		case MotionSpecProperty::AngularFrequency: if (toggled) angularFrequencyB = value; else angularFrequencyA = value; break;
+		default:;
+		}
+	}
+
+	[[nodiscard]] col getColor() const override { return Color::SoftYellow; }
+	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
 private:
 	glm::vec2 position{0.f};   // SSOT
