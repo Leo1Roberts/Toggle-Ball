@@ -11,6 +11,7 @@
 enum class UIResponse {
 	Ignored,
 	Consumed,
+	ConsumedNeedsHoverUpdate,
 	RequestConfirm,
 	RequestCancel
 };
@@ -58,7 +59,7 @@ public:
 
 	void setHitTestable(bool canBeHit) { hitTestable = canBeHit; }
 
-	[[nodiscard]] const UINode* getParent() const { return parent; }
+	[[nodiscard]] UINode* getParent() const { return parent; }
 	[[nodiscard]] const std::vector<std::unique_ptr<UINode>>& getChildren() const { return children; }
 	[[nodiscard]] bool isVisible() const { return visible; }
 	[[nodiscard]] bool isActive() const { return active; }

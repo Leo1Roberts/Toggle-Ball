@@ -11,7 +11,7 @@ PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 	auto levelCompleteBackground = std::make_unique<UIButton>();
 	levelCompleteBackground->hide();
 	levelCompleteDisplay = rootNode->addChild(std::move(levelCompleteBackground));
-	levelCompleteDisplay->setOnClick([&] { levelCompleteDisplay->deactivate(); });
+	levelCompleteDisplay->setOnClick([this] { levelCompleteDisplay->deactivate(); });
 
 	auto levelCompleteButton = std::make_unique<UIButton>("Level complete!", Theme::SuccessButton);
 	levelCompleteButton->layout = {
@@ -19,7 +19,7 @@ PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
 		.width = 280.f, .height = 80.f,
 	};
-	levelCompleteButton->setOnClick([&] {
+	levelCompleteButton->setOnClick([this] {
 		levelCompleteDisplay->deactivate();
 		game.start();
 	});
@@ -34,7 +34,7 @@ PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 		.width = 100.f, .height = 60.f,
 		.offset = {-20.f, 20.f}
 	};
-	restartButton->setOnClick([&] {
+	restartButton->setOnClick([this] {
 		levelCompleteDisplay->deactivate();
 		game.start();
 	});

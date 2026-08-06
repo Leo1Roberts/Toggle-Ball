@@ -67,7 +67,7 @@ UIResponse UITextBox::processEvent(const Event& event) {
 			}
 		}
 
-		if (pressed && pointer->action == PointerAction::Move) {
+		if (pressed && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
 			inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position), true);
 			cursorInactiveTime = 0;
 			updateStyle();

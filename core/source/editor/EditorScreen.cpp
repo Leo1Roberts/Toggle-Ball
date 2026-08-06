@@ -119,6 +119,7 @@ void EditorScreen::processEvent(const Event& event) {
 				return;
 			} break;
 		case PointerAction::Move:
+		case PointerAction::Drag:
 			if (panning) {
 				camera.updatePan(pointer->position);
 				return;

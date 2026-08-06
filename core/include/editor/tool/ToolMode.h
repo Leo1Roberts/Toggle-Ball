@@ -1,12 +1,10 @@
 #ifndef TOOL_MODE_H
 #define TOOL_MODE_H
 
-
-#include "editor/EditorContext.h"
 #include "io/Event.h"
-#include "editor/operation/Operation.h"
 
 struct EditorContext;
+
 
 class ToolMode {
 public:
@@ -30,19 +28,9 @@ private:
 	// Pointer down and up on the same spot
 	virtual void performPrimaryAction(const PointerEvent& upEvent) = 0;
 	virtual void performSecondaryAction(const PointerEvent& upEvent) {}
+	virtual void startDrag(const PointerEvent& dragStartEvent) {}
 
-	// Pointer down and started to move
-	void startPrimaryDrag(const PointerEvent& moveEvent) {
-		if (auto operation = startPrimaryDragOperation())
-			operation->processEvent(moveEvent);
-	}
-	void startSecondaryDrag(const PointerEvent& moveEvent) {
-		if (auto operation = startSecondaryDragOperation())
-			operation->processEvent(moveEvent);
-	}
-	virtual Operation* startPrimaryDragOperation() { return nullptr; }
-	virtual Operation* startSecondaryDragOperation() { return nullptr; }
-
+	bool dragging = false;
 	bool pointerPrimaryDown = false;
 	bool pointerSecondaryDown = false;
 };

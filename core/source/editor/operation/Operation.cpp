@@ -23,12 +23,15 @@ bool Operation::processEvent(const Event& event) {
 		default:;
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (pointer->action == PointerAction::Down) {
-			if ((pointer->button == PointerButton::Primary && trigger == TriggerType::PointerSecondary) ||
-				(pointer->button == PointerButton::Secondary && trigger == TriggerType::PointerPrimary)) {
-				cancel();
-				return true;
-			}
+		switch (pointer->action) {
+		case PointerAction::FinishDrag:
+			finish();
+			commit();
+			return true;
+		case PointerAction::CancelDrag:
+			cancel();
+			return true;
+		case PointerAction::Down:
 			if (trigger == TriggerType::TriggerKey || trigger == TriggerType::ActionKey) {
 				if (pointer->button == PointerButton::Primary) {
 					finish();
@@ -40,13 +43,8 @@ bool Operation::processEvent(const Event& event) {
 					return trigger == TriggerType::TriggerKey;
 				}
 			}
-		} else if (pointer->action == PointerAction::Up) {
-			if ((pointer->button == PointerButton::Primary && trigger == TriggerType::PointerPrimary) ||
-				(pointer->button == PointerButton::Secondary && trigger == TriggerType::PointerSecondary)) {
-				finish();
-				commit();
-				return true;
-			}
+			break;
+		default:;
 		}
 	}
 

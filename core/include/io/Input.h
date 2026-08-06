@@ -1,12 +1,6 @@
 #ifndef INPUT_STATE_H
 #define INPUT_STATE_H
 
-#include <glm/glm.hpp>
-#include <memory>
-#include <unordered_map>
-#include <unordered_set>
-
-
 struct PointerEvent;
 
 
@@ -21,7 +15,15 @@ enum class PointerAction {
 	Down,
 	Move,
 	Up,
+    Leave,
+
 	Scroll,
+
+	StartDrag,
+	Drag,
+	FinishDrag,
+	CancelDrag,
+
 	Unknown
 };
 enum class PointerButton {
@@ -29,29 +31,6 @@ enum class PointerButton {
 	Secondary,
 	Tertiary,
 	Unknown
-};
-
-
-struct PointerState {
-	glm::vec2 position;
-	std::unordered_set<PointerButton> activeButtons;
-
-	[[nodiscard]] bool isDown(PointerButton button) const {
-		return activeButtons.contains(button);
-	}
-};
-
-class InputState {
-public:
-	void updateFromEvent(const PointerEvent& event);
-
-	[[nodiscard]] const PointerState* getPointer(int id) const {
-		auto it = pointers.find(id);
-		return it != pointers.end() ? &it->second : nullptr;
-	}
-
-private:
-	std::unordered_map<int, PointerState> pointers;
 };
 
 

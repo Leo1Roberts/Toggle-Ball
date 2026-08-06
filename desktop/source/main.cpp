@@ -1,10 +1,12 @@
-#include "../../core/include/App.h"
-#include "../../core/include/editor/EditorMode.h"
-#include "../../core/include/game/GameMode.h"
+#include "App.h"
+#include "editor/EditorMode.h"
+#include "game/GameMode.h"
 #include "GlfwWindow.h"
-#include "../../core/include/opengl/Shader.h"
+#include "opengl/Shader.h"
 
 #include <cfenv>
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/norm.hpp"
 #include <iostream>
 
 inline unsigned max_unsigned(unsigned a, unsigned b) { return (a > b) ? a : b; }
@@ -220,7 +222,15 @@ static void charCallback(GLFWwindow* window, unsigned int codepoint) {
 	}
 }
 
+constexpr float dragThreshold = 3.f;
 glm::vec2 mousePosition;
+
+bool primaryDown = false;
+bool secondaryDown = false;
+bool readyToStartDrag = true;
+bool dragging = false;
+glm::vec2 pointerDownPosition;
+
 int clickCount = 0;
 microseconds clickTime = 0;
 glm::vec2 clickPosition;
@@ -232,8 +242,17 @@ static void mouseButtonCallback(GLFWwindow* window, int button, int action, int 
 	auto actionT = translateMouseButtonAction(action);
 	auto buttonT = translateMouseButton(button);
 
+	bool cancelDrag = false;
+	bool finishDrag = false;
+
 	if (actionT == PointerAction::Down) {
+		pointerDownPosition = mousePosition;
+
 		if (buttonT == PointerButton::Primary) {
+			primaryDown = true;
+			if (dragging)
+				cancelDrag = true;
+
 			microseconds time = now();
 			if (mousePosition == clickPosition && toSeconds(time - clickTime) < 0.5f) // Double/triple click registration period
 				clickCount = 1 + clickCount % 3;
@@ -242,24 +261,75 @@ static void mouseButtonCallback(GLFWwindow* window, int button, int action, int 
 				clickPosition = mousePosition;
 			}
 			clickTime = time;
-		} else
+		} else {
 			clickCount = 1;
+
+			if (buttonT == PointerButton::Secondary) {
+				secondaryDown = true;
+				if (dragging)
+					cancelDrag = true;
+			}
+		}
+	} else if (actionT == PointerAction::Up) {
+		if (buttonT == PointerButton::Primary) {
+			if (primaryDown) {
+				primaryDown = false;
+				if (!secondaryDown)
+					readyToStartDrag = true;
+				if (dragging)
+					finishDrag = true;
+			}
+		}
+		else if (buttonT == PointerButton::Secondary) {
+			if (secondaryDown) {
+				secondaryDown = false;
+				if (!primaryDown)
+					readyToStartDrag = true;
+				if (dragging)
+					finishDrag = true;
+			}
+		}
 	}
 
 	app->processEvent(PointerEvent(
 		0, mousePosition, actionT, buttonT,
 		getUpdatedMods(window), {}, false, clickCount));
+
+	if (cancelDrag) {
+		app->processEvent(PointerEvent(0, mousePosition, PointerAction::CancelDrag));
+		readyToStartDrag = false;
+	} else if (finishDrag)
+		app->processEvent(PointerEvent(0, mousePosition, PointerAction::FinishDrag));
+	if (cancelDrag || finishDrag)
+		dragging = false;
 }
 
 static void cursorPosCallback(GLFWwindow* window, double x, double y) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
+
+	glm::vec2 newPosition;
 #if defined(PLATFORM_LINUX)
-	mousePosition = glm::vec2(x, y) * app->window->config.dpiScale;
+	newPosition = glm::vec2(x, y) * app->window->config.dpiScale;
 #else
-	mousePosition = {x, y};
+	newPosition = {x, y};
 #endif
-	app->processEvent(PointerEvent(0, mousePosition, PointerAction::Move, PointerButton::Unknown));
+
+	if (readyToStartDrag && !dragging && primaryDown != secondaryDown && length2(newPosition - pointerDownPosition) > dragThreshold * dragThreshold) {
+		dragging = true;
+
+		PointerButton button;
+		if (primaryDown)
+			button = PointerButton::Primary;
+		else
+			button = PointerButton::Secondary;
+
+		app->processEvent(PointerEvent(0, mousePosition, PointerAction::StartDrag, button));
+	}
+
+	mousePosition = newPosition;
+
+	app->processEvent(PointerEvent(0, mousePosition, dragging ? PointerAction::Drag : PointerAction::Move));
 }
 
 static void scrollCallback(GLFWwindow* window, double xOffset, double yOffset) {

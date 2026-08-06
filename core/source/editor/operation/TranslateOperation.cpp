@@ -51,7 +51,7 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 			}
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (trigger != TriggerType::ActionKey && pointer->id == 0 && pointer->action == PointerAction::Move) {
+		if (trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
 			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
 			rawTranslation = pointerPlanarPosition - initialPointerPlanarPosition;
 			applyOperation();

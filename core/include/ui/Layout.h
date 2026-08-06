@@ -28,10 +28,7 @@ enum class Anchor {
 	BottomLeft, BottomCentre, BottomRight
 };
 
-enum class SizingMode {
-	Absolute,
-	Relative
-};
+enum class SizingMode { Absolute, Relative };
 
 struct Layout {
 	Anchor anchor = Anchor::TopLeft;

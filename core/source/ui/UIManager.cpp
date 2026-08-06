@@ -41,6 +41,7 @@ bool UIManager::processEvent(const Event& event) {
 		if (focusedNode) {
 			switch (focusedNode->processEvent(event)) {
 			case UIResponse::Ignored:
+			case UIResponse::ConsumedNeedsHoverUpdate:
 				break;
 			case UIResponse::Consumed:
 				return true;
@@ -57,6 +58,21 @@ bool UIManager::processEvent(const Event& event) {
 
 	if (auto* rawPointer = std::get_if<PointerEvent>(&event)) {
 		auto pointer = *rawPointer;
+
+		if (pointer.action == PointerAction::Leave) {
+			auto hoverIt = hoveredNodes.find(pointer.id);
+			if (hoverIt != hoveredNodes.end()) {
+				if (hoverIt->second)
+					hoverIt->second->onPointerExited();
+				hoveredNodes.erase(hoverIt);
+			}
+
+			dragCapturedNodes.erase(pointer.id);
+			downCapturedNodes.erase(pointer.id);
+
+			return false;
+		}
+
 		pointer.position = screenToLogicalPosition(pointer.position);
 		
 		UINode* nodePointedTo = nullptr;
@@ -70,29 +86,38 @@ bool UIManager::processEvent(const Event& event) {
 
 		// Track pointer entry
 
-		if (pointer.action == PointerAction::Move || pointer.action == PointerAction::Down) {
-			UINode* previousHoveredNode = hoveredNodes[pointer.id];
-			if (previousHoveredNode != nodePointedTo) {
-				if (previousHoveredNode)
-					previousHoveredNode->onPointerExited();
-				if (nodePointedTo)
-					nodePointedTo->onPointerEntered();
+		UINode* previousHoveredNode = nullptr;
+		auto prevHoverIt = hoveredNodes.find(pointer.id);
+		if (prevHoverIt != hoveredNodes.end())
+			previousHoveredNode = prevHoverIt->second;
+
+		if (previousHoveredNode != nodePointedTo) {
+			if (previousHoveredNode)
+				previousHoveredNode->onPointerExited();
+
+			if (nodePointedTo) {
+				nodePointedTo->onPointerEntered();
 				hoveredNodes[pointer.id] = nodePointedTo;
-			}
+			} else
+				hoveredNodes.erase(pointer.id);
 		}
 
 
-		// Allow nodes to capture the pointer
+		// Allow nodes to capture drag events
 
 		UINode* targetNode = nullptr;
-		auto captureIt = capturedNodes.find(pointer.id);
 
-		if (captureIt != capturedNodes.end() && captureIt->second)
-			targetNode = captureIt->second; // Continue capturing the pointer
+		auto dragIt = dragCapturedNodes.find(pointer.id);
+		auto downIt = downCapturedNodes.find(pointer.id);
+
+		if (dragIt != dragCapturedNodes.end() && dragIt->second)
+			targetNode = dragIt->second;
+		else if (downIt != downCapturedNodes.end() && downIt->second)
+			targetNode = downIt->second;
 		else {
 			targetNode = nodePointedTo;
 			if (targetNode && pointer.action == PointerAction::Down)
-				capturedNodes[pointer.id] = targetNode; // Start capturing the pointer
+				downCapturedNodes[pointer.id] = targetNode;
 		}
 
 
@@ -103,10 +128,28 @@ bool UIManager::processEvent(const Event& event) {
 				if (changeFocus(targetNode->isFocusable() ? targetNode : nullptr, false))
 					pointer.causedFocusChange = true;
 
-			switch (targetNode->processEvent(pointer)) {
+			UINode* node = targetNode;
+			UIResponse response = UIResponse::Ignored;
+			while (node) {
+				response = node->processEvent(pointer);
+				if (response == UIResponse::Ignored)
+					node = node->getParent();
+				else break;
+			}
+
+			if (pointer.action == PointerAction::StartDrag && response != UIResponse::Ignored)
+				dragCapturedNodes[pointer.id] = node;
+
+			switch (response) {
 			case UIResponse::Ignored:
 			case UIResponse::Consumed:
 				break;
+			case UIResponse::ConsumedNeedsHoverUpdate: {
+				PointerEvent dummyMove = *rawPointer;
+				dummyMove.action = PointerAction::Move;
+				this->processEvent(dummyMove);
+				break;
+			}
 			case UIResponse::RequestConfirm:
 				changeFocus(nullptr, false);
 				break;
@@ -117,20 +160,11 @@ bool UIManager::processEvent(const Event& event) {
 		} else if (pointer.action == PointerAction::Down) // Pointer down on nothing
 			changeFocus(nullptr, false);
 
+		if (pointer.action == PointerAction::Up)
+			downCapturedNodes.erase(pointer.id);
 
-		// Track pointer exit
-
-		if (pointer.action == PointerAction::Up) {
-			auto hoverIt = hoveredNodes.find(pointer.id);
-			if (hoverIt != hoveredNodes.end()) {
-				if (hoverIt->second)
-					hoverIt->second->onPointerExited();
-				hoveredNodes.erase(hoverIt);
-			}
-
-			capturedNodes.erase(pointer.id); // Stop capturing the pointer
-		}
-
+		if (pointer.action == PointerAction::FinishDrag || pointer.action == PointerAction::CancelDrag)
+			dragCapturedNodes.erase(pointer.id);
 
 		return targetNode != nullptr;
 	}

@@ -132,7 +132,7 @@ public:
 
 private:
 	glm::vec2 position{0.f}; // SSOT
-	float angle{}; // SSOT
+	float angle{};           // SSOT
 	glm::mat2 rotation{1.f};
 
 	[[nodiscard]] std::string serializeData() const override;
@@ -208,7 +208,7 @@ public:
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2) const override { return glm::vec2(0.f); }
 
 private:
-	float angle{}; // SSOT
+	float angle{};            // SSOT
 	glm::mat2 rotation{1.f};
 	glm::vec2 positionA{0.f}; // SSOT
 	glm::vec2 positionB{0.f}; // SSOT
@@ -286,9 +286,9 @@ public:
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
 private:
-	glm::vec2 position{0.f};  // SSOT
-	float angleA{}; // SSOT
-	float angleB{}; // SSOT
+	glm::vec2 position{0.f}; // SSOT
+	float angleA{};          // SSOT
+	float angleB{};          // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class IMotionSpec;

@@ -13,7 +13,7 @@ struct PointerEvent {
 	int id{};
 	glm::vec2 position;
 	PointerAction action{};
-	PointerButton button{};
+	PointerButton button = PointerButton::Unknown;
 	byte modifiers{};
 	glm::vec2 scroll;
 	bool causedFocusChange = false;

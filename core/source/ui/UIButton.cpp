@@ -43,6 +43,12 @@ UIResponse UIButton::processEvent(const Event& event) {
 						onClickCallback();
 				}
 				return UIResponse::Consumed;
+			case PointerAction::StartDrag:
+				if (pressed) {
+					pressed = false;
+					updateStyle();
+				}
+				return UIResponse::Ignored;
 			default:;
 			}
 		}

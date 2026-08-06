@@ -85,7 +85,7 @@ void SelectOperation::applyModifiers(byte mods) {
 
 bool SelectOperation::doProcessEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (pointer->action == PointerAction::Move) {
+		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
 			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
 			box = {
 				initialPointerPlanarPosition.x, pointerPlanarPosition.x,

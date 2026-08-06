@@ -3,30 +3,42 @@
 
 bool ToolMode::processEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (pointer->action == PointerAction::Down) {
+		switch (pointer->action) {
+		case PointerAction::Down:
 			pointerDownEvent = *pointer;
 			if (pointer->button == PointerButton::Primary)
 				pointerPrimaryDown = true;
 			else if (pointer->button == PointerButton::Secondary)
 				pointerSecondaryDown = true;
-		} else if (pointer->action == PointerAction::Move && (pointerPrimaryDown != pointerSecondaryDown)) {
-			if (pointerPrimaryDown) {
-				startPrimaryDrag(*pointer);
-				pointerPrimaryDown = false;
-			} else if (pointerSecondaryDown) {
-				startSecondaryDrag(*pointer);
-				pointerSecondaryDown = false;
+			break;
+		case PointerAction::StartDrag:
+			dragging = true;
+			if (pointer->button == PointerButton::Primary && pointerPrimaryDown ||
+				pointer->button == PointerButton::Secondary && pointerSecondaryDown) {
+				startDrag(*pointer);
 			}
-		} else if (pointer->action == PointerAction::Up) {
-			if (pointer->button == PointerButton::Primary) {
-				if (pointerPrimaryDown && !pointerSecondaryDown)
-					performPrimaryAction(*pointer);
-				pointerPrimaryDown = false;
-			} else if (pointer->button == PointerButton::Secondary) {
-				if (pointerSecondaryDown && !pointerPrimaryDown)
-					performSecondaryAction(*pointer);
-				pointerSecondaryDown = false;
+			return true;
+		case PointerAction::Up:
+			if (dragging) {
+				if (pointer->button == PointerButton::Primary)
+					pointerPrimaryDown = false;
+				else if (pointer->button == PointerButton::Secondary)
+					pointerSecondaryDown = false;
+				if (!pointerPrimaryDown && !pointerSecondaryDown)
+					dragging = false;
+			} else {
+				if (pointer->button == PointerButton::Primary) {
+					if (pointerPrimaryDown && !pointerSecondaryDown)
+						performPrimaryAction(*pointer);
+					pointerPrimaryDown = false;
+				} else if (pointer->button == PointerButton::Secondary) {
+					if (pointerSecondaryDown && !pointerPrimaryDown)
+						performSecondaryAction(*pointer);
+					pointerSecondaryDown = false;
+				}
 			}
+			break;
+		default:;
 		}
 	}
 

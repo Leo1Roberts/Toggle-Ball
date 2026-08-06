@@ -9,6 +9,8 @@
 #include <game-activity/GameActivity.cpp>
 #include <game-activity/native_app_glue/android_native_app_glue.c>
 #include <game-text-input/gametextinput.cpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/norm.hpp"
 
 extern "C" {
 
@@ -16,12 +18,8 @@ EGLDisplay eglDisplay;
 EGLSurface eglSurface;
 EGLContext eglContext;
 
-/*!
- * Handles commands sent to this Android application
- * @param androidApp the app the commands are coming from
- * @param cmd the command to handle
- */
-void handle_cmd(android_app *androidApp, int32_t cmd) {
+
+void handle_cmd(android_app *androidApp, int cmd) {
 	switch (cmd) {
 	case APP_CMD_INIT_WINDOW: {
         if (androidApp->window == nullptr) break;
@@ -117,6 +115,10 @@ void handle_cmd(android_app *androidApp, int32_t cmd) {
 	}
 }
 
+glm::vec2 pointer0Position;
+constexpr float dragThreshold = 8.f;
+bool dragging = false;
+glm::vec2 pointer0DownPosition;
 
 void processInputEvents(struct android_app* androidApp, App* app) {
     // Swap and retrieve the input buffer for the current frame
@@ -124,12 +126,12 @@ void processInputEvents(struct android_app* androidApp, App* app) {
     if (!inputBuffer) return;
 
     if (inputBuffer->motionEventsCount > 0) {
-        for (uint64_t i = 0; i < inputBuffer->motionEventsCount; ++i) {
+        for (int i = 0; i < inputBuffer->motionEventsCount; ++i) {
             GameActivityMotionEvent* event = &inputBuffer->motionEvents[i];
 
-            int32_t action = event->action;
-            int32_t actionCode = action & AMOTION_EVENT_ACTION_MASK;
-            size_t pointerIndex = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK)
+            int action = event->action;
+            int actionCode = action & AMOTION_EVENT_ACTION_MASK;
+            int pointerIndex = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK)
                     >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
 
             PointerButton button = PointerButton::Primary;
@@ -138,9 +140,15 @@ void processInputEvents(struct android_app* androidApp, App* app) {
             case AMOTION_EVENT_ACTION_DOWN:
             case AMOTION_EVENT_ACTION_POINTER_DOWN: {
                 auto* pointer = &event->pointers[pointerIndex];
-                int32_t pointerId = pointer->id;
+                int pointerId = pointer->id;
                 float x = GameActivityPointerAxes_getX(pointer);
                 float y = GameActivityPointerAxes_getY(pointer);
+
+                if (pointerId == 0) {
+                    pointer0Position = pointer0DownPosition = {x, y};
+                    pointer0DownPosition = {x, y};
+                    dragging = false;
+                }
 
                 app->processEvent(PointerEvent(pointerId, {x, y}, PointerAction::Down, button));
                 break;
@@ -150,23 +158,40 @@ void processInputEvents(struct android_app* androidApp, App* app) {
             case AMOTION_EVENT_ACTION_POINTER_UP:
             case AMOTION_EVENT_ACTION_CANCEL: {
                 auto* pointer = &event->pointers[pointerIndex];
-                int32_t pointerId = pointer->id;
+                int pointerId = pointer->id;
                 float x = GameActivityPointerAxes_getX(pointer);
                 float y = GameActivityPointerAxes_getY(pointer);
 
                 app->processEvent(PointerEvent(pointerId, {x, y}, PointerAction::Up, button));
+
+                if (pointerId == 0 && dragging) {
+                    dragging = false;
+                    app->processEvent(PointerEvent(pointerId, {x, y}, PointerAction::FinishDrag));
+                }
+
+                app->processEvent(PointerEvent(pointerId, {}, PointerAction::Leave));
+
                 break;
             }
 
             case AMOTION_EVENT_ACTION_MOVE: {
                 // AMOTION_EVENT_ACTION_MOVE contains coordinates for ALL active pointers
-                for (uint32_t p = 0; p < event->pointerCount; ++p) {
+                for (int p = 0; p < event->pointerCount; ++p) {
                     auto* pointer = &event->pointers[p];
-                    int32_t pointerId = pointer->id;
+                    int pointerId = pointer->id;
                     float x = GameActivityPointerAxes_getX(pointer);
                     float y = GameActivityPointerAxes_getY(pointer);
 
-                    app->processEvent(PointerEvent(pointerId, {x, y}, PointerAction::Move, PointerButton::Unknown));
+                    if (pointerId == 0) {
+                        if (!dragging && length2(glm::vec2(x, y) - pointer0DownPosition) > dragThreshold * dragThreshold) {
+                            dragging = true;
+                            app->processEvent(PointerEvent(pointerId, pointer0Position, PointerAction::StartDrag, button));
+                        }
+
+                        pointer0Position = {x, y};
+                    }
+
+                    app->processEvent(PointerEvent(pointerId, {x, y}, dragging ? PointerAction::Drag : PointerAction::Move));
                 }
                 break;
             }
