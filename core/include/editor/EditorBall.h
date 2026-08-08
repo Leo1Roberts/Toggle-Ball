@@ -34,7 +34,7 @@ public:
 	}
 	[[nodiscard]] float getOutlineRadius() const { return outlineRadius; }
 
-	void translateBy(glm::vec2 vector, const BallDescriptor* base) {
+	void translateBy(glm::vec2 vector, const BallDescriptor* base) const {
 		descriptor->initialPosition = base->initialPosition + vector;
 	}
 

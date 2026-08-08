@@ -43,11 +43,11 @@ public:
 	// Only provide numSteps if demonstrating the continuous motion of an obstacle
 	void updateKinematicState(const Smoother& smoother, int numSteps = -1);
 
-	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const ObstacleDescriptor* base) {
+	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const ObstacleDescriptor* base) const {
 		descriptor->motion->translateBy(vector, stateless, toggled, base->motion.get());
 	}
 
-	void setMotionProperty(float value, MotionSpecProperty property, bool toggled = false) {
+	void setMotionProperty(float value, MotionSpecProperty property, bool toggled = false) const {
 		descriptor->motion->setProperty(value, property, toggled);
 	}
 	[[nodiscard]] float getMotionProperty(MotionSpecProperty property, bool toggled = false) const {

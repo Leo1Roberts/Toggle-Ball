@@ -45,6 +45,8 @@ private:
 
 	SelectionState cachedSelectionState{};
 
+	UIText* stateIndicator;
+	void updateStateIndicator();
 	UIVerticalList* obstacleMotionPropertiesList;
 
 	std::unique_ptr<ToolMode> currentToolMode;

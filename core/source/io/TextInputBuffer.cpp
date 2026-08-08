@@ -13,7 +13,13 @@ bool TextInputBuffer::Float(char c, int cursor, const std::string& buffer) {
 
 TextInputEventEffect TextInputBuffer::processEvent(const Event& event) {
 	if (auto* charEvent = std::get_if<char>(&event)) {
-		if (charIsValid(*charEvent, cursorIndex, selectionStartIndex == selectionEndIndex ? buffer : "")) {
+		bool valid;
+		if (selectionStartIndex == selectionEndIndex)
+			valid = charIsValid(*charEvent, cursorIndex, buffer);
+		else
+			valid = charIsValid(*charEvent, 0, "");
+
+		if (valid) {
 			eraseSelection();
 			buffer.insert(buffer.begin() + cursorIndex, *charEvent);
 			moveCursorTo(cursorIndex + 1);

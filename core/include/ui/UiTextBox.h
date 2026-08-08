@@ -18,6 +18,7 @@ class UITextBox : public UIPanel {
 public:
 	explicit UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle = {}, std::string placeholderText = "");
 
+	void setOnFocusGained(const std::function<void()>& callback) { onFocusGainedCallback = callback; }
 	void setOnCancel(const std::function<void(const UITextBox&)>& callback) { onCancelCallback = callback; }
 	void setOnConfirm(const std::function<void(const UITextBox&)>& callback) { onConfirmCallback = callback; }
 	void setOnTextChange(const std::function<void(const UITextBox&)>& callback) { onTextChangedCallback = callback; }
@@ -58,6 +59,7 @@ private:
 	TextInputBuffer inputBuffer;
 	std::string placeholder;
 
+	std::function<void()> onFocusGainedCallback;
 	std::function<void(const UITextBox&)> onCancelCallback;
 	std::function<void(const UITextBox&)> onConfirmCallback;
 	std::function<void(const UITextBox&)> onTextChangedCallback;

@@ -75,6 +75,7 @@ public:
 	std::vector<EditorObstacle> obstacles;
 
 	EntityReference selectionFocus = {EntityType::None};
+	bool demonstrateMotion = false;
 
 private:
 	void syncLevel();

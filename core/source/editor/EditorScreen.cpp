@@ -39,6 +39,11 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
 
 
+	stateIndicator = uiManager.addNode(std::make_unique<UIText>(""));
+	stateIndicator->layout = {.offset = {10.f, 10.f}};
+	updateStateIndicator();
+
+
 	auto propertiesPanel = std::make_unique<UIPanel>(Theme::DarkPanel);
 	propertiesPanel->layout = {
 		.anchor = Anchor::CentreRight,
@@ -70,11 +75,13 @@ void EditorScreen::processEvent(const Event& event) {
 			case ActionCode::Toggle:
 				if (key->action == KeyAction::Down) {
 					scene.toggle();
+					updateStateIndicator();
 					return;
 				} break;
 			case ActionCode::InstantToggle:
 				if (key->action == KeyAction::Down) {
 					scene.toggle(false);
+					updateStateIndicator();
 					return;
 				} break;
 			case ActionCode::SelectAll:
@@ -376,6 +383,14 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 				.anchor = Anchor::CentreRight,
 				.width = 0.5f
 			};
+			textField->setOnFocusGained([this, propertyDescriptor] {
+				switch (propertyDescriptor.property) {
+				case MotionSpecProperty::AngularSpeed_rpm:
+				case MotionSpecProperty::AngularFrequency_opm:
+					scene.demonstrateMotion = true;
+				default:;
+				}
+			});
 			textField->setOnTextChange([this, propertyDescriptor, toggled](const UITextBox& tb) {
 				if (tb.isEmpty())
 					scene.cancelLevelChange();
@@ -393,8 +408,12 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 					scene.cancelLevelChange();
 				else
 					scene.commitLevelChange();
+				scene.demonstrateMotion = false;
 			});
-			textField->setOnCancel([this](const UITextBox&) { scene.cancelLevelChange(); });
+			textField->setOnCancel([this](const UITextBox&) {
+				scene.cancelLevelChange();
+				scene.demonstrateMotion = false;
+			});
 			textField->setValueProvider([this, propertyDescriptor, toggled] -> std::string {
 				float value = NAN;
 				for (const auto& obstacle : scene.obstacles)
@@ -434,4 +453,13 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 	}
 
 	obstacleMotionPropertiesList->updateBounds(obstacleMotionPropertiesList->getParent()->getAbsoluteBounds());
+}
+
+
+void EditorScreen::updateStateIndicator() {
+	stateIndicator->setText(scene.isToggled() ? "State B" : "State A");
+	stateIndicator->textStyle = {
+		.color = scene.isToggled() ? Color::StateB : Color::StateA,
+		.alignVertical = TextAlignVertical::Bottom,
+	};
 }

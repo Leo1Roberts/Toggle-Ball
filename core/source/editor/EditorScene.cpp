@@ -14,9 +14,12 @@ EditorScene::EditorScene(std::unique_ptr<LevelDescriptor> levelToEdit, const std
 
 
 void EditorScene::update(microseconds dt) {
-	togglePosition.update(toSeconds(dt));
+	float dt_s = toSeconds(dt);
+	togglePosition.update(dt_s);
 	for (auto& obstacle: obstacles)
-		obstacle.updateKinematicState(togglePosition);
+		obstacle.updateKinematicState(togglePosition,
+			demonstrateMotion && obstacle.isSelected() ?
+			(int)(dt_s / PHYSICS_TIMESTEP) : -1);
 }
 
 

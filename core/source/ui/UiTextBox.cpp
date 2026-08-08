@@ -89,6 +89,8 @@ void UITextBox::onFocusGained() {
 	cursorInactiveTime = 0;
 	inputBuffer.selectAll();
 	updateAppearance();
+	if (onFocusGainedCallback)
+		onFocusGainedCallback();
 }
 void UITextBox::onFocusLost(bool cancel) {
 	focused = false;
