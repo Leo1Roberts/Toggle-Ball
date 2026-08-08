@@ -84,7 +84,21 @@ void SelectOperation::applyModifiers(byte mods) {
 }
 
 bool SelectOperation::doProcessEvent(const Event& event) {
-	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
+	if (auto* key = std::get_if<KeyEvent>(&event)) {
+		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
+			if (key->action == KeyAction::Down) {
+				switch (*actionCode) {
+				case ActionCode::Toggle:
+				case ActionCode::InstantToggle:
+				case ActionCode::ToggleTransformLocally:
+				case ActionCode::ToggleTransformBothStates:
+					return false;
+				default:
+					return true;
+				}
+			}
+		}
+	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
 			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
 			box = {

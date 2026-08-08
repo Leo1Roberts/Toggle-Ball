@@ -45,8 +45,11 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 				case ActionCode::LockToYAxis:
 					setMode(Axis::Y);
 					return true;
-				default:
+				case ActionCode::ToggleTransformLocally:
+				case ActionCode::ToggleTransformBothStates:
 					return false;
+				default:
+					return true;
 				}
 			}
 		}
