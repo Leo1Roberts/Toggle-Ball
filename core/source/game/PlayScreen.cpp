@@ -77,5 +77,5 @@ void PlayScreen::render() {
 
 void PlayScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
-	game.resize(width, height);
+	game.resize((float)width, (float)height);
 }

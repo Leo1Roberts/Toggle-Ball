@@ -8,10 +8,7 @@
 
 struct LevelDescriptor {
 	LevelDescriptor() :
-	    arenaWidth(20),
-	    arenaHeight(20),
-	    transitionTime(1.0f),
-		ballDescriptor(std::make_unique<BallDescriptor>(BASKETBALL, glm::vec2(arenaWidth / 2.f, arenaHeight / 2.f))) {}
+		ballDescriptor(std::make_unique<BallDescriptor>(BallType::Basketball, glm::vec2(arenaWidth / 2.f, arenaHeight / 2.f))) {}
 
 	LevelDescriptor(const LevelDescriptor& other);
 	LevelDescriptor& operator=(const LevelDescriptor& other);
@@ -33,9 +30,9 @@ struct LevelDescriptor {
 	void setName(const std::string& n) { name = n; }
 
 	std::string name;
-	float arenaWidth{};
-	float arenaHeight{};
-	float transitionTime{};
+	float arenaWidth = 20.f;
+	float arenaHeight = 20.f;
+	float transitionTime = 1.f;
 
 	std::unique_ptr<BallDescriptor> ballDescriptor;
 	std::vector<std::unique_ptr<ObstacleDescriptor>> obstacleDescriptors;

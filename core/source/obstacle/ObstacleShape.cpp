@@ -676,7 +676,7 @@ BallCollisionInfo SegmentSpec::getMidsectionCollision(const ObstacleKinematicSta
 		separation = dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
 	}
 
-	if (separation > 0.f && separation < ball.getProperties()->radius)
+	if (separation > 0.f && separation < ball.getProperties().radius)
 		return { true, plane.normal, separation };
 
 	return {.colliding = false};
@@ -688,8 +688,8 @@ BallCollisionInfo ArcSpec::getMidsectionCollision(const ObstacleKinematicState& 
 	distanceToBallSq = length2(centreToBall),
 	innerRadius = getMajorRadius() - getMinorRadius(),
 	outerRadius = getMajorRadius() + getMinorRadius(),
-	innerRadii = innerRadius - ball.getProperties()->radius,
-	outerRadii = outerRadius + ball.getProperties()->radius;
+	innerRadii = innerRadius - ball.getProperties().radius,
+	outerRadii = outerRadius + ball.getProperties().radius;
 
 	if (distanceToBallSq < outerRadii * outerRadii && distanceToBallSq > innerRadii * innerRadii) { // In contact with banana
 		if (distanceToBallSq > outerRadius * outerRadius) { // Beyond banana

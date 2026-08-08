@@ -18,7 +18,7 @@ public:
 	bool processEvent(const Event& event);
 	void update(microseconds dt);
 	void render() const;
-	void resize(int screenWidth, int screenHeight);
+	void resize(float screenWidth, float screenHeight);
 
 	[[nodiscard]] bool levelIsComplete() const { return levelComplete; }
 
@@ -31,7 +31,7 @@ private:
 
 	LevelDescriptor level;
 	PlaneDescriptor arenaBounds[4];
-	GameBall ball{};
+	GameBall ball;
 	std::vector<GameObstacle> obstacles;
 
 	bool toggled = false;

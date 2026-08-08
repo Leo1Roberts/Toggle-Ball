@@ -16,14 +16,14 @@ const glm::vec3 sunDirection = normalize(glm::vec3(2, 2, 3));
 static glm::vec3 viewSunDirection;
 
 
-GameWorld::GameWorld(const LevelDescriptor& levelDescriptor) {
+GameWorld::GameWorld(const LevelDescriptor& levelDescriptor) : ball(level.ballDescriptor.get()) {
 	level = levelDescriptor;
 	level.scale();
 
 	arenaBounds[0] = {{0, 1, 0}, {0, -level.arenaWidth * 0.5f, 0}}; // Left
 	arenaBounds[1] = {{0, -1, 0}, {0, level.arenaWidth * 0.5f, 0}}; // Right
 	arenaBounds[2] = {{0, 0, -1}, {0, 0, level.arenaHeight}};       // Top
-	arenaBounds[3] = {{0, 0, 1}, {0, 0, 0}};                             // Bottom
+	arenaBounds[3] = {{0, 0, 1}, {0, 0, 0}};                        // Bottom
 
 	ball = GameBall(level.ballDescriptor.get());
 	obstacles.append_range(level.obstacleDescriptors | std::views::transform([](const auto& d) { return GameObstacle(d.get()); }));
@@ -97,7 +97,7 @@ void GameWorld::render() const {
 	drawObject(Meshes::ball.get(), ball.getTexture(),
 			   ball.getKinematicState()->position,
 			   ball.getKinematicState()->rotation,
-			   glm::vec3(ball.getProperties()->radius));
+			   glm::vec3(ball.getProperties().radius));
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -109,7 +109,7 @@ void GameWorld::render() const {
 }
 
 
-void GameWorld::resize(int screenWidth, int screenHeight) {
+void GameWorld::resize(float screenWidth, float screenHeight) {
 	camera.update(screenWidth, screenHeight, level.arenaWidth, level.arenaHeight);
 }
 

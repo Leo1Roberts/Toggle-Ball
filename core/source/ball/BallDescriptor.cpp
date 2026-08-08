@@ -14,16 +14,19 @@ BallDescriptor::BallDescriptor(const std::string& data, float version) {
 		version == 0.2f && !(ss >> ballTypeString >> initialPosition.x >> c >> initialPosition.y))
 		throw std::invalid_argument("Invalid ball data format");
 
-	for (type = 0; type < static_cast<byte>(std::size(ballString)); type++)
-		if (ballTypeString == ballString[type]) break;
-	if (type == std::size(ballString))
+	for (int t = 0; t < (int)BallType::COUNT; t++)
+		if (ballTypeString == getBallString((BallType)t)) {
+			type = (BallType)t;
+			break;
+		}
+	if (type == BallType::COUNT)
 		throw std::invalid_argument("Unrecognised ball type");
 }
 
 std::string BallDescriptor::serialize() const {
 	std::ostringstream ss;
 
-	ss << ballString[type] << " " << initialPosition.x << "," << initialPosition.y;
+	ss << getBallString(type) << " " << initialPosition.x << "," << initialPosition.y;
 
 	return ss.str();
 }

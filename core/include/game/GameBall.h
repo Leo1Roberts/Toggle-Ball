@@ -10,11 +10,9 @@ class GameObstacle;
 
 class GameBall {
 public:
-	GameBall() = default;
-
 	explicit GameBall(const BallDescriptor* descriptor) :
 		descriptor(descriptor),
-		properties(&ballProperties[descriptor->type]),
+		properties(getBallProperties(descriptor->type)),
 		texture(getBallTexture(descriptor->type)) {}
 
 	void reset() { descriptor->initKinematicState(kinematicState); }
@@ -24,7 +22,7 @@ public:
 	[[nodiscard]] float springForce(float compression) const {
 		constexpr float power = 4.f;            // Quartic curve...
 		constexpr float forceMultiplier = 10.f; // ...which ends up with a 10x higher force at c = r
-		return compression * properties->springConstant + powf(compression, power) * (forceMultiplier - 1.f) * properties->springConstant * powf(properties->radius, 1.f - power);
+		return compression * properties.springConstant + powf(compression, power) * (forceMultiplier - 1.f) * properties.springConstant * powf(properties.radius, 1.f - power);
 	}
 
 	void collideWithPlane(const PlaneDescriptor& plane);
@@ -34,12 +32,12 @@ public:
 
 	[[nodiscard]] const Texture* getTexture() const { return texture; }
 	[[nodiscard]] const BallKinematicState* getKinematicState() const { return &kinematicState; }
-	[[nodiscard]] const BallProperties* getProperties() const { return properties; }
+	[[nodiscard]] BallProperties getProperties() const { return properties; }
 
 private:
 	const BallDescriptor* descriptor{};
 
-	const BallProperties* properties{};
+	BallProperties properties;
 	Texture* texture{};
 
 	BallKinematicState kinematicState;

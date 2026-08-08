@@ -9,14 +9,23 @@
 struct BallKinematicState;
 
 
-enum {
-	BASKETBALL,
-	FOOTBALL,
-	PING_PONG,
-	MARBLE
+enum class BallType : int {
+	Basketball,
+	Football,
+	PingPong,
+	Marble,
+	COUNT
 };
 
-const std::string ballString[] = {"basketball", "football", "ping-pong", "marble"};
+constexpr std::string getBallString(BallType type) {
+	switch (type) {
+	case BallType::Basketball: return "basketball";
+	case BallType::Football:   return "football";
+	case BallType::PingPong:   return "ping-pong";
+	case BallType::Marble:     return "marble";
+	default: return "";
+	}
+}
 
 struct BallProperties {
 	constexpr BallProperties(
@@ -37,40 +46,38 @@ struct BallProperties {
 		dampingCoefficientInv(1.f/dampingCoefficient),
 		dragCoefficient(dragCoefficient) {}
 
-	byte material;				// SSOT
+	byte material;               // SSOT
 
-	float radius;				// SSOT
-	float mass;					// SSOT
-	float momentOfInertia;		// SSOT
-	float springConstant;		// SSOT
+	float radius;                // SSOT
+	float mass;                  // SSOT
+	float momentOfInertia;       // SSOT
+	float springConstant;        // SSOT
 	float springConstantInv;
-	float dampingCoefficient;	// SSOT
+	float dampingCoefficient;    // SSOT
 	float dampingCoefficientInv;
-	float dragCoefficient;		// SSOT
+	float dragCoefficient;       // SSOT
 };
 
-static constexpr BallProperties ballProperties[] = {
-	{
-		MAT_BASKETBALL,
-		0.12f,
-		0.45f,
-		0.65f * 0.45f * 0.12f * 0.12f,
-		4000.f,
-		4.f,
-		0.5f
+constexpr BallProperties getBallProperties(BallType type) {
+	switch (type) {
+	default:
+	case BallType::Basketball:
+		return {
+			MAT_BASKETBALL,
+			0.12f,
+			0.45f,
+			0.65f * 0.45f * 0.12f * 0.12f,
+			4000.f,
+			4.f,
+			0.5f
+		};
 	}
 };
 
-static Texture* getBallTexture(byte ballType) {
-	switch (ballType) {
-	case BASKETBALL:
+inline Texture* getBallTexture(BallType type) {
+	switch (type) {
+	case BallType::Basketball:
 		return Textures::basketball.get();
-	case FOOTBALL:
-		[[fallthrough]];
-	case PING_PONG:
-		[[fallthrough]];
-	case MARBLE:
-		[[fallthrough]];
 	default:
 		return Textures::white.get();
 	}
@@ -78,7 +85,7 @@ static Texture* getBallTexture(byte ballType) {
 
 
 struct BallDescriptor {
-	constexpr BallDescriptor(byte type, glm::vec2 initialPosition) :
+	constexpr BallDescriptor(BallType type, glm::vec2 initialPosition) :
 		type(type),
 		initialPosition(planarToWorld(initialPosition)) {}
 
@@ -93,9 +100,9 @@ struct BallDescriptor {
 
 	void initKinematicState(BallKinematicState& kinematicState) const;
 
-	[[nodiscard]] float getRadius() const { return ballProperties[type].radius; }
+	[[nodiscard]] constexpr float getRadius() const { return getBallProperties(type).radius; }
 
-	byte type{};
+	BallType type = BallType::COUNT;
 	glm::vec2 initialPosition{0.f};
 };
 
