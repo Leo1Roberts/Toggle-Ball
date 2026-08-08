@@ -41,7 +41,7 @@ public:
 	virtual void onPointerEntered() {}
 	virtual void onPointerExited() {}
 
-	virtual UIResponse processEvent(const Event& event) { return UIResponse::Ignored; }
+	virtual UIResponse processEvent(const Event& event);
 	void update(microseconds dt) {
 		doUpdate(dt);
 		for (auto& child : children) child->update(dt);

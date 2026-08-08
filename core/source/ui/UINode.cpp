@@ -44,3 +44,17 @@ bool UINode::contains(glm::vec2 point) const {
 
 	return containsPrecise(point);
 }
+
+
+UIResponse UINode::processEvent(const Event& event) {
+	if (auto pointer = std::get_if<PointerEvent>(&event)) {
+		switch (pointer->action) {
+		case PointerAction::Down:
+		case PointerAction::Up:
+			return UIResponse::Consumed;
+		default:;
+		}
+	}
+
+	return UIResponse::Ignored;
+}

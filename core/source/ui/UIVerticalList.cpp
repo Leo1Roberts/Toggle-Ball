@@ -31,6 +31,9 @@ void UIVerticalList::updateBounds(Rectangle parentBounds) {
 UIResponse UIVerticalList::processEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		switch (pointer->action) {
+		case PointerAction::Down:
+		case PointerAction::Up:
+			return UIResponse::Consumed;
 		case PointerAction::Scroll:
 			scrollTo(scrollY - pointer->scroll.y * scrollSpeed);
 			return UIResponse::ConsumedNeedsHoverUpdate;
