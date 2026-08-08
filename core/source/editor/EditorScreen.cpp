@@ -359,68 +359,78 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 			}
 		}
 
-	for (const auto& property : commonProperties) {
-		auto item = obstacleMotionPropertiesList->addChild(std::make_unique<UINode>());
-		item->layout = {
-			.heightMode = SizingMode::Absolute, .height = 50.f
-		};
-		auto label = item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(property.property) + ":", TextStyle{
-			.color = {200, 200, 200}, .alignVertical = TextAlignVertical::Middle}));
-		label->layout = {
-			.anchor = Anchor::CentreLeft,
-			.width = 0.5f
-		};
-		auto textField = item->addChild(std::make_unique<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-"));
-		textField->layout = {
-			.anchor = Anchor::CentreRight,
-			.width = 0.5f
-		};
-		textField->setOnTextChange([this, property](const UITextBox& tb) {
-			if (tb.isEmpty())
-				scene.cancelLevelChange();
-			else
-				for (auto& obstacle : scene.obstacles)
+	for (const auto& propertyDescriptor : commonProperties) {
+		auto makeListItem = [this, propertyDescriptor](col labelColor, bool toggled = false) {
+			auto item =  std::make_unique<UINode>();
+			item->layout = {
+				.heightMode = SizingMode::Absolute, .height = 50.f
+			};
+			auto label = item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(propertyDescriptor.property) + ":", TextStyle{
+				.color = labelColor, .alignVertical = TextAlignVertical::Middle}));
+			label->layout = {
+				.anchor = Anchor::CentreLeft,
+				.width = 0.5f
+			};
+			auto textField = item->addChild(std::make_unique<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-"));
+			textField->layout = {
+				.anchor = Anchor::CentreRight,
+				.width = 0.5f
+			};
+			textField->setOnTextChange([this, propertyDescriptor, toggled](const UITextBox& tb) {
+				if (tb.isEmpty())
+					scene.cancelLevelChange();
+				else
+					for (auto& obstacle : scene.obstacles)
+						if (obstacle.isSelected()) {
+							obstacle.setMotionProperty(
+								tb.getValue<float>(), propertyDescriptor.property, toggled);
+							obstacle.initKinematicState();
+							obstacle.generateDomainMesh(uiToWorldScale);
+						}
+			});
+			textField->setOnConfirm([this](const UITextBox& tb) {
+				if (tb.isEmpty())
+					scene.cancelLevelChange();
+				else
+					scene.commitLevelChange();
+			});
+			textField->setOnCancel([this](const UITextBox&) { scene.cancelLevelChange(); });
+			textField->setValueProvider([this, propertyDescriptor, toggled] -> std::string {
+				float value = NAN;
+				for (const auto& obstacle : scene.obstacles)
 					if (obstacle.isSelected()) {
-						obstacle.setMotionProperty(
-							tb.getValue<float>(), property.property, scene.isToggled());
-						obstacle.initKinematicState();
-						obstacle.generateDomainMesh(uiToWorldScale);
+						float v = obstacle.getMotionProperty(propertyDescriptor.property, toggled);
+						if (std::isnan(value))
+							value = v;
+						else if (v != value) {
+							value = NAN;
+							break;
+						}
 					}
-		});
-		textField->setOnConfirm([this](const UITextBox& tb) {
-			if (tb.isEmpty())
-				scene.cancelLevelChange();
-			else
-				scene.commitLevelChange();
-		});
-		textField->setOnCancel([this](const UITextBox&) { scene.cancelLevelChange(); });
-		textField->setValueProvider([this, property] -> std::string {
-			float value = NAN;
-			for (const auto& obstacle : scene.obstacles)
-				if (obstacle.isSelected()) {
-					float v = obstacle.getMotionProperty(property.property);
-					if (std::isnan(value))
-						value = v;
-					else if (v != value) {
-						value = NAN;
-						break;
-					}
+
+				if (std::isnan(value)) return "";
+
+				std::stringstream ss;
+				ss << std::fixed << std::setprecision(3) << value;
+				std::string result = ss.str();
+				if (result.find('.') != std::string::npos) {
+					result.erase(result.find_last_not_of('0') + 1, std::string::npos);
+					if (result.back() == '.')
+						result.pop_back();
 				}
 
-			if (std::isnan(value)) return "";
+				if (result == "-0") return "0";
+				return result;
+			});
 
-			std::stringstream ss;
-			ss << std::fixed << std::setprecision(3) << value;
-			std::string result = ss.str();
-			if (result.find('.') != std::string::npos) {
-				result.erase(result.find_last_not_of('0') + 1, std::string::npos);
-				if (result.back() == '.')
-					result.pop_back();
-			}
+			return item;
+		};
 
-			if (result == "-0") return "0";
-			return result;
-		});
+		if (propertyDescriptor.stateful) {
+			obstacleMotionPropertiesList->addChild(makeListItem(Color::StateA, false));
+			obstacleMotionPropertiesList->addChild(makeListItem(Color::StateB, true));
+		} else
+			obstacleMotionPropertiesList->addChild(makeListItem({200, 200, 200}));
 	}
 
 	obstacleMotionPropertiesList->updateBounds(obstacleMotionPropertiesList->getParent()->getAbsoluteBounds());

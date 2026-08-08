@@ -51,10 +51,6 @@ namespace Color {
 
 	constexpr col StateA = col(204, 22, 22);
 	constexpr col StateB = col(22, 95, 204);
-	extern col State;
-	extern col StateHover;
-	extern col StateActive;
-	extern col StateInstant;
 
 	constexpr col ToggleBlob = col(220, 220, 220);
 }
