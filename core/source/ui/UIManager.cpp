@@ -229,3 +229,24 @@ void UIManager::render() {
 	glDisable(GL_BLEND);
 	glEnable(GL_CULL_FACE);
 }
+
+
+void UIManager::removeAllChildrenOfNode(UINode* node) {
+	for (auto& child : node->getChildren())
+		unregisterNode(child.get());
+
+	node->clearChildren();
+}
+void UIManager::unregisterNode(UINode* node) {
+	if (focusedNode == node)
+		focusedNode = nullptr;
+
+	auto isNode = [node](const auto& pair) { return pair.second == node; };
+
+	std::erase_if(hoveredNodes, isNode);
+	std::erase_if(dragCapturedNodes, isNode);
+	std::erase_if(downCapturedNodes, isNode);
+
+	for (const auto& child : node->getChildren())
+		unregisterNode(child.get());
+}

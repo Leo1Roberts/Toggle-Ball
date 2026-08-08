@@ -342,7 +342,7 @@ void EditorScreen::doResize() {
 
 
 void EditorScreen::updateObstacleMotionPropertiesList() {
-	obstacleMotionPropertiesList->clearChildren();
+	uiManager.removeAllChildrenOfNode(obstacleMotionPropertiesList);
 
 	std::vector<MotionSpecPropertyDescriptor> commonProperties;
 	for (const auto& obstacle : scene.obstacles)
