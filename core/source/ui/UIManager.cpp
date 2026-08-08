@@ -10,13 +10,11 @@ void UIManager::resize(int screenWidth, int screenHeight, float screenDPIScale) 
 	glm::vec2 logicalSize = glm::vec2((float)screenWidth, (float)screenHeight) / getScale();
 	projectionMatrix = glm::ortho(0.f, logicalSize.x, logicalSize.y, 0.f);
 
-	if (rootNode) {
-		Rectangle screenBounds = {
-			.x = 0.f, .y = 0.f,
-			.width = logicalSize.x, .height = logicalSize.y,
-		};
-		rootNode->updateBounds(screenBounds);
-	}
+	Rectangle screenBounds = {
+		.x = 0.f, .y = 0.f,
+		.width = logicalSize.x, .height = logicalSize.y,
+	};
+	rootNode.updateBounds(screenBounds);
 }
 
 
@@ -77,9 +75,9 @@ bool UIManager::processEvent(const Event& event) {
 		
 		UINode* nodePointedTo = nullptr;
 
-		if (rootNode && rootNode->contains(pointer.position)) {
-			nodePointedTo = findNodePointedTo(rootNode.get(), pointer.position);
-			if (nodePointedTo == rootNode.get())
+		if (rootNode.contains(pointer.position)) {
+			nodePointedTo = findNodePointedTo(&rootNode, pointer.position);
+			if (nodePointedTo == &rootNode)
 				nodePointedTo = nullptr;
 		}
 
@@ -213,15 +211,13 @@ void UIManager::drawNodeRecursive(UINode* node) {
 }
 
 void UIManager::render() {
-	if (!rootNode) return;
-
 	activeRenderer = nullptr;
 
 	glDisable(GL_CULL_FACE);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	drawNodeRecursive(rootNode.get());
+	drawNodeRecursive(&rootNode);
 
 	if (activeRenderer)
 		activeRenderer->flush(projectionMatrix);

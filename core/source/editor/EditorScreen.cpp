@@ -37,9 +37,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
 
 
-	auto rootNode = std::make_unique<UINode>();
-
-	auto propertiesPanel = rootNode->addChild(std::make_unique<UIPanel>(Theme::DarkPanel));
+	auto propertiesPanel = std::make_unique<UIPanel>(Theme::DarkPanel);
 	propertiesPanel->layout = {
 		.anchor = Anchor::CentreRight,
 		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Relative,
@@ -48,7 +46,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 
 	obstacleMotionPropertiesList = propertiesPanel->addChild(std::make_unique<UIVerticalList>(glm::vec2(20.f), 10.f));
 
-	uiManager.setRootNode(std::move(rootNode));
+	uiManager.addNode(std::move(propertiesPanel));
 }
 
 

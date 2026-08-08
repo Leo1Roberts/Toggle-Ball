@@ -7,13 +7,10 @@
 
 PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<void()>& browseLevelsCallback)
 	: game(levelToPlay) {
-	auto rootNode = std::make_unique<UINode>();
-
 	auto levelCompleteBackground = std::make_unique<UIButton>();
 	levelCompleteBackground->hide();
-	levelCompleteDisplay = rootNode->addChild(std::move(levelCompleteBackground));
+	levelCompleteDisplay = uiManager.addNode(std::move(levelCompleteBackground));
 	levelCompleteDisplay->setOnClick([this] {
-		// ReSharper disable once CppDFANullDereference
 		levelCompleteDisplay->deactivate();
 	});
 
@@ -42,7 +39,7 @@ PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<v
 		levelCompleteDisplay->deactivate();
 		game.start();
 	});
-	rootNode->addChild(std::move(restartButton));
+	uiManager.addNode(std::move(restartButton));
 
 	auto levelButton = std::make_unique<UIButton>(levelToPlay.name, Theme::SecondaryOutline);
 	levelButton->layout = {
@@ -52,9 +49,7 @@ PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<v
 		.offset = {20.f, -20.f}
 	};
 	levelButton->setOnClick(browseLevelsCallback);
-	rootNode->addChild(std::move(levelButton));
-
-	uiManager.setRootNode(std::move(rootNode));
+	uiManager.addNode(std::move(levelButton));
 
 	game.start();
 }

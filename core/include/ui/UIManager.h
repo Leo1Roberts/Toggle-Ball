@@ -17,13 +17,14 @@ public:
 
 	bool processEvent(const Event& event);
 
-	void update(microseconds dt) { if (rootNode) rootNode->update(dt); }
+	void update(microseconds dt) { rootNode.update(dt); }
 
 	void submitPanel(const UIPanel* panel);
 	void submitText(const UIText* text);
 	void render();
 
-	void setRootNode(std::unique_ptr<UINode> node) { rootNode = std::move(node); }
+	template <typename T>
+	T* addNode(std::unique_ptr<T> node) { return rootNode.addChild(std::move(node)); }
 
 	void removeAllChildrenOfNode(UINode* node);
 
@@ -41,7 +42,7 @@ private:
 
 	void unregisterNode(UINode* node);
 
-	std::unique_ptr<UINode> rootNode;
+	UINode rootNode;
 	UINode* focusedNode = nullptr;
 	std::unordered_map<int, UINode*> hoveredNodes;
 	std::unordered_map<int, UINode*> downCapturedNodes;

@@ -14,11 +14,9 @@ void ScreenVertex::setupLayout() {
 }
 
 App::App(std::unique_ptr<AbstractWindow> appWindow, std::unique_ptr<AppMode> appMode) : window(std::move(appWindow)), content(std::move(appMode)) {
-	auto rootNode = std::make_unique<UINode>();
 	auto fps = std::make_unique<FPSOverlay>();
 	fps->layout = { .offset = {10.f, 10.f} };
-	fpsOverlay = rootNode->addChild(std::move(fps));
-	overlayUI.setRootNode(std::move(rootNode));
+	fpsOverlay = overlayUI.addNode(std::move(fps));
 
 	quadVertices.emplace_back(glm::vec2(-1, 1), glm::vec2(0, 1));
 	quadVertices.emplace_back(glm::vec2(-1, -1), glm::vec2(0, 0));

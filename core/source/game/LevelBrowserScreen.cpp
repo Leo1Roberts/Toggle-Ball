@@ -7,8 +7,7 @@
 
 
 LevelBrowserScreen::LevelBrowserScreen(const std::function<void(std::string)>& playLevelCallback) {
-	auto rootNode = std::make_unique<UINode>();
-	auto list = rootNode->addChild(std::make_unique<UIVerticalList>(glm::vec2(60.f), 10.f));
+	auto list = std::make_unique<UIVerticalList>(glm::vec2(60.f), 10.f);
 
 	auto levels = AssetManager::getFileList("levels", ".lvl");
 	for (const auto& levelName : levels) {
@@ -24,7 +23,7 @@ LevelBrowserScreen::LevelBrowserScreen(const std::function<void(std::string)>& p
 		list->addChild(std::move(button));
 	}
 
-	uiManager.setRootNode(std::move(rootNode));
+	uiManager.addNode(std::move(list));
 }
 
 
