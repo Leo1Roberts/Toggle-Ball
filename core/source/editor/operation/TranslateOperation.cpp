@@ -19,7 +19,7 @@ std::optional<glm::vec2> TranslateOperation::keyToTranslationVector(KeyCode key)
 
 
 bool TranslateOperation::doProcessEvent(const Event& event) {
-	if (typing && textInput.processEvent(event)) {
+	if (typing && textInput.processEvent(event) == TextInputEventEffect::Buffer) {
 		applyOperation(); // Get value later - rawTranslation is not suitable
 		return true;
 	}
@@ -60,7 +60,7 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 	} else if (auto* c = std::get_if<char>(&event)) {
 		if (!typing && TextInputBuffer::Float(*c) && constraint != ConstraintType::None) {
 			typing = true;
-			if (textInput.processEvent(*c))
+			if (textInput.processEvent(*c) == TextInputEventEffect::Buffer)
 				applyOperation(); // Get value later - rawTranslation is not suitable
 		}
 	}

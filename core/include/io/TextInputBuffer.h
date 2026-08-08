@@ -5,7 +5,10 @@
 
 #include "Event.h"
 
+
 enum class TextInputMode { Simple, Rich };
+
+enum class TextInputEventEffect { None, Cursor, Buffer };
 
 
 class TextInputBuffer {
@@ -16,7 +19,7 @@ public:
 	explicit TextInputBuffer(Validator validator, TextInputMode mode = TextInputMode::Rich)
 		: charIsValid(std::move(validator)), mode(mode) {}
 
-	bool processEvent(const Event& event);
+	TextInputEventEffect processEvent(const Event& event);
 
 	void clear() { buffer.clear(); }
 

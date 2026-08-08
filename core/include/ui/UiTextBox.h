@@ -63,17 +63,9 @@ private:
 	std::function<void(const UITextBox&)> onTextChangedCallback;
 	std::function<std::string()> valueProvider;
 
-	void updateText() {
-		if (!focused && isEmpty())
-			textNode->setText(placeholder);
-		else
-			textNode->setText(inputBuffer.getValue<const std::string&>());
-	}
+	void updateText();
+	void setText(const std::string& text);
 
-	void setText(const std::string& text) {
-		inputBuffer.setText(text);
-		updateText();
-	}
 	void updateCursorAndHighlight();
 	void updateAppearance();
 

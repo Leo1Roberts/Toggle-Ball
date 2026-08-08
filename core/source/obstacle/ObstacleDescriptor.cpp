@@ -13,13 +13,13 @@ ObstacleDescriptor::ObstacleDescriptor(const ObstacleDescriptor& other) :
 
 ObstacleDescriptor& ObstacleDescriptor::operator=(const ObstacleDescriptor& other) {
 	if (this != &other) {
+		goal = other.goal;
+		color = other.color;
+		material = other.material;
 		if (other.shape)
 			shape = other.shape->clone();
 		if (other.motion)
 			motion = other.motion->clone();
-		goal = other.goal;
-		color = other.color;
-		material = other.material;
 	}
 	return *this;
 }

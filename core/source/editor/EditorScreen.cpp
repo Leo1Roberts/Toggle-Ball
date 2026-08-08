@@ -392,7 +392,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 				scene.commitLevelChange();
 		});
 		textField->setOnCancel([this](const UITextBox&) { scene.cancelLevelChange(); });
-		textField->setValueProvider([this, property] -> std::string {
+		textField->setValueProvider([this, property] {
 			float value = NAN;
 			for (const auto& obstacle : scene.obstacles)
 				if (obstacle.isSelected()) {

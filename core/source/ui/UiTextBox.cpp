@@ -22,13 +22,15 @@ UIResponse UITextBox::processEvent(const Event& event) {
 	if (state == TextBoxState::Disabled)
 		return UIResponse::Ignored;
 
-	if (inputBuffer.processEvent(event)) {
+	auto effect = inputBuffer.processEvent(event);
+	if (effect == TextInputEventEffect::Cursor ||
+		effect == TextInputEventEffect::Buffer) {
 		updateText();
 		updateCursorAndHighlight();
-		if (onTextChangedCallback) {
-			cursorInactiveTime = 0;
+		cursorInactiveTime = 0;
+		if (onTextChangedCallback && effect == TextInputEventEffect::Buffer)
 			onTextChangedCallback(*this);
-		}
+
 		return UIResponse::Consumed;
 	}
 
@@ -114,7 +116,8 @@ void UITextBox::onPointerExited() {
 
 void UITextBox::doUpdate(microseconds dt) {
 	cursorInactiveTime += dt;
-	if (focused && (cursorInactiveTime / 500000 % 2 || cursorInactiveTime < 500000))
+	float cursorInactiveSeconds = toSeconds(cursorInactiveTime);
+	if (focused && (cursorInactiveSeconds < 0.5f || (int)(cursorInactiveSeconds / 0.5f) % 2))
 		cursorNode->show();
 	else
 		cursorNode->hide();
@@ -136,6 +139,16 @@ int UITextBox::getPointedCharacterIndex(glm::vec2 pointerPos) const {
 	return textNode->getIndexAtPosition(pointerPos - textNode->getAbsoluteBounds().position, false);
 }
 
+void UITextBox::updateText() {
+	if (!focused && isEmpty())
+		textNode->setText(placeholder);
+	else
+		textNode->setText(inputBuffer.getValue<const std::string&>());
+}
+void UITextBox::setText(const std::string& text) {
+	inputBuffer.setText(text);
+	updateText();
+}
 
 void UITextBox::updateCursorAndHighlight() {
 	highlightContainer->clearChildren(); // Only safe because highlightContainer is not hit testable

@@ -11,50 +11,64 @@ bool TextInputBuffer::Float(char c, int cursor, const std::string& buffer) {
 }
 
 
-bool TextInputBuffer::processEvent(const Event& event) {
-	if (auto* c = std::get_if<char>(&event)) {
-		if (charIsValid(*c, cursorIndex, selectionStartIndex == selectionEndIndex ? buffer : "")) {
+TextInputEventEffect TextInputBuffer::processEvent(const Event& event) {
+	if (auto* charEvent = std::get_if<char>(&event)) {
+		if (charIsValid(*charEvent, cursorIndex, selectionStartIndex == selectionEndIndex ? buffer : "")) {
 			eraseSelection();
-			buffer.insert(buffer.begin() + cursorIndex, *c);
+			buffer.insert(buffer.begin() + cursorIndex, *charEvent);
 			moveCursorTo(cursorIndex + 1);
+			return TextInputEventEffect::Buffer;
 		}
-		return true;
+		return TextInputEventEffect::None;
 	}
 	if (auto key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			switch (*actionCode) {
 			case ActionCode::Copy:
 				if (key->action == KeyAction::Down) {
-					if (selectionStartIndex == selectionEndIndex)
-						System::setClipboardText(buffer);
-					else
+					if (selectionStartIndex == selectionEndIndex) {
+						if (!isEmpty())
+							System::setClipboardText(buffer);
+					} else
 						System::setClipboardText(buffer.substr(selectionStartIndex, selectionEndIndex - selectionStartIndex));
-					return true;
 				}
+				return TextInputEventEffect::None;
 			case ActionCode::Paste:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
-					eraseSelection();
+					bool changed = false;
+					if (selectionStartIndex != selectionEndIndex) {
+						eraseSelection();
+						changed = true;
+					}
 					for (char c : System::getClipboardText())
 						if (charIsValid(c, cursorIndex, buffer)) {
 							buffer.insert(buffer.begin() + cursorIndex, c);
+							changed |= true;
 							moveCursorTo(cursorIndex + 1);
 						}
-					return true;
+					if (changed)
+						return TextInputEventEffect::Buffer;
 				}
+				return TextInputEventEffect::None;
 			default:;
 			}
 		}
 		
 		if (key->chord.code == KeyCode::Backspace) {
 			if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
-				if (selectionStartIndex != selectionEndIndex)
+				if (selectionStartIndex != selectionEndIndex) {
 					eraseSelection();
-				else if (cursorIndex > 0) {
+					return TextInputEventEffect::Buffer;
+				}
+				if (cursorIndex > 0) {
 					moveCursorTo(key->chord.modifiers & MOD_CTRL ? getWordJumpCursorIndex(true) : cursorIndex - 1, true);
 					eraseSelection();
-				} else if (key->action == KeyAction::Repeat)
-					return false;
-				return true;
+					return TextInputEventEffect::Buffer;
+				}
+				if (key->action == KeyAction::Repeat)
+					return TextInputEventEffect::None;
+
+				return TextInputEventEffect::Cursor;
 			}
 		}
 
@@ -64,29 +78,36 @@ bool TextInputBuffer::processEvent(const Event& event) {
 				case ActionCode::SelectAll:
 					if (key->action == KeyAction::Down) {
 						selectAll();
-						return true;
-					} return false;
+						return TextInputEventEffect::Cursor;
+					}
+					return TextInputEventEffect::None;
 				case ActionCode::DeselectAll:
 					if (key->action == KeyAction::Down) {
 						deselectAll();
-						return true;
-					} return false;
+						return TextInputEventEffect::Cursor;
+					}
+					return TextInputEventEffect::None;
 				default:
-					return false;
+					return TextInputEventEffect::None;
 				}
 			}
 			switch (key->chord.code) {
 			case KeyCode::Delete:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
-					if (selectionStartIndex != selectionEndIndex)
+					if (selectionStartIndex != selectionEndIndex) {
 						eraseSelection();
-					else if (cursorIndex < buffer.size()) {
+						return TextInputEventEffect::Buffer;
+					}
+					if (cursorIndex < buffer.size()) {
 						moveCursorTo(key->chord.modifiers & MOD_CTRL ? getWordJumpCursorIndex(false) : cursorIndex + 1, true);
 						eraseSelection();
-					} else if (key->action == KeyAction::Repeat)
-						return false;
-					return true;
-				}
+						return TextInputEventEffect::Buffer;
+					}
+					if (key->action == KeyAction::Repeat)
+						return TextInputEventEffect::None;
+
+					return TextInputEventEffect::Cursor;
+				} break;
 			case KeyCode::Left:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					if (selectionStartIndex != selectionEndIndex && !(key->chord.modifiers & MOD_SHIFT))
@@ -95,9 +116,9 @@ bool TextInputBuffer::processEvent(const Event& event) {
 						moveCursorTo(key->chord.modifiers & MOD_CTRL ? getWordJumpCursorIndex(true) : cursorIndex - 1,
 							key->chord.modifiers & MOD_SHIFT);
 					else if (key->action == KeyAction::Repeat)
-						return false;
-					return true;
-				}
+						return TextInputEventEffect::None;
+					return TextInputEventEffect::Cursor;
+				} break;
 			case KeyCode::Right:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					if (selectionStartIndex != selectionEndIndex && !(key->chord.modifiers & MOD_SHIFT))
@@ -106,30 +127,30 @@ bool TextInputBuffer::processEvent(const Event& event) {
 						moveCursorTo(key->chord.modifiers & MOD_CTRL ? getWordJumpCursorIndex(false) : cursorIndex + 1,
 							key->chord.modifiers & MOD_SHIFT);
 					else if (key->action == KeyAction::Repeat)
-						return false;
-					return true;
-				}
+						return TextInputEventEffect::None;
+					return TextInputEventEffect::Cursor;
+				} break;
 			case KeyCode::Up:
 			case KeyCode::Home:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					if (cursorIndex == 0 && key->action == KeyAction::Repeat)
-						return false;
+						return TextInputEventEffect::None;
 					moveCursorTo(0, key->chord.modifiers & MOD_SHIFT);
-					return true;
-				}
+					return TextInputEventEffect::Cursor;
+				} break;
 			case KeyCode::Down:
 			case KeyCode::End:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					if (cursorIndex == buffer.length() && key->action == KeyAction::Repeat)
-						return false;
+						return TextInputEventEffect::None;
 					moveCursorTo((int)buffer.length(), key->chord.modifiers & MOD_SHIFT);
-					return true;
-				}
+					return TextInputEventEffect::Cursor;
+				} break;
 			default:;
 			}
 		}
 	}
-	return false;
+	return TextInputEventEffect::None;
 }
 
 

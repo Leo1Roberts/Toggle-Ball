@@ -5,6 +5,7 @@
 #include <sstream>
 
 LevelDescriptor::LevelDescriptor(const LevelDescriptor& other) :
+	name(other.name),
 	arenaWidth(other.arenaWidth),
 	arenaHeight(other.arenaHeight),
 	transitionTime(other.transitionTime),
