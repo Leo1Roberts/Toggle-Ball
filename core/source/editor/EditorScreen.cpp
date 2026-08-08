@@ -9,6 +9,8 @@
 #include "ui/UIVerticalList.h"
 #include "ui/UiTextBox.h"
 
+#include <iomanip>
+
 
 const glm::vec3 groundColor = colorToLinear({76, 76, 76});
 const glm::vec3 skyColor = colorToLinear({85, 110, 128});
@@ -392,7 +394,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 				scene.commitLevelChange();
 		});
 		textField->setOnCancel([this](const UITextBox&) { scene.cancelLevelChange(); });
-		textField->setValueProvider([this, property] {
+		textField->setValueProvider([this, property] -> std::string {
 			float value = NAN;
 			for (const auto& obstacle : scene.obstacles)
 				if (obstacle.isSelected()) {
@@ -405,7 +407,19 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 					}
 				}
 
-			return std::isnan(value) ? "" : std::to_string(value);
+			if (std::isnan(value)) return "";
+
+			std::stringstream ss;
+			ss << std::fixed << std::setprecision(3) << value;
+			std::string result = ss.str();
+			if (result.find('.') != std::string::npos) {
+				result.erase(result.find_last_not_of('0') + 1, std::string::npos);
+				if (result.back() == '.')
+					result.pop_back();
+			}
+
+			if (result == "-0") return "0";
+			return result;
 		});
 	}
 
