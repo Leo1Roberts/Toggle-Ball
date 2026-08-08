@@ -1,6 +1,7 @@
 #ifndef OBSTACLE_MOTION_H
 #define OBSTACLE_MOTION_H
 
+#include "glm/gtc/constants.hpp"
 #include "opengl/Mesh.h"
 
 class AbstractShapeSpec;
@@ -12,16 +13,45 @@ enum class MotionSpecProperty {
 	Position_X, Position_Y,
 	Position1_X,Position1_Y, Position2_X,Position2_Y,
 
-	Angle,
-	InitialAngle,
-	Angle1, Angle2,
+	Angle_deg,
+	InitialAngle_deg,
+	Angle1_deg, Angle2_deg,
 
-	AngularVelocity,
+	AngularSpeed_rpm,
 
-	AngularFrequency,
+	AngularFrequency_opm,
 };
 
-struct MotionSpecPropertyDescriptor { MotionSpecProperty property; bool stateful; };
+inline std::string getMotionSpecPropertyName(MotionSpecProperty property) {
+	switch (property) {
+	case MotionSpecProperty::Position_X:           return "Position X";
+	case MotionSpecProperty::Position_Y:           return "Position Y";
+	case MotionSpecProperty::Position1_X:          return "Position 1 X";
+	case MotionSpecProperty::Position1_Y:          return "Position 1 Y";
+	case MotionSpecProperty::Position2_X:          return "Position 2 X";
+	case MotionSpecProperty::Position2_Y:          return "Position 2 Y";
+	case MotionSpecProperty::Angle_deg:            return "Angle";
+	case MotionSpecProperty::InitialAngle_deg:     return "Initial angle";
+	case MotionSpecProperty::Angle1_deg:           return "Angle 1";
+	case MotionSpecProperty::Angle2_deg:           return "Angle 2";
+	case MotionSpecProperty::AngularSpeed_rpm:     return "Revolutions/min";
+	case MotionSpecProperty::AngularFrequency_opm: return "Oscillations/min";
+	}
+	return "Unknown";
+}
+
+struct MotionSpecPropertyDescriptor {
+	MotionSpecProperty property; bool stateful;
+
+	bool operator==(const MotionSpecPropertyDescriptor&) const = default;
+};
+
+static float to_deg(float rad) { return -rad * glm::one_over_pi<float>() * 180.f; }
+static float to_rad(float deg) { return -deg / 180.f * glm::pi<float>(); }
+
+static float to_rpm(float radPerSec) { return -radPerSec * glm::one_over_pi<float>() * 30.f; }
+static float to_opm(float radPerSec) { return to_rpm(radPerSec); }
+static float to_radPerSec(float rpm_or_opm) { return -rpm_or_opm / 30.f * glm::pi<float>(); }
 
 
 class IMotionSpec {
@@ -107,14 +137,14 @@ public:
 		return {
 			{ MotionSpecProperty::Position_X, false },
 			{ MotionSpecProperty::Position_Y, false },
-			{ MotionSpecProperty::Angle,      false },
+			{ MotionSpecProperty::Angle_deg,  false },
 		};
 	}
 	[[nodiscard]] float getProperty(MotionSpecProperty property, bool) const override {
 		switch (property) {
 		case MotionSpecProperty::Position_X: return position.x;
 		case MotionSpecProperty::Position_Y: return position.y;
-		case MotionSpecProperty::Angle:      return angle;
+		case MotionSpecProperty::Angle_deg:  return to_deg(angle);
 		default: return NAN;
 		}
 	}
@@ -122,7 +152,7 @@ public:
 		switch (property) {
 		case MotionSpecProperty::Position_X: position.x = value; break;
 		case MotionSpecProperty::Position_Y: position.y = value; break;
-		case MotionSpecProperty::Angle:      setAngle(value); break;
+		case MotionSpecProperty::Angle_deg:  setAngle(to_rad(value)); break;
 		default:;
 		}
 	}
@@ -184,14 +214,14 @@ public:
 		return {
 			{ MotionSpecProperty::Position_X, true  },
 			{ MotionSpecProperty::Position_Y, true  },
-			{ MotionSpecProperty::Angle,      false },
+			{ MotionSpecProperty::Angle_deg,  false },
 		};
 	}
 	[[nodiscard]] float getProperty(MotionSpecProperty property, bool toggled) const override {
 		switch (property) {
 		case MotionSpecProperty::Position_X: return toggled ? positionB.x : positionA.x;
 		case MotionSpecProperty::Position_Y: return toggled ? positionB.y : positionA.y;
-		case MotionSpecProperty::Angle:      return angle;
+		case MotionSpecProperty::Angle_deg:  return to_deg(angle);
 		default: return NAN;
 		}
 	}
@@ -199,7 +229,7 @@ public:
 		switch (property) {
 		case MotionSpecProperty::Position_X: if (toggled) positionB.x = value; else positionA.x = value; break;
 		case MotionSpecProperty::Position_Y: if (toggled) positionB.y = value; else positionA.y = value; break;
-		case MotionSpecProperty::Angle:      setAngle(value); break;
+		case MotionSpecProperty::Angle_deg:  setAngle(to_rad(value)); break;
 		default:;
 		}
 	}
@@ -262,14 +292,14 @@ public:
 		return {
 			{ MotionSpecProperty::Position_X, false },
 			{ MotionSpecProperty::Position_Y, false },
-			{ MotionSpecProperty::Angle,      true  },
+			{ MotionSpecProperty::Angle_deg,  true  },
 		};
 	}
 	[[nodiscard]] float getProperty(MotionSpecProperty property, bool toggled) const override {
 		switch (property) {
 		case MotionSpecProperty::Position_X: return position.x;
 		case MotionSpecProperty::Position_Y: return position.y;
-		case MotionSpecProperty::Angle:      return toggled ? angleB : angleA;
+		case MotionSpecProperty::Angle_deg:  return to_deg(toggled ? angleB : angleA);
 		default: return NAN;
 		}
 	}
@@ -277,7 +307,7 @@ public:
 		switch (property) {
 		case MotionSpecProperty::Position_X: position.x = value; break;
 		case MotionSpecProperty::Position_Y: position.y = value; break;
-		case MotionSpecProperty::Angle:      if (toggled) angleB = value; else angleA = value; break;
+		case MotionSpecProperty::Angle_deg:  if (toggled) angleB = to_rad(value); else angleA = to_rad(value); break;
 		default:;
 		}
 	}
@@ -309,11 +339,11 @@ private:
 
 class SpinningSpec : public IMotionSpec {
 public:
-	SpinningSpec(glm::vec2 position, float initialAngle, float angularVelocityA, float angularVelocityB) :
+	SpinningSpec(glm::vec2 position, float initialAngle, float angularSpeedA, float angularSpeedB) :
 	    position(position),
 	    initialAngle(initialAngle),
-	    angularVelocityA(angularVelocityA),
-	    angularVelocityB(angularVelocityB) {}
+	    angularSpeedA(angularSpeedA),
+	    angularSpeedB(angularSpeedB) {}
 
 	explicit SpinningSpec(const std::string& data);
 
@@ -324,7 +354,7 @@ public:
 	~SpinningSpec() override = default;
 
 	void scale(float factor) override {
-		*this = SpinningSpec(position * factor, initialAngle, angularVelocityA, angularVelocityB);
+		*this = SpinningSpec(position * factor, initialAngle, angularSpeedA, angularSpeedB);
 	}
 
 	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
@@ -337,27 +367,27 @@ public:
 
 	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
 		return {
-			{ MotionSpecProperty::Position_X,      false },
-			{ MotionSpecProperty::Position_Y,      false },
-			{ MotionSpecProperty::InitialAngle,    false },
-			{ MotionSpecProperty::AngularVelocity, true  },
+			{ MotionSpecProperty::Position_X,       false },
+			{ MotionSpecProperty::Position_Y,       false },
+			{ MotionSpecProperty::InitialAngle_deg, false },
+			{ MotionSpecProperty::AngularSpeed_rpm, true  },
 		};
 	}
 	[[nodiscard]] float getProperty(MotionSpecProperty property, bool toggled) const override {
 		switch (property) {
-		case MotionSpecProperty::Position_X:      return position.x;
-		case MotionSpecProperty::Position_Y:      return position.y;
-		case MotionSpecProperty::InitialAngle:    return initialAngle;
-		case MotionSpecProperty::AngularVelocity: return toggled ? angularVelocityB : angularVelocityA;
+		case MotionSpecProperty::Position_X:       return position.x;
+		case MotionSpecProperty::Position_Y:       return position.y;
+		case MotionSpecProperty::InitialAngle_deg: return to_deg(initialAngle);
+		case MotionSpecProperty::AngularSpeed_rpm: return to_rpm(toggled ? angularSpeedB : angularSpeedA);
 		default: return NAN;
 		}
 	}
 	void setProperty(float value, MotionSpecProperty property, bool toggled) override {
 		switch (property) {
-		case MotionSpecProperty::Position_X:      position.x = value; break;
-		case MotionSpecProperty::Position_Y:      position.y = value; break;
-		case MotionSpecProperty::InitialAngle:    initialAngle = value; break;
-		case MotionSpecProperty::AngularVelocity: if (toggled) angularVelocityB = value; else angularVelocityA = value; break;
+		case MotionSpecProperty::Position_X:       position.x = value; break;
+		case MotionSpecProperty::Position_Y:       position.y = value; break;
+		case MotionSpecProperty::InitialAngle_deg: initialAngle = to_rad(value); break;
+		case MotionSpecProperty::AngularSpeed_rpm: if (toggled) angularSpeedB = to_radPerSec(value); else angularSpeedA = to_radPerSec(value); break;
 		default:;
 		}
 	}
@@ -368,8 +398,8 @@ public:
 private:
 	glm::vec2 position{0.f};  // SSOT
 	float initialAngle{};     // SSOT
-	float angularVelocityA{}; // SSOT
-	float angularVelocityB{}; // SSOT
+	float angularSpeedA{}; // SSOT
+	float angularSpeedB{}; // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class IMotionSpec;
@@ -380,15 +410,15 @@ private:
 		auto otherSpinningSpec = (const SpinningSpec&)other;
 		return
 			position == otherSpinningSpec.position && initialAngle == otherSpinningSpec.initialAngle &&
-			angularVelocityA == otherSpinningSpec.angularVelocityA && angularVelocityB == otherSpinningSpec.angularVelocityB;
+			angularSpeedA == otherSpinningSpec.angularSpeedA && angularSpeedB == otherSpinningSpec.angularSpeedB;
 	}
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
 
 	[[nodiscard]] glm::vec2 getPosition() const { return position; }
 	[[nodiscard]] float getInitialAngle() const { return initialAngle; }
-	[[nodiscard]] float getAngularVelocityA() const { return angularVelocityA; }
-	[[nodiscard]] float getAngularVelocityB() const { return angularVelocityB; }
+	[[nodiscard]] float getAngularSpeedA() const { return angularSpeedA; }
+	[[nodiscard]] float getAngularSpeedB() const { return angularSpeedB; }
 };
 
 class OscillatingPositionSpec : public IMotionSpec {
@@ -423,33 +453,33 @@ public:
 
 	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
 		return {
-			{ MotionSpecProperty::Position1_X,      false },
-			{ MotionSpecProperty::Position1_Y,      false },
-			{ MotionSpecProperty::Position2_X,      false },
-			{ MotionSpecProperty::Position2_Y,      false },
-			{ MotionSpecProperty::Angle,            false },
-			{ MotionSpecProperty::AngularFrequency, true  },
+			{ MotionSpecProperty::Position1_X,          false },
+			{ MotionSpecProperty::Position1_Y,          false },
+			{ MotionSpecProperty::Position2_X,          false },
+			{ MotionSpecProperty::Position2_Y,          false },
+			{ MotionSpecProperty::Angle_deg,            false },
+			{ MotionSpecProperty::AngularFrequency_opm, true  },
 		};
 	}
 	[[nodiscard]] float getProperty(MotionSpecProperty property, bool toggled) const override {
 		switch (property) {
-		case MotionSpecProperty::Position1_X:      return position1.x;
-		case MotionSpecProperty::Position1_Y:      return position1.y;
-		case MotionSpecProperty::Position2_X:      return position2.x;
-		case MotionSpecProperty::Position2_Y:      return position2.y;
-		case MotionSpecProperty::Angle:            return angle;
-		case MotionSpecProperty::AngularFrequency: return toggled ? angularFrequencyB : angularFrequencyA;
+		case MotionSpecProperty::Position1_X:          return position1.x;
+		case MotionSpecProperty::Position1_Y:          return position1.y;
+		case MotionSpecProperty::Position2_X:          return position2.x;
+		case MotionSpecProperty::Position2_Y:          return position2.y;
+		case MotionSpecProperty::Angle_deg:            return to_deg(angle);
+		case MotionSpecProperty::AngularFrequency_opm: return to_opm(toggled ? angularFrequencyB : angularFrequencyA);
 		default: return NAN;
 		}
 	}
 	void setProperty(float value, MotionSpecProperty property, bool toggled) override {
 		switch (property) {
-		case MotionSpecProperty::Position1_X:      position1.x = value; break;
-		case MotionSpecProperty::Position1_Y:      position1.y = value; break;
-		case MotionSpecProperty::Position2_X:      position2.x = value; break;
-		case MotionSpecProperty::Position2_Y:      position2.y = value; break;
-		case MotionSpecProperty::Angle:            setAngle(value); break;
-		case MotionSpecProperty::AngularFrequency: if (toggled) angularFrequencyB = value; else angularFrequencyA = value; break;
+		case MotionSpecProperty::Position1_X:          position1.x = value; break;
+		case MotionSpecProperty::Position1_Y:          position1.y = value; break;
+		case MotionSpecProperty::Position2_X:          position2.x = value; break;
+		case MotionSpecProperty::Position2_Y:          position2.y = value; break;
+		case MotionSpecProperty::Angle_deg:            setAngle(to_rad(value)); break;
+		case MotionSpecProperty::AngularFrequency_opm: if (toggled) angularFrequencyB = to_radPerSec(value); else angularFrequencyA = to_radPerSec(value); break;
 		default:;
 		}
 	}
@@ -519,30 +549,30 @@ public:
 
 	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
 		return {
-			{ MotionSpecProperty::Position_X,       false },
-			{ MotionSpecProperty::Position_Y,       false },
-			{ MotionSpecProperty::Angle1,           false },
-			{ MotionSpecProperty::Angle2,           false },
-			{ MotionSpecProperty::AngularFrequency, true  },
+			{ MotionSpecProperty::Position_X,           false },
+			{ MotionSpecProperty::Position_Y,           false },
+			{ MotionSpecProperty::Angle1_deg,           false },
+			{ MotionSpecProperty::Angle2_deg,           false },
+			{ MotionSpecProperty::AngularFrequency_opm, true  },
 		};
 	}
 	[[nodiscard]] float getProperty(MotionSpecProperty property, bool toggled) const override {
 		switch (property) {
-		case MotionSpecProperty::Position_X:       return position.x;
-		case MotionSpecProperty::Position_Y:       return position.y;
-		case MotionSpecProperty::Angle1:           return angle1;
-		case MotionSpecProperty::Angle2:           return angle2;
-		case MotionSpecProperty::AngularFrequency: return toggled ? angularFrequencyB : angularFrequencyA;
+		case MotionSpecProperty::Position_X:           return position.x;
+		case MotionSpecProperty::Position_Y:           return position.y;
+		case MotionSpecProperty::Angle1_deg:           return to_deg(angle1);
+		case MotionSpecProperty::Angle2_deg:           return to_deg(angle2);
+		case MotionSpecProperty::AngularFrequency_opm: return to_opm(toggled ? angularFrequencyB : angularFrequencyA);
 		default: return NAN;
 		}
 	}
 	void setProperty(float value, MotionSpecProperty property, bool toggled) override {
 		switch (property) {
-		case MotionSpecProperty::Position_X:       position.x = value; break;
-		case MotionSpecProperty::Position_Y:       position.y = value; break;
-		case MotionSpecProperty::Angle1:           angle1 = value; break;
-		case MotionSpecProperty::Angle2:           angle2 = value; break;
-		case MotionSpecProperty::AngularFrequency: if (toggled) angularFrequencyB = value; else angularFrequencyA = value; break;
+		case MotionSpecProperty::Position_X:           position.x = value; break;
+		case MotionSpecProperty::Position_Y:           position.y = value; break;
+		case MotionSpecProperty::Angle1_deg:           angle1 = to_rad(value); break;
+		case MotionSpecProperty::Angle2_deg:           angle2 = to_rad(value); break;
+		case MotionSpecProperty::AngularFrequency_opm: if (toggled) angularFrequencyB = to_radPerSec(value); else angularFrequencyA = to_radPerSec(value); break;
 		default:;
 		}
 	}

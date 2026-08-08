@@ -12,6 +12,10 @@ namespace Theme {
 		.strokeWidth = 1.0f
 	};
 
+	inline constexpr PanelStyle DarkPanel {
+		.fillColor = {24, 26, 32, 240}
+	};
+
 	inline constexpr ButtonStyle PrimaryButton {
 		// --- Panel States ---
 		.normalPanel = {

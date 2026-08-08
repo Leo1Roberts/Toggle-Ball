@@ -123,13 +123,13 @@ bool UIManager::processEvent(const Event& event) {
 
 		// Dispatch event to target node
 
+		UIResponse response = UIResponse::Ignored;
 		if (targetNode) {
 			if (pointer.action == PointerAction::Down && pointer.button == PointerButton::Primary)
 				if (changeFocus(targetNode->isFocusable() ? targetNode : nullptr, false))
 					pointer.causedFocusChange = true;
 
 			UINode* node = targetNode;
-			UIResponse response = UIResponse::Ignored;
 			while (node) {
 				response = node->processEvent(pointer);
 				if (response == UIResponse::Ignored)
@@ -166,7 +166,7 @@ bool UIManager::processEvent(const Event& event) {
 		if (pointer.action == PointerAction::FinishDrag || pointer.action == PointerAction::CancelDrag)
 			dragCapturedNodes.erase(pointer.id);
 
-		return targetNode != nullptr;
+		return targetNode != nullptr && response != UIResponse::Ignored;
 	}
 	return false;
 }

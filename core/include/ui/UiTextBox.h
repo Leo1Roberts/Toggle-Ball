@@ -16,11 +16,12 @@ enum class TextBoxState {
 
 class UITextBox : public UIPanel {
 public:
-	explicit UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle = {});
+	explicit UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle = {}, std::string placeholderText = "");
 
-	void setOnCancel(const std::function<void()>& callback) { onCancelCallback = callback; }
+	void setOnCancel(const std::function<void(const UITextBox&)>& callback) { onCancelCallback = callback; }
 	void setOnConfirm(const std::function<void(const UITextBox&)>& callback) { onConfirmCallback = callback; }
 	void setOnTextChange(const std::function<void(const UITextBox&)>& callback) { onTextChangedCallback = callback; }
+	void setValueProvider(const std::function<std::string()>& vp) { valueProvider = vp; }
 
 	UIResponse processEvent(const Event& event) override;
 
@@ -29,12 +30,13 @@ public:
 	void onPointerEntered() override;
 	void onPointerExited() override;
 
-	void disable() { state = TextBoxState::Disabled; updateStyle(); }
-	void enable() { state = TextBoxState::Normal; updateStyle(); }
+	void disable() { state = TextBoxState::Disabled; updateAppearance(); }
+	void enable() { state = TextBoxState::Normal; updateAppearance(); }
 
 	template <typename T>
 	T getValue() const { return inputBuffer.getValue<T>(); }
 
+	[[nodiscard]] bool isEmpty() const { return inputBuffer.isEmpty(); }
 	[[nodiscard]] bool isFocusable() const override { return isVisible() && isActive(); }
 
 private:
@@ -54,14 +56,26 @@ private:
 	UIPanel* cursorNode = nullptr;
 	UINode* highlightContainer = nullptr;
 	TextInputBuffer inputBuffer;
+	std::string placeholder;
 
-	std::function<void()> onCancelCallback;
+	std::function<void(const UITextBox&)> onCancelCallback;
 	std::function<void(const UITextBox&)> onConfirmCallback;
 	std::function<void(const UITextBox&)> onTextChangedCallback;
+	std::function<std::string()> valueProvider;
 
-	void updateText() { textNode->setText(inputBuffer.getValue<const std::string&>()); }
+	void updateText() {
+		if (!focused && isEmpty())
+			textNode->setText(placeholder);
+		else
+			textNode->setText(inputBuffer.getValue<const std::string&>());
+	}
+
+	void setText(const std::string& text) {
+		inputBuffer.setText(text);
+		updateText();
+	}
 	void updateCursorAndHighlight();
-	void updateStyle();
+	void updateAppearance();
 
 	microseconds cursorInactiveTime = 0;
 };

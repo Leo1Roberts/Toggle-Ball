@@ -10,6 +10,7 @@
 #include "editor/tool/ToolMode.h"
 #include "ui/UIManager.h"
 
+class UIVerticalList;
 
 class EditorScreen : public Screen {
 public:
@@ -31,8 +32,9 @@ private:
 	bool panning = false;
 	float uiToWorldScale{};
 	void updateEphemeralMeshes();
+	void updateObstacleMotionPropertiesList();
 
-	glm::vec2 mainPointerPosition{};
+	glm::vec2 pointer0Position{};
 
 	EditorQuickSettings quickSettings;
 	EditorScene scene;
@@ -40,6 +42,10 @@ private:
 	UIManager uiManager;
 	GizmoRenderer gizmoRenderer{&uiManager, &camera};
 	EditorContext context;
+
+	SelectionState cachedSelectionState{};
+
+	UIVerticalList* obstacleMotionPropertiesList;
 
 	std::unique_ptr<ToolMode> currentToolMode;
 	std::unique_ptr<Operation> activeOperation;

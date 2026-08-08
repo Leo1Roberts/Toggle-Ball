@@ -1,12 +1,12 @@
 #include "ui/UiTextBox.h"
 
 
-UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle)
-	: UIPanel(bStyle.normalPanel), textBoxStyle(bStyle), inputBuffer(validator) {
+UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle, std::string placeholderText)
+	: UIPanel(bStyle.normalPanel), textBoxStyle(bStyle), inputBuffer(validator), placeholder(std::move(placeholderText)) {
 	highlightContainer = addChild(std::make_unique<UINode>());
 	highlightContainer->setHitTestable(false);
 
-	textNode = addChild(std::make_unique<UIText>("", textBoxStyle.normalText));
+	textNode = addChild(std::make_unique<UIText>(placeholder, textBoxStyle.normalText));
 	highlightContainer->layout = textNode->layout = {
 		.anchor = Anchor::CentreLeft,
 		.offset = {10.f, 0.f}
@@ -14,7 +14,7 @@ UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxS
 
 	cursorNode = textNode->addChild(std::make_unique<UIPanel>(textBoxStyle.cursor));
 
-	updateStyle();
+	updateAppearance();
 }
 
 
@@ -55,12 +55,12 @@ UIResponse UITextBox::processEvent(const Event& event) {
 					inputBuffer.selectWord(getPointedCharacterIndex(pointer->position));
 
 				cursorInactiveTime = 0;
-				updateStyle();
+				updateAppearance();
 				return UIResponse::Consumed;
 			case PointerAction::Up:
 				if (pressed) {
 					pressed = false;
-					updateStyle();
+					updateAppearance();
 				}
 				return UIResponse::Consumed;
 			case PointerAction::StartDrag:
@@ -72,7 +72,7 @@ UIResponse UITextBox::processEvent(const Event& event) {
 		if (pressed && pointer->action == PointerAction::Drag) {
 			inputBuffer.moveCursorTo(getPointedCursorIndex(pointer->position), true);
 			cursorInactiveTime = 0;
-			updateStyle();
+			updateAppearance();
 			return UIResponse::Consumed;
 		}
 	}
@@ -83,31 +83,32 @@ UIResponse UITextBox::processEvent(const Event& event) {
 
 void UITextBox::onFocusGained() {
 	focused = true;
+	updateText();
 	cursorInactiveTime = 0;
 	inputBuffer.selectAll();
-	updateStyle();
+	updateAppearance();
 }
 void UITextBox::onFocusLost(bool cancel) {
 	focused = false;
+	updateText();
 	inputBuffer.deselectAll();
-	updateStyle();
+	updateAppearance();
 	if (cancel) {
 		if (onCancelCallback)
-			onCancelCallback();
+			onCancelCallback(*this);
 	} else {
 		if (onConfirmCallback)
 			onConfirmCallback(*this);
 	}
-	updateText();
 }
 
 void UITextBox::onPointerEntered() {
 	hovered = true;
-	updateStyle();
+	updateAppearance();
 }
 void UITextBox::onPointerExited() {
 	hovered = false;
-	updateStyle();
+	updateAppearance();
 }
 
 
@@ -117,6 +118,14 @@ void UITextBox::doUpdate(microseconds dt) {
 		cursorNode->show();
 	else
 		cursorNode->hide();
+
+	if (!focused && valueProvider) {
+		std::string newValue = valueProvider();
+		if (newValue != textNode->getText()) {
+			setText(newValue);
+			updateBounds(getParent()->getAbsoluteBounds());
+		}
+	}
 }
 
 
@@ -138,7 +147,7 @@ void UITextBox::updateCursorAndHighlight() {
 			.width = highlightRect.width, .height = highlightRect.height,
 			.offset = highlightRect.position
 		};
-		highlightNode->updateBounds(highlightNode->getParent()->getAbsoluteBounds());
+		highlightNode->updateBounds(highlightContainer->getAbsoluteBounds());
 	}
 
 	float cursorWidth = 1.f;
@@ -151,10 +160,10 @@ void UITextBox::updateCursorAndHighlight() {
 		.offset = pos
 	};
 
-	cursorNode->updateBounds(cursorNode->getParent()->getAbsoluteBounds());
+	cursorNode->updateBounds(textNode->getAbsoluteBounds());
 }
 
-void UITextBox::updateStyle() {
+void UITextBox::updateAppearance() {
 	if (state != TextBoxState::Disabled) {
 		if (focused)
 			state = TextBoxState::Focused;

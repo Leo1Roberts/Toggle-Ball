@@ -16,10 +16,10 @@ inline glm::mat3 angleToRotation3D(float radians) {
 class ObstacleKinematicState {
 public:
 	ObstacleKinematicState() = default;
-	ObstacleKinematicState(glm::vec3 position, float angle, glm::vec3 velocity, float angularVelocity) :
+	ObstacleKinematicState(glm::vec3 position, float angle, glm::vec3 velocity, float angularSpeed) :
 		position(position),
 		velocity(velocity),
-		angularVelocity(angularVelocity) {
+		angularSpeed(angularSpeed) {
 		setAngle(angle);
 	}
 
@@ -29,14 +29,14 @@ public:
 		rotation = angleToRotation3D(radians);
 	}
 	void setVelocity(glm::vec3 vel) { velocity = vel; }
-	void setAngularVelocity(float angVel) { angularVelocity = angVel; }
+	void setAngularSpeed(float angSpeed) { angularSpeed = angSpeed; }
 	void setPhase(float radians) { phase = wrapAngle(radians); }
 
 	[[nodiscard]] glm::vec3 getPosition() const { return position; }
 	[[nodiscard]] float getAngle() const { return angle; }
 	[[nodiscard]] glm::mat3 getRotation() const { return rotation; }
 	[[nodiscard]] glm::vec3 getVelocity() const { return velocity; }
-	[[nodiscard]] float getAngularVelocity() const { return angularVelocity; }
+	[[nodiscard]] float getAngularSpeed() const { return angularSpeed; }
 	[[nodiscard]] float getPhase() const { return phase; }
 
 private:
@@ -44,7 +44,7 @@ private:
 	float angle = 0.f;
 	glm::mat3 rotation = glm::mat3(1.f);
 	glm::vec3 velocity{0.f};
-	float angularVelocity = 0.f;
+	float angularSpeed = 0.f;
 	float phase = 0.f;
 };
 

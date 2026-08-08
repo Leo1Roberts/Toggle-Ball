@@ -29,9 +29,15 @@ public:
 		moveCursorTo(selectionStartIndex);
 	}
 
+	void setText(const std::string& text) {
+		buffer = text;
+		cursorIndex = selectionStartIndex = selectionEndIndex = (int)text.length();
+	}
+
 	template <typename T>
 	T getValue() const;
 
+	[[nodiscard]] bool isEmpty() const { return buffer.empty(); }
 	[[nodiscard]] int getCursorIndex() const { return cursorIndex; }
 	[[nodiscard]] int getSelectionStartIndex() const { return selectionStartIndex; }
 	[[nodiscard]] int getSelectionEndIndex() const { return selectionEndIndex; }

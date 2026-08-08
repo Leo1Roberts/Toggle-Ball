@@ -47,6 +47,13 @@ public:
 		descriptor->motion->translateBy(vector, stateless, toggled, base->motion.get());
 	}
 
+	void setMotionProperty(float value, MotionSpecProperty property, bool toggled = false) {
+		descriptor->motion->setProperty(value, property, toggled);
+	}
+	[[nodiscard]] float getMotionProperty(MotionSpecProperty property, bool toggled = false) const {
+		return descriptor->motion->getProperty(property, toggled);
+	}
+
 	[[nodiscard]] bool isSelected() const { return selected; }
 	void select() { selected = true; }
 	void deselect() { selected = false; }

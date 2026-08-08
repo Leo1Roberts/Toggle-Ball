@@ -105,7 +105,7 @@ void GameBall::collideWithPointOnObstacle(const GameObstacle& obstacle, glm::vec
 	glm::vec3 ballToPoint = normal * -separation;
 	glm::vec3 obstacleToPoint = kinematicState.position - obstacle.getKinematicState()->getPosition() + ballToPoint;
 	glm::vec3 ballPointVelocity = kinematicState.velocity + cross(kinematicState.angularVelocity, ballToPoint);
-	glm::vec3 obstaclePointVelocity = obstacle.getKinematicState()->getVelocity() + cross({obstacle.getKinematicState()->getAngularVelocity(), 0, 0}, obstacleToPoint);
+	glm::vec3 obstaclePointVelocity = obstacle.getKinematicState()->getVelocity() + cross({obstacle.getKinematicState()->getAngularSpeed(), 0, 0}, obstacleToPoint);
 	glm::vec3 pointVelocity = ballPointVelocity - obstaclePointVelocity; // Velocity of the contact point relative to the obstacle
 	float pointPerpendicularSpeed = dot(normal, pointVelocity);
 

@@ -5,6 +5,9 @@
 #include "Settings.h"
 #include "opengl/Shader.h"
 #include "editor/operation/TranslateOperation.h"
+#include "ui/Theme.h"
+#include "ui/UIVerticalList.h"
+#include "ui/UiTextBox.h"
 
 
 const glm::vec3 groundColor = colorToLinear({76, 76, 76});
@@ -32,13 +35,27 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
+
+
+	auto rootNode = std::make_unique<UINode>();
+
+	auto propertiesPanel = rootNode->addChild(std::make_unique<UIPanel>(Theme::DarkPanel));
+	propertiesPanel->layout = {
+		.anchor = Anchor::CentreRight,
+		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Relative,
+		.width = 300.f, .height = 1.f,
+	};
+
+	obstacleMotionPropertiesList = propertiesPanel->addChild(std::make_unique<UIVerticalList>(glm::vec2(20.f), 10.f));
+
+	uiManager.setRootNode(std::move(rootNode));
 }
 
 
 void EditorScreen::processEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->id == 0)
-			mainPointerPosition = pointer->position;
+			pointer0Position = pointer->position;
 	}
 
 	if (activeOperation && activeOperation->processEvent(event))
@@ -88,7 +105,7 @@ void EditorScreen::processEvent(const Event& event) {
 				} break;
 			case ActionCode::Translate:
 				if (key->action == KeyAction::Down) {
-					activeOperation = std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, mainPointerPosition);
+					activeOperation = std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, pointer0Position);
 					if (!activeOperation->start(key->chord.modifiers))
 						activeOperation = nullptr;
 					return;
@@ -150,6 +167,13 @@ void EditorScreen::processEvent(const Event& event) {
 
 void EditorScreen::update(microseconds dt) {
 	scene.update(dt);
+
+	auto selectionState = scene.getSelectionState();
+	if (cachedSelectionState != selectionState) {
+		updateObstacleMotionPropertiesList();
+		cachedSelectionState = selectionState;
+	}
+
 	uiManager.update(dt);
 }
 
@@ -173,7 +197,7 @@ void EditorScreen::render() {
 	drawObject(Meshes::plane.get(), Textures::white.get(),
 			   {-1.f, 0, scene.level->arenaHeight / 2.f},
 			   backgroundRotation,
-			   {scene.level->arenaHeight, scene.level->arenaWidth, 1});
+			   {scene.level->arenaHeight, scene.level->arenaWidth, 1.f});
 
 	Shaders::outline->use();
 	glEnable(GL_DEPTH_TEST);
@@ -314,4 +338,78 @@ void EditorScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
 	camera.update((float)width, (float)height, scene.level->arenaWidth, scene.level->arenaHeight);
 	updateEphemeralMeshes();
+}
+
+
+void EditorScreen::updateObstacleMotionPropertiesList() {
+	obstacleMotionPropertiesList->clearChildren();
+
+	std::vector<MotionSpecPropertyDescriptor> commonProperties;
+	for (const auto& obstacle : scene.obstacles)
+		if (obstacle.isSelected()) {
+			const auto& properties = obstacle.descriptor->motion->getPropertyDescriptors();
+
+			if (commonProperties.empty())
+				commonProperties = properties;
+			else {
+				std::erase_if(commonProperties, [&](const auto& property) {
+					return std::ranges::find(properties, property) == properties.end(); });
+
+				if (commonProperties.empty()) break;
+			}
+		}
+
+	for (const auto& property : commonProperties) {
+		auto item = obstacleMotionPropertiesList->addChild(std::make_unique<UINode>());
+		item->layout = {
+			.heightMode = SizingMode::Absolute, .height = 50.f
+		};
+		auto label = item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(property.property) + ":", TextStyle{
+			.color = {200, 200, 200}, .alignVertical = TextAlignVertical::Middle}));
+		label->layout = {
+			.anchor = Anchor::CentreLeft,
+			.width = 0.5f
+		};
+		auto textField = item->addChild(std::make_unique<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-"));
+		textField->layout = {
+			.anchor = Anchor::CentreRight,
+			.width = 0.5f
+		};
+		textField->setOnTextChange([this, property](const UITextBox& tb) {
+			if (tb.isEmpty())
+				scene.cancelLevelChange();
+			else
+				for (auto& obstacle : scene.obstacles)
+					if (obstacle.isSelected()) {
+						obstacle.setMotionProperty(
+							tb.getValue<float>(), property.property, scene.isToggled());
+						obstacle.initKinematicState();
+						obstacle.generateDomainMesh(uiToWorldScale);
+					}
+		});
+		textField->setOnConfirm([this](const UITextBox& tb) {
+			if (tb.isEmpty())
+				scene.cancelLevelChange();
+			else
+				scene.commitLevelChange();
+		});
+		textField->setOnCancel([this](const UITextBox&) { scene.cancelLevelChange(); });
+		textField->setValueProvider([this, property] -> std::string {
+			float value = NAN;
+			for (const auto& obstacle : scene.obstacles)
+				if (obstacle.isSelected()) {
+					float v = obstacle.getMotionProperty(property.property);
+					if (std::isnan(value))
+						value = v;
+					else if (v != value) {
+						value = NAN;
+						break;
+					}
+				}
+
+			return std::isnan(value) ? "" : std::to_string(value);
+		});
+	}
+
+	obstacleMotionPropertiesList->updateBounds(obstacleMotionPropertiesList->getParent()->getAbsoluteBounds());
 }

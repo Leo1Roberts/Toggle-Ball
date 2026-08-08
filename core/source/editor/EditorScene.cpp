@@ -94,12 +94,17 @@ void EditorScene::syncSelection() {
 		obstacles[i].setSelected(selection.obstacles[i]);
 }
 
+bool EditorScene::anythingIsSelected() const {
+	return
+	ball.isSelected() ||
+	std::ranges::any_of(obstacles, &EditorObstacle::isSelected);
+}
 SelectionState EditorScene::getSelectionState() const {
 	return {
 		selectionFocus,
 		ball.isSelected(),
 		obstacles
-			| std::views::transform([](const auto& o) { return o.isSelected(); })
+			| std::views::transform(&EditorObstacle::isSelected)
 			| std::ranges::to<std::vector<bool>>()
 	};
 }

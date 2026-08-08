@@ -63,7 +63,8 @@ public:
 	void setSelectionFocus(EntityReference focus);
 	void selectAll();
 	void deselectAll();
-	[[nodiscard]] bool anythingIsSelected() const { return selectionFocus.type != EntityType::None; }
+	[[nodiscard]] bool anythingIsSelected() const;
+	[[nodiscard]] SelectionState getSelectionState() const;
 
 	[[nodiscard]] bool isToggled() const { return toggled; }
 	[[nodiscard]] float getTogglePosition() const { return togglePosition.getCurrentPosition(); }
@@ -79,7 +80,6 @@ private:
 	void syncLevel();
 	std::function<void()> syncLevelCallback;
 	void syncSelection();
-	[[nodiscard]] SelectionState getSelectionState() const;
 
 	bool toggled = false;
 	Smoother togglePosition{};

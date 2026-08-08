@@ -94,7 +94,7 @@ std::string SpinningSpec::serializeData() const {
 	std::ostringstream ss;
 	ss << std::fixed << std::setprecision(6);
 
-	ss << position.x << "," << position.y << "," << initialAngle << "," << angularVelocityA << "," << angularVelocityB;
+	ss << position.x << "," << position.y << "," << initialAngle << "," << angularSpeedA << "," << angularSpeedB;
 
 	return ss.str();
 }
@@ -102,7 +102,7 @@ SpinningSpec::SpinningSpec(const std::string& data) {
 	std::istringstream ss(data);
 
 	char c;
-	if (!(ss >> position.x >> c >> position.y >> c >> initialAngle >> c >> angularVelocityA >> c >> angularVelocityB))
+	if (!(ss >> position.x >> c >> position.y >> c >> initialAngle >> c >> angularSpeedA >> c >> angularSpeedB))
 		throw std::invalid_argument("Invalid spinning motion data format");
 }
 
@@ -784,35 +784,35 @@ void StaticSpec::initKinematicState(ObstacleKinematicState& kinematicState) cons
 	kinematicState.setPosition(planarToWorld(getPosition()));
 	kinematicState.setAngle(getAngle());
 	kinematicState.setVelocity(glm::vec3(0.f));
-	kinematicState.setAngularVelocity(0.f);
+	kinematicState.setAngularSpeed(0.f);
 }
 
 void TogglingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(planarToWorld(getPositionA()));
 	kinematicState.setAngle(getAngle());
 	kinematicState.setVelocity(glm::vec3(0.f));
-	kinematicState.setAngularVelocity(0.f);
+	kinematicState.setAngularSpeed(0.f);
 }
 
 void TogglingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(planarToWorld(getPosition()));
 	kinematicState.setAngle(getAngleA());
 	kinematicState.setVelocity(glm::vec3(0.f));
-	kinematicState.setAngularVelocity(0.f);
+	kinematicState.setAngularSpeed(0.f);
 }
 
 void SpinningSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(planarToWorld(getPosition()));
 	kinematicState.setAngle(getInitialAngle());
 	kinematicState.setVelocity(glm::vec3(0.f));
-	kinematicState.setAngularVelocity(getAngularVelocityA());
+	kinematicState.setAngularSpeed(getAngularSpeedA());
 }
 
 void OscillatingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
 	kinematicState.setPosition(planarToWorld(getPosition1()));
 	kinematicState.setAngle(getAngle());
 	kinematicState.setVelocity(glm::vec3(0.f));
-	kinematicState.setAngularVelocity(0.f);
+	kinematicState.setAngularSpeed(0.f);
 	kinematicState.setPhase(0.f);
 }
 
@@ -820,7 +820,7 @@ void OscillatingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicS
 	kinematicState.setPosition(planarToWorld(getPosition()));
 	kinematicState.setAngle(getAngle1());
 	kinematicState.setVelocity(glm::vec3(0.f));
-	kinematicState.setAngularVelocity(0.f);
+	kinematicState.setAngularSpeed(0.f);
 	kinematicState.setPhase(0.f);
 }
 
@@ -832,12 +832,12 @@ void TogglingPositionSpec::stepKinematicState(ObstacleKinematicState& kinematicS
 
 void TogglingAngleSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	kinematicState.setAngle(glm::mix(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
-	kinematicState.setAngularVelocity((getAngleB() - getAngleA()) * smoother.getCurrentVelocity());
+	kinematicState.setAngularSpeed((getAngleB() - getAngleA()) * smoother.getCurrentVelocity());
 }
 
 void SpinningSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setAngularVelocity(glm::mix(getAngularVelocityA(), getAngularVelocityB(), smoother.getCurrentPosition()));
-	kinematicState.setAngle(kinematicState.getAngle() + kinematicState.getAngularVelocity() * PHYSICS_TIMESTEP);
+	kinematicState.setAngularSpeed(glm::mix(getAngularSpeedA(), getAngularSpeedB(), smoother.getCurrentPosition()));
+	kinematicState.setAngle(kinematicState.getAngle() + kinematicState.getAngularSpeed() * PHYSICS_TIMESTEP);
 }
 
 void OscillatingPositionSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
@@ -851,7 +851,7 @@ void OscillatingAngleSpec::stepKinematicState(ObstacleKinematicState& kinematicS
 	float angularFrequency = glm::mix(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
 	kinematicState.setPhase(kinematicState.getPhase() + angularFrequency * PHYSICS_TIMESTEP);
 	kinematicState.setAngle(glm::mix(getAngle1(), getAngle2(), 0.5f - 0.5f * std::cos(kinematicState.getPhase())));
-	kinematicState.setAngularVelocity((getAngle2() - getAngle1()) * (0.5f * std::sin(kinematicState.getPhase()) * angularFrequency));
+	kinematicState.setAngularSpeed((getAngle2() - getAngle1()) * (0.5f * std::sin(kinematicState.getPhase()) * angularFrequency));
 }
 
 
