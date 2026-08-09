@@ -37,7 +37,7 @@ protected:
 class UIPanelRenderer : public IUIRenderer {
 public:
 	void addPanel(const UIPanel* panel);
-	void addLine(glm::vec2 p1, glm::vec2 p2, LineStyle style);
+	void addLine(glm::vec2 p1, glm::vec2 p2, const LineStyle& style);
 
 	void flush(const glm::mat4& projectionMatrix) override;
 

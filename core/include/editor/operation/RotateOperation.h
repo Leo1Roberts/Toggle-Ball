@@ -10,6 +10,8 @@ public:
 
 	static std::optional<float> keyToRotationRadians(KeyCode key);
 
+	void renderGizmos() override;
+
 private:
 	bool doProcessEvent(const Event& event) override;
 	void applyOperation() override;

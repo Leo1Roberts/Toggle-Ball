@@ -77,25 +77,25 @@ void UIPanelRenderer::addPanel(const UIPanel* panel) {
 	Index base = vertices.size();
 
 	// Top row
-	vertices.emplace_back(glm::vec2(l, t),             glm::vec2(1.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
-	vertices.emplace_back(glm::vec2(l + rad, t),       glm::vec2(0.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
-	vertices.emplace_back(glm::vec2(r - rad, t),       glm::vec2(0.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
-	vertices.emplace_back(glm::vec2(r, t),             glm::vec2(1.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(l, t),			 glm::vec2(1.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(l + rad, t),	   glm::vec2(0.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(r - rad, t),	   glm::vec2(0.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(r, t),			 glm::vec2(1.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
 	// Second row
-	vertices.emplace_back(glm::vec2(l, t - rad),       glm::vec2(1.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(l, t - rad),	   glm::vec2(1.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
 	vertices.emplace_back(glm::vec2(l + rad, t - rad), glm::vec2(0.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
 	vertices.emplace_back(glm::vec2(r - rad, t - rad), glm::vec2(0.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
-	vertices.emplace_back(glm::vec2(r, t - rad),       glm::vec2(1.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(r, t - rad),	   glm::vec2(1.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
 	// Third row
-	vertices.emplace_back(glm::vec2(l, b + rad),       glm::vec2(1.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(l, b + rad),	   glm::vec2(1.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
 	vertices.emplace_back(glm::vec2(l + rad, b + rad), glm::vec2(0.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
 	vertices.emplace_back(glm::vec2(r - rad, b + rad), glm::vec2(0.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
-	vertices.emplace_back(glm::vec2(r, b + rad),       glm::vec2(1.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(r, b + rad),	   glm::vec2(1.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
 	// Bottom row
-	vertices.emplace_back(glm::vec2(l, b),             glm::vec2(1.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
-	vertices.emplace_back(glm::vec2(l + rad, b),       glm::vec2(0.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
-	vertices.emplace_back(glm::vec2(r - rad, b),       glm::vec2(0.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
-	vertices.emplace_back(glm::vec2(r, b),             glm::vec2(1.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(l, b),			 glm::vec2(1.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(l + rad, b),	   glm::vec2(0.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(r - rad, b),	   glm::vec2(0.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
+	vertices.emplace_back(glm::vec2(r, b),			 glm::vec2(1.f, 1.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
 	// Inset centre quad
 	vertices.emplace_back(glm::vec2(l + rad + inset, t - rad - inset), glm::vec2(0.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
 	vertices.emplace_back(glm::vec2(l + rad + inset, b + rad + inset), glm::vec2(0.f, 0.f), panel->panelStyle.fillColor, panel->panelStyle.strokeColor, strokeRad);
@@ -114,8 +114,8 @@ void UIPanelRenderer::addPanel(const UIPanel* panel) {
 			indices.push_back(base + 16 + 0); indices.push_back(base + 16 + 2); indices.push_back(base + 16 + 3);
 		} else {
 			Index quadBase = base + (i / 3 * 4) + (i % 3);
-			indices.push_back(quadBase);      indices.push_back(quadBase + 4);  indices.push_back(quadBase + 5);
-			indices.push_back(quadBase);      indices.push_back(quadBase + 5);  indices.push_back(quadBase + 1);
+			indices.push_back(quadBase);	  indices.push_back(quadBase + 4);  indices.push_back(quadBase + 5);
+			indices.push_back(quadBase);	  indices.push_back(quadBase + 5);  indices.push_back(quadBase + 1);
 		}
 	}
 
@@ -134,30 +134,56 @@ void UIPanelRenderer::addPanel(const UIPanel* panel) {
 	indices.push_back(base + 23); indices.push_back(base + 10); indices.push_back(base +  6);
 }
 
-void UIPanelRenderer::addLine(glm::vec2 p1, glm::vec2 p2, LineStyle style) {
-	glm::vec2 dir = p2 - p1;
-	float length = glm::length(dir);
+void UIPanelRenderer::addLine(glm::vec2 p1, glm::vec2 p2, const LineStyle& style) {
+	glm::vec2 diff = p2 - p1;
+	float length = glm::length(diff);
 
 	if (length <= 0.0001f)
 		return;
 
-	glm::vec2 normal = glm::vec2(-dir.y, dir.x) / length;
+	glm::vec2 dir = diff / length;
+	glm::vec2 normal = glm::vec2(-dir.y, dir.x);
 	glm::vec2 offset = normal * (style.width * 0.5f);
 
-	glm::vec2 v0 = p1 - offset;
-	glm::vec2 v1 = p1 + offset;
-	glm::vec2 v2 = p2 + offset;
-	glm::vec2 v3 = p2 - offset;
+	auto addSegment = [&](glm::vec2 start, glm::vec2 end) {
+		glm::vec2 v0 = start - offset;
+		glm::vec2 v1 = start + offset;
+		glm::vec2 v2 = end + offset;
+		glm::vec2 v3 = end - offset;
 
-	Index base = vertices.size();
+		Index base = vertices.size();
 
-	vertices.emplace_back(v0, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
-	vertices.emplace_back(v1, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
-	vertices.emplace_back(v2, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
-	vertices.emplace_back(v3, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
+		vertices.emplace_back(v0, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
+		vertices.emplace_back(v1, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
+		vertices.emplace_back(v2, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
+		vertices.emplace_back(v3, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
 
-	indices.push_back(base + 0); indices.push_back(base + 1); indices.push_back(base + 2);
-	indices.push_back(base + 0); indices.push_back(base + 2); indices.push_back(base + 3);
+		indices.push_back(base + 0); indices.push_back(base + 1); indices.push_back(base + 2);
+		indices.push_back(base + 0); indices.push_back(base + 2); indices.push_back(base + 3);
+	};
+
+	if (style.dashLength > 0.f) {
+		glm::vec2 centre = p1 + dir * (length * 0.5f);
+		float halfLength = length * 0.5f;
+
+		for (int i = 0; true; i++) {
+			float t_start = (i * 2.f * style.dashLength) + 0.5f * style.dashLength;
+			
+			if (t_start >= halfLength) break;
+
+			float t_end = std::min(t_start + style.dashLength, halfLength);
+
+			// Add segment 'in front of' centre
+			glm::vec2 f_start = centre + dir * t_start;
+			glm::vec2 f_end   = centre + dir * t_end;
+			addSegment(f_start, f_end);
+			// Add segment 'behind' centre
+			glm::vec2 b_start = centre - dir * t_end;
+			glm::vec2 b_end   = centre - dir * t_start;
+			addSegment(b_start, b_end);
+		}
+	} else
+		addSegment(p1, p2);
 }
 
 

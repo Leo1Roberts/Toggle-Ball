@@ -24,14 +24,14 @@ void TranslateOperation::renderGizmos() {
 	col color = baseAxis == Axis::X ? Color::AxisX : Color::AxisY;
 	context->gizmoRenderer->addLine(focusedAxisLine, {
 		.color = color,
-		.width = Settings::Sizes.axisLineWidth
+		.width = Settings::Sizes.lineWidth
 	});
 
 	color = col(color, 0.3f);
 	for (auto line : otherAxisLines)
 		context->gizmoRenderer->addLine(line, {
 		.color = color,
-		.width = Settings::Sizes.axisLineWidth
+		.width = Settings::Sizes.lineWidth
 	});
 
 	context->gizmoRenderer->render();

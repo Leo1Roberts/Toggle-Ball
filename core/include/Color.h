@@ -44,6 +44,7 @@ namespace Color {
 
 	constexpr col AxisX = col(255, 0, 0);
 	constexpr col AxisY = col(0, 255, 0);
+	constexpr col PointerConnectorLine = col(100, 100, 100);
 
 	constexpr col ObBlobTerminal = col(0, 100, 255);
 	constexpr col ObBlobTerminalHover = col(0, 90, 230);

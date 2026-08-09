@@ -12,7 +12,7 @@ struct SizePreferences {
 	// Sizes given in pixels (before scaling)
 	float outlineWidth = 3.f;
 	float centreDotRadius = 3.f;
-	float axisLineWidth = 1.f;
+	float lineWidth = 1.f;
 };
 
 

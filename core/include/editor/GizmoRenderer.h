@@ -18,8 +18,10 @@ public:
 	GizmoRenderer(const UIManager* ui, const Camera* camera)
 		: ui(ui), camera(camera) {}
 
-	// Coordinates given in world space
+	// All coordinates given in world space
+
 	void addBox(const SelectBox& box, const PanelStyle& style);
+	void addLine(glm::vec2 p1, glm::vec2 p2, const LineStyle& style);
 	void addLine(InfiniteLine line, const LineStyle& style);
 
 	void render() { panelRenderer.flush(ui->getProjectionMatrix()); }

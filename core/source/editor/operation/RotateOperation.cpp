@@ -1,5 +1,7 @@
 #include "editor/operation/RotateOperation.h"
 
+#include "editor/GizmoRenderer.h"
+
 
 RotateOperation::RotateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
 	: TransformOperation(context, trigger, initialPointerPosition) {
@@ -19,6 +21,17 @@ std::optional<float> RotateOperation::keyToRotationRadians(KeyCode key) {
 	// case KeyCode::Right: return -glm::quarter_pi<float>();
 	default: return std::nullopt;
 	}
+}
+
+
+void RotateOperation::renderGizmos() {
+	context->gizmoRenderer->addLine(pivot, lastPointerPlanarPosition, {
+		.color = Color::PointerConnectorLine,
+		.width = Settings::Sizes.lineWidth,
+		.dashLength = Settings::Sizes.lineWidth * 3.f,
+	});
+
+	context->gizmoRenderer->render();
 }
 
 

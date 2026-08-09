@@ -15,6 +15,7 @@ struct PanelStyle {
 struct LineStyle {
 	col color = Color::Black;
 	float width = 1.f;
+	float dashLength = 0.f;
 };
 
 
