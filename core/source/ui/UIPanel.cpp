@@ -135,55 +135,63 @@ void UIPanelRenderer::addPanel(const UIPanel* panel) {
 }
 
 void UIPanelRenderer::addLine(glm::vec2 p1, glm::vec2 p2, const LineStyle& style) {
-	glm::vec2 diff = p2 - p1;
-	float length = glm::length(diff);
+    glm::vec2 diff = p2 - p1;
+    float length = glm::length(diff);
 
-	if (length <= 0.0001f)
-		return;
+    if (length <= 0.0001f)
+        return;
 
-	glm::vec2 dir = diff / length;
-	glm::vec2 normal = glm::vec2(-dir.y, dir.x);
-	glm::vec2 offset = normal * (style.width * 0.5f);
+    glm::vec2 dir = diff / length;
+    glm::vec2 normal = glm::vec2(-dir.y, dir.x);
+    glm::vec2 offset = normal * (style.width * 0.5f);
 
-	auto addSegment = [&](glm::vec2 start, glm::vec2 end) {
-		glm::vec2 v0 = start - offset;
-		glm::vec2 v1 = start + offset;
-		glm::vec2 v2 = end + offset;
-		glm::vec2 v3 = end - offset;
+    auto addSegment = [&](glm::vec2 start, glm::vec2 end, col c) {
+        glm::vec2 v0 = start - offset;
+        glm::vec2 v1 = start + offset;
+        glm::vec2 v2 = end + offset;
+        glm::vec2 v3 = end - offset;
 
-		Index base = vertices.size();
+        Index base = vertices.size();
 
-		vertices.emplace_back(v0, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
-		vertices.emplace_back(v1, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
-		vertices.emplace_back(v2, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
-		vertices.emplace_back(v3, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
+        vertices.emplace_back(v0, glm::vec2(0.f, 0.f), c, c, 0.f);
+        vertices.emplace_back(v1, glm::vec2(0.f, 0.f), c, c, 0.f);
+        vertices.emplace_back(v2, glm::vec2(0.f, 0.f), c, c, 0.f);
+        vertices.emplace_back(v3, glm::vec2(0.f, 0.f), c, c, 0.f);
 
-		indices.push_back(base + 0); indices.push_back(base + 1); indices.push_back(base + 2);
-		indices.push_back(base + 0); indices.push_back(base + 2); indices.push_back(base + 3);
-	};
+        indices.push_back(base + 0); indices.push_back(base + 1); indices.push_back(base + 2);
+        indices.push_back(base + 0); indices.push_back(base + 2); indices.push_back(base + 3);
+    };
 
-	if (style.dashLength > 0.f) {
-		glm::vec2 centre = p1 + dir * (length * 0.5f);
-		float halfLength = length * 0.5f;
+    if (style.dashLength > 0.f) {
+        glm::vec2 centre = p1 + dir * (length * 0.5f);
+        float halfLength = length * 0.5f;
 
-		for (int i = 0; true; i++) {
-			float t_start = (i * 2.f * style.dashLength) + 0.5f * style.dashLength;
-			
-			if (t_start >= halfLength) break;
+        float current_t = 0.f;
+        int step = 0;
 
-			float t_end = std::min(t_start + style.dashLength, halfLength);
+        while (current_t < halfLength) {
+            float next_t = (step == 0) ? (0.5f * style.dashLength) : (current_t + style.dashLength);
+            next_t = std::min(next_t, halfLength);
 
-			// Add segment 'in front of' centre
-			glm::vec2 f_start = centre + dir * t_start;
-			glm::vec2 f_end   = centre + dir * t_end;
-			addSegment(f_start, f_end);
-			// Add segment 'behind' centre
-			glm::vec2 b_start = centre - dir * t_end;
-			glm::vec2 b_end   = centre - dir * t_start;
-			addSegment(b_start, b_end);
-		}
-	} else
-		addSegment(p1, p2);
+            col color = (step % 2 == 0) ? style.secondaryColor : style.primaryColor;
+
+            // Add segment 'in front of' centre
+            glm::vec2 f_start = centre + dir * current_t;
+            glm::vec2 f_end   = centre + dir * next_t;
+            addSegment(f_start, f_end, color);
+
+            // Add segment 'behind' centre
+            glm::vec2 b_start = centre - dir * next_t;
+            glm::vec2 b_end   = centre - dir * current_t;
+            addSegment(b_start, b_end, color);
+
+            current_t = next_t;
+            step++;
+        }
+    } else {
+        // Fallback to solid color1 if dashLength is 0
+        addSegment(p1, p2, style.primaryColor);
+    }
 }
 
 

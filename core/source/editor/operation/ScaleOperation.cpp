@@ -1,11 +1,14 @@
-#include "editor/operation/RotateOperation.h"
+#include "editor/operation/ScaleOperation.h"
 
 #include "editor/GizmoRenderer.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/norm.hpp"
 
-RotateOperation::RotateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
+
+ScaleOperation::ScaleOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
 	: TransformOperation(context, trigger, initialPointerPosition) {
-	lastPointerPlanarPosition = initialPointerPlanarPosition;
+	pointerPlanarPosition = initialPointerPlanarPosition;
 
 	auto focus = context->scene->selectionFocus;
 	if (focus.type == EntityType::Ball)
@@ -15,19 +18,10 @@ RotateOperation::RotateOperation(const EditorContext* context, TriggerType trigg
 }
 
 
-std::optional<float> RotateOperation::keyToRotationRadians(KeyCode key) {
-	switch (key) {
-	// case KeyCode::Left:  return glm::quarter_pi<float>();
-	// case KeyCode::Right: return -glm::quarter_pi<float>();
-	default: return std::nullopt;
-	}
-}
-
-
-void RotateOperation::renderGizmos() {
+void ScaleOperation::renderGizmos() {
 	if (typing) return;
 
-	context->gizmoRenderer->addLine(pivot, lastPointerPlanarPosition, {
+	context->gizmoRenderer->addLine(pivot, pointerPlanarPosition, {
 		.primaryColor = Color::PointerConnectorLine1,
 		.secondaryColor = Color::PointerConnectorLine2,
 		.width = Settings::Sizes.lineWidth,
@@ -38,18 +32,9 @@ void RotateOperation::renderGizmos() {
 }
 
 
-float angleDifference(glm::vec2 newPos, glm::vec2 oldPos, glm::vec2 pivot) {
-	glm::vec2 v1 = oldPos - pivot;
-	glm::vec2 v2 = newPos - pivot;
-
-	if (v1 == glm::vec2(0.f) || v2 == glm::vec2(0.f)) return 0.f;
-
-	return std::atan2(v1.x * v2.y - v1.y * v2.x, dot(v1, v2));
-}
-
-bool RotateOperation::doProcessEvent(const Event& event) {
+bool ScaleOperation::doProcessEvent(const Event& event) {
 	if (typing && textInput.processEvent(event) == TextInputEventEffect::Buffer) {
-		setRotation(to_rad(textInput.getValue<float>()));
+		scale = textInput.getValue<float>();
 		applyOperation();
 		return true;
 	}
@@ -68,22 +53,10 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 				}
 			}
 		}
-
-		if (trigger == TriggerType::ActionKey) {
-			if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
-				if (auto amount = keyToRotationRadians(key->chord.code)) {
-					setRotation(rotation + *amount);
-					applyOperation();
-					return true;
-				}
-			}
-			return false;
-		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
-			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
-			setRotation(rotation + angleDifference(pointerPlanarPosition, lastPointerPlanarPosition, pivot));
-			lastPointerPlanarPosition = pointerPlanarPosition;
+			pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
+			scale = std::sqrt(length2(pointerPlanarPosition - pivot) / length2(initialPointerPlanarPosition - pivot));
 			applyOperation();
 			return false; // Allow pointer move events to pass through
 		}
@@ -91,7 +64,7 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 		if (!typing && TextInputBuffer::Float(*c)) {
 			typing = true;
 			if (textInput.processEvent(*c) == TextInputEventEffect::Buffer) {
-				setRotation(to_rad(textInput.getValue<float>()));
+				scale = textInput.getValue<float>();
 				applyOperation();
 			}
 		}
@@ -100,27 +73,29 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 }
 
 
-void RotateOperation::applyOperation() {
+void ScaleOperation::applyOperation() {
 	auto ball = &context->scene->ball;
 	auto& obstacles = context->scene->obstacles;
 
 	if (ball->isSelected())
-		ball->rotateBy(rotationMatrix, pivot, context->scene->getCurrentNode()->level.ballDescriptor.get());
+		ball->scaleBy(scale, pivot, context->scene->getCurrentNode()->level.ballDescriptor.get());
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			obstacle.rotateBy(rotation, rotationMatrix, pivot, context->quickSettings->transformBothStates, context->scene->isToggled(), context->quickSettings->transformLocally,
+			// TODO: let the user set these
+			bool affectMinorRadius = true;
+			bool affectMajorRadius = true;
+
+			obstacle.scaleBy(scale, pivot, context->quickSettings->transformLocally,
+				affectMinorRadius, affectMajorRadius,
 				context->scene->getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
-			obstacle.generateDomainMesh(*context->uiToWorldScale);
+			if (affectMinorRadius || affectMajorRadius)
+				obstacle.generateMeshes(*context->uiToWorldScale);
+			else
+				obstacle.generateDomainMesh(*context->uiToWorldScale);
 		}
 	}
-}
-
-
-void RotateOperation::setRotation(float radians) {
-	rotation = radians;
-	rotationMatrix = angleToRotation2D(rotation);
 }

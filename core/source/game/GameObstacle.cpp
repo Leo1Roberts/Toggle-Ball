@@ -3,7 +3,7 @@
 #include "game/GameBall.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/quaternion.hpp"
+#include "glm/gtx/norm.hpp"
 
 
 void GameObstacle::stepKinematicState(const Smoother& smoother) {

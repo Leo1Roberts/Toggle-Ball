@@ -13,7 +13,8 @@ struct PanelStyle {
 };
 
 struct LineStyle {
-	col color = Color::Black;
+	col primaryColor = Color::Black;
+	col secondaryColor = Color::White; // Only used if dashLength > 0.f
 	float width = 1.f;
 	float dashLength = 0.f;
 };

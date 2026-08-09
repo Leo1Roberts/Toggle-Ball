@@ -517,6 +517,25 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 }
 
 
+void AbstractShapeSpec::scaleBy(float factor, bool affectMinorRadius, bool affectMajorRadius, const AbstractShapeSpec* base) {
+	if (affectMinorRadius)
+		minorRadius = base->minorRadius * factor;
+	if (affectMajorRadius)
+		scaleMajorRadiusBy(factor, base);
+}
+
+void SegmentSpec::scaleMajorRadiusBy(float factor, const AbstractShapeSpec* base) {
+	auto baseSpec = (const SegmentSpec*)base;
+	setLeftLength(baseSpec->leftLength * factor);
+	setRightLength(baseSpec->rightLength * factor);
+}
+void ArcSpec::scaleMajorRadiusBy(float factor, const AbstractShapeSpec* base) {
+	auto baseSpec = (const ArcSpec*)base;
+	arcRadius = baseSpec->arcRadius * factor;
+	setCaps();
+}
+
+
 bool AbstractShapeSpec::isInSelectBox(const ObstacleKinematicState& s, SelectBox box) const {
 	// Check if caps are in the box
 	const glm::vec2 leftCapPlanarPosition = worldToPlanar(s.getPosition() + s.getRotation() * planarToWorld(getLeftCap()));

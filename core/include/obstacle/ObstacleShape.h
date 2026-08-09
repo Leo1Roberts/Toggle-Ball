@@ -41,6 +41,9 @@ public:
 	void generateOutlineMesh(Mesh<ObjectVertex>& outlineMesh, float uiToWorldScale) const;
 	virtual void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const = 0;
 
+	void scaleBy(float factor, bool affectMinorRadius, bool affectMajorRadius, const AbstractShapeSpec* base);
+	virtual void scaleMajorRadiusBy(float factor, const AbstractShapeSpec* base) = 0;
+
 	[[nodiscard]] bool isInSelectBox(const ObstacleKinematicState& s, SelectBox box) const;
 
 	[[nodiscard]] virtual bool pointIsBetweenCaps(float leftPlaneDistance, float rightPlaneDistance) const = 0;
@@ -105,6 +108,8 @@ public:
 
 	void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
 
+	void scaleMajorRadiusBy(float factor, const AbstractShapeSpec* base) override;
+
 	[[nodiscard]] bool pointIsBetweenCaps(float leftPlaneDistance, float rightPlaneDistance) const override {
 		return leftPlaneDistance <= 0 && rightPlaneDistance <= 0;
 	}
@@ -161,6 +166,8 @@ public:
 	}
 
 	void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
+
+	void scaleMajorRadiusBy(float factor, const AbstractShapeSpec* base) override;
 
 	[[nodiscard]] bool pointIsBetweenCaps(float leftPlaneDistance, float rightPlaneDistance) const override {
 		return getArcAngle() <= glm::pi<float>() && (leftPlaneDistance <= 0 && rightPlaneDistance <= 0) ||
