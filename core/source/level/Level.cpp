@@ -24,7 +24,7 @@ LevelDescriptor& LevelDescriptor::operator=(const LevelDescriptor& other) {
 		arenaWidth = other.arenaWidth;
 		arenaHeight = other.arenaHeight;
 		transitionTime = other.transitionTime;
-		ballDescriptor = std::make_unique<BallDescriptor>(*other.ballDescriptor);
+		*ballDescriptor = *other.ballDescriptor;
 
 		obstacleDescriptors.clear();
 		obstacleDescriptors.reserve(other.obstacleDescriptors.size());

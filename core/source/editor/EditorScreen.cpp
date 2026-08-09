@@ -51,7 +51,64 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		.width = 300.f, .height = 1.f,
 	};
 
+
+	auto levelAndBallPropertiesList = propertiesPanel->addChild(std::make_unique<UIVerticalList>(glm::vec2(20.f), 10.f));
+	levelAndBallPropertiesList->layout = { .anchor = Anchor::TopCentre, .height = 0.5f };
+
+	auto makeListItem = [this](const std::string& labelText, float* property) {
+		auto item =  std::make_unique<UINode>();
+		item->layout = {
+			.heightMode = SizingMode::Absolute, .height = 50.f
+		};
+		auto label = item->addChild(std::make_unique<UIText>(labelText + ":", TextStyle{
+			.color = {200, 200, 200}, .alignVertical = TextAlignVertical::Middle}));
+		label->layout = {
+			.anchor = Anchor::CentreLeft,
+			.width = 0.5f
+		};
+		auto textField = item->addChild(std::make_unique<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-"));
+		textField->layout = {
+			.anchor = Anchor::CentreRight,
+			.width = 0.5f
+		};
+		textField->setOnTextChange([this, property](const UITextBox& tb) {
+			if (tb.isEmpty())
+				scene.cancelLevelChange();
+			else
+				*property = tb.getValue<float>();
+		});
+		textField->setOnConfirm([this](const UITextBox& tb) {
+			if (tb.isEmpty())
+				scene.cancelLevelChange();
+			else
+				scene.commitLevelChange();
+		});
+		textField->setOnCancel([this](const UITextBox&) { scene.cancelLevelChange(); });
+		textField->setValueProvider([property] -> std::string {
+			std::stringstream ss;
+			ss << std::fixed << std::setprecision(3) << *property;
+			std::string result = ss.str();
+			if (result.find('.') != std::string::npos) {
+				result.erase(result.find_last_not_of('0') + 1, std::string::npos);
+				if (result.back() == '.')
+					result.pop_back();
+			}
+
+			if (result == "-0") return "0";
+			return result;
+		});
+
+		return item;
+	};
+
+	levelAndBallPropertiesList->addChild(makeListItem("Arena width", &scene.level->arenaWidth));
+	levelAndBallPropertiesList->addChild(makeListItem("Arena height", &scene.level->arenaHeight));
+	levelAndBallPropertiesList->addChild(makeListItem("Transition time", &scene.level->transitionTime));
+	levelAndBallPropertiesList->addChild(makeListItem("Ball position X", &scene.ball.descriptor->initialPosition.x));
+	levelAndBallPropertiesList->addChild(makeListItem("Ball position Y", &scene.ball.descriptor->initialPosition.y));
+
 	obstacleMotionPropertiesList = propertiesPanel->addChild(std::make_unique<UIVerticalList>(glm::vec2(20.f), 10.f));
+	obstacleMotionPropertiesList->layout = { .anchor = Anchor::BottomCentre, .height = 0.5f };
 
 	uiManager.addNode(std::move(propertiesPanel));
 }
@@ -176,7 +233,7 @@ void EditorScreen::update(microseconds dt) {
 	scene.update(dt);
 
 	auto selectionState = scene.getSelectionState();
-	if (cachedSelectionState != selectionState) {
+	if (cachedSelectionState.obstacles != selectionState.obstacles) {
 		updateObstacleMotionPropertiesList();
 		cachedSelectionState = selectionState;
 	}
