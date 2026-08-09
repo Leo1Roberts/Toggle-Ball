@@ -46,12 +46,12 @@ struct MotionSpecPropertyDescriptor {
 	bool operator==(const MotionSpecPropertyDescriptor&) const = default;
 };
 
-static float to_deg(float rad) { return -rad * glm::one_over_pi<float>() * 180.f; }
-static float to_rad(float deg) { return -deg / 180.f * glm::pi<float>(); }
+inline float to_deg(float rad) { return -rad * glm::one_over_pi<float>() * 180.f; }
+inline float to_rad(float deg) { return -deg / 180.f * glm::pi<float>(); }
 
-static float to_rpm(float radPerSec) { return -radPerSec * glm::one_over_pi<float>() * 30.f; }
-static float to_opm(float radPerSec) { return to_rpm(radPerSec); }
-static float to_radPerSec(float rpm_or_opm) { return -rpm_or_opm / 30.f * glm::pi<float>(); }
+inline float to_rpm(float radPerSec) { return -radPerSec * glm::one_over_pi<float>() * 30.f; }
+inline float to_opm(float radPerSec) { return to_rpm(radPerSec); }
+inline float to_radPerSec(float rpm_or_opm) { return -rpm_or_opm / 30.f * glm::pi<float>(); }
 
 
 class IMotionSpec {
@@ -83,6 +83,7 @@ public:
 
 
 	virtual void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) = 0;
+	virtual void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool local, const IMotionSpec* base) = 0;
 
 	[[nodiscard]] constexpr virtual std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const = 0;
 	[[nodiscard]] virtual float getProperty(MotionSpecProperty property, bool toggled = false) const = 0;
@@ -130,6 +131,7 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const StaticSpec*)base)->position + vector;
 	}
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool, const IMotionSpec* base) override;
 
 	void setAngle(float radians);
 
@@ -207,6 +209,7 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool local, const IMotionSpec* base) override;
 
 	void setAngle(float radians);
 
@@ -287,6 +290,7 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const TogglingAngleSpec*)base)->position + vector;
 	}
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool local, const IMotionSpec* base) override;
 
 	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
 		return {
@@ -341,9 +345,10 @@ class SpinningSpec : public IMotionSpec {
 public:
 	SpinningSpec(glm::vec2 position, float initialAngle, float angularSpeedA, float angularSpeedB) :
 	    position(position),
-	    initialAngle(initialAngle),
 	    angularSpeedA(angularSpeedA),
-	    angularSpeedB(angularSpeedB) {}
+	    angularSpeedB(angularSpeedB) {
+		setInitialAngle(initialAngle);
+	}
 
 	explicit SpinningSpec(const std::string& data);
 
@@ -364,6 +369,9 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const SpinningSpec*)base)->position + vector;
 	}
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool local, const IMotionSpec* base) override;
+
+	void setInitialAngle(float radians);
 
 	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
 		return {
@@ -386,7 +394,7 @@ public:
 		switch (property) {
 		case MotionSpecProperty::Position_X:       position.x = value; break;
 		case MotionSpecProperty::Position_Y:       position.y = value; break;
-		case MotionSpecProperty::InitialAngle_deg: initialAngle = to_rad(value); break;
+		case MotionSpecProperty::InitialAngle_deg: setInitialAngle(to_rad(value)); break;
 		case MotionSpecProperty::AngularSpeed_rpm: if (toggled) angularSpeedB = to_radPerSec(value); else angularSpeedA = to_radPerSec(value); break;
 		default:;
 		}
@@ -396,10 +404,10 @@ public:
 	[[nodiscard]] glm::vec2 getDomainPosition(glm::vec2 obstaclePosition) const override { return obstaclePosition; }
 
 private:
-	glm::vec2 position{0.f};  // SSOT
-	float initialAngle{};     // SSOT
-	float angularSpeedA{}; // SSOT
-	float angularSpeedB{}; // SSOT
+	glm::vec2 position{0.f}; // SSOT
+	float initialAngle{};    // SSOT
+	float angularSpeedA{};   // SSOT
+	float angularSpeedB{};   // SSOT
 
 	[[nodiscard]] std::string serializeData() const override;
 	friend class IMotionSpec;
@@ -448,6 +456,7 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool local, const IMotionSpec* base) override;
 
 	void setAngle(float radians);
 
@@ -546,6 +555,7 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const OscillatingAngleSpec*)base)->position + vector;
 	}
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool local, const IMotionSpec* base) override;
 
 	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
 		return {

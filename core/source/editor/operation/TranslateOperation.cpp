@@ -13,7 +13,7 @@ std::optional<glm::vec2> TranslateOperation::keyToTranslationVector(KeyCode key)
 	case KeyCode::Right: return glm::vec2( 1.f, 0.f);
 	case KeyCode::Up:    return glm::vec2( 0.f, 1.f);
 	case KeyCode::Down:  return glm::vec2( 0.f,-1.f);
-	default:             return std::nullopt;
+	default: return std::nullopt;
 	}
 }
 
@@ -84,7 +84,7 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 			return false;
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
+		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
 			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
 			rawTranslation = pointerPlanarPosition - initialPointerPlanarPosition;
 			applyOperation();

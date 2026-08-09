@@ -37,6 +37,9 @@ public:
 	void translateBy(glm::vec2 vector, const BallDescriptor* base) const {
 		descriptor->initialPosition = base->initialPosition + vector;
 	}
+	void rotateBy(glm::mat2 rotationMatrix, glm::vec2 pivot, const BallDescriptor* base) const {
+		descriptor->initialPosition = pivot + rotationMatrix * (base->initialPosition - pivot);
+	}
 
 	[[nodiscard]] const Texture* getTexture() const { return texture; }
 

@@ -7,8 +7,7 @@
 
 
 enum class TriggerType {
-	PointerPrimary,
-	PointerSecondary,
+	Pointer,
 	TriggerKey,
 	ActionKey,
 };

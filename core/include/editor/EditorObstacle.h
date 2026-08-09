@@ -46,6 +46,9 @@ public:
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const ObstacleDescriptor* base) const {
 		descriptor->motion->translateBy(vector, stateless, toggled, base->motion.get());
 	}
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool local, const ObstacleDescriptor* base) const {
+		descriptor->motion->rotateBy(radians, rotationMatrix, pivot, stateless, toggled, local, base->motion.get());
+	}
 
 	void setMotionProperty(float value, MotionSpecProperty property, bool toggled = false) const {
 		descriptor->motion->setProperty(value, property, toggled);

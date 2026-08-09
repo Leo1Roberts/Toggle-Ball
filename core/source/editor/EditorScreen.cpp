@@ -3,6 +3,7 @@
 #include "editor/tool/DefaultMode.h"
 #include "editor/EditorObstacle.h"
 #include "Settings.h"
+#include "editor/operation/RotateOperation.h"
 #include "opengl/Shader.h"
 #include "editor/operation/TranslateOperation.h"
 #include "ui/Theme.h"
@@ -172,6 +173,13 @@ void EditorScreen::processEvent(const Event& event) {
 			case ActionCode::Translate:
 				if (key->action == KeyAction::Down) {
 					activeOperation = std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, pointer0Position);
+					if (!activeOperation->start(key->chord.modifiers))
+						activeOperation = nullptr;
+					return;
+				} break;
+			case ActionCode::Rotate:
+				if (key->action == KeyAction::Down) {
+					activeOperation = std::make_unique<RotateOperation>(&context, TriggerType::TriggerKey, pointer0Position);
 					if (!activeOperation->start(key->chord.modifiers))
 						activeOperation = nullptr;
 					return;
