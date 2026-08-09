@@ -14,8 +14,11 @@ private:
 	bool doProcessEvent(const Event& event) override;
 	void applyOperation() override;
 
+	enum class Dimension : int { MajorAndMinor, Major, Minor, COUNT };
+
 	glm::vec2 pointerPlanarPosition{};
 
+	Dimension dimension = Dimension::MajorAndMinor;
 	glm::vec2 pivot{};
 	float scale = 1.f;
 };

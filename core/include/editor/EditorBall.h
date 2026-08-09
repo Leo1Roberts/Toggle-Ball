@@ -40,8 +40,8 @@ public:
 	void rotateBy(glm::mat2 rotationMatrix, glm::vec2 pivot, const BallDescriptor* base) const {
 		descriptor->initialPosition = pivot + rotationMatrix * (base->initialPosition - pivot);
 	}
-	void scaleBy(float factor, glm::vec2 pivot, const BallDescriptor* base) const {
-		descriptor->initialPosition = pivot + factor * (base->initialPosition - pivot);
+	void scaleBy(float factor, glm::vec2 pivot, bool local, const BallDescriptor* base) const {
+		descriptor->initialPosition = local ? base->initialPosition : pivot + factor * (base->initialPosition - pivot);
 	}
 
 	[[nodiscard]] const Texture* getTexture() const { return texture; }

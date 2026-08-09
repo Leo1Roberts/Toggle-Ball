@@ -19,7 +19,7 @@ private:
 	bool doProcessEvent(const Event& event) override;
 	void applyOperation() override;
 
-	void setMode(glm::vec2 requestedAxis);
+	void setConstraint(glm::vec2 requestedAxis);
 
 	enum class ConstraintType { None, GlobalAxis, LocalAxis };
 

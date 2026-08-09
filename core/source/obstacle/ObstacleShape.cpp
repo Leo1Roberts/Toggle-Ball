@@ -518,10 +518,8 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 
 
 void AbstractShapeSpec::scaleBy(float factor, bool affectMinorRadius, bool affectMajorRadius, const AbstractShapeSpec* base) {
-	if (affectMinorRadius)
-		minorRadius = base->minorRadius * factor;
-	if (affectMajorRadius)
-		scaleMajorRadiusBy(factor, base);
+	minorRadius = base->minorRadius * (affectMinorRadius ? factor : 1.f);
+	scaleMajorRadiusBy(affectMajorRadius ? factor : 1.f, base);
 }
 
 void SegmentSpec::scaleMajorRadiusBy(float factor, const AbstractShapeSpec* base) {

@@ -49,10 +49,10 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
 				case ActionCode::LockToXAxis:
-					setMode(Axis::X);
+					setConstraint(Axis::X);
 					return true;
 				case ActionCode::LockToYAxis:
-					setMode(Axis::Y);
+					setConstraint(Axis::Y);
 					return true;
 				case ActionCode::Toggle:
 				case ActionCode::InstantToggle:
@@ -189,7 +189,7 @@ void TranslateOperation::applyOperation() {
 }
 
 
-void TranslateOperation::setMode(glm::vec2 requestedAxis) {
+void TranslateOperation::setConstraint(glm::vec2 requestedAxis) {
 	if (constraint == ConstraintType::None || (typing && constraint == ConstraintType::LocalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::GlobalAxis && baseAxis != requestedAxis)) {
 		constraint = ConstraintType::GlobalAxis;
 		baseAxis = requestedAxis;

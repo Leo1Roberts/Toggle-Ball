@@ -43,6 +43,10 @@ bool ScaleOperation::doProcessEvent(const Event& event) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
+				case ActionCode::Scale:
+					dimension = (Dimension)(((int)dimension + 1) % (int)Dimension::COUNT);
+					applyOperation();
+					return true;
 				case ActionCode::Undo:
 				case ActionCode::Redo:
 				case ActionCode::ToggleTransformLocally:
@@ -77,16 +81,29 @@ void ScaleOperation::applyOperation() {
 	auto ball = &context->scene->ball;
 	auto& obstacles = context->scene->obstacles;
 
+	bool affectMinorRadius = false;
+	bool affectMajorRadius = false;
+	switch (dimension) {
+	case Dimension::MajorAndMinor:
+		affectMinorRadius = true;
+		affectMajorRadius = true;
+		break;
+	case Dimension::Major:
+		affectMajorRadius = true;
+		break;
+	case Dimension::Minor:
+		affectMinorRadius = true;
+		break;
+	default:;
+	}
+
 	if (ball->isSelected())
-		ball->scaleBy(scale, pivot, context->scene->getCurrentNode()->level.ballDescriptor.get());
+		ball->scaleBy(scale, pivot, context->quickSettings->transformLocally,
+			context->scene->getCurrentNode()->level.ballDescriptor.get());
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			// TODO: let the user set these
-			bool affectMinorRadius = true;
-			bool affectMajorRadius = true;
-
 			obstacle.scaleBy(scale, pivot, context->quickSettings->transformLocally,
 				affectMinorRadius, affectMajorRadius,
 				context->scene->getCurrentNode()->level.obstacleDescriptors[i].get());
