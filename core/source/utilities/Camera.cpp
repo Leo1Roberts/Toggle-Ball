@@ -61,3 +61,6 @@ glm::vec2 Camera::planarToScreenPosition(glm::vec2 planarPosition) const {
 	glm::vec3 projectedPosition = glm::project(planarToWorld(planarPosition), viewMatrix, projectionMatrix, viewport);
 	return { projectedPosition.x, cache.screenHeight - projectedPosition.y };
 }
+glm::vec2 Camera::planarToScreenDirection(glm::vec2 planarDirection) {
+	return {planarDirection.x, -planarDirection.y};
+}

@@ -7,14 +7,13 @@
 
 void UIManager::resize(int screenWidth, int screenHeight, float screenDPIScale) {
 	dpiScale = screenDPIScale;
-	glm::vec2 logicalSize = glm::vec2((float)screenWidth, (float)screenHeight) / getScale();
-	projectionMatrix = glm::ortho(0.f, logicalSize.x, logicalSize.y, 0.f);
+	logicalScreenSize = glm::vec2((float)screenWidth, (float)screenHeight) / getScale();
+	projectionMatrix = glm::ortho(0.f, logicalScreenSize.x, logicalScreenSize.y, 0.f);
 
-	Rectangle screenBounds = {
-		.x = 0.f, .y = 0.f,
-		.width = logicalSize.x, .height = logicalSize.y,
-	};
-	rootNode.updateBounds(screenBounds);
+	rootNode.updateBounds({
+		.position = glm::vec2(0.f),
+		.size = logicalScreenSize,
+	});
 }
 
 

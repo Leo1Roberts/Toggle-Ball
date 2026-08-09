@@ -29,6 +29,7 @@ public:
 	void removeAllChildrenOfNode(UINode* node);
 
 	[[nodiscard]] float getScale() const { return dpiScale * Settings::Sizes.uiScale; }
+	[[nodiscard]] glm::vec2 getLogicalScreenSize() const { return logicalScreenSize; }
 	[[nodiscard]] const glm::mat4& getProjectionMatrix() const { return projectionMatrix; }
 
 private:
@@ -49,6 +50,7 @@ private:
 	std::unordered_map<int, UINode*> dragCapturedNodes;
 
 	float dpiScale = 1.f;
+	glm::vec2 logicalScreenSize{};
 	glm::mat4 projectionMatrix{};
 
 	IUIRenderer* activeRenderer = nullptr;

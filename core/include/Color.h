@@ -42,6 +42,9 @@ namespace Color {
 	constexpr col Focused = col(255, 191, 0);
 	constexpr col Warning = col(224, 0, 44);
 
+	constexpr col AxisX = col(255, 0, 0);
+	constexpr col AxisY = col(0, 255, 0);
+
 	constexpr col ObBlobTerminal = col(0, 100, 255);
 	constexpr col ObBlobTerminalHover = col(0, 90, 230);
 	constexpr col ObBlobTerminalPressed = col(0, 70, 179);

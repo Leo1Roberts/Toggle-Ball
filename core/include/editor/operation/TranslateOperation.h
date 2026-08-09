@@ -3,6 +3,7 @@
 
 #include "TransformOperation.h"
 #include "Operation.h"
+#include "editor/GizmoRenderer.h"
 
 
 class TranslateOperation : public TransformOperation {
@@ -11,6 +12,8 @@ public:
 		: TransformOperation(context, trigger, initialPointerPosition) {}
 
 	static std::optional<glm::vec2> keyToTranslationVector(KeyCode key);
+
+	void renderGizmos() override;
 
 private:
 	bool doProcessEvent(const Event& event) override;
@@ -23,6 +26,9 @@ private:
 	ConstraintType constraint = ConstraintType::None;
 	glm::vec2 baseAxis{};
 	glm::vec2 rawTranslation{0.f};
+
+	InfiniteLine focusedAxisLine;
+	std::vector<InfiniteLine> otherAxisLines;
 };
 
 

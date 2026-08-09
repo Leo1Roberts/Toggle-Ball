@@ -18,6 +18,26 @@ std::optional<glm::vec2> TranslateOperation::keyToTranslationVector(KeyCode key)
 }
 
 
+void TranslateOperation::renderGizmos() {
+	if (constraint == ConstraintType::None) return;
+
+	col color = baseAxis == Axis::X ? Color::AxisX : Color::AxisY;
+	context->gizmoRenderer->addLine(focusedAxisLine, {
+		.color = color,
+		.width = Settings::Sizes.axisLineWidth
+	});
+
+	color = col(color, 0.3f);
+	for (auto line : otherAxisLines)
+		context->gizmoRenderer->addLine(line, {
+		.color = color,
+		.width = Settings::Sizes.axisLineWidth
+	});
+
+	context->gizmoRenderer->render();
+}
+
+
 bool TranslateOperation::doProcessEvent(const Event& event) {
 	if (typing && textInput.processEvent(event) == TextInputEventEffect::Buffer) {
 		applyOperation(); // Get value later - rawTranslation is not suitable
@@ -72,6 +92,8 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 
 
 void TranslateOperation::applyOperation() {
+	otherAxisLines.clear();
+
 	auto ball = &context->scene->ball;
 	auto& obstacles = context->scene->obstacles;
 
@@ -109,22 +131,51 @@ void TranslateOperation::applyOperation() {
 	if (ball->isSelected()) {
 		if (context->quickSettings->transformLocally && trigger != TriggerType::ActionKey)
 			translation = (angleToRotation2D(-focusAngle) * direction) * magnitude;
+
 		ball->translateBy(translation, context->scene->getCurrentNode()->level.ballDescriptor.get());
+
+		if (context->quickSettings->transformLocally && constraint != ConstraintType::None && focus->type != EntityType::Ball)
+			otherAxisLines.push_back({
+				.point = ball->descriptor->initialPosition,
+				.direction = baseAxis,
+			});
 	}
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			if (context->quickSettings->transformLocally && trigger != TriggerType::ActionKey)
-				translation = (angleToRotation2D(obstacle.getKinematicState()->getAngle() - focusAngle) * direction) * magnitude;
+			glm::vec2 localDirection = direction;
+			if (context->quickSettings->transformLocally && trigger != TriggerType::ActionKey) {
+				localDirection = (angleToRotation2D(obstacle.getKinematicState()->getAngle() - focusAngle) * direction);
+				translation = localDirection * magnitude;
+			}
 
 			obstacle.translateBy(translation, context->quickSettings->transformBothStates, context->scene->isToggled(),
 				context->scene->getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
 			obstacle.generateDomainMesh(*context->uiToWorldScale);
+
+			if (context->quickSettings->transformLocally && constraint != ConstraintType::None &&
+				!(focus->type == EntityType::Obstacle && i == focus->index))
+				otherAxisLines.push_back({
+					.point = worldToPlanar(obstacle.getKinematicState()->getPosition()),
+					.direction = localDirection,
+				});
 		}
 	}
+
+	glm::vec2 focusPos{};
+	if (focus->type == EntityType::Ball)
+		focusPos = ball->descriptor->initialPosition;
+	else if (focus->type == EntityType::Obstacle)
+		focusPos = worldToPlanar(obstacles[focus->index].getKinematicState()->getPosition());
+
+	if (constraint != ConstraintType::None)
+		focusedAxisLine = {
+		.point = focusPos,
+		.direction = direction,
+	};
 }
 
 

@@ -12,6 +12,11 @@ struct PanelStyle {
 	float strokeWidth = 0.f;
 };
 
+struct LineStyle {
+	col color = Color::Black;
+	float width = 1.f;
+};
+
 
 struct Font;
 enum class TextAlignHorizontal { Left, Centre, Right };

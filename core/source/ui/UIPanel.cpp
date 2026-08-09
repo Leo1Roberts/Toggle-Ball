@@ -134,6 +134,32 @@ void UIPanelRenderer::addPanel(const UIPanel* panel) {
 	indices.push_back(base + 23); indices.push_back(base + 10); indices.push_back(base +  6);
 }
 
+void UIPanelRenderer::addLine(glm::vec2 p1, glm::vec2 p2, LineStyle style) {
+	glm::vec2 dir = p2 - p1;
+	float length = glm::length(dir);
+
+	if (length <= 0.0001f)
+		return;
+
+	glm::vec2 normal = glm::vec2(-dir.y, dir.x) / length;
+	glm::vec2 offset = normal * (style.width * 0.5f);
+
+	glm::vec2 v0 = p1 - offset;
+	glm::vec2 v1 = p1 + offset;
+	glm::vec2 v2 = p2 + offset;
+	glm::vec2 v3 = p2 - offset;
+
+	Index base = vertices.size();
+
+	vertices.emplace_back(v0, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
+	vertices.emplace_back(v1, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
+	vertices.emplace_back(v2, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
+	vertices.emplace_back(v3, glm::vec2(0.f, 0.f), style.color, style.color, 0.f);
+
+	indices.push_back(base + 0); indices.push_back(base + 1); indices.push_back(base + 2);
+	indices.push_back(base + 0); indices.push_back(base + 2); indices.push_back(base + 3);
+}
+
 
 void UIPanelRenderer::flush(const glm::mat4& projectionMatrix) {
 	if (vertices.empty()) return;

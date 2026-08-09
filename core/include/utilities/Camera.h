@@ -17,6 +17,7 @@ public:
 
 	[[nodiscard]] glm::vec2 screenToPlanarPosition(glm::vec2 screenPosition) const;
 	[[nodiscard]] glm::vec2 planarToScreenPosition(glm::vec2 planarPosition) const;
+	static glm::vec2 planarToScreenDirection(glm::vec2 planarDirection); // Magnitude is not considered
 
 	[[nodiscard]] float getHalfHeight() const { return halfHeight; }
 	[[nodiscard]] const glm::mat4& getViewMatrix() const { return viewMatrix; }

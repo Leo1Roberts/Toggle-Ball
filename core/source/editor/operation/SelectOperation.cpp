@@ -5,12 +5,14 @@
 
 
 void SelectOperation::renderGizmos() {
-	context->gizmoRenderer->drawBox(box, {
+	context->gizmoRenderer->addBox(box, {
 		.fillColor = Color::SelectBox,
 		.strokeColor = Color::Selected,
 		.cornerRadius = 0.f,
 		.strokeWidth = Settings::Sizes.outlineWidth,
 	});
+
+	context->gizmoRenderer->render();
 }
 
 
