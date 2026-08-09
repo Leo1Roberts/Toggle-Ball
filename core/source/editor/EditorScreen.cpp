@@ -164,6 +164,8 @@ void EditorScreen::processEvent(const Event& event) {
 				} break;
 			case ActionCode::Redo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
+					if (activeOperation)
+						activeOperation->cancel();
 					scene.redo();
 					return;
 				} break;

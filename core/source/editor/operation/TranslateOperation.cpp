@@ -45,17 +45,6 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 	}
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
-		if (trigger == TriggerType::ActionKey) {
-			if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
-				if (auto vector = keyToTranslationVector(key->chord.code)) {
-					rawTranslation += *vector;
-					applyOperation();
-					return true;
-				}
-			}
-			return false;
-		}
-
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
@@ -65,6 +54,16 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 				case ActionCode::LockToYAxis:
 					setMode(Axis::Y);
 					return true;
+				case ActionCode::Toggle:
+				case ActionCode::InstantToggle:
+					if (trigger == TriggerType::ActionKey) {
+						finish();
+						commit();
+						return false;
+					}
+					return true;
+				case ActionCode::Undo:
+				case ActionCode::Redo:
 				case ActionCode::ToggleTransformLocally:
 				case ActionCode::ToggleTransformBothStates:
 					return false;
@@ -72,6 +71,17 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 					return true;
 				}
 			}
+		}
+
+		if (trigger == TriggerType::ActionKey) {
+			if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
+				if (auto vector = keyToTranslationVector(key->chord.code)) {
+					rawTranslation += *vector;
+					applyOperation();
+					return true;
+				}
+			}
+			return false;
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
