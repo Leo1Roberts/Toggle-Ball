@@ -4,20 +4,15 @@
 
 #include <format>
 
-FPSOverlay::FPSOverlay() {
-	hitTestable = false;
-
-	TextStyle fpsStyle{
+FPSOverlay::FPSOverlay()
+	: UIText("--- fps") {
+	textStyle = {
 		.font = FontId::CourierNew,
 		.fontSize = 20.f,
 		.color = {0, 255, 128, 255},
 		.alignHorizontal = TextAlignHorizontal::Left,
 		.alignVertical = TextAlignVertical::Top
 	};
-
-	auto text = std::make_unique<UIText>("--- fps", fpsStyle);
-
-	labelNode = addChild(std::move(text));
 }
 
 
@@ -30,7 +25,7 @@ void FPSOverlay::doUpdate(microseconds dt) {
 		int fps = (int)std::round((float)frameCount / seconds);
 
 		std::string fpsString = std::format("{:3}", fps);
-		labelNode->setText(fpsString + " fps");
+		setText(fpsString + " fps");
 
 		timeAccumulator = 0;
 		frameCount = 0;

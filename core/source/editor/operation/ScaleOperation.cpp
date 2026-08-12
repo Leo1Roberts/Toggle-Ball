@@ -1,12 +1,21 @@
 #include "editor/operation/ScaleOperation.h"
 
+#include "ui/UIText.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/norm.hpp"
 
 
+void ScaleOperation::updateDetailsText() {
+	std::string title = "Scale: ";
+	std::string value = typing ? textInput.getValue<const std::string&>() : floatToString(scale, 3, true);
+	detailsText->setText(title + value);
+	detailsText->updateBounds(detailsText->getParent()->getAbsoluteBounds());
+}
+
+
 bool ScaleOperation::doProcessEvent(const Event& event) {
 	if (typing && textInput.processEvent(event) == TextInputEventEffect::Buffer) {
-		scale = textInput.getValue<float>();
 		applyOperation();
 		return true;
 	}
@@ -42,8 +51,8 @@ bool ScaleOperation::doProcessEvent(const Event& event) {
 		if (!typing && TextInputBuffer::Float(*c)) {
 			typing = true;
 			if (textInput.processEvent(*c) == TextInputEventEffect::Buffer) {
-				scale = textInput.getValue<float>();
 				applyOperation();
+				return true;
 			}
 		}
 	}
@@ -52,6 +61,16 @@ bool ScaleOperation::doProcessEvent(const Event& event) {
 
 
 void ScaleOperation::applyOperation() {
+	if (typing) {
+		if (auto value = textInput.getValue<std::optional<float>>())
+			scale = *value;
+		else {
+			updateDetailsText();
+			context->scene->cancelLevelChange();
+			return;
+		}
+	}
+
 	auto ball = &context->scene->ball;
 	auto& obstacles = context->scene->obstacles;
 
@@ -89,4 +108,6 @@ void ScaleOperation::applyOperation() {
 				obstacle.generateDomainMesh(*context->uiToWorldScale);
 		}
 	}
+
+	updateDetailsText();
 }

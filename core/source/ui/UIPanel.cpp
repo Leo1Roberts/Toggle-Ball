@@ -17,6 +17,19 @@ void UIPanelVertex::setupLayout() {
 }
 
 
+UIResponse UIPanel::processEvent(const Event& event) {
+	if (auto pointer = std::get_if<PointerEvent>(&event)) {
+		switch (pointer->action) {
+		case PointerAction::Down:
+		case PointerAction::Up:
+			return UIResponse::Consumed;
+		default:;
+		}
+	}
+
+	return UIResponse::Ignored;
+}
+
 
 void UIPanel::submitRender(UIManager& manager) {
 	manager.submitPanel(this);

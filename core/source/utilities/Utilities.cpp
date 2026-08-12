@@ -1,12 +1,12 @@
 #include "TypeAlias.h"
 #include "utilities/Utilities.h"
 
-#include "glm/ext/scalar_constants.hpp"
 #include "glm/gtc/constants.hpp"
 
 #include <chrono>
 #include <cmath>
 #include <algorithm>
+#include <iomanip>
 
 glm::vec3 colorToLinear(col srgb) {
 	glm::vec3 colorVec = srgb;
@@ -48,21 +48,20 @@ float wrapAngle(float radians) {
 	return radians;
 }
 
-float angleToDisplay(float angle) {
-	angle *= -180.f / glm::pi<float>();
-	if (angle == 0.f) angle = 0.f; // Remove -0
-	return std::round(angle * 100.f) * 0.01f;
-}
 
-float wrapDisplayAngle(float displayAngle) {
-	displayAngle = fmodf(displayAngle, 360.f);
-	if (displayAngle <= -180.f) displayAngle += 360.f;
-	else if (displayAngle > 180.f) displayAngle -= 360.f;
-	return displayAngle;
-}
+std::string floatToString(float f, int maxPrecision, bool forceMax) {
+	std::stringstream ss;
+	ss << std::fixed << std::setprecision(maxPrecision) << f;
+	std::string result = ss.str();
+	if (!forceMax && result.find('.') != std::string::npos) {
+		result.erase(result.find_last_not_of('0') + 1, std::string::npos);
+		if (result.back() == '.')
+			result.pop_back();
+	}
 
-float displayToAngle(float displayAngle) {
-	return displayAngle * glm::pi<float>() / -180.f;
+	if (!result.empty() && result[0] == '-' && result.find_first_not_of("-0.") == std::string::npos)
+		result.erase(0, 1);
+	return result;
 }
 
 

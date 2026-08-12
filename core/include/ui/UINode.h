@@ -21,6 +21,9 @@ class UIManager;
 
 class UINode {
 public:
+	UINode() = default;
+	explicit UINode(bool hitTestable) : hitTestable(hitTestable) {}
+
 	virtual ~UINode() = default;
 
 	template <typename T>
@@ -41,7 +44,8 @@ public:
 	virtual void onPointerEntered() {}
 	virtual void onPointerExited() {}
 
-	virtual UIResponse processEvent(const Event& event);
+	virtual UIResponse processEvent(const Event& event) { return UIResponse::Ignored; }
+
 	void update(microseconds dt) {
 		doUpdate(dt);
 		for (auto& child : children) child->update(dt);
@@ -58,20 +62,20 @@ public:
 	void deactivate() { active = false; }
 
 	void setHitTestable(bool canBeHit) { hitTestable = canBeHit; }
+	void setHitTestableChildren(bool canBeHit) { hitTestableChildren = canBeHit; }
 
 	[[nodiscard]] UINode* getParent() const { return parent; }
 	[[nodiscard]] const std::vector<std::unique_ptr<UINode>>& getChildren() const { return children; }
 	[[nodiscard]] bool isVisible() const { return visible; }
 	[[nodiscard]] bool isActive() const { return active; }
 	[[nodiscard]] bool isHitTestable() const { return hitTestable && active; }
+	[[nodiscard]] bool childrenAreHitTestable() const { return hitTestableChildren && active; }
 	[[nodiscard]] virtual bool isFocusable() const { return false; }
 
 	Layout layout;
 
 protected:
 	[[nodiscard]] virtual bool containsPrecise(glm::vec2 point) const { return true; }
-
-	bool hitTestable = true;
 
 private:
 	virtual void doUpdate(microseconds dt) {}
@@ -83,6 +87,8 @@ private:
 
 	bool visible = true;
 	bool active = true;
+	bool hitTestable = true;
+	bool hitTestableChildren = true;
 };
 
 

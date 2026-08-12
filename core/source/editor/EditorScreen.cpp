@@ -11,8 +11,6 @@
 #include "ui/UIVerticalList.h"
 #include "ui/UiTextBox.h"
 
-#include <iomanip>
-
 
 const glm::vec3 groundColor = colorToLinear({76, 76, 76});
 const glm::vec3 skyColor = colorToLinear({85, 110, 128});
@@ -29,12 +27,9 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		std::move(levelToEdit),
 		[this] { updateEphemeralMeshes(); }),
 	context(
-		&quickSettings, &scene, &camera, &gizmoRenderer, &uiToWorldScale,
-		[this](std::unique_ptr<Operation> operation) {
-			activeOperation = std::move(operation);
-			return activeOperation.get();
-		},
-		[this] { activeOperation = nullptr; }),
+		&quickSettings, &scene, &camera, nullptr, &gizmoRenderer, &uiToWorldScale,
+		[this](std::unique_ptr<Operation> operation) { return startOperation(std::move(operation)); },
+		[this] { finishOperation(); }),
 	currentToolMode(std::make_unique<DefaultMode>(&context)) {
 	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
@@ -74,10 +69,10 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 			.width = 0.5f
 		};
 		textField->setOnTextChange([this, property](const UITextBox& tb) {
-			if (tb.isEmpty())
-				scene.cancelLevelChange();
+			if (auto value = tb.getValue<std::optional<float>>())
+				*property = *value;
 			else
-				*property = tb.getValue<float>();
+				scene.cancelLevelChange();
 		});
 		textField->setOnConfirm([this](const UITextBox& tb) {
 			if (tb.isEmpty())
@@ -86,18 +81,8 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 				scene.commitLevelChange();
 		});
 		textField->setOnCancel([this](const UITextBox&) { scene.cancelLevelChange(); });
-		textField->setValueProvider([property] -> std::string {
-			std::stringstream ss;
-			ss << std::fixed << std::setprecision(3) << *property;
-			std::string result = ss.str();
-			if (result.find('.') != std::string::npos) {
-				result.erase(result.find_last_not_of('0') + 1, std::string::npos);
-				if (result.back() == '.')
-					result.pop_back();
-			}
-
-			if (result == "-0") return "0";
-			return result;
+		textField->setValueProvider([property] {
+			return floatToString(*property, 3);
 		});
 
 		return item;
@@ -113,6 +98,8 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	obstacleMotionPropertiesList->layout = { .anchor = Anchor::BottomCentre, .height = 0.5f };
 
 	uiManager.addNode(std::move(propertiesPanel));
+
+	context.operationUI = uiManager.addNode(std::make_unique<UINode>(false));
 }
 
 
@@ -177,16 +164,16 @@ void EditorScreen::processEvent(const Event& event) {
 						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
 							auto oldOperation = std::move(activeOperation);
 							oldOperation->cancel();
-							activeOperation = std::make_unique<TranslateOperation>(*transform);
+							startOperation(std::make_unique<TranslateOperation>(*transform));
 							if (activeOperation->start(key->chord.modifiers))
 								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
 							else
-								activeOperation = nullptr;
+								finishOperation();
 						}
 					} else {
-						activeOperation = std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, pointer0Position);
+						startOperation(std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, pointer0Position));
 						if (!activeOperation->start(key->chord.modifiers))
-							activeOperation = nullptr;
+							finishOperation();
 					}
 					return;
 				} break;
@@ -196,16 +183,16 @@ void EditorScreen::processEvent(const Event& event) {
 						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
 							auto oldOperation = std::move(activeOperation);
 							oldOperation->cancel();
-							activeOperation = std::make_unique<RotateOperation>(*transform);
+							startOperation(std::make_unique<RotateOperation>(*transform));
 							if (activeOperation->start(key->chord.modifiers))
 								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
 							else
-								activeOperation = nullptr;
+								finishOperation();
 						}
 					} else {
-						activeOperation = std::make_unique<RotateOperation>(&context, TriggerType::TriggerKey, pointer0Position);
+						startOperation(std::make_unique<RotateOperation>(&context, TriggerType::TriggerKey, pointer0Position));
 						if (!activeOperation->start(key->chord.modifiers))
-							activeOperation = nullptr;
+							finishOperation();
 					}
 					return;
 				} break;
@@ -215,16 +202,16 @@ void EditorScreen::processEvent(const Event& event) {
 						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
 							auto oldOperation = std::move(activeOperation);
 							oldOperation->cancel();
-							activeOperation = std::make_unique<ScaleOperation>(*transform);
+							startOperation(std::make_unique<ScaleOperation>(*transform));
 							if (activeOperation->start(key->chord.modifiers))
 								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
 							else
-								activeOperation = nullptr;
+								finishOperation();
 						}
 					} else {
-						activeOperation = std::make_unique<ScaleOperation>(&context, TriggerType::TriggerKey, pointer0Position);
+						startOperation(std::make_unique<ScaleOperation>(&context, TriggerType::TriggerKey, pointer0Position));
 						if (!activeOperation->start(key->chord.modifiers))
-							activeOperation = nullptr;
+							finishOperation();
 					}
 					return;
 				} break;
@@ -503,16 +490,15 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 				}
 			});
 			textField->setOnTextChange([this, propertyDescriptor, toggled](const UITextBox& tb) {
-				if (tb.isEmpty())
-					scene.cancelLevelChange();
-				else
+				if (auto value = tb.getValue<std::optional<float>>()) {
 					for (auto& obstacle : scene.obstacles)
 						if (obstacle.isSelected()) {
-							obstacle.setMotionProperty(
-								tb.getValue<float>(), propertyDescriptor.property, toggled);
+							obstacle.setMotionProperty(*value, propertyDescriptor.property, toggled);
 							obstacle.initKinematicState();
 							obstacle.generateDomainMesh(uiToWorldScale);
 						}
+				} else
+					scene.cancelLevelChange();
 			});
 			textField->setOnConfirm([this](const UITextBox& tb) {
 				if (tb.isEmpty())
@@ -525,7 +511,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 				scene.cancelLevelChange();
 				scene.demonstrateMotion = false;
 			});
-			textField->setValueProvider([this, propertyDescriptor, toggled] -> std::string {
+			textField->setValueProvider([this, propertyDescriptor, toggled] {
 				float value = NAN;
 				for (const auto& obstacle : scene.obstacles)
 					if (obstacle.isSelected()) {
@@ -538,19 +524,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 						}
 					}
 
-				if (std::isnan(value)) return "";
-
-				std::stringstream ss;
-				ss << std::fixed << std::setprecision(3) << value;
-				std::string result = ss.str();
-				if (result.find('.') != std::string::npos) {
-					result.erase(result.find_last_not_of('0') + 1, std::string::npos);
-					if (result.back() == '.')
-						result.pop_back();
-				}
-
-				if (result == "-0") return "0";
-				return result;
+				return std::isnan(value) ? "" : floatToString(value, 3);
 			});
 
 			return item;
@@ -573,4 +547,15 @@ void EditorScreen::updateStateIndicator() {
 		.color = scene.isToggled() ? Color::StateB : Color::StateA,
 		.alignVertical = TextAlignVertical::Bottom,
 	};
+}
+
+
+Operation* EditorScreen::startOperation(std::unique_ptr<Operation> operation) {
+	context.operationUI->updateBounds(context.operationUI->getParent()->getAbsoluteBounds());
+	activeOperation = std::move(operation);
+	return activeOperation.get();
+}
+void EditorScreen::finishOperation() {
+	activeOperation.reset();
+	uiManager.removeAllChildrenOfNode(context.operationUI);
 }

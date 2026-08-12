@@ -73,12 +73,8 @@ bool UIManager::processEvent(const Event& event) {
 		pointer.position = screenToLogicalPosition(pointer.position);
 		
 		UINode* nodePointedTo = nullptr;
-
-		if (rootNode.contains(pointer.position)) {
+		if (rootNode.contains(pointer.position))
 			nodePointedTo = findNodePointedTo(&rootNode, pointer.position);
-			if (nodePointedTo == &rootNode)
-				nodePointedTo = nullptr;
-		}
 
 
 		// Track pointer entry
@@ -170,11 +166,12 @@ bool UIManager::processEvent(const Event& event) {
 
 
 UINode* UIManager::findNodePointedTo(UINode* currentNode, glm::vec2 pointerPosition) {
-	for (const auto& child: std::views::reverse(currentNode->getChildren()))
-		if (child->isHitTestable() && child->contains(pointerPosition))
-			return findNodePointedTo(child.get(), pointerPosition);
+	if (currentNode->childrenAreHitTestable())
+		for (const auto& child: std::views::reverse(currentNode->getChildren()))
+			if (child->contains(pointerPosition))
+				if (auto node = findNodePointedTo(child.get(), pointerPosition)) return node;
 
-	return currentNode;
+	return currentNode->isHitTestable() ? currentNode : nullptr;
 }
 
 

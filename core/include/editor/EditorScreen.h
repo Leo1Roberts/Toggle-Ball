@@ -51,6 +51,8 @@ private:
 
 	std::unique_ptr<ToolMode> currentToolMode;
 	std::unique_ptr<Operation> activeOperation;
+	Operation* startOperation(std::unique_ptr<Operation> operation);
+	void finishOperation();
 };
 
 #endif // EDITOR_H

@@ -1,19 +1,16 @@
 #ifndef FPS_OVERLAY_H
 #define FPS_OVERLAY_H
 
-#include "ui/UINode.h"
+#include "ui/UIText.h"
 
 
-class UIText;
-
-class FPSOverlay : public UINode {
+class FPSOverlay : public UIText {
 public:
 	FPSOverlay();
 
 private:
 	void doUpdate(microseconds dt) override;
 
-	UIText* labelNode = nullptr;
 	microseconds timeAccumulator = 0;
 	int frameCount = 0;
 };

@@ -1,5 +1,15 @@
 #include "editor/operation/RotateOperation.h"
 
+#include "ui/UIText.h"
+
+
+void RotateOperation::updateDetailsText() {
+	std::string title = "Rotation: ";
+	std::string value = typing ? textInput.getValue<const std::string&>() : floatToString(to_deg(rotation), 3, true);
+	detailsText->setText(title + value);
+	detailsText->updateBounds(detailsText->getParent()->getAbsoluteBounds());
+}
+
 
 std::optional<float> RotateOperation::keyToRotationRadians(KeyCode key) {
 	switch (key) {
@@ -21,7 +31,6 @@ float angleDifference(glm::vec2 newPos, glm::vec2 oldPos, glm::vec2 pivot) {
 
 bool RotateOperation::doProcessEvent(const Event& event) {
 	if (typing && textInput.processEvent(event) == TextInputEventEffect::Buffer) {
-		setRotation(to_rad(textInput.getValue<float>()));
 		applyOperation();
 		return true;
 	}
@@ -65,8 +74,8 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 		if (!typing && TextInputBuffer::Float(*c)) {
 			typing = true;
 			if (textInput.processEvent(*c) == TextInputEventEffect::Buffer) {
-				setRotation(to_rad(textInput.getValue<float>()));
 				applyOperation();
+				return true;
 			}
 		}
 	}
@@ -75,6 +84,16 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 
 
 void RotateOperation::applyOperation() {
+	if (typing) {
+		if (auto value = textInput.getValue<std::optional<float>>())
+			setRotation(to_rad(*value));
+		else {
+			updateDetailsText();
+			context->scene->cancelLevelChange();
+			return;
+		}
+	}
+
 	auto ball = &context->scene->ball;
 	auto& obstacles = context->scene->obstacles;
 
@@ -91,6 +110,8 @@ void RotateOperation::applyOperation() {
 			obstacle.generateDomainMesh(*context->uiToWorldScale);
 		}
 	}
+
+	updateDetailsText();
 }
 
 

@@ -7,8 +7,12 @@
 class ScaleOperation : public PivotOperation {
 public:
 	ScaleOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
-		: PivotOperation(context, trigger, initialPointerPosition) {}
-	explicit ScaleOperation(const TransformOperation& other) : PivotOperation(other) {}
+		: PivotOperation(context, trigger, initialPointerPosition) { ScaleOperation::updateDetailsText(); }
+	explicit ScaleOperation(const TransformOperation& other)
+		: PivotOperation(other) { ScaleOperation::updateDetailsText(); }
+
+protected:
+	void updateDetailsText() override;
 
 private:
 	bool doProcessEvent(const Event& event) override;

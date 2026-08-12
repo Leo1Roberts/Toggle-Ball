@@ -24,6 +24,8 @@ class UIPanel : public UINode {
 public:
 	explicit UIPanel(const PanelStyle& style = {}) : panelStyle(style) {}
 
+	UIResponse processEvent(const Event& event) override;
+
 	void submitRender(UIManager& manager) override;
 
 	PanelStyle panelStyle;

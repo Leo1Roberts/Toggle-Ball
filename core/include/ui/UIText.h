@@ -48,7 +48,8 @@ class UIText : public UINode {
 public:
 	explicit UIText(std::string text, const TextStyle& style = {})
 		: textStyle(style), text(std::move(text)) {
-		hitTestable = false;
+		setHitTestable(false);
+		setHitTestableChildren(false);
 		updateTextLayout();
 	}
 

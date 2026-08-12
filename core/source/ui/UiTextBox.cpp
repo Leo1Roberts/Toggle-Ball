@@ -4,7 +4,8 @@
 UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle, std::string placeholderText)
 	: UIPanel(bStyle.normalPanel), textBoxStyle(bStyle), inputBuffer(validator), placeholder(std::move(placeholderText)) {
 	highlightContainer = addChild(std::make_unique<UINode>());
-	highlightContainer->setHitTestable(false); // Not safe to change - see updateCursorAndHighlight()
+	highlightContainer->setHitTestable(false);
+	highlightContainer->setHitTestableChildren(false); // Not safe to change - see updateCursorAndHighlight()
 
 	textNode = addChild(std::make_unique<UIText>(placeholder, textBoxStyle.normalText));
 	highlightContainer->layout = textNode->layout = {
@@ -153,7 +154,7 @@ void UITextBox::setText(const std::string& text) {
 }
 
 void UITextBox::updateCursorAndHighlight() {
-	highlightContainer->clearChildren(); // Only safe because highlightContainer is not hit testable
+	highlightContainer->clearChildren(); // Only safe because highlightContainer children are not hit testable
 	for (const auto& highlightRect : textNode->getHighlightRects(inputBuffer.getSelectionStartIndex(), inputBuffer.getSelectionEndIndex())) {
 		auto highlightNode = highlightContainer->addChild(std::make_unique<UIPanel>(textBoxStyle.highlight));
 		highlightNode->layout = {

@@ -43,7 +43,7 @@ private:
 
 	void unregisterNode(UINode* node);
 
-	UINode rootNode;
+	UINode rootNode{false};
 	UINode* focusedNode = nullptr;
 	std::unordered_map<int, UINode*> hoveredNodes;
 	std::unordered_map<int, UINode*> downCapturedNodes;

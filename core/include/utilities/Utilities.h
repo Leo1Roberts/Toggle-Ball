@@ -4,7 +4,7 @@
 #include "Color.h"
 
 #include <glm/glm.hpp>
-#include <string_view>
+#include <string>
 
 [[nodiscard]] glm::vec3 colorToLinear(col srgb);
 
@@ -22,9 +22,8 @@ inline glm::mat2 angleToRotation2D(float radians) {
 }
 
 [[nodiscard]] float wrapAngle(float radians); // Wraps angle to range (-PI, PI]
-[[nodiscard]] float angleToDisplay(float angle);
-[[nodiscard]] float wrapDisplayAngle(float displayAngle);
-[[nodiscard]] float displayToAngle(float displayAngle);
+
+[[nodiscard]] std::string floatToString(float f, int maxPrecision, bool forceMax = false);
 
 enum { // Order of these is important
 	VP_INSIDE,

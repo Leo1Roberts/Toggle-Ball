@@ -9,12 +9,16 @@
 class TranslateOperation : public TransformOperation {
 public:
 	TranslateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
-		: TransformOperation(context, trigger, initialPointerPosition) {}
-	explicit TranslateOperation(const TransformOperation& other) : TransformOperation(other) {}
+		: TransformOperation(context, trigger, initialPointerPosition) { TranslateOperation::updateDetailsText(); }
+	explicit TranslateOperation(const TransformOperation& other)
+		: TransformOperation(other) { TranslateOperation::updateDetailsText(); }
 
 	static std::optional<glm::vec2> keyToTranslationVector(KeyCode key);
 
 	void renderGizmos() override;
+
+protected:
+	void updateDetailsText() override;
 
 private:
 	bool doProcessEvent(const Event& event) override;
@@ -27,6 +31,9 @@ private:
 	ConstraintType constraint = ConstraintType::None;
 	glm::vec2 baseAxis{};
 	glm::vec2 rawTranslation{0.f};
+
+	glm::vec2 translation{0.f};
+	float magnitude = 0.f;
 
 	InfiniteLine focusedAxisLine{};
 	std::vector<InfiniteLine> otherAxisLines;

@@ -7,6 +7,21 @@ namespace Axis {
 } // namespace Axis
 
 
+void TranslateOperation::updateDetailsText() {
+	std::string title = "Translation: ";
+	std::string value;
+	if (typing)
+		value = textInput.getValue<const std::string&>();
+	else if (constraint == ConstraintType::None)
+		value = floatToString(translation.x, 3, true) + ", " + floatToString(translation.y, 3, true);
+	else
+		value = floatToString(magnitude, 3, true);
+
+	detailsText->setText(title + value);
+	detailsText->updateBounds(detailsText->getParent()->getAbsoluteBounds());
+}
+
+
 std::optional<glm::vec2> TranslateOperation::keyToTranslationVector(KeyCode key) {
 	switch (key) {
 	case KeyCode::Left:  return glm::vec2(-1.f, 0.f);
@@ -40,7 +55,7 @@ void TranslateOperation::renderGizmos() {
 
 bool TranslateOperation::doProcessEvent(const Event& event) {
 	if (typing && textInput.processEvent(event) == TextInputEventEffect::Buffer) {
-		applyOperation(); // Get value later - rawTranslation is not suitable
+		applyOperation();
 		return true;
 	}
 
@@ -95,8 +110,10 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 	} else if (auto* c = std::get_if<char>(&event)) {
 		if (!typing && TextInputBuffer::Float(*c) && constraint != ConstraintType::None) {
 			typing = true;
-			if (textInput.processEvent(*c) == TextInputEventEffect::Buffer)
-				applyOperation(); // Get value later - rawTranslation is not suitable
+			if (textInput.processEvent(*c) == TextInputEventEffect::Buffer) {
+				applyOperation();
+				return true;
+			}
 		}
 	}
 	return false;
@@ -115,8 +132,6 @@ void TranslateOperation::applyOperation() {
 		focusAngle = obstacles[focus->index].getKinematicState()->getAngle();
 
 	glm::vec2 direction;
-	float magnitude = 0.f;
-	glm::vec2 translation;
 
 	if (trigger == TriggerType::ActionKey)
 		translation = rawTranslation;
@@ -131,9 +146,15 @@ void TranslateOperation::applyOperation() {
 		else
 			direction = angleToRotation2D(focusAngle) * baseAxis;
 
-		if (typing)
-			magnitude = textInput.getValue<float>();
-		else
+		if (typing) {
+			if (auto value = textInput.getValue<std::optional<float>>())
+				magnitude = *value;
+			else {
+				updateDetailsText();
+				context->scene->cancelLevelChange();
+				return;
+			}
+		} else
 			magnitude = dot(rawTranslation, direction);
 
 		if (!context->quickSettings->transformLocally)
@@ -158,7 +179,7 @@ void TranslateOperation::applyOperation() {
 		if (obstacle.isSelected()) {
 			glm::vec2 localDirection = direction;
 			if (context->quickSettings->transformLocally && trigger != TriggerType::ActionKey) {
-				localDirection = (angleToRotation2D(obstacle.getKinematicState()->getAngle() - focusAngle) * direction);
+				localDirection = angleToRotation2D(obstacle.getKinematicState()->getAngle() - focusAngle) * direction;
 				translation = localDirection * magnitude;
 			}
 
@@ -177,6 +198,9 @@ void TranslateOperation::applyOperation() {
 		}
 	}
 
+	if (trigger != TriggerType::ActionKey && context->quickSettings->transformLocally)
+		translation = angleToRotation2D(-focusAngle) * direction * magnitude;
+
 	glm::vec2 focusPos{};
 	if (focus->type == EntityType::Ball)
 		focusPos = ball->descriptor->initialPosition;
@@ -188,6 +212,8 @@ void TranslateOperation::applyOperation() {
 		.point = focusPos,
 		.direction = direction,
 	};
+
+	updateDetailsText();
 }
 
 

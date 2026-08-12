@@ -9,6 +9,7 @@ class Operation;
 class GizmoRenderer;
 class Camera;
 class EditorScene;
+class UINode;
 
 struct EditorQuickSettings {
 	bool transformBothStates = false;
@@ -19,6 +20,7 @@ struct EditorContext {
 	EditorQuickSettings* quickSettings;
 	EditorScene* scene;
 	const Camera* camera;
+	UINode* operationUI;
 	GizmoRenderer* gizmoRenderer;
 	const float* uiToWorldScale;
 

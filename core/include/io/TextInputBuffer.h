@@ -63,9 +63,9 @@ private:
 template <>
 inline const std::string& TextInputBuffer::getValue<const std::string&>() const { return buffer; }
 template <>
-inline float TextInputBuffer::getValue<float>() const {
+inline std::optional<float> TextInputBuffer::getValue<std::optional<float>>() const {
 	try { return std::stof(buffer); }
-	catch (...) { return 0.f; }
+	catch (...) { return std::nullopt; }
 }
 
 
