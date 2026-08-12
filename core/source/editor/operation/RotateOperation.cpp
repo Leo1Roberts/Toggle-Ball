@@ -1,19 +1,5 @@
 #include "editor/operation/RotateOperation.h"
 
-#include "editor/GizmoRenderer.h"
-
-
-RotateOperation::RotateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
-	: TransformOperation(context, trigger, initialPointerPosition) {
-	lastPointerPlanarPosition = initialPointerPlanarPosition;
-
-	auto focus = context->scene->selectionFocus;
-	if (focus.type == EntityType::Ball)
-		pivot = context->scene->ball.descriptor->initialPosition;
-	else if (focus.type == EntityType::Obstacle)
-		pivot = worldToPlanar(context->scene->obstacles[focus.index].getKinematicState()->getPosition());
-}
-
 
 std::optional<float> RotateOperation::keyToRotationRadians(KeyCode key) {
 	switch (key) {
@@ -21,20 +7,6 @@ std::optional<float> RotateOperation::keyToRotationRadians(KeyCode key) {
 	// case KeyCode::Right: return -glm::quarter_pi<float>();
 	default: return std::nullopt;
 	}
-}
-
-
-void RotateOperation::renderGizmos() {
-	if (typing) return;
-
-	context->gizmoRenderer->addLine(pivot, lastPointerPlanarPosition, {
-		.primaryColor = Color::PointerConnectorLine1,
-		.secondaryColor = Color::PointerConnectorLine2,
-		.width = Settings::Sizes.lineWidth,
-		.dashLength = Settings::Sizes.lineWidth * 3.f,
-	});
-
-	context->gizmoRenderer->render();
 }
 
 
@@ -62,6 +34,8 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 				case ActionCode::Redo:
 				case ActionCode::ToggleTransformLocally:
 				case ActionCode::ToggleTransformBothStates:
+				case ActionCode::Translate:
+				case ActionCode::Scale:
 					return false;
 				default:
 					return true;
@@ -81,9 +55,9 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
-			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
-			setRotation(rotation + angleDifference(pointerPlanarPosition, lastPointerPlanarPosition, pivot));
-			lastPointerPlanarPosition = pointerPlanarPosition;
+			glm::vec2 newPointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
+			setRotation(rotation + angleDifference(newPointerPlanarPosition, pointerPlanarPosition, pivot));
+			pointerPlanarPosition = newPointerPlanarPosition;
 			applyOperation();
 			return false; // Allow pointer move events to pass through
 		}

@@ -66,6 +66,8 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 				case ActionCode::Redo:
 				case ActionCode::ToggleTransformLocally:
 				case ActionCode::ToggleTransformBothStates:
+				case ActionCode::Rotate:
+				case ActionCode::Scale:
 					return false;
 				default:
 					return true;

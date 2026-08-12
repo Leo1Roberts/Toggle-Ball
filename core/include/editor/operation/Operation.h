@@ -43,6 +43,7 @@ public:
 protected:
 	Operation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
 		: context(context), trigger(trigger), initialPointerPlanarPosition(context->camera->screenToPlanarPosition(initialPointerPosition)) {}
+	Operation(const Operation&) = default;
 
 	const EditorContext* context;
 	TriggerType trigger{};

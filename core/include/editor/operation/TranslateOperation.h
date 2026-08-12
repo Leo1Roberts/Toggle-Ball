@@ -10,6 +10,7 @@ class TranslateOperation : public TransformOperation {
 public:
 	TranslateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
 		: TransformOperation(context, trigger, initialPointerPosition) {}
+	explicit TranslateOperation(const TransformOperation& other) : TransformOperation(other) {}
 
 	static std::optional<glm::vec2> keyToTranslationVector(KeyCode key);
 
@@ -27,7 +28,7 @@ private:
 	glm::vec2 baseAxis{};
 	glm::vec2 rawTranslation{0.f};
 
-	InfiniteLine focusedAxisLine;
+	InfiniteLine focusedAxisLine{};
 	std::vector<InfiniteLine> otherAxisLines;
 };
 

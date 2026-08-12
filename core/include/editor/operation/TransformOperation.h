@@ -10,6 +10,7 @@ class TransformOperation : public Operation {
 public:
 	TransformOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
 		: Operation(context, trigger, initialPointerPosition) {}
+	TransformOperation(const TransformOperation& other) : Operation(other) {} // Reset typing
 
 protected:
 	bool typing = false;

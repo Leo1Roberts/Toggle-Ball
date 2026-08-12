@@ -173,23 +173,59 @@ void EditorScreen::processEvent(const Event& event) {
 				} break;
 			case ActionCode::Translate:
 				if (key->action == KeyAction::Down) {
-					activeOperation = std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, pointer0Position);
-					if (!activeOperation->start(key->chord.modifiers))
-						activeOperation = nullptr;
+					if (activeOperation) {
+						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
+							auto oldOperation = std::move(activeOperation);
+							oldOperation->cancel();
+							activeOperation = std::make_unique<TranslateOperation>(*transform);
+							if (activeOperation->start(key->chord.modifiers))
+								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
+							else
+								activeOperation = nullptr;
+						}
+					} else {
+						activeOperation = std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, pointer0Position);
+						if (!activeOperation->start(key->chord.modifiers))
+							activeOperation = nullptr;
+					}
 					return;
 				} break;
 			case ActionCode::Rotate:
 				if (key->action == KeyAction::Down) {
-					activeOperation = std::make_unique<RotateOperation>(&context, TriggerType::TriggerKey, pointer0Position);
-					if (!activeOperation->start(key->chord.modifiers))
-						activeOperation = nullptr;
+					if (activeOperation) {
+						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
+							auto oldOperation = std::move(activeOperation);
+							oldOperation->cancel();
+							activeOperation = std::make_unique<RotateOperation>(*transform);
+							if (activeOperation->start(key->chord.modifiers))
+								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
+							else
+								activeOperation = nullptr;
+						}
+					} else {
+						activeOperation = std::make_unique<RotateOperation>(&context, TriggerType::TriggerKey, pointer0Position);
+						if (!activeOperation->start(key->chord.modifiers))
+							activeOperation = nullptr;
+					}
 					return;
 				} break;
 			case ActionCode::Scale:
 				if (key->action == KeyAction::Down) {
-					activeOperation = std::make_unique<ScaleOperation>(&context, TriggerType::TriggerKey, pointer0Position);
-					if (!activeOperation->start(key->chord.modifiers))
-						activeOperation = nullptr;
+					if (activeOperation) {
+						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
+							auto oldOperation = std::move(activeOperation);
+							oldOperation->cancel();
+							activeOperation = std::make_unique<ScaleOperation>(*transform);
+							if (activeOperation->start(key->chord.modifiers))
+								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
+							else
+								activeOperation = nullptr;
+						}
+					} else {
+						activeOperation = std::make_unique<ScaleOperation>(&context, TriggerType::TriggerKey, pointer0Position);
+						if (!activeOperation->start(key->chord.modifiers))
+							activeOperation = nullptr;
+					}
 					return;
 				} break;
 			case ActionCode::ToggleTransformBothStates:

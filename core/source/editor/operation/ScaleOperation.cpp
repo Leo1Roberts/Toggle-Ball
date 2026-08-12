@@ -1,35 +1,7 @@
 #include "editor/operation/ScaleOperation.h"
 
-#include "editor/GizmoRenderer.h"
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/norm.hpp"
-
-
-ScaleOperation::ScaleOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
-	: TransformOperation(context, trigger, initialPointerPosition) {
-	pointerPlanarPosition = initialPointerPlanarPosition;
-
-	auto focus = context->scene->selectionFocus;
-	if (focus.type == EntityType::Ball)
-		pivot = context->scene->ball.descriptor->initialPosition;
-	else if (focus.type == EntityType::Obstacle)
-		pivot = worldToPlanar(context->scene->obstacles[focus.index].getKinematicState()->getPosition());
-}
-
-
-void ScaleOperation::renderGizmos() {
-	if (typing) return;
-
-	context->gizmoRenderer->addLine(pivot, pointerPlanarPosition, {
-		.primaryColor = Color::PointerConnectorLine1,
-		.secondaryColor = Color::PointerConnectorLine2,
-		.width = Settings::Sizes.lineWidth,
-		.dashLength = Settings::Sizes.lineWidth * 3.f,
-	});
-
-	context->gizmoRenderer->render();
-}
 
 
 bool ScaleOperation::doProcessEvent(const Event& event) {
@@ -51,6 +23,8 @@ bool ScaleOperation::doProcessEvent(const Event& event) {
 				case ActionCode::Redo:
 				case ActionCode::ToggleTransformLocally:
 				case ActionCode::ToggleTransformBothStates:
+				case ActionCode::Translate:
+				case ActionCode::Rotate:
 					return false;
 				default:
 					return true;

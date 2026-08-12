@@ -1,14 +1,14 @@
 #ifndef SCALE_OPERATION_H
 #define SCALE_OPERATION_H
 
-#include "TransformOperation.h"
+#include "PivotOperation.h"
 
 
-class ScaleOperation : public TransformOperation {
+class ScaleOperation : public PivotOperation {
 public:
-	ScaleOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {});
-
-	void renderGizmos() override;
+	ScaleOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
+		: PivotOperation(context, trigger, initialPointerPosition) {}
+	explicit ScaleOperation(const TransformOperation& other) : PivotOperation(other) {}
 
 private:
 	bool doProcessEvent(const Event& event) override;
@@ -16,10 +16,7 @@ private:
 
 	enum class Dimension : int { MajorAndMinor, Major, Minor, COUNT };
 
-	glm::vec2 pointerPlanarPosition{};
-
 	Dimension dimension = Dimension::MajorAndMinor;
-	glm::vec2 pivot{};
 	float scale = 1.f;
 };
 
