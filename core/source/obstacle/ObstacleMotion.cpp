@@ -177,7 +177,7 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 	std::vector<Index> is_shadow;
 	shapeSpec->buildShadowMesh(vs_shadow, is_shadow);
 
-	glm::vec2 diff = getPositionB() - getPositionA();
+	glm::vec2 diff = positionB - positionA;
 	float line1Length, line2Length;
 	line1Length = line2Length = length(diff);
 	if (line1Length > 0.001f) {
@@ -188,42 +188,42 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 
 		if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
 			glm::vec2 diffPerp = diffPerpUnit * segment->getMinorRadius();
-			if (wrapAngle(getAngle() - diffAngle) > 0.f) {
-				topPointA = getPositionA() + getRotation() * segment->getRightCap() + diffPerp;
-				bottomPointA = getPositionA() + getRotation() * segment->getLeftCap() - diffPerp;
+			if (wrapAngle(angle - diffAngle) > 0.f) {
+				topPointA = positionA + rotation * segment->getRightCap() + diffPerp;
+				bottomPointA = positionA + rotation * segment->getLeftCap() - diffPerp;
 			} else {
-				topPointA = getPositionA() + getRotation() * segment->getLeftCap() + diffPerp;
-				bottomPointA = getPositionA() + getRotation() * segment->getRightCap() - diffPerp;
+				topPointA = positionA + rotation * segment->getLeftCap() + diffPerp;
+				bottomPointA = positionA + rotation * segment->getRightCap() - diffPerp;
 			}
 		} else if (auto* arc = dynamic_cast<const ArcSpec*>(shapeSpec)) {
-			float ang = wrapAngle(diffAngle - getAngle());
+			float ang = wrapAngle(diffAngle - angle);
 			if (ang > -arc->getHalfArcAngle() && ang < arc->getHalfArcAngle()) {
-				topPointA = getPositionA() + diffPerpUnit * (arc->getArcRadius() + arc->getMinorRadius());
+				topPointA = positionA + diffPerpUnit * (arc->getArcRadius() + arc->getMinorRadius());
 			} else {
-				float startAng = std::abs(wrapAngle(diffAngle - getAngle() + arc->getHalfArcAngle()));
-				float endAng = std::abs(wrapAngle(diffAngle - getAngle() - arc->getHalfArcAngle()));
+				float startAng = std::abs(wrapAngle(diffAngle - angle + arc->getHalfArcAngle()));
+				float endAng = std::abs(wrapAngle(diffAngle - angle - arc->getHalfArcAngle()));
 				if (std::abs(startAng - endAng) < 0.001f) { // Equal
-					topPointA = getPositionA() + getRotation() * arc->getRightCap() + diffPerpUnit * arc->getMinorRadius();
+					topPointA = positionA + rotation * arc->getRightCap() + diffPerpUnit * arc->getMinorRadius();
 					line1Length += arc->getRightCap().x - arc->getLeftCap().x;
 				} else if (startAng < endAng)
-					topPointA = getPositionA() + getRotation() * arc->getRightCap() + diffPerpUnit * arc->getMinorRadius();
+					topPointA = positionA + rotation * arc->getRightCap() + diffPerpUnit * arc->getMinorRadius();
 				else
-					topPointA = getPositionA() + getRotation() * arc->getLeftCap() + diffPerpUnit * arc->getMinorRadius();
+					topPointA = positionA + rotation * arc->getLeftCap() + diffPerpUnit * arc->getMinorRadius();
 			}
 
-			ang = wrapAngle(diffAngle - getAngle() + glm::pi<float>());
+			ang = wrapAngle(diffAngle - angle + glm::pi<float>());
 			if (ang > -arc->getHalfArcAngle() && ang < arc->getHalfArcAngle()) {
-				bottomPointA = getPositionA() - diffPerpUnit * (arc->getArcRadius() + arc->getMinorRadius());
+				bottomPointA = positionA - diffPerpUnit * (arc->getArcRadius() + arc->getMinorRadius());
 			} else {
-				float startAng = std::abs(wrapAngle(diffAngle - getAngle() + arc->getHalfArcAngle() + glm::pi<float>()));
-				float endAng = std::abs(wrapAngle(diffAngle - getAngle() - arc->getHalfArcAngle() + glm::pi<float>()));
+				float startAng = std::abs(wrapAngle(diffAngle - angle + arc->getHalfArcAngle() + glm::pi<float>()));
+				float endAng = std::abs(wrapAngle(diffAngle - angle - arc->getHalfArcAngle() + glm::pi<float>()));
 				if (std::abs(startAng - endAng) < 0.001f) { // Equal
-					bottomPointA = getPositionA() + getRotation() * arc->getLeftCap() - diffPerpUnit * arc->getMinorRadius();
+					bottomPointA = positionA + rotation * arc->getLeftCap() - diffPerpUnit * arc->getMinorRadius();
 					line2Length += arc->getRightCap().x- arc->getLeftCap().x;
 				} else if (startAng < endAng)
-					bottomPointA = getPositionA() + getRotation() * arc->getRightCap() - diffPerpUnit * arc->getMinorRadius();
+					bottomPointA = positionA + rotation * arc->getRightCap() - diffPerpUnit * arc->getMinorRadius();
 				else
-					bottomPointA = getPositionA() + getRotation() * arc->getLeftCap() - diffPerpUnit * arc->getMinorRadius();
+					bottomPointA = positionA + rotation * arc->getLeftCap() - diffPerpUnit * arc->getMinorRadius();
 			}
 		} else return;
 
@@ -293,8 +293,8 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		}
 	}
 
-	glm::mat3 rot = angleToRotation3D(getAngle());
-	for (glm::vec3 pos : {planarToWorld(getPositionA()), planarToWorld(getPositionB())}) {
+	glm::mat3 rot = angleToRotation3D(angle);
+	for (glm::vec3 pos : {planarToWorld(positionA), planarToWorld(positionB)}) {
 		auto offset = (Index)vs.size();
 
 		std::ranges::transform(vs_shadow, std::back_inserter(vs), [pos, rot](const ObjectVertex& v) {
@@ -319,19 +319,19 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 	const float dotDiameter = uiToWorldScale * Settings::Sizes.outlineWidth;
 
 	if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
-		dotsArcAngle = std::clamp(getAngleB() - getAngleA(), -glm::two_pi<float>(), glm::two_pi<float>());
+		dotsArcAngle = std::clamp(angleB - angleA, -glm::two_pi<float>(), glm::two_pi<float>());
 		dotsArc1Radius = length(segment->getRightCap()) + segment->getMinorRadius() - dotDiameter / 2.f;
 		dotsArc2Radius = length(segment->getLeftCap()) + segment->getMinorRadius() - dotDiameter / 2.f;
-		start1 = getAngleA();
-		start2 = getAngleA() + glm::pi<float>();
+		start1 = angleA;
+		start2 = angleA + glm::pi<float>();
 	} else if (auto* arc = dynamic_cast<const ArcSpec*>(shapeSpec)) {
-		float angDiff = getAngleB() - getAngleA();
+		float angDiff = angleB - angleA;
 		if (angDiff < 0) {
 			dotsArcAngle = std::clamp(angDiff + arc->getArcAngle(), -glm::two_pi<float>() + arc->getArcAngle(), 0.f);
-			start1 = start2 = getAngleA() + glm::half_pi<float>() - arc->getHalfArcAngle();
+			start1 = start2 = angleA + glm::half_pi<float>() - arc->getHalfArcAngle();
 		} else {
 			dotsArcAngle = std::clamp(angDiff - arc->getArcAngle(), 0.f, glm::two_pi<float>() - arc->getArcAngle());
-			start1 = start2 = getAngleA() + glm::half_pi<float>() + arc->getHalfArcAngle();
+			start1 = start2 = angleA + glm::half_pi<float>() + arc->getHalfArcAngle();
 		}
 		dotsArc1Radius = arc->getArcRadius() + arc->getMinorRadius() - dotDiameter / 2.f;
 		dotsArc2Radius = arc->getArcRadius() - arc->getMinorRadius() + dotDiameter / 2.f;
@@ -406,7 +406,7 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 		dotAngle += dotShift2;
 	}
 
-	for (float angle : {getAngleA(), getAngleB()}) {
+	for (float angle : {angleA, angleB}) {
 		auto offset = (Index)vs.size();
 
 		glm::mat3 rot = angleToRotation3D(angle);
@@ -470,15 +470,15 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 			float y = std::cos(ang);
 			float xrh = x * segment->getMinorRadius();
 			float yrh = y * segment->getMinorRadius();
-			glm::vec2 rotatedRightCap = getRotation() * (segment->getRightCap() + glm::vec2(xrh, yrh));
-			glm::vec2 rotatedLeftCap = getRotation() * (segment->getLeftCap() + glm::vec2(-xrh, yrh));
-			vs.emplace_back(planarToWorld(rotatedRightCap + getPosition1()), glm::vec2(), glm::vec3());
-			vs.emplace_back(planarToWorld(rotatedRightCap + getPosition2()), glm::vec2(), glm::vec3());
-			vs.emplace_back(planarToWorld(rotatedLeftCap + getPosition1()), glm::vec2(), glm::vec3());
-			vs.emplace_back(planarToWorld(rotatedLeftCap + getPosition2()), glm::vec2(), glm::vec3());
+			glm::vec2 rotatedRightCap = rotation * (segment->getRightCap() + glm::vec2(xrh, yrh));
+			glm::vec2 rotatedLeftCap = rotation * (segment->getLeftCap() + glm::vec2(-xrh, yrh));
+			vs.emplace_back(planarToWorld(rotatedRightCap + position1), glm::vec2(), glm::vec3());
+			vs.emplace_back(planarToWorld(rotatedRightCap + position2), glm::vec2(), glm::vec3());
+			vs.emplace_back(planarToWorld(rotatedLeftCap + position1), glm::vec2(), glm::vec3());
+			vs.emplace_back(planarToWorld(rotatedLeftCap + position2), glm::vec2(), glm::vec3());
 		}
-		vs.emplace_back(planarToWorld(getRotation() * segment->getRightCap() + getPosition1()), glm::vec2(), glm::vec3());
-		vs.emplace_back(planarToWorld(getRotation() * segment->getLeftCap() + getPosition1()), glm::vec2(), glm::vec3());
+		vs.emplace_back(planarToWorld(rotation * segment->getRightCap() + position1), glm::vec2(), glm::vec3());
+		vs.emplace_back(planarToWorld(rotation * segment->getLeftCap() + position1), glm::vec2(), glm::vec3());
 
 		for (int i = 0; i < SECTORS_PER_SEMICIRCLE * 4; i += 4) {
 			// Join caps
@@ -543,15 +543,15 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 			float y = std::cos(ang);
 			float xrh = x * arc->getMinorRadius();
 			float yrh = y * arc->getMinorRadius();
-			glm::vec2 rotatedRightCap = getRotation() * (arc->getRightCap() + glm::vec2(xrh, yrh));
-			glm::vec2 rotatedLeftCap = getRotation() * (arc->getLeftCap() + glm::vec2(-xrh, yrh));
-			vs.emplace_back(planarToWorld(rotatedRightCap + getPosition1()), glm::vec2(), glm::vec3());
-			vs.emplace_back(planarToWorld(rotatedRightCap + getPosition2()), glm::vec2(), glm::vec3());
-			vs.emplace_back(planarToWorld(rotatedLeftCap + getPosition1()), glm::vec2(), glm::vec3());
-			vs.emplace_back(planarToWorld(rotatedLeftCap + getPosition2()), glm::vec2(), glm::vec3());
+			glm::vec2 rotatedRightCap = rotation * (arc->getRightCap() + glm::vec2(xrh, yrh));
+			glm::vec2 rotatedLeftCap = rotation * (arc->getLeftCap() + glm::vec2(-xrh, yrh));
+			vs.emplace_back(planarToWorld(rotatedRightCap + position1), glm::vec2(), glm::vec3());
+			vs.emplace_back(planarToWorld(rotatedRightCap + position2), glm::vec2(), glm::vec3());
+			vs.emplace_back(planarToWorld(rotatedLeftCap + position1), glm::vec2(), glm::vec3());
+			vs.emplace_back(planarToWorld(rotatedLeftCap + position2), glm::vec2(), glm::vec3());
 		}
-		vs.emplace_back(planarToWorld(getRotation() * arc->getRightCap() + getPosition1()), glm::vec2(), glm::vec3());
-		vs.emplace_back(planarToWorld(getRotation() * arc->getLeftCap() + getPosition1()), glm::vec2(), glm::vec3());
+		vs.emplace_back(planarToWorld(rotation * arc->getRightCap() + position1), glm::vec2(), glm::vec3());
+		vs.emplace_back(planarToWorld(rotation * arc->getLeftCap() + position1), glm::vec2(), glm::vec3());
 
 		for (int i = 0; i < SECTORS_PER_SEMICIRCLE * 4; i += 4) {
 			// Join caps
@@ -591,12 +591,12 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 				float yroh = y * (arc->getArcRadius() + arc->getMinorRadius());
 				float xrih = x * (arc->getArcRadius() - arc->getMinorRadius());
 				float yrih = y * (arc->getArcRadius() - arc->getMinorRadius());
-				glm::vec2 rotatedInner = getRotation() * glm::vec2(xrih, yrih);
-				glm::vec2 rotatedOuter = getRotation() * glm::vec2(xroh, yroh);
-				vs.emplace_back(planarToWorld(rotatedInner + getPosition1()), glm::vec2(), glm::vec3());
-				vs.emplace_back(planarToWorld(rotatedInner + getPosition2()), glm::vec2(), glm::vec3());
-				vs.emplace_back(planarToWorld(rotatedOuter + getPosition1()), glm::vec2(), glm::vec3());
-				vs.emplace_back(planarToWorld(rotatedOuter + getPosition2()), glm::vec2(), glm::vec3());
+				glm::vec2 rotatedInner = rotation * glm::vec2(xrih, yrih);
+				glm::vec2 rotatedOuter = rotation * glm::vec2(xroh, yroh);
+				vs.emplace_back(planarToWorld(rotatedInner + position1), glm::vec2(), glm::vec3());
+				vs.emplace_back(planarToWorld(rotatedInner + position2), glm::vec2(), glm::vec3());
+				vs.emplace_back(planarToWorld(rotatedOuter + position1), glm::vec2(), glm::vec3());
+				vs.emplace_back(planarToWorld(rotatedOuter + position2), glm::vec2(), glm::vec3());
 			}
 			constexpr int START_INDEX = 4 * (SECTORS_PER_SEMICIRCLE + 1) + 2;
 			for (int i = START_INDEX; i < START_INDEX + NUM_SECTORS * 4; i += 4) {
@@ -629,14 +629,14 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 
 void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const {
 	if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
-		bool fullCircle = std::abs(getAngle2() - getAngle1()) >= glm::two_pi<float>();
+		bool fullCircle = std::abs(angle2 - angle1) >= glm::two_pi<float>();
 		float domainStartAngle, domainEndAngle;
 		if (fullCircle) {
 			domainStartAngle = 0.f;
 			domainEndAngle = glm::two_pi<float>();
 		} else {
-			domainStartAngle = std::min(getAngle1(), getAngle2());
-			domainEndAngle = std::max(getAngle1(), getAngle2());
+			domainStartAngle = std::min(angle1, angle2);
+			domainEndAngle = std::max(angle1, angle2);
 		}
 
 		const int NUM_SECTORS = (int)std::ceil((float)SECTORS_PER_SEMICIRCLE * (domainEndAngle - domainStartAngle) * glm::one_over_pi<float>());
@@ -712,15 +712,15 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			}
 		}
 	} else if (auto* arc = dynamic_cast<const ArcSpec*>(shapeSpec)) {
-		bool fullCircle = std::abs(getAngle2() - getAngle1()) + arc->getArcAngle() >= glm::two_pi<float>();
+		bool fullCircle = std::abs(angle2 - angle1) + arc->getArcAngle() >= glm::two_pi<float>();
 		float startAngle, endAngle;
 		glm::vec2 start, end;
 		if (fullCircle) {
 			startAngle = 0.f;
 			endAngle = glm::two_pi<float>();
 		} else {
-			startAngle = std::min(getAngle1(), getAngle2()) - arc->getHalfArcAngle();
-			endAngle = std::max(getAngle1(), getAngle2()) + arc->getHalfArcAngle();
+			startAngle = std::min(angle1, angle2) - arc->getHalfArcAngle();
+			endAngle = std::max(angle1, angle2) + arc->getHalfArcAngle();
 			start = glm::vec2(-std::sin(startAngle), std::cos(startAngle)) * arc->getArcRadius();
 			end = glm::vec2(-std::sin(endAngle), std::cos(endAngle)) * arc->getArcRadius();
 		}
@@ -783,44 +783,44 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 
 
 void StaticSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
-	kinematicState.setPosition(planarToWorld(getPosition()));
-	kinematicState.setAngle(getAngle());
+	kinematicState.setPosition(planarToWorld(position));
+	kinematicState.setAngle(angle);
 	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularSpeed(0.f);
 }
 
 void TogglingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
-	kinematicState.setPosition(planarToWorld(getPositionA()));
-	kinematicState.setAngle(getAngle());
+	kinematicState.setPosition(planarToWorld(positionA));
+	kinematicState.setAngle(angle);
 	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularSpeed(0.f);
 }
 
 void TogglingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
-	kinematicState.setPosition(planarToWorld(getPosition()));
-	kinematicState.setAngle(getAngleA());
+	kinematicState.setPosition(planarToWorld(position));
+	kinematicState.setAngle(angleA);
 	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularSpeed(0.f);
 }
 
 void SpinningSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
-	kinematicState.setPosition(planarToWorld(getPosition()));
-	kinematicState.setAngle(getInitialAngle());
+	kinematicState.setPosition(planarToWorld(position));
+	kinematicState.setAngle(initialAngle);
 	kinematicState.setVelocity(glm::vec3(0.f));
-	kinematicState.setAngularSpeed(getAngularSpeedA());
+	kinematicState.setAngularSpeed(angularSpeedA);
 }
 
 void OscillatingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
-	kinematicState.setPosition(planarToWorld(getPosition1()));
-	kinematicState.setAngle(getAngle());
+	kinematicState.setPosition(planarToWorld(position1));
+	kinematicState.setAngle(angle);
 	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularSpeed(0.f);
 	kinematicState.setPhase(0.f);
 }
 
 void OscillatingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
-	kinematicState.setPosition(planarToWorld(getPosition()));
-	kinematicState.setAngle(getAngle1());
+	kinematicState.setPosition(planarToWorld(position));
+	kinematicState.setAngle(angle1);
 	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularSpeed(0.f);
 	kinematicState.setPhase(0.f);
@@ -828,57 +828,57 @@ void OscillatingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicS
 
 
 void TogglingPositionSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setPosition(planarToWorld(glm::mix(getPositionA(), getPositionB(), smoother.getCurrentPosition())));
-	kinematicState.setVelocity(planarToWorld((getPositionB() - getPositionA()) * smoother.getCurrentVelocity()));
+	kinematicState.setPosition(planarToWorld(glm::mix(positionA, positionB, smoother.getCurrentPosition())));
+	kinematicState.setVelocity(planarToWorld((positionB - positionA) * smoother.getCurrentVelocity()));
 }
 
 void TogglingAngleSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setAngle(glm::mix(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
-	kinematicState.setAngularSpeed((getAngleB() - getAngleA()) * smoother.getCurrentVelocity());
+	kinematicState.setAngle(glm::mix(angleA, angleB, smoother.getCurrentPosition()));
+	kinematicState.setAngularSpeed((angleB - angleA) * smoother.getCurrentVelocity());
 }
 
 void SpinningSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setAngularSpeed(glm::mix(getAngularSpeedA(), getAngularSpeedB(), smoother.getCurrentPosition()));
+	kinematicState.setAngularSpeed(glm::mix(angularSpeedA, angularSpeedB, smoother.getCurrentPosition()));
 	kinematicState.setAngle(kinematicState.getAngle() + kinematicState.getAngularSpeed() * PHYSICS_TIMESTEP);
 }
 
 void OscillatingPositionSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	float angularFrequency = glm::mix(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
+	float angularFrequency = glm::mix(angularFrequencyA, angularFrequencyB, smoother.getCurrentPosition());
 	kinematicState.setPhase(kinematicState.getPhase() + angularFrequency * PHYSICS_TIMESTEP);
-	kinematicState.setPosition(planarToWorld(glm::mix(getPosition1(), getPosition2(), 0.5f - 0.5f * std::cos(kinematicState.getPhase()))));
-	kinematicState.setVelocity(planarToWorld((getPosition2() - getPosition1()) * (0.5f * std::sin(kinematicState.getPhase()) * angularFrequency)));
+	kinematicState.setPosition(planarToWorld(glm::mix(position1, position2, 0.5f - 0.5f * std::cos(kinematicState.getPhase()))));
+	kinematicState.setVelocity(planarToWorld((position2 - position1) * (0.5f * std::sin(kinematicState.getPhase()) * angularFrequency)));
 }
 
 void OscillatingAngleSpec::stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	float angularFrequency = glm::mix(getAngularFrequencyA(), getAngularFrequencyB(), smoother.getCurrentPosition());
+	float angularFrequency = glm::mix(angularFrequencyA, angularFrequencyB, smoother.getCurrentPosition());
 	kinematicState.setPhase(kinematicState.getPhase() + angularFrequency * PHYSICS_TIMESTEP);
-	kinematicState.setAngle(glm::mix(getAngle1(), getAngle2(), 0.5f - 0.5f * std::cos(kinematicState.getPhase())));
-	kinematicState.setAngularSpeed((getAngle2() - getAngle1()) * (0.5f * std::sin(kinematicState.getPhase()) * angularFrequency));
+	kinematicState.setAngle(glm::mix(angle1, angle2, 0.5f - 0.5f * std::cos(kinematicState.getPhase())));
+	kinematicState.setAngularSpeed((angle2 - angle1) * (0.5f * std::sin(kinematicState.getPhase()) * angularFrequency));
 }
 
 
 void TogglingPositionSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setPosition(planarToWorld(glm::mix(getPositionA(), getPositionB(), smoother.getCurrentPosition())));
+	kinematicState.setPosition(planarToWorld(glm::mix(positionA, positionB, smoother.getCurrentPosition())));
 }
 
 void TogglingAngleSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
-	kinematicState.setAngle(glm::mix(getAngleA(), getAngleB(), smoother.getCurrentPosition()));
+	kinematicState.setAngle(glm::mix(angleA, angleB, smoother.getCurrentPosition()));
 }
 
 void SpinningSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother&) const {
-	kinematicState.setAngle(getInitialAngle());
+	kinematicState.setAngle(initialAngle);
 }
 
 void OscillatingPositionSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	bool toggled = smoother.getCurrentPosition() > 0.5f;
 	kinematicState.setPhase(toggled ? glm::pi<float>() : 0.f);
-	kinematicState.setPosition(planarToWorld(toggled ? getPosition2() : getPosition1()));
+	kinematicState.setPosition(planarToWorld(toggled ? position2 : position1));
 }
 
 void OscillatingAngleSpec::updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const {
 	bool toggled = smoother.getCurrentPosition() > 0.5f;
 	kinematicState.setPhase(toggled ? glm::pi<float>() : 0.f);
-	kinematicState.setAngle(toggled ? getAngle2() : getAngle1());
+	kinematicState.setAngle(toggled ? angle2 : angle1);
 }
 
 

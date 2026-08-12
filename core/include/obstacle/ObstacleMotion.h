@@ -180,10 +180,6 @@ private:
 	}
 
 	void buildDomainMesh(std::vector<ObjectVertex>&, std::vector<Index>&, const AbstractShapeSpec*, float) const override {}
-
-	[[nodiscard]] glm::vec2 getPosition() const { return position; }
-	[[nodiscard]] float getAngle() const { return angle; }
-	[[nodiscard]] glm::mat2 getRotation() const { return rotation; }
 };
 
 class TogglingPositionSpec : public IMotionSpec {
@@ -260,11 +256,6 @@ private:
 	}
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const override;
-
-	[[nodiscard]] float getAngle() const { return angle; }
-	[[nodiscard]] glm::mat2 getRotation() const { return rotation; }
-	[[nodiscard]] glm::vec2 getPositionA() const { return positionA; }
-	[[nodiscard]] glm::vec2 getPositionB() const { return positionB; }
 };
 
 class TogglingAngleSpec : public IMotionSpec {
@@ -339,10 +330,6 @@ private:
 	}
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const override;
-
-	[[nodiscard]] glm::vec2 getPosition() const { return position; }
-	[[nodiscard]] float getAngleA() const { return angleA; }
-	[[nodiscard]] float getAngleB() const { return angleB; }
 };
 
 class SpinningSpec : public IMotionSpec {
@@ -427,11 +414,6 @@ private:
 	}
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
-
-	[[nodiscard]] glm::vec2 getPosition() const { return position; }
-	[[nodiscard]] float getInitialAngle() const { return initialAngle; }
-	[[nodiscard]] float getAngularSpeedA() const { return angularSpeedA; }
-	[[nodiscard]] float getAngularSpeedB() const { return angularSpeedB; }
 };
 
 class OscillatingPositionSpec : public IMotionSpec {
@@ -524,13 +506,6 @@ private:
 	}
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
-
-	[[nodiscard]] glm::vec2 getPosition1() const { return position1; }
-	[[nodiscard]] glm::vec2 getPosition2() const { return position2; }
-	[[nodiscard]] float getAngle() const { return angle; }
-	[[nodiscard]] glm::mat2 getRotation() const { return rotation; }
-	[[nodiscard]] float getAngularFrequencyA() const { return angularFrequencyA; }
-	[[nodiscard]] float getAngularFrequencyB() const { return angularFrequencyB; }
 };
 
 class OscillatingAngleSpec : public IMotionSpec {
@@ -618,12 +593,6 @@ private:
 	}
 
 	void buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, const AbstractShapeSpec* shapeSpec, float) const override;
-
-	[[nodiscard]] glm::vec2 getPosition() const { return position; }
-	[[nodiscard]] float getAngle1() const { return angle1; }
-	[[nodiscard]] float getAngle2() const { return angle2; }
-	[[nodiscard]] float getAngularFrequencyA() const { return angularFrequencyA; }
-	[[nodiscard]] float getAngularFrequencyB() const { return angularFrequencyB; }
 };
 
 
