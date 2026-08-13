@@ -5,7 +5,7 @@
 #include "Operation.h"
 #include "io/TextInputBuffer.h"
 
-class UIText;
+class UITextBubble;
 
 
 class TransformOperation : public Operation {
@@ -21,7 +21,7 @@ protected:
 	bool typing = false;
 	TextInputBuffer textInput{TextInputBuffer::Float, TextInputMode::Simple};
 
-	UIText* detailsText;
+	UITextBubble* detailsBubble = nullptr;
 
 private:
 	void createUI();

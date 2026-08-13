@@ -1,5 +1,7 @@
 #include "editor/operation/TranslateOperation.h"
 
+#include "ui/UiTextBubble.h"
+
 
 namespace Axis {
 	glm::vec2 X{1.f, 0.f};
@@ -26,8 +28,8 @@ void TranslateOperation::updateDetailsText() {
 			text += floatToString(magnitude, 3, true);
 	}
 
-	detailsText->setText(text);
-	detailsText->updateBounds(detailsText->getParent()->getAbsoluteBounds());
+	detailsBubble->setText(text);
+	detailsBubble->updateBounds(detailsBubble->getParent()->getAbsoluteBounds());
 }
 
 

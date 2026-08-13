@@ -77,10 +77,10 @@ public:
 protected:
 	[[nodiscard]] virtual bool containsPrecise(glm::vec2 point) const { return true; }
 
+	Rectangle absoluteBounds;
+
 private:
 	virtual void doUpdate(microseconds dt) {}
-
-	Rectangle absoluteBounds;
 
 	UINode* parent = nullptr;
 	std::vector<std::unique_ptr<UINode>> children;

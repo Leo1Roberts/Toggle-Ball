@@ -1,7 +1,7 @@
 #include "ui/UINode.h"
 
 
-void UINode::updateBounds(Rectangle parentBounds) {
+void UINode::updateBounds(Rectangle parentBounds) { // Similar code in UITextBubble
 	float ax = 0.f;
 	float ay = 0.f;
 

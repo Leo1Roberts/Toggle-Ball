@@ -1,13 +1,13 @@
 #include "editor/operation/RotateOperation.h"
 
-#include "ui/UIText.h"
+#include "ui/UiTextBubble.h"
 
 
 void RotateOperation::updateDetailsText() {
 	std::string text = "Rotation: ";
 	text += typing ? textInput.getValue<const std::string&>() : floatToString(to_deg(rotation), 3, true);
-	detailsText->setText(text);
-	detailsText->updateBounds(detailsText->getParent()->getAbsoluteBounds());
+	detailsBubble->setText(text);
+	detailsBubble->updateBounds(detailsBubble->getParent()->getAbsoluteBounds());
 }
 
 

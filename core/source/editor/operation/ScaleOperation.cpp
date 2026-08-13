@@ -1,6 +1,6 @@
 #include "editor/operation/ScaleOperation.h"
 
-#include "ui/UIText.h"
+#include "ui/UiTextBubble.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/norm.hpp"
@@ -20,8 +20,8 @@ void ScaleOperation::updateDetailsText() {
 	}
 	std::string text = "Scale" + dimensionString + ": ";
 	text += typing ? textInput.getValue<const std::string&>() : floatToString(scale, 3, true);
-	detailsText->setText(text);
-	detailsText->updateBounds(detailsText->getParent()->getAbsoluteBounds());
+	detailsBubble->setText(text);
+	detailsBubble->updateBounds(detailsBubble->getParent()->getAbsoluteBounds());
 }
 
 

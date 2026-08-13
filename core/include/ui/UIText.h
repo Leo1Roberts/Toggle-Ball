@@ -34,7 +34,7 @@ struct TextLayout {
 	std::vector<TextGlyph> glyphs;
 
 	void reset() {
-		totalSize = {};
+		totalSize = glm::vec2(0.f);
 		cursorPositions.clear();
 		charAdvances.clear();
 		glyphs.clear();

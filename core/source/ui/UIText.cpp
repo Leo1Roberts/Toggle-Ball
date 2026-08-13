@@ -45,7 +45,7 @@ void UIText::updateTextLayout() {
 	int currentLineStart = 0;
 	float currentLineWidth = 0.f;
 
-	for (int i = 0; i < (int)text.length(); i++) {
+	for (int i = 0; i < text.length(); i++) {
 		char c = text[i];
 		if (c == '\n') {
 			float lineWidth = currentLineWidth;
