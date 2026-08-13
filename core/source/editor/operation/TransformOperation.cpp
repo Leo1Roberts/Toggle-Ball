@@ -12,7 +12,7 @@ void TransformOperation::createUI() {
 	detailsPopup->layout = {
 		.anchor = Anchor::TopCentre,
 		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = 300.f, .height = 30.f,
+		.width = 350.f, .height = 30.f,
 		.offset = {0.f, 10.f}
 	};
 

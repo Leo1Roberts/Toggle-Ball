@@ -77,7 +77,7 @@ enum class ActionCode {
 
 	LockToXAxis, LockToYAxis,
 
-	ToggleTransformBothStates, ToggleTransformLocally,
+	ToggleTransformBothStates, ToggleTransformIndividually,
 };
 
 
@@ -118,7 +118,7 @@ private:
 		{ ActionCode::LockToXAxis,               "Constrain to X axis"          },
 		{ ActionCode::LockToYAxis,               "Constrain to Y axis"          },
 		{ ActionCode::ToggleTransformBothStates, "Toggle transform both states" },
-		{ ActionCode::ToggleTransformLocally,    "Toggle transform locally"     },
+		{ ActionCode::ToggleTransformIndividually, "Toggle transform individually"     },
 	};
 };
 

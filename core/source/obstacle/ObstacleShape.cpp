@@ -650,7 +650,7 @@ bool SegmentSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, Selec
     glm::vec2 leftCapToBox = boxCentre - leftCapPos;
 
     float x = dot(leftCapToBox, leftToRight) / lengthSq; // Projection along length
-    float y = dot(leftCapToBox, upOffset) / length2(upOffset); // Projection along width
+    float y = dot(leftCapToBox, upOffset) / length2(upOffset); // Projection along width. TODO: make sure minor radius is never 0, to avoid crash
 
     return x >= 0.f && x <= 1.f && std::abs(y) <= 1.f;
 }

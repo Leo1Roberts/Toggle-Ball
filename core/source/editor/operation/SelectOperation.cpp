@@ -92,7 +92,7 @@ bool SelectOperation::doProcessEvent(const Event& event) {
 				switch (*actionCode) {
 				case ActionCode::Toggle:
 				case ActionCode::InstantToggle:
-				case ActionCode::ToggleTransformLocally:
+				case ActionCode::ToggleTransformIndividually:
 				case ActionCode::ToggleTransformBothStates:
 					return false;
 				default:

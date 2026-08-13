@@ -13,7 +13,7 @@ class UINode;
 
 struct EditorQuickSettings {
 	bool transformBothStates = false;
-	bool transformLocally = false;
+	bool transformIndividually = false;
 };
 
 struct EditorContext {

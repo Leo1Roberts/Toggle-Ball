@@ -4,9 +4,9 @@
 
 
 void RotateOperation::updateDetailsText() {
-	std::string title = "Rotation: ";
-	std::string value = typing ? textInput.getValue<const std::string&>() : floatToString(to_deg(rotation), 3, true);
-	detailsText->setText(title + value);
+	std::string text = "Rotation: ";
+	text += typing ? textInput.getValue<const std::string&>() : floatToString(to_deg(rotation), 3, true);
+	detailsText->setText(text);
 	detailsText->updateBounds(detailsText->getParent()->getAbsoluteBounds());
 }
 
@@ -41,7 +41,7 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 				switch (*actionCode) {
 				case ActionCode::Undo:
 				case ActionCode::Redo:
-				case ActionCode::ToggleTransformLocally:
+				case ActionCode::ToggleTransformIndividually:
 				case ActionCode::ToggleTransformBothStates:
 				case ActionCode::Translate:
 				case ActionCode::Scale:
@@ -103,7 +103,7 @@ void RotateOperation::applyOperation() {
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			obstacle.rotateBy(rotation, rotationMatrix, pivot, context->quickSettings->transformBothStates, context->scene->isToggled(), context->quickSettings->transformLocally,
+			obstacle.rotateBy(rotation, rotationMatrix, pivot, context->quickSettings->transformBothStates, context->scene->isToggled(), context->quickSettings->transformIndividually,
 				context->scene->getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();

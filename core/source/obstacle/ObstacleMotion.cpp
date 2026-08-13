@@ -901,19 +901,19 @@ void OscillatingPositionSpec::translateBy(glm::vec2 vector, bool stateless, bool
 		position2 += vector;
 }
 
-void StaticSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool local, const IMotionSpec* base) {
+void StaticSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const StaticSpec*)base;
 	setAngle(baseSpec->angle + radians);
 
-	if (local)
+	if (individual)
 		position = baseSpec->position;
 	else
 		position = pivot + rotationMatrix * (baseSpec->position - pivot);
 }
-void TogglingPositionSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool local, const IMotionSpec* base) {
+void TogglingPositionSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const TogglingPositionSpec*)base;
 	setAngle(baseSpec->angle + radians);
-	if (local) {
+	if (individual) {
 		positionA = baseSpec->positionA;
 		positionB = baseSpec->positionB;
 	} else {
@@ -921,7 +921,7 @@ void TogglingPositionSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm
 		positionB = pivot + rotationMatrix * (baseSpec->positionB - pivot);
 	}
 }
-void TogglingAngleSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool local, const IMotionSpec* base) {
+void TogglingAngleSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const TogglingAngleSpec*)base;
 	angleA = baseSpec->angleA;
 	angleB = baseSpec->angleB;
@@ -929,23 +929,23 @@ void TogglingAngleSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::v
 		angleA += radians;
 	if (stateless || toggled)
 		angleB += radians;
-	if (local)
+	if (individual)
 		position = baseSpec->position;
 	else
 		position = pivot + rotationMatrix * (baseSpec->position - pivot);
 }
-void SpinningSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool local, const IMotionSpec* base) {
+void SpinningSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const SpinningSpec*)base;
 	setInitialAngle(baseSpec->initialAngle + radians);
-	if (local)
+	if (individual)
 		position = baseSpec->position;
 	else
 		position = pivot + rotationMatrix * (baseSpec->position - pivot);
 }
-void OscillatingPositionSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool local, const IMotionSpec* base) {
+void OscillatingPositionSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const OscillatingPositionSpec*)base;
 	setAngle(baseSpec->angle + radians);
-	if (local) {
+	if (individual) {
 		position1 = baseSpec->position1;
 		position2 = baseSpec->position2;
 	} else {
@@ -953,7 +953,7 @@ void OscillatingPositionSpec::rotateBy(float radians, glm::mat2 rotationMatrix, 
 		position2 = pivot + rotationMatrix * (baseSpec->position2 - pivot);
 	}
 }
-void OscillatingAngleSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool local, const IMotionSpec* base) {
+void OscillatingAngleSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const OscillatingAngleSpec*)base;
 	angle1 = baseSpec->angle1;
 	angle2 = baseSpec->angle2;
@@ -961,22 +961,22 @@ void OscillatingAngleSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm
 		angle1 += radians;
 	if (stateless || toggled)
 		angle2 += radians;
-	if (local)
+	if (individual)
 		position = baseSpec->position;
 	else
 		position = pivot + rotationMatrix * (baseSpec->position - pivot);
 }
 
-void StaticSpec::scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) {
+void StaticSpec::scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const StaticSpec*)base;
-	if (local)
+	if (individual)
 		position = baseSpec->position;
 	else
 		position = pivot + factor * (baseSpec->position - pivot);
 }
-void TogglingPositionSpec::scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) {
+void TogglingPositionSpec::scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const TogglingPositionSpec*)base;
-	if (local) {
+	if (individual) {
 		positionA = baseSpec->positionA;
 		positionB = baseSpec->positionB;
 	} else {
@@ -984,23 +984,23 @@ void TogglingPositionSpec::scaleBy(float factor, glm::vec2 pivot, bool local, co
 		positionB = pivot + factor * (baseSpec->positionB - pivot);
 	}
 }
-void TogglingAngleSpec::scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) {
+void TogglingAngleSpec::scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const TogglingAngleSpec*)base;
-	if (local)
+	if (individual)
 		position = baseSpec->position;
 	else
 		position = pivot + factor * (baseSpec->position - pivot);
 }
-void SpinningSpec::scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) {
+void SpinningSpec::scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const SpinningSpec*)base;
-	if (local)
+	if (individual)
 		position = baseSpec->position;
 	else
 		position = pivot + factor * (baseSpec->position - pivot);
 }
-void OscillatingPositionSpec::scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) {
+void OscillatingPositionSpec::scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const OscillatingPositionSpec*)base;
-	if (local) {
+	if (individual) {
 		position1 = baseSpec->position1;
 		position2 = baseSpec->position2;
 	} else {
@@ -1008,9 +1008,9 @@ void OscillatingPositionSpec::scaleBy(float factor, glm::vec2 pivot, bool local,
 		position2 = pivot + factor * (baseSpec->position2 - pivot);
 	}
 }
-void OscillatingAngleSpec::scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) {
+void OscillatingAngleSpec::scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const OscillatingAngleSpec*)base;
-	if (local)
+	if (individual)
 		position = baseSpec->position;
 	else
 		position = pivot + factor * (baseSpec->position - pivot);

@@ -7,9 +7,20 @@
 
 
 void ScaleOperation::updateDetailsText() {
-	std::string title = "Scale: ";
-	std::string value = typing ? textInput.getValue<const std::string&>() : floatToString(scale, 3, true);
-	detailsText->setText(title + value);
+	std::string dimensionString;
+	switch (dimension) {
+	case Dimension::Major:
+		dimensionString = " length";
+		break;
+	case Dimension::Minor:
+		dimensionString = " width";
+		break;
+	default:
+		dimensionString = "";
+	}
+	std::string text = "Scale" + dimensionString + ": ";
+	text += typing ? textInput.getValue<const std::string&>() : floatToString(scale, 3, true);
+	detailsText->setText(text);
 	detailsText->updateBounds(detailsText->getParent()->getAbsoluteBounds());
 }
 
@@ -30,7 +41,7 @@ bool ScaleOperation::doProcessEvent(const Event& event) {
 					return true;
 				case ActionCode::Undo:
 				case ActionCode::Redo:
-				case ActionCode::ToggleTransformLocally:
+				case ActionCode::ToggleTransformIndividually:
 				case ActionCode::ToggleTransformBothStates:
 				case ActionCode::Translate:
 				case ActionCode::Rotate:
@@ -91,13 +102,13 @@ void ScaleOperation::applyOperation() {
 	}
 
 	if (ball->isSelected())
-		ball->scaleBy(scale, pivot, context->quickSettings->transformLocally,
+		ball->scaleBy(scale, pivot, context->quickSettings->transformIndividually,
 			context->scene->getCurrentNode()->level.ballDescriptor.get());
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			obstacle.scaleBy(scale, pivot, context->quickSettings->transformLocally,
+			obstacle.scaleBy(scale, pivot, context->quickSettings->transformIndividually,
 				affectMinorRadius, affectMajorRadius,
 				context->scene->getCurrentNode()->level.obstacleDescriptors[i].get());
 

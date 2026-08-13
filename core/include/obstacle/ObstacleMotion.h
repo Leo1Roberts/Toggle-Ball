@@ -83,8 +83,8 @@ public:
 
 
 	virtual void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) = 0;
-	virtual void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool local, const IMotionSpec* base) = 0;
-	virtual void scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) = 0;
+	virtual void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool individual, const IMotionSpec* base) = 0;
+	virtual void scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) = 0;
 
 	[[nodiscard]] constexpr virtual std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const = 0;
 	[[nodiscard]] virtual float getProperty(MotionSpecProperty property, bool toggled = false) const = 0;
@@ -133,7 +133,7 @@ public:
 		position = ((const StaticSpec*)base)->position + vector;
 	}
 	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool, const IMotionSpec* base) override;
-	void scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) override;
+	void scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) override;
 
 	void setAngle(float radians);
 
@@ -207,8 +207,8 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
-	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool local, const IMotionSpec* base) override;
-	void scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) override;
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool individual, const IMotionSpec* base) override;
+	void scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) override;
 
 	void setAngle(float radians);
 
@@ -284,8 +284,8 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const TogglingAngleSpec*)base)->position + vector;
 	}
-	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool local, const IMotionSpec* base) override;
-	void scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) override;
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool individual, const IMotionSpec* base) override;
+	void scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) override;
 
 	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
 		return {
@@ -360,8 +360,8 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const SpinningSpec*)base)->position + vector;
 	}
-	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool local, const IMotionSpec* base) override;
-	void scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) override;
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool individual, const IMotionSpec* base) override;
+	void scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) override;
 
 	void setInitialAngle(float radians);
 
@@ -443,8 +443,8 @@ public:
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) override;
-	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool local, const IMotionSpec* base) override;
-	void scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) override;
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool individual, const IMotionSpec* base) override;
+	void scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) override;
 
 	void setAngle(float radians);
 
@@ -536,8 +536,8 @@ public:
 	void translateBy(glm::vec2 vector, bool, bool, const IMotionSpec* base) override {
 		position = ((const OscillatingAngleSpec*)base)->position + vector;
 	}
-	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool local, const IMotionSpec* base) override;
-	void scaleBy(float factor, glm::vec2 pivot, bool local, const IMotionSpec* base) override;
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool individual, const IMotionSpec* base) override;
+	void scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) override;
 
 	[[nodiscard]] constexpr std::vector<MotionSpecPropertyDescriptor> getPropertyDescriptors() const override {
 		return {

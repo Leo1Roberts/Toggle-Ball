@@ -46,13 +46,13 @@ public:
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const ObstacleDescriptor* base) const {
 		descriptor->motion->translateBy(vector, stateless, toggled, base->motion.get());
 	}
-	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool local, const ObstacleDescriptor* base) const {
-		descriptor->motion->rotateBy(radians, rotationMatrix, pivot, stateless, toggled, local, base->motion.get());
+	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool individual, const ObstacleDescriptor* base) const {
+		descriptor->motion->rotateBy(radians, rotationMatrix, pivot, stateless, toggled, individual, base->motion.get());
 	}
-	void scaleBy(float factor, glm::vec2 pivot, bool local,
+	void scaleBy(float factor, glm::vec2 pivot, bool individual,
 		bool affectMinorRadius, bool affectMajorRadius,
 		const ObstacleDescriptor* base) const {
-		descriptor->motion->scaleBy(factor, pivot, local, base->motion.get());
+		descriptor->motion->scaleBy(factor, pivot, individual, base->motion.get());
 		descriptor->shape->scaleBy(factor, affectMinorRadius, affectMajorRadius, base->shape.get());
 	}
 

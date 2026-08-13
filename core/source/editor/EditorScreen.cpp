@@ -222,9 +222,9 @@ void EditorScreen::processEvent(const Event& event) {
 						activeOperation->onQuickSettingsChanged();
 					return;
 				} break;
-			case ActionCode::ToggleTransformLocally:
+			case ActionCode::ToggleTransformIndividually:
 				if (key->action == KeyAction::Down) {
-					quickSettings.transformLocally = !quickSettings.transformLocally;
+					quickSettings.transformIndividually = !quickSettings.transformIndividually;
 					if (activeOperation)
 						activeOperation->onQuickSettingsChanged();
 					return;
