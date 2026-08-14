@@ -1,6 +1,6 @@
 #include "editor/operation/TranslateOperation.h"
 
-#include "ui/UiTextBubble.h"
+#include "ui/UITextBubble.h"
 
 
 namespace Axis {

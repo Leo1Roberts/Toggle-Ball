@@ -1,4 +1,4 @@
-#include "ui/UiTextBubble.h"
+#include "ui/UITextBubble.h"
 
 #include "ui/UIText.h"
 

@@ -1,4 +1,4 @@
-#include "ui/UiTextBox.h"
+#include "ui/UITextBox.h"
 
 
 UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle, std::string placeholderText)

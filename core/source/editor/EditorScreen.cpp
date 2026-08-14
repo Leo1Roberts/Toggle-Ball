@@ -9,7 +9,7 @@
 #include "editor/operation/TranslateOperation.h"
 #include "ui/Theme.h"
 #include "ui/UIList.h"
-#include "ui/UiTextBox.h"
+#include "ui/UITextBox.h"
 
 
 const glm::vec3 groundColor = colorToLinear({76, 76, 76});

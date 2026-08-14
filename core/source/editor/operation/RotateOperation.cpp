@@ -1,6 +1,6 @@
 #include "editor/operation/RotateOperation.h"
 
-#include "ui/UiTextBubble.h"
+#include "ui/UITextBubble.h"
 
 
 void RotateOperation::updateDetailsText() {

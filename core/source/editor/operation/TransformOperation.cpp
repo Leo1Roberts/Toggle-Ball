@@ -1,6 +1,6 @@
 #include "editor/operation/TransformOperation.h"
 
-#include "ui/UiTextBubble.h"
+#include "ui/UITextBubble.h"
 
 
 void TransformOperation::createUI() {
