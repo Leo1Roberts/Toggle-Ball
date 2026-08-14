@@ -3,7 +3,7 @@
 #include "utilities/AssetManager.h"
 #include "ui/Theme.h"
 #include "ui/UIButton.h"
-#include "ui/UIVerticalList.h"
+#include "ui/UIList.h"
 
 
 LevelBrowserScreen::LevelBrowserScreen(const std::function<void(std::string)>& playLevelCallback) {

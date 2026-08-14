@@ -8,7 +8,7 @@
 #include "opengl/Shader.h"
 #include "editor/operation/TranslateOperation.h"
 #include "ui/Theme.h"
-#include "ui/UIVerticalList.h"
+#include "ui/UIList.h"
 #include "ui/UiTextBox.h"
 
 
