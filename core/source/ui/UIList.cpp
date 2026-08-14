@@ -41,19 +41,13 @@ void UIList::updateBounds(Rectangle parentBounds) {
 		Rectangle bounds;
 		bounds = paddedBounds;
 		if (vertical) {
-			if (child->layout.widthMode == SizingMode::Absolute)
-				child->layout.offset.y = currentPos - offset;
-			else if (child->layout.heightMode == SizingMode::Relative) {
-				bounds.y += currentPos - offset;
+			bounds.y += currentPos - offset;
+			if (child->layout.heightMode == SizingMode::Relative)
 				bounds.height = lengthPerRelativeSize;
-			}
 		} else {
-			if (child->layout.widthMode == SizingMode::Absolute)
-				child->layout.offset.x = currentPos - offset;
-			else if (child->layout.widthMode == SizingMode::Relative) {
-				bounds.x += currentPos - offset;
+			bounds.x += currentPos - offset;
+			if (child->layout.widthMode == SizingMode::Relative)
 				bounds.width = lengthPerRelativeSize;
-			}
 		}
 		child->updateBounds(bounds);
 
