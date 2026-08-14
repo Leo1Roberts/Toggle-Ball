@@ -28,10 +28,7 @@ void UIList::updateBounds(Rectangle parentBounds) {
 
 	totalContentLength = currentPos > 0.f ? currentPos - spacing : 0.f;
 
-	float viewLength = vertical ? (getAbsoluteBounds().height - padding.y * 2.f)
-	                            : (getAbsoluteBounds().width - padding.x * 2.f);
-
-	maxOffset = std::max(0.f, totalContentLength - viewLength);
+	maxOffset = std::max(0.f, totalContentLength - (vertical ? paddedBounds.height : paddedBounds.width));
 	offset = std::clamp(offset, 0.f, maxOffset);
 }
 
