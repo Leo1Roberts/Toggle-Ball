@@ -56,7 +56,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		item->layout = {
 			.heightMode = SizingMode::Absolute, .height = 50.f
 		};
-		auto label = item->addChild(std::make_unique<UIText>(labelText + ":", TextStyle{
+		auto label = item->addChild(std::make_unique<UIText>(labelText, TextStyle{
 			.color = {200, 200, 200}, .alignVertical = TextAlignVertical::Middle}));
 		label->layout = {
 			.anchor = Anchor::CentreLeft,
@@ -478,7 +478,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 			item->layout = {
 				.heightMode = SizingMode::Absolute, .height = 50.f
 			};
-			auto label = item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(propertyDescriptor.property) + ":", TextStyle{
+			auto label = item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(propertyDescriptor.property), TextStyle{
 				.color = labelColor, .alignVertical = TextAlignVertical::Middle}));
 			label->layout = {
 				.anchor = Anchor::CentreLeft,
