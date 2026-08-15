@@ -10,6 +10,8 @@
 #include "editor/tool/ToolMode.h"
 #include "ui/UIManager.h"
 
+
+class UITextBubble;
 class UIVerticalList;
 
 class EditorScreen : public Screen {
@@ -45,7 +47,7 @@ private:
 
 	SelectionState cachedSelectionState{};
 
-	UIText* stateIndicator;
+	UITextBubble* stateIndicator;
 	void updateStateIndicator();
 	UIVerticalList* obstacleMotionPropertiesList;
 

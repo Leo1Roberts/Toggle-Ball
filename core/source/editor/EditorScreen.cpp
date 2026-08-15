@@ -10,6 +10,7 @@
 #include "ui/Theme.h"
 #include "ui/UIList.h"
 #include "ui/UITextBox.h"
+#include "ui/UITextBubble.h"
 
 
 const glm::vec3 groundColor = colorToLinear({76, 76, 76});
@@ -36,16 +37,14 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
 
 
-	stateIndicator = uiManager.addNode(std::make_unique<UIText>(""));
-	stateIndicator->layout = {.offset = {10.f, 10.f}};
-	updateStateIndicator();
+	auto layout = uiManager.addNode(std::make_unique<UIHorizontalList>(glm::vec2(0.f), 0.f, 0.f));
 
+	auto viewport = layout->addChild(std::make_unique<UINode>(false));
 
-	auto propertiesPanel = std::make_unique<UIPanel>(Theme::DarkPanel);
+	auto propertiesPanel = layout->addChild(std::make_unique<UIPanel>(Theme::DarkPanel));
 	propertiesPanel->layout = {
-		.anchor = Anchor::CentreRight,
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Relative,
-		.width = 300.f, .height = 1.f,
+		.widthMode = SizingMode::Absolute,
+		.width = 300.f,
 	};
 
 
@@ -97,9 +96,18 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	obstacleMotionPropertiesList = propertiesPanel->addChild(std::make_unique<UIVerticalList>(glm::vec2(20.f), 10.f));
 	obstacleMotionPropertiesList->layout = { .anchor = Anchor::BottomCentre, .height = 0.5f };
 
-	uiManager.addNode(std::move(propertiesPanel));
+	context.operationUI = viewport->addChild(std::make_unique<UINode>(false));
 
-	context.operationUI = uiManager.addNode(std::make_unique<UINode>(false));
+	stateIndicator = viewport->addChild(std::make_unique<UITextBubble>("", glm::vec2(10.f), PanelStyle{}, TextStyle{
+		.color = Color::White,
+		.alignHorizontal = TextAlignHorizontal::Centre,
+		.alignVertical = TextAlignVertical::Middle
+	}));
+	stateIndicator->layout = {
+		.anchor = Anchor::TopRight,
+		.offset = {-10.f, 10.f}
+	};
+	updateStateIndicator();
 }
 
 
@@ -543,9 +551,9 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 
 void EditorScreen::updateStateIndicator() {
 	stateIndicator->setText(scene.isToggled() ? "State B" : "State A");
-	stateIndicator->textStyle = {
-		.color = scene.isToggled() ? Color::StateB : Color::StateA,
-		.alignVertical = TextAlignVertical::Bottom,
+	stateIndicator->panelStyle = {
+		.fillColor = scene.isToggled() ? Color::StateB : Color::StateA,
+		.cornerRadius = 10.f,
 	};
 }
 

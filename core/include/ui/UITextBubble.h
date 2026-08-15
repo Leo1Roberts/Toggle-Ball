@@ -8,7 +8,7 @@ class UIText;
 
 class UITextBubble : public UIPanel {
 public:
-	explicit UITextBubble(const std::string& text, glm::vec2 padding, const PanelStyle& pStyle, const TextStyle& tStyle = {});
+	UITextBubble(const std::string& text, glm::vec2 padding, const PanelStyle& pStyle = {}, const TextStyle& tStyle = {});
 
 	void updateBounds(Rectangle parentBounds) override;
 
