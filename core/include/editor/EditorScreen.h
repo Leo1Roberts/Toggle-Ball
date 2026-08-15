@@ -47,6 +47,8 @@ private:
 
 	SelectionState cachedSelectionState{};
 
+	UINode* viewportUI;
+
 	UITextBubble* stateIndicator;
 	void updateStateIndicator();
 	UIVerticalList* obstacleMotionPropertiesList;

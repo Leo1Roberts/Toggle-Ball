@@ -39,7 +39,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 
 	auto layout = uiManager.addNode(std::make_unique<UIHorizontalList>(glm::vec2(0.f), 0.f, 0.f));
 
-	auto viewport = layout->addChild(std::make_unique<UINode>(false));
+	viewportUI = layout->addChild(std::make_unique<UINode>(false));
 
 	auto propertiesPanel = layout->addChild(std::make_unique<UIPanel>(Theme::DarkPanel));
 	propertiesPanel->layout = {
@@ -96,9 +96,9 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	obstacleMotionPropertiesList = propertiesPanel->addChild(std::make_unique<UIVerticalList>(glm::vec2(20.f), 10.f));
 	obstacleMotionPropertiesList->layout = { .anchor = Anchor::BottomCentre, .height = 0.5f };
 
-	context.operationUI = viewport->addChild(std::make_unique<UINode>(false));
+	context.operationUI = viewportUI->addChild(std::make_unique<UINode>(false));
 
-	stateIndicator = viewport->addChild(std::make_unique<UITextBubble>("", glm::vec2(10.f), PanelStyle{}, TextStyle{
+	stateIndicator = viewportUI->addChild(std::make_unique<UITextBubble>("", glm::vec2(10.f), PanelStyle{}, TextStyle{
 		.color = Color::White,
 		.alignHorizontal = TextAlignHorizontal::Centre,
 		.alignVertical = TextAlignVertical::Middle
@@ -449,7 +449,7 @@ void EditorScreen::updateEphemeralMeshes() {
 
 void EditorScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
-	camera.update((float)width, (float)height, scene.level->arenaWidth, scene.level->arenaHeight);
+	camera.update((float)width, (float)height, scene.level->arenaWidth, scene.level->arenaHeight, viewportUI->getAbsoluteBounds() * uiManager.getScale());
 	updateEphemeralMeshes();
 }
 

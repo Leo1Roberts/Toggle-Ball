@@ -19,6 +19,8 @@ struct Rectangle {
 			float height;
 		};
 	};
+
+	Rectangle operator*(float scale) const { return {position * scale, size * scale}; }
 };
 
 

@@ -11,23 +11,38 @@ void Camera::reset(float arenaWidth, float arenaHeight) {
 	zoomInv = 1.f;
 }
 
-void Camera::update(float screenWidth, float screenHeight, float arenaWidth, float arenaHeight) {
+void Camera::update(float screenWidth, float screenHeight, float arenaWidth, float arenaHeight, Rectangle viewport) {
 	cache.screenWidth = screenWidth;
 	cache.screenHeight = screenHeight;
 	cache.arenaWidth = arenaWidth;
 	cache.arenaHeight = arenaHeight;
+	cache.viewport = viewport;
 
-	if (arenaWidth * screenHeight > screenWidth * arenaHeight) { // Level is wider than screen
+	if (viewport.width == 0.f || viewport.height == 0.f) return;
+
+	if (arenaWidth * viewport.height > viewport.width * arenaHeight) { // Level is wider than screen
 		halfWidth = arenaWidth * 0.5f;
-		halfHeight = halfWidth * screenHeight / screenWidth;
+		halfHeight = halfWidth * viewport.height / viewport.width;
 	} else {
 		halfHeight = arenaHeight * 0.5f;
-		halfWidth = halfHeight * screenWidth / screenHeight;
+		halfWidth = halfHeight * viewport.width / viewport.height;
 	}
 	halfWidth *= zoomInv;
 	halfHeight *= zoomInv;
 
-	projectionMatrix = glm::ortho(halfWidth, -halfWidth, -halfHeight, halfHeight, -clippingDistance, clippingDistance);
+	glm::vec2 centre = {
+		viewport.x + (viewport.width * 0.5f),
+		viewport.y + (viewport.height * 0.5f)};
+
+	float unitsPerPixel = (halfWidth * 2.f) / viewport.width;
+
+	float
+	left   = centre.x * unitsPerPixel,
+	right  = -(screenWidth - centre.x) * unitsPerPixel,
+	bottom = -centre.y * unitsPerPixel,
+	top    = (screenHeight - centre.y) * unitsPerPixel;
+
+	projectionMatrix = glm::ortho(left, right, bottom, top, -clippingDistance, clippingDistance);
 	viewMatrix = buildViewMatrix(viewRotationMatrix, viewOrigin);
 }
 
@@ -40,14 +55,14 @@ void Camera::updatePan(glm::vec2 pointerPosition) {
 	glm::vec2 pointerPlanarPosition = screenToPlanarPosition(pointerPosition);
 	viewOrigin -= planarToWorld(pointerPlanarPosition - panPointerPlanarPosition);
 	panPointerPosition = pointerPosition;
-	update(cache.screenWidth, cache.screenHeight, cache.arenaWidth, cache.arenaHeight);
+	update(cache.screenWidth, cache.screenHeight, cache.arenaWidth, cache.arenaHeight, cache.viewport);
 }
 
 void Camera::zoom(float amount, glm::vec2 pointerPosition) {
 	float multiplier = 1.f / amount;
 	zoomInv *= multiplier;
 	viewOrigin = viewOrigin * multiplier + planarToWorld(screenToPlanarPosition(pointerPosition) * (1 - multiplier));
-	update(cache.screenWidth, cache.screenHeight, cache.arenaWidth, cache.arenaHeight);
+	update(cache.screenWidth, cache.screenHeight, cache.arenaWidth, cache.arenaHeight, cache.viewport);
 }
 
 

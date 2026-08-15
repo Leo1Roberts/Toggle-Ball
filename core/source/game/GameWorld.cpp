@@ -110,7 +110,8 @@ void GameWorld::render() const {
 
 
 void GameWorld::resize(float screenWidth, float screenHeight) {
-	camera.update(screenWidth, screenHeight, level.arenaWidth, level.arenaHeight);
+	camera.update(screenWidth, screenHeight, level.arenaWidth, level.arenaHeight, Rectangle{
+		.position = {0.f, 0.f}, .size = {screenWidth, screenHeight}});
 }
 
 

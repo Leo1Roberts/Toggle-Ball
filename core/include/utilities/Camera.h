@@ -2,6 +2,7 @@
 #define CAMERA_H
 
 #include "utilities/MatrixUtilities.h"
+#include "ui/Layout.h"
 
 #include <glm/glm.hpp>
 
@@ -9,7 +10,7 @@
 class Camera {
 public:
 	void reset(float arenaWidth, float arenaHeight);
-	void update(float screenWidth, float screenHeight, float arenaWidth, float arenaHeight);
+	void update(float screenWidth, float screenHeight, float arenaWidth, float arenaHeight, Rectangle viewport);
 
 	void startPan(glm::vec2 pointerPosition);
 	void updatePan(glm::vec2 pointerPosition);
@@ -40,6 +41,7 @@ private:
 		float
 		screenWidth{}, screenHeight{},
 		arenaWidth{}, arenaHeight{};
+		Rectangle viewport;
 	} cache;
 
 	static constexpr glm::vec3 viewDirection = {-1, 0, 0};
