@@ -12,7 +12,7 @@ LevelBrowserScreen::LevelBrowserScreen(const std::function<void(std::string)>& p
 
 	auto levels = AssetManager::getFileList("levels", ".lvl");
 	for (const auto& levelName : levels) {
-		auto button = list->addChild(std::make_unique<UIButton>(levelName, Theme::PrimaryButton));
+		auto button = list->addChild<UIButton>(levelName, Theme::PrimaryButton);
 		button->setLayout({
 			.widthMode = SizingMode::Stretch,
 			.heightMode = SizingMode::Wrap,

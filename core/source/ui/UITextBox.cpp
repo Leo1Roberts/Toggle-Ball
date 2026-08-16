@@ -3,7 +3,7 @@
 
 UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle, std::string placeholderText)
 	: UIPanel(bStyle.normalPanel), textBoxStyle(bStyle), inputBuffer(validator), placeholder(std::move(placeholderText)) {
-	container = addChild(std::make_unique<UINode>());
+	container = addChild<UINode>();
 	container->setHitTestable(false);
 	container->setHitTestableChildren(false); // Not safe to change - see updateCursorAndHighlight()
 	container->setLayout({
@@ -12,9 +12,9 @@ UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxS
 		.heightMode = SizingMode::Wrap,
 	});
 
-	highlightContainer = container->addChild(std::make_unique<UINode>());
-	textNode = container->addChild(std::make_unique<UIText>(placeholder, textBoxStyle.normalText));
-	cursorNode = container->addChild(std::make_unique<UIPanel>(textBoxStyle.cursor));
+	highlightContainer = container->addChild<UINode>();
+	textNode = container->addChild<UIText>(placeholder, textBoxStyle.normalText);
+	cursorNode = container->addChild<UIPanel>(textBoxStyle.cursor);
 
 	updateAppearance();
 }
@@ -187,7 +187,7 @@ void UITextBox::setText(const std::string& text) {
 void UITextBox::updateCursorAndHighlight() {
 	highlightContainer->clearChildren(); // Only safe because container children are not hit testable
 	for (const auto& highlightRect : textNode->getHighlightRects(inputBuffer.getSelectionStartIndex(), inputBuffer.getSelectionEndIndex())) {
-		auto highlightNode = highlightContainer->addChild(std::make_unique<UIPanel>(textBoxStyle.highlight));
+		auto highlightNode = highlightContainer->addChild<UIPanel>(textBoxStyle.highlight);
 		highlightNode->setLayout({
 			.anchor = Anchor::TopLeft,
 			.widthMode = SizingMode::Absolute, .width = highlightRect.width,

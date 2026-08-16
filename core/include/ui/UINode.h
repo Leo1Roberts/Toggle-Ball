@@ -34,6 +34,11 @@ public:
 		invalidateLayout();
 		return ptr;
 	}
+	template <typename T, typename... Args>
+	T* addChild(Args&&... args) {
+		return addChild<T>(std::make_unique<T>(std::forward<Args>(args)...));
+	}
+
 	void clearChildren() {
 		children.clear();
 		invalidateLayout();

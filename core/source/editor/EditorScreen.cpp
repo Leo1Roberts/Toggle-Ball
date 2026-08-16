@@ -38,16 +38,16 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 
 	auto layout = uiManager.addNode(std::make_unique<UIHorizontalList>(0.f, 0.f));
 
-	viewportUI = layout->addChild(std::make_unique<UINode>(false));
+	viewportUI = layout->addChild<UINode>(false);
 
-	auto propertiesPanel = layout->addChild(std::make_unique<UIPanel>(Theme::DarkPanel));
+	auto propertiesPanel = layout->addChild<UIPanel>(Theme::DarkPanel);
 	propertiesPanel->setLayout({
 		.widthMode = SizingMode::Absolute, .width = 300.f,
 	});
-	auto propertiesList = propertiesPanel->addChild(std::make_unique<UIVerticalList>(0.f, 0.f));
+	auto propertiesList = propertiesPanel->addChild<UIVerticalList>(0.f, 0.f);
 
 
-	auto levelAndBallPropertiesList = propertiesList->addChild(std::make_unique<UIVerticalList>(10.f));
+	auto levelAndBallPropertiesList = propertiesList->addChild<UIVerticalList>(10.f);
 	levelAndBallPropertiesList->setLayout({ .padding = glm::vec2(20.f) });
 
 	auto makeListItem = [this](const std::string& labelText, float* property) {
@@ -58,7 +58,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		});
 		item->addChild(std::make_unique<UIText>(labelText, TextStyle{
 			.color = {200, 200, 200}, .alignVertical = TextAlignVertical::Middle}));
-		auto textField = item->addChild(std::make_unique<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-"));
+		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
 		textField->setLayout({
 			.heightMode = SizingMode::Wrap,
 			.padding = {0.f, 10.f}
@@ -89,12 +89,12 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	levelAndBallPropertiesList->addChild(makeListItem("Ball position X", &scene.ball.descriptor->initialPosition.x));
 	levelAndBallPropertiesList->addChild(makeListItem("Ball position Y", &scene.ball.descriptor->initialPosition.y));
 
-	obstacleMotionPropertiesList = propertiesList->addChild(std::make_unique<UIVerticalList>(10.f));
+	obstacleMotionPropertiesList = propertiesList->addChild<UIVerticalList>(10.f);
 	obstacleMotionPropertiesList->setLayout({ .padding = glm::vec2(20.f) });
 
-	context.operationUI = viewportUI->addChild(std::make_unique<UINode>(false));
+	context.operationUI = viewportUI->addChild<UINode>(false);
 
-	stateIndicator = viewportUI->addChild(std::make_unique<UIPanel>());
+	stateIndicator = viewportUI->addChild<UIPanel>();
 	stateIndicator->setLayout({
 		.anchor = Anchor::TopRight,
 		.widthMode  = SizingMode::Wrap,
@@ -481,7 +481,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 			});
 			item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(propertyDescriptor.property), TextStyle{
 				.color = labelColor, .alignVertical = TextAlignVertical::Middle}));
-			auto textField = item->addChild(std::make_unique<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-"));
+			auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
 			textField->setLayout({
 				.heightMode = SizingMode::Wrap,
 				.padding = {0.f, 10.f}
