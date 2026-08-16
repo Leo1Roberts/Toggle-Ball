@@ -1,10 +1,16 @@
 #include "editor/operation/RotateOperation.h"
 
+#include "ui/UIList.h"
 #include "ui/UIText.h"
 
 
 void RotateOperation::createUI() {
-
+	if (trigger == TriggerType::TriggerKey) {
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::Translate))
+			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Translate")));
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::Scale))
+			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Scale")));
+	}
 
 	updateDetailsText();
 }
@@ -44,12 +50,13 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
+				case ActionCode::Translate:
+				case ActionCode::Scale:
+					if (trigger != TriggerType::TriggerKey) return true;
 				case ActionCode::Undo:
 				case ActionCode::Redo:
 				case ActionCode::ToggleTransformIndividually:
 				case ActionCode::ToggleTransformBothStates:
-				case ActionCode::Translate:
-				case ActionCode::Scale:
 					return false;
 				default:
 					return true;

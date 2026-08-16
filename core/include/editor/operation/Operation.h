@@ -30,12 +30,12 @@ public:
 	}
 	void cancel() const {
 		doCancel();
-		context->finishOperation();
+		context->unloadOperation();
 	}
 	virtual void finish() const {}
 	void commit() const {
 		doCommit();
-		context->finishOperation();
+		context->unloadOperation();
 	}
 
 	void onQuickSettingsChanged() { applyOperation(); }

@@ -29,8 +29,8 @@ struct EditorContext {
 	UINode* operationUI;
 	UIHorizontalList* operationShortcutHints;
 
-	std::function <Operation*(std::unique_ptr<Operation>)> startOperation;
-	std::function <void()> finishOperation;
+	std::function <Operation*(std::unique_ptr<Operation>)> loadOperation;
+	std::function <void()> unloadOperation;
 
 	static std::unique_ptr<UIHorizontalList> makeShortcutHint(KeyChord keyChord, const std::string& effect);
 };

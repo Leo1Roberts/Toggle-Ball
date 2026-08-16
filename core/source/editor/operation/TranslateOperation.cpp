@@ -1,5 +1,6 @@
 #include "editor/operation/TranslateOperation.h"
 
+#include "ui/UIList.h"
 #include "ui/UIText.h"
 
 
@@ -10,7 +11,16 @@ namespace Axis {
 
 
 void TranslateOperation::createUI() {
-
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::LockToXAxis))
+		context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "X axis")));
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::LockToYAxis))
+		context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Y axis")));
+	if (trigger == TriggerType::TriggerKey) {
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::Rotate))
+			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Rotate")));
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::Scale))
+			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Scale")));
+	}
 
 	updateDetailsText();
 }
@@ -93,12 +103,13 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 						return false;
 					}
 					return true;
+				case ActionCode::Rotate:
+				case ActionCode::Scale:
+					if (trigger != TriggerType::TriggerKey) return true;
 				case ActionCode::Undo:
 				case ActionCode::Redo:
 				case ActionCode::ToggleTransformIndividually:
 				case ActionCode::ToggleTransformBothStates:
-				case ActionCode::Rotate:
-				case ActionCode::Scale:
 					return false;
 				default:
 					return true;

@@ -2,6 +2,15 @@
 
 #include "editor/EditorObstacle.h"
 #include "editor/GizmoRenderer.h"
+#include "ui/UIList.h"
+
+
+void SelectOperation::createUI() {
+	context->operationShortcutHints->addChild(EditorContext::makeShortcutHint(
+		KeyChord(KeyCode::Unknown, MOD_CTRL), "Add to selection"));
+	context->operationShortcutHints->addChild(EditorContext::makeShortcutHint(
+		KeyChord(KeyCode::Unknown, MOD_SHIFT), "Remove from selection"));
+}
 
 
 void SelectOperation::renderGizmos() {

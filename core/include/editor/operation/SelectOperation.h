@@ -10,13 +10,16 @@ enum class SelectionMode { Replace, Add, Subtract };
 class SelectOperation : public Operation {
 public:
 	SelectOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, bool instant = false)
-		: Operation(context, trigger, initialPointerPosition), box(initialPointerPlanarPosition), instant(instant) {}
+		: Operation(context, trigger, initialPointerPosition), box(initialPointerPlanarPosition), instant(instant) { SelectOperation::createUI(); }
 
 	void renderGizmos() final;
 
 	void finish() const final;
 
 	[[nodiscard]] SelectionMode getMode() const { return mode; }
+
+protected:
+	void createUI() override;
 
 private:
 	void applyModifiers(byte mods) final;

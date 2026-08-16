@@ -28,8 +28,8 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		[this] { updateEphemeralMeshes(); }),
 	context(
 		&quickSettings, &scene, &camera, &gizmoRenderer, &uiToWorldScale, nullptr, nullptr,
-		[this](std::unique_ptr<Operation> operation) { return startOperation(std::move(operation)); },
-		[this] { finishOperation(); }),
+		[this](std::unique_ptr<Operation> operation) { return loadOperation(std::move(operation)); },
+		[this] { unloadOperation(); }),
 	currentToolMode(std::make_unique<DefaultMode>(&context)) {
 	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
@@ -113,9 +113,9 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	});
 
 	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformBothStates))
-		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Statefulness toggle")));
+		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Toggle stateless transform")));
 	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformIndividually))
-		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Individuality toggle")));
+		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Toggle group transform")));
 
 	idleShortcutHints = shortcutsList->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
 	idleShortcutHints->setLayout({
@@ -214,16 +214,16 @@ void EditorScreen::processEvent(const Event& event) {
 						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
 							auto oldOperation = std::move(activeOperation);
 							oldOperation->cancel();
-							startOperation(std::make_unique<TranslateOperation>(*transform));
+							loadOperation(std::make_unique<TranslateOperation>(*transform));
 							if (activeOperation->start(key->chord.modifiers))
 								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
 							else
-								finishOperation();
+								unloadOperation();
 						}
 					} else {
-						startOperation(std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, pointer0Position));
+						loadOperation(std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, pointer0Position));
 						if (!activeOperation->start(key->chord.modifiers))
-							finishOperation();
+							unloadOperation();
 					}
 					return;
 				} break;
@@ -233,16 +233,16 @@ void EditorScreen::processEvent(const Event& event) {
 						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
 							auto oldOperation = std::move(activeOperation);
 							oldOperation->cancel();
-							startOperation(std::make_unique<RotateOperation>(*transform));
+							loadOperation(std::make_unique<RotateOperation>(*transform));
 							if (activeOperation->start(key->chord.modifiers))
 								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
 							else
-								finishOperation();
+								unloadOperation();
 						}
 					} else {
-						startOperation(std::make_unique<RotateOperation>(&context, TriggerType::TriggerKey, pointer0Position));
+						loadOperation(std::make_unique<RotateOperation>(&context, TriggerType::TriggerKey, pointer0Position));
 						if (!activeOperation->start(key->chord.modifiers))
-							finishOperation();
+							unloadOperation();
 					}
 					return;
 				} break;
@@ -252,16 +252,16 @@ void EditorScreen::processEvent(const Event& event) {
 						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
 							auto oldOperation = std::move(activeOperation);
 							oldOperation->cancel();
-							startOperation(std::make_unique<ScaleOperation>(*transform));
+							loadOperation(std::make_unique<ScaleOperation>(*transform));
 							if (activeOperation->start(key->chord.modifiers))
 								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
 							else
-								finishOperation();
+								unloadOperation();
 						}
 					} else {
-						startOperation(std::make_unique<ScaleOperation>(&context, TriggerType::TriggerKey, pointer0Position));
+						loadOperation(std::make_unique<ScaleOperation>(&context, TriggerType::TriggerKey, pointer0Position));
 						if (!activeOperation->start(key->chord.modifiers))
-							finishOperation();
+							unloadOperation();
 					}
 					return;
 				} break;
@@ -589,15 +589,6 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 }
 
 
-void EditorScreen::hideShortcutHints() {
-	for (auto& hint : idleShortcutHints->getChildren())
-		hint->deactivate();
-}
-void EditorScreen::showShortcutHints() {
-	for (auto& hint : idleShortcutHints->getChildren())
-		hint->activate();
-}
-
 void EditorScreen::updateStateIndicator() {
 	stateIndicator->panelStyle = {
 		.fillColor = scene.isToggled() ? Color::StateB : Color::StateA,
@@ -608,14 +599,14 @@ void EditorScreen::updateStateIndicator() {
 }
 
 
-Operation* EditorScreen::startOperation(std::unique_ptr<Operation> operation) {
-	hideShortcutHints();
+Operation* EditorScreen::loadOperation(std::unique_ptr<Operation> operation) {
+	idleShortcutHints->deactivate();
 	activeOperation = std::move(operation);
 	return activeOperation.get();
 }
-void EditorScreen::finishOperation() {
+void EditorScreen::unloadOperation() {
 	activeOperation.reset();
 	uiManager.removeAllChildrenOfNode(context.operationUI);
 	uiManager.removeAllChildrenOfNode(context.operationShortcutHints);
-	showShortcutHints();
+	idleShortcutHints->activate();
 }

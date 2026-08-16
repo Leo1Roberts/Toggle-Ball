@@ -1,5 +1,6 @@
 #include "editor/operation/ScaleOperation.h"
 
+#include "ui/UIList.h"
 #include "ui/UIText.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -7,7 +8,14 @@
 
 
 void ScaleOperation::createUI() {
-
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::Scale))
+		context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Cycle dimension")));
+	if (trigger == TriggerType::TriggerKey) {
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::Translate))
+			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Translate")));
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::Rotate))
+			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Rotate")));
+	}
 
 	updateDetailsText();
 }
@@ -44,12 +52,13 @@ bool ScaleOperation::doProcessEvent(const Event& event) {
 					dimension = (Dimension)(((int)dimension + 1) % (int)Dimension::COUNT);
 					applyOperation();
 					return true;
+				case ActionCode::Translate:
+				case ActionCode::Rotate:
+					if (trigger != TriggerType::TriggerKey) return true;
 				case ActionCode::Undo:
 				case ActionCode::Redo:
 				case ActionCode::ToggleTransformIndividually:
 				case ActionCode::ToggleTransformBothStates:
-				case ActionCode::Translate:
-				case ActionCode::Rotate:
 					return false;
 				default:
 					return true;

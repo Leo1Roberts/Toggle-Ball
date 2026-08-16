@@ -47,8 +47,6 @@ private:
 	SelectionState cachedSelectionState{};
 
 	UINode* viewportUI;
-	void hideShortcutHints();
-	void showShortcutHints();
 	UIHorizontalList* idleShortcutHints;
 
 	UIPanel* stateIndicator;
@@ -57,8 +55,8 @@ private:
 
 	std::unique_ptr<ToolMode> currentToolMode;
 	std::unique_ptr<Operation> activeOperation;
-	Operation* startOperation(std::unique_ptr<Operation> operation);
-	void finishOperation();
+	Operation* loadOperation(std::unique_ptr<Operation> operation);
+	void unloadOperation();
 };
 
 #endif // EDITOR_H

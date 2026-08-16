@@ -28,14 +28,23 @@ std::unique_ptr<UIHorizontalList> EditorContext::makeShortcutHint(KeyChord keyCh
 				.cornerRadius = 3.f,
 				.strokeWidth = 1.f,
 			});
-		box->setLayout({
-			.anchor = Anchor::Centre,
-			.widthMode = SizingMode::Wrap,
-			.heightMode = SizingMode::Wrap,
-			.padding = {5.f, 3.f}
-		});
+		constexpr float paddingY = 2.f;
+		if (name.length() == 1)
+			box->setLayout({
+				.anchor = Anchor::Centre,
+				.widthMode = SizingMode::Absolute, .width = textStyle.fontSize + paddingY * 2.f,
+				.heightMode = SizingMode::Absolute, .height = textStyle.fontSize + paddingY * 2.f,
+			});
+		else
+			box->setLayout({
+				.anchor = Anchor::Centre,
+				.widthMode = SizingMode::Wrap,
+				.heightMode = SizingMode::Wrap,
+				.padding = {paddingY * 1.75f, paddingY}
+			});
 		auto text = box->addChild<UIText>(std::string(name), textStyle);
 		text->setLayout({
+			.anchor = Anchor::Centre,
 			.widthMode = SizingMode::Wrap,
 			.heightMode = SizingMode::Wrap,
 		});

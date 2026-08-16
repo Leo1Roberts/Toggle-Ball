@@ -11,7 +11,7 @@ bool DefaultMode::doProcessEvent(const Event& event) {
 			if (TranslateOperation::keyToTranslationVector(key->chord.code)) {
 				auto translateOperation = std::make_unique<TranslateOperation>(context, TriggerType::ActionKey);
 				if (translateOperation->start(key->chord.modifiers))
-					context->startOperation(std::move(translateOperation))->processEvent(event);
+					context->loadOperation(std::move(translateOperation))->processEvent(event);
 				return true;
 			}
 		}
@@ -43,15 +43,17 @@ void DefaultMode::startDrag(const PointerEvent& dragStartEvent) {
 			}
 
 	if (hit) {
-		auto selectOperation = SelectOperation(
+		auto selectOperation = (SelectOperation*)context->loadOperation(std::make_unique<SelectOperation>(
 			context, TriggerType::Pointer,
-			pointerDownEvent.position, true);
-		if (selectOperation.start(pointerDownEvent.modifiers))
-			selectOperation.finish();
+			pointerDownEvent.position, true));
+		if (selectOperation->start(pointerDownEvent.modifiers)) {
+			selectOperation->finish();
+			context->unloadOperation();
+		}
 		else return;
 
-		if (selectOperation.getMode() == SelectionMode::Subtract) {
-			selectOperation.cancel();
+		if (selectOperation->getMode() == SelectionMode::Subtract) {
+			selectOperation->cancel();
 			return;
 		}
 	}
@@ -62,13 +64,13 @@ void DefaultMode::startDrag(const PointerEvent& dragStartEvent) {
 				context, TriggerType::Pointer,
 				pointerDownEvent.position);
 			if (translateOperation->start(pointerDownEvent.modifiers))
-				context->startOperation(std::move(translateOperation));
+				context->loadOperation(std::move(translateOperation));
 		} else {
 			auto selectOperation = std::make_unique<SelectOperation>(
 				context, TriggerType::Pointer,
 				pointerDownEvent.position);
 			if (selectOperation->start(pointerDownEvent.modifiers))
-				context->startOperation(std::move(selectOperation));
+				context->loadOperation(std::move(selectOperation));
 		}
 	} else if (dragStartEvent.button == PointerButton::Secondary) {
 		if (hit) {
@@ -76,7 +78,7 @@ void DefaultMode::startDrag(const PointerEvent& dragStartEvent) {
 				context, TriggerType::Pointer,
 				pointerDownEvent.position);
 			if (rotateOperation->start(pointerDownEvent.modifiers))
-				context->startOperation(std::move(rotateOperation));
+				context->loadOperation(std::move(rotateOperation));
 		}
 	}
 }
