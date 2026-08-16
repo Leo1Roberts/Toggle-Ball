@@ -30,10 +30,11 @@ void TranslateOperation::updateDetailsText() {
 	if (constraint == ConstraintType::None)
 		text += "X: " + floatToString(translation.x, 3, true) + "  Y: " + floatToString(translation.y, 3, true);
 	else {
-		if (constraint == ConstraintType::GlobalAxis)
-			text += "along global ";
-		else if (constraint == ConstraintType::LocalAxis)
+		if (constraint == ConstraintType::LocalAxis ||
+		   (constraint == ConstraintType::GlobalAxis && context->quickSettings->transformIndividually))
 			text += "along local ";
+		else if (constraint == ConstraintType::GlobalAxis)
+			text += "along global ";
 
 		if (baseAxis == Axis::X) text += "X: ";
 		else if (baseAxis == Axis::Y) text += "Y: ";
