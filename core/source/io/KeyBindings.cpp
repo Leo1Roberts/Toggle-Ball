@@ -23,7 +23,7 @@ KeyBindings::KeyBindings(const std::string& data) {
 		auto action = ActionRegistry::fromString(actionString);
 
 		if (chord && action)
-			bindings[*chord] = *action;
+			bind(*chord, *action);
 		else
 			throw std::invalid_argument("Unknown action/key: " + actionString + "=" += keyString);
 	}
@@ -51,9 +51,9 @@ std::optional<KeyChord> KeyBindings::parseChord(std::string_view string) {
 	while (end != std::string_view::npos) {
 		std::string_view word = string.substr(start, end - start);
 
-		if (iequals(word, "CTRL")) chord.modifiers |= MOD_CTRL;
-		else if (iequals(word, "SHIFT")) chord.modifiers |= MOD_SHIFT;
-		else if (iequals(word, "ALT")) chord.modifiers |= MOD_ALT;
+		if (iequals(word, KeyRegistry::toString(KeyCode::Ctrl))) chord.modifiers |= MOD_CTRL;
+		else if (iequals(word, KeyRegistry::toString(KeyCode::Shift))) chord.modifiers |= MOD_SHIFT;
+		else if (iequals(word, KeyRegistry::toString(KeyCode::Alt))) chord.modifiers |= MOD_ALT;
 		else return std::nullopt;
 
 		start = end + 1;
@@ -73,9 +73,18 @@ std::optional<KeyChord> KeyBindings::parseChord(std::string_view string) {
 std::string KeyBindings::formatChord(const KeyChord& chord) {
 	std::string result;
 
-	if (chord.modifiers & MOD_CTRL)  result += "CTRL+";
-	if (chord.modifiers & MOD_SHIFT) result += "SHIFT+";
-	if (chord.modifiers & MOD_ALT)   result += "ALT+";
+	if (chord.modifiers & MOD_CTRL) {
+		result += KeyRegistry::toString(KeyCode::Ctrl);
+		result += '+';
+	}
+	if (chord.modifiers & MOD_SHIFT) {
+		result += KeyRegistry::toString(KeyCode::Shift);
+		result += '+';
+	}
+	if (chord.modifiers & MOD_ALT) {
+		result += KeyRegistry::toString(KeyCode::Alt);
+		result += '+';
+	}
 
 	result += KeyRegistry::toString(chord.code);
 	return result;
@@ -93,6 +102,13 @@ std::optional<ActionCode> KeyBindings::translate(KeyChord chord) const {
 		if (it != bindings.end())
 			return it->second; // Fallback - just the KeyCode without modifier keys
 	}
+
+	return std::nullopt;
+}
+std::optional<KeyChord> KeyBindings::findBinding(ActionCode action) const {
+	auto it = reverseBindings.find(action);
+	if (it != reverseBindings.end())
+		return it->second; // Exact match
 
 	return std::nullopt;
 }

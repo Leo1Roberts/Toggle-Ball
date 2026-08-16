@@ -47,6 +47,9 @@ private:
 	SelectionState cachedSelectionState{};
 
 	UINode* viewportUI;
+	void hideShortcutHints();
+	void showShortcutHints();
+	UIHorizontalList* idleShortcutHints;
 
 	UIPanel* stateIndicator;
 	void updateStateIndicator();

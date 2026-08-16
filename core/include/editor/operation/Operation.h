@@ -45,6 +45,8 @@ protected:
 		: context(context), trigger(trigger), initialPointerPlanarPosition(context->camera->screenToPlanarPosition(initialPointerPosition)) {}
 	Operation(const Operation&) = default;
 
+	virtual void createUI() {}
+
 	const EditorContext* context;
 	TriggerType trigger{};
 	glm::vec2 initialPointerPlanarPosition{};

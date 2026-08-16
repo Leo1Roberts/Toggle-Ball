@@ -6,6 +6,12 @@
 #include "glm/gtx/norm.hpp"
 
 
+void ScaleOperation::createUI() {
+
+
+	updateDetailsText();
+}
+
 void ScaleOperation::updateDetailsText() {
 	std::string dimensionString;
 	switch (dimension) {

@@ -25,8 +25,10 @@ struct col {
 };
 
 namespace Color {
+	constexpr col Transparent = col(0, 0, 0, 0);
 	constexpr col Black = col(0, 0, 0);
 	constexpr col White = col(255, 255, 255);
+	constexpr col LightGrey = col(200, 200, 200);
 
 	constexpr col SoftRed = col(240, 10, 10);
 	constexpr col SoftGreen = col(10, 240, 10);
@@ -45,7 +47,7 @@ namespace Color {
 	constexpr col AxisX = col(255, 0, 0);
 	constexpr col AxisY = col(0, 255, 0);
 	constexpr col PointerConnectorLine1 = col(80, 80, 80);
-	constexpr col PointerConnectorLine2 = col(200, 200, 200);
+	constexpr col PointerConnectorLine2 = LightGrey;
 
 	constexpr col ObBlobTerminal = col(0, 100, 255);
 	constexpr col ObBlobTerminalHover = col(0, 90, 230);

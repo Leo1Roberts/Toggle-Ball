@@ -8,15 +8,16 @@
 class TranslateOperation : public TransformOperation {
 public:
 	TranslateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
-		: TransformOperation(context, trigger, initialPointerPosition) { TranslateOperation::updateDetailsText(); }
+		: TransformOperation(context, trigger, initialPointerPosition) { TranslateOperation::createUI(); }
 	explicit TranslateOperation(const TransformOperation& other)
-		: TransformOperation(other) { TranslateOperation::updateDetailsText(); }
+		: TransformOperation(other) { TranslateOperation::createUI(); }
 
 	static std::optional<glm::vec2> keyToTranslationVector(KeyCode key);
 
 	void renderGizmos() override;
 
 protected:
+	void createUI() override;
 	void updateDetailsText() override;
 
 private:

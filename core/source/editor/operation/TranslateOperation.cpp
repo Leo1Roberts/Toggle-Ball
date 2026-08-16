@@ -9,6 +9,12 @@ namespace Axis {
 } // namespace Axis
 
 
+void TranslateOperation::createUI() {
+
+
+	updateDetailsText();
+}
+
 void TranslateOperation::updateDetailsText() {
 	std::string text = "Translation ";
 	if (constraint == ConstraintType::None)

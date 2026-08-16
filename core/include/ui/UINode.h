@@ -79,10 +79,10 @@ public:
 			child->markLayoutValid();
 	}
 
-	void show() { visible = true; }
-	void hide() { visible = false; }
-	void activate() { active = true; }
-	void deactivate() { active = false; }
+	void show() { visible = true; invalidateLayout(); }
+	void hide() { visible = false; invalidateLayout(); }
+	void activate() { active = true; invalidateLayout(); }
+	void deactivate() { active = false; invalidateLayout(); }
 
 	void setLayout(const Layout& l) { layout = l; invalidateLayout(); }
 	void setHitTestable(bool canBeHit) { hitTestable = canBeHit; }

@@ -3,6 +3,12 @@
 #include "ui/UIText.h"
 
 
+void RotateOperation::createUI() {
+
+
+	updateDetailsText();
+}
+
 void RotateOperation::updateDetailsText() {
 	std::string text = "Rotation: ";
 	text += typing ? textInput.getValue<const std::string&>() : floatToString(to_deg(rotation), 3, true);

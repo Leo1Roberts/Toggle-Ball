@@ -52,7 +52,7 @@ struct KeyChord {
 template<>
 struct std::hash<KeyChord> {
 	size_t operator()(const KeyChord& chord) const noexcept {
-		return (static_cast<size_t>(chord.code) << 8) | chord.modifiers;
+		return ((size_t)chord.code << 8) | chord.modifiers;
 	}
 };
 
@@ -101,30 +101,30 @@ private:
 	struct Entry { ActionCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
-		{ ActionCode::Quit,                      "Quit"                         },
-		{ ActionCode::Fullscreen,                "Fullscreen"                   },
-		{ ActionCode::Copy,                      "Copy"                         },
-		{ ActionCode::Paste,                     "Paste"                        },
-		{ ActionCode::TestLevel,                 "Test level"                   },
-		{ ActionCode::Toggle,                    "Toggle"                       },
-		{ ActionCode::InstantToggle,             "Instant toggle"               },
-		{ ActionCode::Undo,                      "Undo"                         },
-		{ ActionCode::Redo,                      "Redo"                         },
-		{ ActionCode::SelectAll,                 "Select all"                   },
-		{ ActionCode::DeselectAll,               "Deselect all"                 },
-		{ ActionCode::Translate,                 "Translate"                    },
-		{ ActionCode::Rotate,                    "Rotate"                       },
-		{ ActionCode::Scale,                     "Scale"                        },
-		{ ActionCode::LockToXAxis,               "Constrain to X axis"          },
-		{ ActionCode::LockToYAxis,               "Constrain to Y axis"          },
-		{ ActionCode::ToggleTransformBothStates, "Toggle transform both states" },
-		{ ActionCode::ToggleTransformIndividually, "Toggle transform individually"     },
+		{ ActionCode::Quit,                        "Quit"                          },
+		{ ActionCode::Fullscreen,                  "Fullscreen"                    },
+		{ ActionCode::Copy,                        "Copy"                          },
+		{ ActionCode::Paste,                       "Paste"                         },
+		{ ActionCode::TestLevel,                   "Test level"                    },
+		{ ActionCode::Toggle,                      "Toggle"                        },
+		{ ActionCode::InstantToggle,               "Instant toggle"                },
+		{ ActionCode::Undo,                        "Undo"                          },
+		{ ActionCode::Redo,                        "Redo"                          },
+		{ ActionCode::SelectAll,                   "Select all"                    },
+		{ ActionCode::DeselectAll,                 "Deselect all"                  },
+		{ ActionCode::Translate,                   "Translate"                     },
+		{ ActionCode::Rotate,                      "Rotate"                        },
+		{ ActionCode::Scale,                       "Scale"                         },
+		{ ActionCode::LockToXAxis,                 "Constrain to X axis"           },
+		{ ActionCode::LockToYAxis,                 "Constrain to Y axis"           },
+		{ ActionCode::ToggleTransformBothStates,   "Toggle transform both states"  },
+		{ ActionCode::ToggleTransformIndividually, "Toggle transform individually" },
 	};
 };
 
 class KeyRegistry {
 public:
-	constexpr static std::string_view UNKNOWN_KEY = "UnknownKey";
+	constexpr static std::string UNKNOWN_KEY = "UnknownKey";
 
 	static std::optional<KeyCode> fromString(std::string_view str) {
 		auto it = std::ranges::find_if(entries,
@@ -132,22 +132,26 @@ public:
 		return (it != std::ranges::end(entries)) ? std::make_optional(it->code) : std::nullopt;
 	}
 
-	static std::string_view toString(KeyCode code) {
+	static std::string toString(KeyCode code) {
 		auto it = std::ranges::find_if(entries,
 			[code](const Entry& e) { return e.code == code; });
-		return (it != std::ranges::end(entries)) ? it->name : UNKNOWN_KEY;
+		return (it != std::ranges::end(entries)) ? std::string(it->name) : UNKNOWN_KEY;
 	}
 
 private:
 	struct Entry { KeyCode code; std::string_view name; };
 
 	static constexpr Entry entries[] = {
+		{ KeyCode::Ctrl , "CTRL"  },
+		{ KeyCode::Shift, "SHIFT" },
+		{ KeyCode::Alt,   "ALT"   },
+
 	    { KeyCode::Tab,       "TAB"       },
 	    { KeyCode::Enter,     "ENTER"     },
-	    { KeyCode::Escape,    "ESCAPE"       },
+	    { KeyCode::Escape,    "ESCAPE"    },
 	    { KeyCode::Space,     "SPACE"     },
 	    { KeyCode::Backspace, "BACKSPACE" },
-	    { KeyCode::Delete,    "DELETE" },
+	    { KeyCode::Delete,    "DELETE"    },
 
 	    { KeyCode::A, "A" }, { KeyCode::B, "B" }, { KeyCode::C, "C" },
 	    { KeyCode::D, "D" }, { KeyCode::E, "E" }, { KeyCode::F, "F" },
@@ -199,15 +203,18 @@ public:
 
 	void bind(KeyChord chord, ActionCode action) {
 		bindings[chord] = action;
+		reverseBindings[action] = chord;
 	}
 
 	[[nodiscard]] std::optional<ActionCode> translate(KeyChord chord) const;
+	[[nodiscard]] std::optional<KeyChord> findBinding(ActionCode action) const;
 
 private:
 	[[nodiscard]] static std::optional<KeyChord> parseChord(std::string_view string);
 	[[nodiscard]] static std::string formatChord(const KeyChord& chord);
 
 	std::unordered_map<KeyChord, ActionCode> bindings;
+	std::unordered_map<ActionCode, KeyChord> reverseBindings;
 };
 
 

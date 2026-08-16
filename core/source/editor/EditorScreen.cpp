@@ -27,7 +27,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		std::move(levelToEdit),
 		[this] { updateEphemeralMeshes(); }),
 	context(
-		&quickSettings, &scene, &camera, nullptr, &gizmoRenderer, &uiToWorldScale,
+		&quickSettings, &scene, &camera, &gizmoRenderer, &uiToWorldScale, nullptr, nullptr,
 		[this](std::unique_ptr<Operation> operation) { return startOperation(std::move(operation)); },
 		[this] { finishOperation(); }),
 	currentToolMode(std::make_unique<DefaultMode>(&context)) {
@@ -56,8 +56,11 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 			.widthMode = SizingMode::Stretch,
 			.heightMode = SizingMode::Wrap,
 		});
-		item->addChild(std::make_unique<UIText>(labelText, TextStyle{
-			.color = {200, 200, 200}, .alignVertical = TextAlignVertical::Middle}));
+		item->addChild(std::make_unique<UIText>(labelText,
+			TextStyle{
+				.color = Color::LightGrey,
+				.alignVertical = TextAlignVertical::Middle
+			}));
 		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
 		textField->setLayout({
 			.heightMode = SizingMode::Wrap,
@@ -93,6 +96,45 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	obstacleMotionPropertiesList->setLayout({ .padding = glm::vec2(20.f) });
 
 	context.operationUI = viewportUI->addChild<UINode>(false);
+
+	auto shortcutsBar = viewportUI->addChild(std::make_unique<UIPanel>(PanelStyle{
+		.fillColor = {24, 26, 32, 240},
+		.cornerRadius = 5.f,
+	}));
+	shortcutsBar->setLayout({
+		.anchor = Anchor::BottomCentre,
+		.heightMode = SizingMode::Wrap,
+		.margin = glm::vec2(5.f),
+	});
+	auto shortcutsList = shortcutsBar->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
+	shortcutsList->setLayout({
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(5.f),
+	});
+
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformBothStates))
+		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Statefulness toggle")));
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformIndividually))
+		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Individuality toggle")));
+
+	idleShortcutHints = shortcutsList->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
+	idleShortcutHints->setLayout({
+		.widthMode = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::Translate))
+		idleShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Translate")));
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::Rotate))
+		idleShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Rotate")));
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::Scale))
+		idleShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Scale")));
+
+	context.operationShortcutHints = shortcutsList->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
+	context.operationShortcutHints->setLayout({
+		.widthMode = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+
 
 	stateIndicator = viewportUI->addChild<UIPanel>();
 	stateIndicator->setLayout({
@@ -479,8 +521,11 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 				.widthMode = SizingMode::Stretch,
 				.heightMode = SizingMode::Wrap,
 			});
-			item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(propertyDescriptor.property), TextStyle{
-				.color = labelColor, .alignVertical = TextAlignVertical::Middle}));
+			item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(propertyDescriptor.property),
+				TextStyle{
+					.color = labelColor,
+					.alignVertical = TextAlignVertical::Middle
+				}));
 			auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
 			textField->setLayout({
 				.heightMode = SizingMode::Wrap,
@@ -539,10 +584,19 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 			obstacleMotionPropertiesList->addChild(makeListItem(Color::StateA, false));
 			obstacleMotionPropertiesList->addChild(makeListItem(Color::StateB, true));
 		} else
-			obstacleMotionPropertiesList->addChild(makeListItem({200, 200, 200}));
+			obstacleMotionPropertiesList->addChild(makeListItem(Color::LightGrey));
 	}
 }
 
+
+void EditorScreen::hideShortcutHints() {
+	for (auto& hint : idleShortcutHints->getChildren())
+		hint->deactivate();
+}
+void EditorScreen::showShortcutHints() {
+	for (auto& hint : idleShortcutHints->getChildren())
+		hint->activate();
+}
 
 void EditorScreen::updateStateIndicator() {
 	stateIndicator->panelStyle = {
@@ -555,10 +609,13 @@ void EditorScreen::updateStateIndicator() {
 
 
 Operation* EditorScreen::startOperation(std::unique_ptr<Operation> operation) {
+	hideShortcutHints();
 	activeOperation = std::move(operation);
 	return activeOperation.get();
 }
 void EditorScreen::finishOperation() {
 	activeOperation.reset();
 	uiManager.removeAllChildrenOfNode(context.operationUI);
+	uiManager.removeAllChildrenOfNode(context.operationShortcutHints);
+	showShortcutHints();
 }

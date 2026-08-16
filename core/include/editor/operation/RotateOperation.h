@@ -9,13 +9,14 @@ class UIText;
 class RotateOperation : public PivotOperation {
 public:
 	RotateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
-		: PivotOperation(context, trigger, initialPointerPosition) { RotateOperation::updateDetailsText(); }
+		: PivotOperation(context, trigger, initialPointerPosition) { RotateOperation::createUI(); }
 	explicit RotateOperation(const TransformOperation& other)
-		: PivotOperation(other) { RotateOperation::updateDetailsText(); }
+		: PivotOperation(other) { RotateOperation::createUI(); }
 
 	static std::optional<float> keyToRotationRadians(KeyCode key);
 
 protected:
+	void createUI() override;
 	void updateDetailsText() override;
 
 private:

@@ -11,11 +11,12 @@ class UIText;
 class TransformOperation : public Operation {
 public:
 	TransformOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
-		: Operation(context, trigger, initialPointerPosition) { createUI(); }
+		: Operation(context, trigger, initialPointerPosition) { TransformOperation::createUI(); }
 	TransformOperation(const TransformOperation& other)
-		: Operation(other) { createUI(); } // Reset typing
+		: Operation(other) { TransformOperation::createUI(); } // Reset typing
 
 protected:
+	void createUI() override;
 	virtual void updateDetailsText() = 0;
 
 	bool typing = false;
@@ -24,8 +25,6 @@ protected:
 	UIText* detailsText = nullptr;
 
 private:
-	void createUI();
-
 	void applyModifiers(byte mods) final {}
 
 	[[nodiscard]] bool canStart() const final { return context->scene->anythingIsSelected(); }
