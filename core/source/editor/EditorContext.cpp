@@ -14,7 +14,7 @@ std::unique_ptr<UIHorizontalList> EditorContext::makeShortcutHint(KeyChord keyCh
 	});
 
 	TextStyle textStyle = {
-		.fontSize = 16.f,
+		.fontSize = 14.f,
 		.color = Color::LightGrey,
 		.alignHorizontal = TextAlignHorizontal::Centre,
 		.alignVertical = TextAlignVertical::Middle,
@@ -28,7 +28,7 @@ std::unique_ptr<UIHorizontalList> EditorContext::makeShortcutHint(KeyChord keyCh
 				.cornerRadius = 3.f,
 				.strokeWidth = 1.f,
 			});
-		constexpr float paddingY = 2.f;
+		float paddingY = textStyle.fontSize / 8.f;
 		if (name.length() == 1)
 			box->setLayout({
 				.anchor = Anchor::Centre,

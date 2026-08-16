@@ -47,13 +47,12 @@ void UINode::updateBounds(Rectangle parentBounds) {
 
 	glm::vec2 availableSize = max(glm::vec2(0.f), parentBounds.size - layout.margin * 2.f);
 
-	absoluteBounds.width  = (layout.widthMode  == SizingMode::Stretch) ? availableSize.x * layout.width  : measuredSize.x;
-	absoluteBounds.height = (layout.heightMode == SizingMode::Stretch) ? availableSize.y * layout.height : measuredSize.y;
+	absoluteBounds.width()  = (layout.widthMode  == SizingMode::Stretch) ? availableSize.x * layout.width  : measuredSize.x;
+	absoluteBounds.height() = (layout.heightMode == SizingMode::Stretch) ? availableSize.y * layout.height : measuredSize.y;
 
 	absoluteBounds.position = parentBounds.position + layout.margin + (availableSize - absoluteBounds.size) * anchor + layout.offset;
 
-	Rectangle innerBounds;
-	innerBounds = absoluteBounds;
+	Rectangle innerBounds = absoluteBounds;
 	innerBounds.position += layout.padding;
 	innerBounds.size = max(glm::vec2(0.f), innerBounds.size - layout.padding * 2.f);
 
@@ -68,8 +67,8 @@ void UINode::arrangeChildren(Rectangle innerBounds) {
 
 
 bool UINode::contains(glm::vec2 point) const {
-	if (point.x < absoluteBounds.x || point.x > absoluteBounds.x + absoluteBounds.width ||
-		point.y < absoluteBounds.y || point.y > absoluteBounds.y + absoluteBounds.height)
+	if (point.x < absoluteBounds.x() || point.x > absoluteBounds.x() + absoluteBounds.width() ||
+		point.y < absoluteBounds.y() || point.y > absoluteBounds.y() + absoluteBounds.height())
 		return false;
 
 	return containsPrecise(point);

@@ -38,7 +38,8 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 
 	auto layout = uiManager.addNode(std::make_unique<UIHorizontalList>(0.f, 0.f));
 
-	viewportUI = layout->addChild<UINode>(false);
+	auto mainArea = layout->addChild<UIVerticalList>(0.f, 0.f);
+	viewportUI = mainArea->addChild<UINode>(false);
 
 	auto propertiesPanel = layout->addChild<UIPanel>(Theme::DarkPanel);
 	propertiesPanel->setLayout({
@@ -97,15 +98,17 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 
 	context.operationUI = viewportUI->addChild<UINode>(false);
 
-	auto shortcutsBar = viewportUI->addChild(std::make_unique<UIPanel>(PanelStyle{
-		.fillColor = {24, 26, 32, 240},
-		.cornerRadius = 5.f,
-	}));
+	auto shortcutsBar = mainArea->addChild(std::make_unique<UIPanel>(
+		PanelStyle{
+			.fillColor = {24, 26, 32, 150},
+		}));
 	shortcutsBar->setLayout({
 		.anchor = Anchor::BottomCentre,
 		.heightMode = SizingMode::Wrap,
-		.margin = glm::vec2(5.f),
 	});
+	shortcutsBar->setHitTestable(false);
+	shortcutsBar->setHitTestableChildren(false);
+
 	auto shortcutsList = shortcutsBar->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
 	shortcutsList->setLayout({
 		.heightMode = SizingMode::Wrap,
@@ -491,7 +494,9 @@ void EditorScreen::updateEphemeralMeshes() {
 
 void EditorScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
-	camera.update((float)width, (float)height, scene.level->arenaWidth, scene.level->arenaHeight, viewportUI->getAbsoluteBounds() * uiManager.getScale());
+	auto viewportBounds = viewportUI->getAbsoluteBounds() * uiManager.getScale();
+	viewportBounds.y() = (float)height - viewportBounds.height() - viewportBounds.y();
+	camera.update((float)width, (float)height, scene.level->arenaWidth, scene.level->arenaHeight, viewportBounds);
 	updateEphemeralMeshes();
 }
 

@@ -190,8 +190,8 @@ void UITextBox::updateCursorAndHighlight() {
 		auto highlightNode = highlightContainer->addChild<UIPanel>(textBoxStyle.highlight);
 		highlightNode->setLayout({
 			.anchor = Anchor::TopLeft,
-			.widthMode = SizingMode::Absolute, .width = highlightRect.width,
-			.heightMode = SizingMode::Absolute, .height = highlightRect.height,
+			.widthMode = SizingMode::Absolute, .width = highlightRect.width(),
+			.heightMode = SizingMode::Absolute, .height = highlightRect.height(),
 			.offset = highlightRect.position
 		});
 	}

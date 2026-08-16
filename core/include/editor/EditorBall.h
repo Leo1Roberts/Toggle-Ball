@@ -37,8 +37,8 @@ public:
 	void translateBy(glm::vec2 vector, const BallDescriptor* base) const {
 		descriptor->initialPosition = base->initialPosition + vector;
 	}
-	void rotateBy(glm::mat2 rotationMatrix, glm::vec2 pivot, const BallDescriptor* base) const {
-		descriptor->initialPosition = pivot + rotationMatrix * (base->initialPosition - pivot);
+	void rotateBy(glm::mat2 rotationMatrix, glm::vec2 pivot, bool individual, const BallDescriptor* base) const {
+		descriptor->initialPosition = individual ? base->initialPosition : pivot + rotationMatrix * (base->initialPosition - pivot);
 	}
 	void scaleBy(float factor, glm::vec2 pivot, bool individual, const BallDescriptor* base) const {
 		descriptor->initialPosition = individual ? base->initialPosition : pivot + factor * (base->initialPosition - pivot);

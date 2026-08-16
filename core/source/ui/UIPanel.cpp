@@ -42,11 +42,11 @@ bool UIPanel::containsPrecise(glm::vec2 point) const {
 	if (panelStyle.cornerRadius == 0.f)
 		return true;
 
-	float halfWidth = bounds.width * 0.5f;
-	float halfHeight = bounds.height * 0.5f;
+	float halfWidth = bounds.width() * 0.5f;
+	float halfHeight = bounds.height() * 0.5f;
 
-	float centerX = bounds.x + halfWidth;
-	float centerY = bounds.y + halfHeight;
+	float centerX = bounds.x() + halfWidth;
+	float centerY = bounds.y() + halfHeight;
 
 	float dx = std::abs(point.x - centerX);
 	float dy = std::abs(point.y - centerY);
@@ -69,12 +69,12 @@ void UIPanelRenderer::addPanel(const UIPanel* panel) {
 	const auto& bounds = panel->getAbsoluteBounds();
 
 	float
-	l = bounds.x,
-	r = bounds.x + bounds.width,
-	b = bounds.y,
-	t = bounds.y + bounds.height;
+	l = bounds.x(),
+	r = bounds.x() + bounds.width(),
+	b = bounds.y(),
+	t = bounds.y() + bounds.height();
 
-	float maxFeatureSize = std::min(bounds.width, bounds.height) * 0.5f;
+	float maxFeatureSize = std::min(bounds.width(), bounds.height()) * 0.5f;
 	float strokeWidth = std::max(0.f, std::min(panel->panelStyle.strokeWidth, maxFeatureSize));
 	float rad = std::max(0.f, std::min(panel->panelStyle.cornerRadius, maxFeatureSize));
 

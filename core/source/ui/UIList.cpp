@@ -60,7 +60,7 @@ glm::vec2 UIList::measure() {
 }
 
 void UIList::arrangeChildren(Rectangle innerBounds) {
-	float viewLength = vertical ? innerBounds.height : innerBounds.width;
+	float viewLength = vertical ? innerBounds.height() : innerBounds.width();
 	float freeSpace = viewLength;
 	float relativeWeightTotal = 0.f; // Use relative sizes as weights for distributing free space
 	int visibleCount = 0;
@@ -96,17 +96,16 @@ void UIList::arrangeChildren(Rectangle innerBounds) {
 		if (!child->isActive() || !child->isVisible()) continue;
 
 		const auto& childLayout = child->getLayout();
-		Rectangle slotBounds;
-		slotBounds = innerBounds;
+		auto slotBounds = innerBounds;
 
 		if (vertical) {
 			float childHeight = childLayout.heightMode == SizingMode::Stretch
 			                    ? spacePerWeight * childLayout.height
 			                    : child->getMeasuredSize().y;
 
-			slotBounds.y += currentPos - offset;
+			slotBounds.y() += currentPos - offset;
 
-			slotBounds.height = childLayout.heightMode == SizingMode::Stretch && childLayout.height > 0.f
+			slotBounds.height() = childLayout.heightMode == SizingMode::Stretch && childLayout.height > 0.f
 			                    ? childHeight / childLayout.height + childLayout.margin.y * 2.f
 			                    : childHeight + childLayout.margin.y * 2.f;
 
@@ -116,9 +115,9 @@ void UIList::arrangeChildren(Rectangle innerBounds) {
 			                    ? spacePerWeight * childLayout.width
 			                    : child->getMeasuredSize().x;
 
-			slotBounds.x += currentPos - offset;
+			slotBounds.x() += currentPos - offset;
 
-			slotBounds.width = childLayout.widthMode == SizingMode::Stretch && childLayout.width > 0.f
+			slotBounds.width() = childLayout.widthMode == SizingMode::Stretch && childLayout.width > 0.f
 			                    ? childWidth / childLayout.width + childLayout.margin.x * 2.f
 			                    : childWidth + childLayout.margin.x * 2.f;
 

@@ -120,8 +120,8 @@ void UIText::updateGlyphLayout() {
 	float startY{};
 	switch (textStyle.alignVertical) {
 	case TextAlignVertical::Top:    startY = 0.f; break;
-	case TextAlignVertical::Middle: startY = (bounds.height - totalHeight) * 0.5f; break;
-	case TextAlignVertical::Bottom: startY = bounds.height - totalHeight; break;
+	case TextAlignVertical::Middle: startY = (bounds.height() - totalHeight) * 0.5f; break;
+	case TextAlignVertical::Bottom: startY = bounds.height() - totalHeight; break;
 	}
 
 	float currentY = startY;
@@ -129,8 +129,8 @@ void UIText::updateGlyphLayout() {
 		float currentX{};
 		switch (textStyle.alignHorizontal) {
 		case TextAlignHorizontal::Left:   currentX = 0.f; break;
-		case TextAlignHorizontal::Centre: currentX = (bounds.width - line.width) * 0.5f; break;
-		case TextAlignHorizontal::Right:  currentX = bounds.width - line.width; break;
+		case TextAlignHorizontal::Centre: currentX = (bounds.width() - line.width) * 0.5f; break;
+		case TextAlignHorizontal::Right:  currentX = bounds.width() - line.width; break;
 		}
 
 		if (line.start == line.end) {
@@ -271,10 +271,8 @@ std::vector<Rectangle> UIText::getHighlightRects(int start, int end) const {
 			float y      = textLayout.cursorPositions[lineStart].y;
 
 			rects.push_back({
-				.x      = startX,
-				.y      = y,
-				.width  = endX - startX,
-				.height = lineHeight
+				.position = {startX, y},
+				.size = {endX - startX, lineHeight}
 			});
 		}
 	}
@@ -297,8 +295,8 @@ void UITextRenderer::addText(const UIText* textNode) {
 	const auto& bounds = textNode->getAbsoluteBounds();
 
 	for (const auto& glyph : layout.glyphs) {
-		float x = bounds.x + glyph.pos.x;
-		float y = bounds.y + glyph.pos.y;
+		float x = bounds.x() + glyph.pos.x;
+		float y = bounds.y() + glyph.pos.y;
 		float width = glyph.size.x;
 		float height = glyph.size.y;
 

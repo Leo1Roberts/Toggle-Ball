@@ -5,22 +5,19 @@
 
 
 struct Rectangle {
-	union {
-		glm::vec2 position{};
-		struct {
-			float x;
-			float y;
-		};
-	};
-	union {
-		glm::vec2 size{};
-		struct {
-			float width;
-			float height;
-		};
-	};
+	glm::vec2 position{0.f};
+	glm::vec2 size{0.f};
 
-	Rectangle operator*(float scale) const { return {position * scale, size * scale}; }
+	float& x() { return position.x; }
+	[[nodiscard]] float x() const { return position.x; }
+	float& y() { return position.y; }
+	[[nodiscard]] float y() const { return position.y; }
+	float& width() { return size.x; }
+	[[nodiscard]] float width() const { return size.x; }
+	float& height() { return size.y; }
+	[[nodiscard]] float height() const { return size.y; }
+
+	Rectangle operator*(float scale) const { return { position * scale, size * scale }; }
 };
 
 

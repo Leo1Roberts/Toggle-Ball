@@ -110,7 +110,7 @@ void RotateOperation::applyOperation() {
 	auto& obstacles = context->scene->obstacles;
 
 	if (ball->isSelected())
-		ball->rotateBy(rotationMatrix, pivot, context->scene->getCurrentNode()->level.ballDescriptor.get());
+		ball->rotateBy(rotationMatrix, pivot, context->quickSettings->transformIndividually, context->scene->getCurrentNode()->level.ballDescriptor.get());
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];

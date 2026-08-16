@@ -18,23 +18,23 @@ void Camera::update(float screenWidth, float screenHeight, float arenaWidth, flo
 	cache.arenaHeight = arenaHeight;
 	cache.viewport = viewport;
 
-	if (viewport.width == 0.f || viewport.height == 0.f) return;
+	if (viewport.width() == 0.f || viewport.height() == 0.f) return;
 
-	if (arenaWidth * viewport.height > viewport.width * arenaHeight) { // Level is wider than screen
+	if (arenaWidth * viewport.height() > viewport.width() * arenaHeight) { // Level is wider than screen
 		halfWidth = arenaWidth * 0.5f;
-		halfHeight = halfWidth * viewport.height / viewport.width;
+		halfHeight = halfWidth * viewport.height() / viewport.width();
 	} else {
 		halfHeight = arenaHeight * 0.5f;
-		halfWidth = halfHeight * viewport.width / viewport.height;
+		halfWidth = halfHeight * viewport.width() / viewport.height();
 	}
 	halfWidth *= zoomInv;
 	halfHeight *= zoomInv;
 
 	glm::vec2 centre = {
-		viewport.x + (viewport.width * 0.5f),
-		viewport.y + (viewport.height * 0.5f)};
+		viewport.x() + (viewport.width() * 0.5f),
+		viewport.y() + (viewport.height() * 0.5f)};
 
-	float unitsPerPixel = (halfWidth * 2.f) / viewport.width;
+	float unitsPerPixel = (halfWidth * 2.f) / viewport.width();
 
 	float
 	left   = centre.x * unitsPerPixel,
