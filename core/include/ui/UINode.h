@@ -22,7 +22,6 @@ class UIManager;
 class UINode {
 public:
 	UINode() = default;
-	explicit UINode(bool hitTestable) : hitTestable(hitTestable) {}
 
 	virtual ~UINode() = default;
 

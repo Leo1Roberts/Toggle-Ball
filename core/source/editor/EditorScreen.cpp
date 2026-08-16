@@ -8,6 +8,7 @@
 #include "opengl/Shader.h"
 #include "editor/operation/TranslateOperation.h"
 #include "ui/Theme.h"
+#include "ui/UIContainer.h"
 #include "ui/UIList.h"
 #include "ui/UITextBox.h"
 
@@ -39,7 +40,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	auto layout = uiManager.addNode(std::make_unique<UIHorizontalList>(0.f, 0.f));
 
 	auto mainArea = layout->addChild<UIVerticalList>(0.f, 0.f);
-	viewportUI = mainArea->addChild<UINode>(false);
+	viewportUI = mainArea->addChild<UIContainer>();
 
 	auto propertiesPanel = layout->addChild<UIPanel>(Theme::DarkPanel);
 	propertiesPanel->setLayout({
@@ -96,7 +97,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	obstacleMotionPropertiesList = propertiesList->addChild<UIVerticalList>(10.f);
 	obstacleMotionPropertiesList->setLayout({ .padding = glm::vec2(20.f) });
 
-	context.operationUI = viewportUI->addChild<UINode>(false);
+	context.operationUI = viewportUI->addChild<UIContainer>();
 
 	auto shortcutsBar = mainArea->addChild(std::make_unique<UIPanel>(
 		PanelStyle{

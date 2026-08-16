@@ -1,10 +1,11 @@
 #include "ui/UITextBox.h"
 
+#include "ui/UIContainer.h"
+
 
 UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle, std::string placeholderText)
 	: UIPanel(bStyle.normalPanel), textBoxStyle(bStyle), inputBuffer(validator), placeholder(std::move(placeholderText)) {
-	container = addChild<UINode>();
-	container->setHitTestable(false);
+	container = addChild<UIContainer>();
 	container->setHitTestableChildren(false); // Not safe to change - see updateCursorAndHighlight()
 	container->setLayout({
 		.anchor = Anchor::Centre,
@@ -12,7 +13,7 @@ UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxS
 		.heightMode = SizingMode::Wrap,
 	});
 
-	highlightContainer = container->addChild<UINode>();
+	highlightContainer = container->addChild<UIContainer>();
 	textNode = container->addChild<UIText>(placeholder, textBoxStyle.normalText);
 	cursorNode = container->addChild<UIPanel>(textBoxStyle.cursor);
 

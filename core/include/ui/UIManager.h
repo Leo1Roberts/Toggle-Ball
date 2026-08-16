@@ -2,6 +2,7 @@
 #define UI_MANAGER_H
 
 #include "Settings.h"
+#include "UIContainer.h"
 #include "UIPanel.h"
 #include "UIText.h"
 
@@ -45,7 +46,7 @@ private:
 
 	void unregisterNode(UINode* node);
 
-	UINode rootNode{false};
+	UIContainer rootNode;
 	UINode* focusedNode = nullptr;
 	std::unordered_map<int, UINode*> hoveredNodes;
 	std::unordered_map<int, UINode*> downCapturedNodes;
