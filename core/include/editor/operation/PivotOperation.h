@@ -14,8 +14,6 @@ public:
 	void renderGizmos() override;
 
 protected:
-	glm::vec2 pointerPlanarPosition{};
-
 	glm::vec2 pivot{};
 
 private:

@@ -67,8 +67,9 @@ bool ScaleOperation::doProcessEvent(const Event& event) {
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
-			pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
-			scale = std::sqrt(length2(pointerPlanarPosition - pivot) / length2(initialPointerPlanarPosition - pivot));
+			glm::vec2 newPointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
+			scale *= std::pow(std::sqrt(length2(newPointerPlanarPosition - pivot) / length2(pointerPlanarPosition - pivot)), precisionMultiplier);
+			pointerPlanarPosition = newPointerPlanarPosition;
 			applyOperation();
 			return false; // Allow pointer move events to pass through
 		}

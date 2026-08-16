@@ -120,7 +120,7 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 		if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 			if (auto vector = keyToTranslationVector(key->chord.code)) {
 				if (trigger == TriggerType::ActionKey) {
-					rawTranslation += *vector;
+					rawTranslation += *vector * precisionMultiplier;
 					applyOperation();
 				}
 				return true;
@@ -128,8 +128,9 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
-			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
-			rawTranslation = pointerPlanarPosition - initialPointerPlanarPosition;
+			glm::vec2 newPointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
+			rawTranslation += (newPointerPlanarPosition - pointerPlanarPosition) * precisionMultiplier;
+			pointerPlanarPosition = newPointerPlanarPosition;
 			applyOperation();
 			return false; // Allow pointer move events to pass through
 		}

@@ -67,7 +67,7 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 		if (trigger == TriggerType::ActionKey) {
 			if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 				if (auto amount = keyToRotationRadians(key->chord.code)) {
-					setRotation(rotation + *amount);
+					setRotation(rotation + *amount * precisionMultiplier);
 					applyOperation();
 					return true;
 				}
@@ -77,7 +77,7 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
 			glm::vec2 newPointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
-			setRotation(rotation + angleDifference(newPointerPlanarPosition, pointerPlanarPosition, pivot));
+			setRotation(rotation + angleDifference(newPointerPlanarPosition, pointerPlanarPosition, pivot) * precisionMultiplier);
 			pointerPlanarPosition = newPointerPlanarPosition;
 			applyOperation();
 			return false; // Allow pointer move events to pass through

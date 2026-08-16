@@ -4,8 +4,6 @@
 
 
 void PivotOperation::init() {
-	pointerPlanarPosition = initialPointerPlanarPosition;
-
 	auto focus = context->scene->selectionFocus;
 	if (focus.type == EntityType::Ball)
 		pivot = context->scene->ball.descriptor->initialPosition;

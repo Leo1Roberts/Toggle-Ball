@@ -1,5 +1,6 @@
 #include "editor/operation/TransformOperation.h"
 
+#include "ui/UIList.h"
 #include "ui/UIPanel.h"
 #include "ui/UIText.h"
 
@@ -25,4 +26,7 @@ void TransformOperation::createUI() {
 		.alignHorizontal = TextAlignHorizontal::Centre,
 		.alignVertical = TextAlignVertical::Middle
 	}));
+
+	context->operationShortcutHints->addChild(EditorContext::makeShortcutHint(
+		KeyChord(KeyCode::Unknown, MOD_SHIFT), "Precision mode"));
 }
