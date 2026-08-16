@@ -21,8 +21,8 @@ UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxS
 
 
 glm::vec2 UITextBox::measure() {
-	bool cursorVisible = cursorNode ? cursorNode->isVisible() : false;
-	bool highlightVisible = highlightContainer ? highlightContainer->isVisible() : false;
+	bool cursorVisible = cursorNode->isVisible();
+	bool highlightVisible = highlightContainer->isVisible();
 
 	cursorNode->hide();
 	highlightContainer->hide();

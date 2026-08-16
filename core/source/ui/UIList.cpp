@@ -6,7 +6,7 @@ glm::vec2 UIList::measure() {
 	int visibleCount = 0;
 
 	for (auto& child : getChildren()) {
-		if (!child->isActive() || !child->isVisible()) continue;
+		if (!child->isActive()) continue;
 
 		glm::vec2 childSize = child->measure();
 		visibleCount++;
@@ -66,7 +66,7 @@ void UIList::arrangeChildren(Rectangle innerBounds) {
 	int visibleCount = 0;
 
 	for (const auto& child : getChildren()) {
-		if (!child->isActive() || !child->isVisible()) continue;
+		if (!child->isActive()) continue;
 		visibleCount++;
 
 		const auto& childLayout = child->getLayout();
@@ -93,7 +93,7 @@ void UIList::arrangeChildren(Rectangle innerBounds) {
 	float currentPos = 0.f;
 
 	for (const auto& child : getChildren()) {
-		if (!child->isActive() || !child->isVisible()) continue;
+		if (!child->isActive()) continue;
 
 		const auto& childLayout = child->getLayout();
 		auto slotBounds = innerBounds;

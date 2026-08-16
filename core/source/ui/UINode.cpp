@@ -6,14 +6,14 @@ glm::vec2 UINode::measure() {
 
 	if (layout.widthMode == SizingMode::Wrap || layout.heightMode == SizingMode::Wrap)
 		for (auto& child : children) {
-			if (!child->isActive() || !child->isVisible()) continue;
+			if (!child->isActive()) continue;
 
 			glm::vec2 childSize = child->measure() + child->layout.margin * 2.f + abs(child->layout.offset);
 			contentSize = max(contentSize, childSize);
 		}
 	else
 		for (auto& child : children)
-			if (child->isActive() && child->isVisible())
+			if (child->isActive())
 				child->measure();
 
 	switch (layout.widthMode) {
@@ -61,7 +61,7 @@ void UINode::updateBounds(Rectangle parentBounds) {
 
 void UINode::arrangeChildren(Rectangle innerBounds) {
 	for (auto& child: children)
-		if (child->isActive() && child->isVisible())
+		if (child->isActive())
 			child->updateBounds(innerBounds);
 }
 

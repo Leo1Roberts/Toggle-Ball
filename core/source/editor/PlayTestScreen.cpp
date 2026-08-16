@@ -6,9 +6,8 @@
 
 PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 	: game(levelToPlay) {
-	auto levelCompleteBackground = std::make_unique<UIButton>();
-	levelCompleteBackground->hide();
-	levelCompleteDisplay = uiManager.addNode(std::move(levelCompleteBackground));
+	levelCompleteDisplay = uiManager.addNode<UIButton>();
+	levelCompleteDisplay->hide();
 	levelCompleteDisplay->setOnClick([this] { levelCompleteDisplay->deactivate(); });
 
 	auto levelCompleteButton = levelCompleteDisplay->addChild<UIButton>("Level complete!", Theme::SuccessButton);

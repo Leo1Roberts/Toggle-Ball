@@ -25,6 +25,8 @@ public:
 
 	template <typename T>
 	T* addNode(std::unique_ptr<T> node) { return rootNode.addChild(std::move(node)); }
+	template <typename T, typename... Args>
+	T* addNode(Args&&... args) { return rootNode.addChild<T>(std::forward<Args>(args)...); }
 
 	void removeAllChildrenOfNode(UINode* node);
 
