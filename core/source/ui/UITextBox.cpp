@@ -6,7 +6,7 @@
 UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle, std::string placeholderText)
 	: UIPanel(bStyle.normalPanel), textBoxStyle(bStyle), inputBuffer(validator), placeholder(std::move(placeholderText)) {
 	container = addChild<UIContainer>();
-	container->setHitTestableChildren(false); // Not safe to change - see updateCursorAndHighlight()
+	container->setHitTestableChildren(false); // Not safe to change - see arrangeChildren()
 	container->setLayout({
 		.anchor = Anchor::Centre,
 		.widthMode  = SizingMode::Wrap,
@@ -25,13 +25,13 @@ glm::vec2 UITextBox::measure() {
 	bool cursorVisible = cursorNode->isVisible();
 	bool highlightVisible = highlightContainer->isVisible();
 
-	cursorNode->hide();
-	highlightContainer->hide();
+	// cursorNode->deactivate();
+	// highlightContainer->deactivate();
 
 	glm::vec2 size = UIPanel::measure();
 
-	if (cursorVisible) cursorNode->show();
-	if (highlightVisible) highlightContainer->show();
+	// if (cursorVisible) cursorNode->activate();
+	// if (highlightVisible) highlightContainer->activate();
 
 	return size;
 }
@@ -39,12 +39,31 @@ glm::vec2 UITextBox::measure() {
 void UITextBox::arrangeChildren(Rectangle innerBounds) {
 	UIPanel::arrangeChildren(innerBounds);
 
-	updateCursorAndHighlight();
+	highlightContainer->clearChildren(); // Only safe because container children are not hit testable
+	for (const auto& highlightRect : textNode->getHighlightRects(inputBuffer.getSelectionStartIndex(), inputBuffer.getSelectionEndIndex())) {
+		auto highlightNode = highlightContainer->addChild<UIPanel>(textBoxStyle.highlight);
+		highlightNode->setLayout({
+			.anchor = Anchor::TopLeft,
+			.widthMode = SizingMode::Absolute, .width = highlightRect.width(),
+			.heightMode = SizingMode::Absolute, .height = highlightRect.height(),
+			.offset = highlightRect.position
+		});
+	}
+
+	float cursorWidth = 1.f;
+	glm::vec2 pos = textNode->getCursorPosition(inputBuffer.getCursorIndex());
+	pos.x -= cursorWidth / 2.f;
+	cursorNode->setLayout({
+		.anchor = Anchor::TopLeft,
+		.widthMode = SizingMode::Absolute, .width = cursorWidth,
+		.heightMode = SizingMode::Absolute, .height = textNode->textStyle.fontSize,
+		.offset = pos
+	});
 
 	highlightContainer->measure();
 	cursorNode->measure();
 
-	Rectangle containerInner = container->getAbsoluteBounds();
+	auto containerInner = container->getAbsoluteBounds();
 	containerInner.position += container->getLayout().padding;
 	containerInner.size = glm::max(glm::vec2(0.f), containerInner.size - container->getLayout().padding * 2.f);
 
@@ -183,29 +202,6 @@ void UITextBox::updateText() {
 void UITextBox::setText(const std::string& text) {
 	inputBuffer.setText(text);
 	updateText();
-}
-
-void UITextBox::updateCursorAndHighlight() {
-	highlightContainer->clearChildren(); // Only safe because container children are not hit testable
-	for (const auto& highlightRect : textNode->getHighlightRects(inputBuffer.getSelectionStartIndex(), inputBuffer.getSelectionEndIndex())) {
-		auto highlightNode = highlightContainer->addChild<UIPanel>(textBoxStyle.highlight);
-		highlightNode->setLayout({
-			.anchor = Anchor::TopLeft,
-			.widthMode = SizingMode::Absolute, .width = highlightRect.width(),
-			.heightMode = SizingMode::Absolute, .height = highlightRect.height(),
-			.offset = highlightRect.position
-		});
-	}
-
-	float cursorWidth = 1.f;
-	glm::vec2 pos = textNode->getCursorPosition(inputBuffer.getCursorIndex());
-	pos.x -= cursorWidth / 2.f;
-	cursorNode->setLayout({
-		.anchor = Anchor::TopLeft,
-		.widthMode = SizingMode::Absolute, .width = cursorWidth,
-		.heightMode = SizingMode::Absolute, .height = textNode->textStyle.fontSize,
-		.offset = pos
-	});
 }
 
 void UITextBox::updateAppearance() {

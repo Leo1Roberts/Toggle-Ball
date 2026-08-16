@@ -56,8 +56,12 @@ namespace Color {
 	constexpr col ObBlobCentralHover = col(90, 0, 230);
 	constexpr col ObBlobCentralPressed = col(70, 0, 179);
 
-	constexpr col StateA = col(204, 22, 22);
-	constexpr col StateB = col(22, 95, 204);
+	constexpr col StateA        = col(204, 22, 22);
+	constexpr col StateAHovered = col(173, 19, 19);
+	constexpr col StateAPressed = col(143, 15, 15);
+	constexpr col StateB        = col(22, 95, 204);
+	constexpr col StateBHovered = col(19, 81, 173);
+	constexpr col StateBPressed = col(15, 67, 143);
 
 	constexpr col ToggleBlob = col(220, 220, 220);
 }

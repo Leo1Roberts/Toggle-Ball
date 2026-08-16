@@ -72,7 +72,6 @@ private:
 	void updateText();
 	void setText(const std::string& text);
 
-	void updateCursorAndHighlight();
 	void updateAppearance();
 
 	microseconds cursorInactiveTime = 0;

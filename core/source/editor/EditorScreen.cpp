@@ -11,6 +11,7 @@
 #include "ui/UIContainer.h"
 #include "ui/UIList.h"
 #include "ui/UITextBox.h"
+#include "ui/UIToggle.h"
 
 
 const glm::vec3 groundColor = colorToLinear({76, 76, 76});
@@ -40,6 +41,16 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	auto layout = uiManager.addNode(std::make_unique<UIHorizontalList>(0.f, 0.f));
 
 	auto mainArea = layout->addChild<UIVerticalList>(0.f, 0.f);
+
+	auto statusBar = mainArea->addChild(std::make_unique<UIPanel>(
+		PanelStyle{
+			.fillColor = {24, 26, 32, 150},
+		}));
+	statusBar->setLayout({
+		.anchor = Anchor::TopCentre,
+		.heightMode = SizingMode::Wrap,
+	});
+
 	viewportUI = mainArea->addChild<UIContainer>();
 
 	auto propertiesPanel = layout->addChild<UIPanel>(Theme::DarkPanel);
@@ -99,18 +110,16 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 
 	context.operationUI = viewportUI->addChild<UIContainer>();
 
-	auto shortcutsBar = mainArea->addChild(std::make_unique<UIPanel>(
+	auto helpBar = mainArea->addChild(std::make_unique<UIPanel>(
 		PanelStyle{
 			.fillColor = {24, 26, 32, 150},
 		}));
-	shortcutsBar->setLayout({
+	helpBar->setLayout({
 		.anchor = Anchor::BottomCentre,
 		.heightMode = SizingMode::Wrap,
 	});
-	shortcutsBar->setHitTestable(false);
-	shortcutsBar->setHitTestableChildren(false);
 
-	auto shortcutsList = shortcutsBar->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
+	auto shortcutsList = helpBar->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
 	shortcutsList->setLayout({
 		.heightMode = SizingMode::Wrap,
 		.padding = glm::vec2(5.f),
@@ -140,20 +149,27 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	});
 
 
-	stateIndicator = viewportUI->addChild<UIPanel>();
-	stateIndicator->setLayout({
-		.anchor = Anchor::TopRight,
-		.widthMode  = SizingMode::Wrap,
+	auto stateToggle = statusBar->addChild<UIToggle>(scene.isToggled(),
+		ToggleStyle{
+			.normalTrackOff = PanelStyle{ .fillColor = Color::StateA, .cornerRadius = 8.f },
+			.hoveredTrackOff = PanelStyle{ .fillColor = Color::StateAHovered, .cornerRadius = 8.f },
+			.normalTrackOn  = PanelStyle{ .fillColor = Color::StateB, .cornerRadius = 8.f },
+			.hoveredTrackOn = PanelStyle{ .fillColor = Color::StateBHovered, .cornerRadius = 8.f },
+			.handle   = PanelStyle{ .fillColor = Color::White,  .cornerRadius = 3.f }
+		});
+	stateToggle->setLayout({
+		.anchor = Anchor::CentreRight,
+		.widthMode  = SizingMode::Absolute, .width = 60.f,
 		.heightMode = SizingMode::Wrap,
-		.padding = glm::vec2(10.f),
-		.margin = glm::vec2(10.f)
+		.padding = glm::vec2(5.f),
+		.margin = glm::vec2(5.f)
 	});
-	stateIndicator->addChild(std::make_unique<UIText>("", TextStyle{
-		.color = Color::White,
-		.alignHorizontal = TextAlignHorizontal::Centre,
-		.alignVertical = TextAlignVertical::Middle
-	}));
-	updateStateIndicator();
+	stateToggle->setHandleLayout({
+		.widthMode = SizingMode::Absolute, .width = 20.f,
+		.heightMode = SizingMode::Absolute, .height = 20.f,
+	});
+	stateToggle->setOnToggle([this](...) { scene.toggle(); });
+	stateToggle->setValueProvider([this] { return scene.getTogglePosition(); });
 }
 
 
@@ -175,13 +191,11 @@ void EditorScreen::processEvent(const Event& event) {
 			case ActionCode::Toggle:
 				if (key->action == KeyAction::Down) {
 					scene.toggle();
-					updateStateIndicator();
 					return;
 				} break;
 			case ActionCode::InstantToggle:
 				if (key->action == KeyAction::Down) {
 					scene.toggle(false);
-					updateStateIndicator();
 					return;
 				} break;
 			case ActionCode::SelectAll:
@@ -592,16 +606,6 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 		} else
 			obstacleMotionPropertiesList->addChild(makeListItem(Color::LightGrey));
 	}
-}
-
-
-void EditorScreen::updateStateIndicator() {
-	stateIndicator->panelStyle = {
-		.fillColor = scene.isToggled() ? Color::StateB : Color::StateA,
-		.cornerRadius = 10.f,
-	};
-	auto text = (UIText*)stateIndicator->getChildren()[0].get();
-	text->setText(scene.isToggled() ? "State B" : "State A");
 }
 
 

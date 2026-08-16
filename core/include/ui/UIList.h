@@ -33,13 +33,13 @@ private:
 
 class UIVerticalList : public UIList {
 public:
-	UIVerticalList(float spacing, float scrollSpeed = 20.f)
+	explicit UIVerticalList(float spacing, float scrollSpeed = 20.f)
 		: UIList(true, spacing, scrollSpeed) {}
 };
 
 class UIHorizontalList : public UIList {
 public:
-	UIHorizontalList(float spacing, float scrollSpeed = 20.f)
+	explicit UIHorizontalList(float spacing, float scrollSpeed = 20.f)
 		: UIList(false, spacing, scrollSpeed) {}
 };
 

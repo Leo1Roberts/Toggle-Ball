@@ -10,6 +10,15 @@ struct PanelStyle {
 	col strokeColor = Color::Black;
 	float cornerRadius = 0.f;
 	float strokeWidth = 0.f;
+
+	[[nodiscard]] static PanelStyle mix(const PanelStyle& x, const PanelStyle& y, float a) {
+		return {
+			glm::mix((glm::vec4)x.fillColor,    (glm::vec4)y.fillColor,    a),
+			glm::mix((glm::vec4)x.strokeColor,  (glm::vec4)y.strokeColor,  a),
+			glm::mix(           x.cornerRadius,            y.cornerRadius, a),
+			glm::mix(           x.strokeWidth,             y.strokeWidth,  a),
+		};
+	}
 };
 
 struct LineStyle {
@@ -58,6 +67,18 @@ struct TextBoxStyle {
 
 	PanelStyle cursor;
 	PanelStyle highlight;
+};
+
+struct ToggleStyle {
+	PanelStyle normalTrackOff;
+	PanelStyle hoveredTrackOff;
+	PanelStyle disabledTrackOff;
+
+	PanelStyle normalTrackOn;
+	PanelStyle hoveredTrackOn;
+	PanelStyle disabledTrackOn;
+
+	PanelStyle handle;
 };
 
 #endif // UI_STYLE_H

@@ -49,8 +49,6 @@ private:
 	UINode* viewportUI;
 	UIHorizontalList* idleShortcutHints;
 
-	UIPanel* stateIndicator;
-	void updateStateIndicator();
 	UIVerticalList* obstacleMotionPropertiesList;
 
 	std::unique_ptr<ToolMode> currentToolMode;
