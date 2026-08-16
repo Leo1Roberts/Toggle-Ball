@@ -1,41 +1,71 @@
 #include "ui/UINode.h"
 
 
-void UINode::updateBounds(Rectangle parentBounds) { // Similar code in UITextBubble
-	float ax = 0.f;
-	float ay = 0.f;
+glm::vec2 UINode::measure() {
+	glm::vec2 contentSize{0.f, 0.f};
+
+	if (layout.widthMode == SizingMode::Wrap || layout.heightMode == SizingMode::Wrap)
+		for (auto& child : children) {
+			if (!child->isActive() || !child->isVisible()) continue;
+
+			glm::vec2 childSize = child->measure() + child->layout.margin * 2.f + abs(child->layout.offset);
+			contentSize = max(contentSize, childSize);
+		}
+	else
+		for (auto& child : children)
+			if (child->isActive() && child->isVisible())
+				child->measure();
+
+	switch (layout.widthMode) {
+	case SizingMode::Absolute: measuredSize.x = layout.width; break;
+	case SizingMode::Wrap:     measuredSize.x = contentSize.x + layout.padding.x * 2.f; break;
+	case SizingMode::Stretch:  measuredSize.x = 0.f; break;
+	}
+	switch (layout.heightMode) {
+	case SizingMode::Absolute: measuredSize.y = layout.height; break;
+	case SizingMode::Wrap:     measuredSize.y = contentSize.y + layout.padding.y * 2.f; break;
+	case SizingMode::Stretch:  measuredSize.y = 0.f; break;
+	}
+
+	return measuredSize;
+}
+
+void UINode::updateBounds(Rectangle parentBounds) {
+	auto anchor = glm::vec2(0.f);
 
 	switch (layout.anchor) {
-		case Anchor::TopLeft:      ax = 0.0f; ay = 0.0f; break;
-		case Anchor::TopCentre:    ax = 0.5f; ay = 0.0f; break;
-		case Anchor::TopRight:     ax = 1.0f; ay = 0.0f; break;
-		case Anchor::CentreLeft:   ax = 0.0f; ay = 0.5f; break;
-		case Anchor::Centre:       ax = 0.5f; ay = 0.5f; break;
-		case Anchor::CentreRight:  ax = 1.0f; ay = 0.5f; break;
-		case Anchor::BottomLeft:   ax = 0.0f; ay = 1.0f; break;
-		case Anchor::BottomCentre: ax = 0.5f; ay = 1.0f; break;
-		case Anchor::BottomRight:  ax = 1.0f; ay = 1.0f; break;
+		case Anchor::TopLeft:	   anchor = {0.0f, 0.0f}; break;
+		case Anchor::TopCentre:	   anchor = {0.5f, 0.0f}; break;
+		case Anchor::TopRight:	   anchor = {1.0f, 0.0f}; break;
+		case Anchor::CentreLeft:   anchor = {0.0f, 0.5f}; break;
+		case Anchor::Centre:	   anchor = {0.5f, 0.5f}; break;
+		case Anchor::CentreRight:  anchor = {1.0f, 0.5f}; break;
+		case Anchor::BottomLeft:   anchor = {0.0f, 1.0f}; break;
+		case Anchor::BottomCentre: anchor = {0.5f, 1.0f}; break;
+		case Anchor::BottomRight:  anchor = {1.0f, 1.0f}; break;
 	}
 
-	if (layout.widthMode == SizingMode::Absolute) {
-		absoluteBounds.width = layout.width;
-		absoluteBounds.x = parentBounds.x + (parentBounds.width - absoluteBounds.width) * ax + layout.offset.x;
-	} else {
-		absoluteBounds.width = (parentBounds.width * layout.width) - (2.f * layout.offset.x);
-		absoluteBounds.x = parentBounds.x + (parentBounds.width - absoluteBounds.width) * ax + layout.offset.x * (1.f - 2.f * ax);
-	}
+	glm::vec2 availableSize = max(glm::vec2(0.f), parentBounds.size - layout.margin * 2.f);
 
-	if (layout.heightMode == SizingMode::Absolute) {
-		absoluteBounds.height = layout.height;
-		absoluteBounds.y = parentBounds.y + (parentBounds.height - absoluteBounds.height) * ay + layout.offset.y;
-	} else {
-		absoluteBounds.height = (parentBounds.height * layout.height) - (2.f * layout.offset.y);
-		absoluteBounds.y = parentBounds.y + (parentBounds.height - absoluteBounds.height) * ay + layout.offset.y * (1.f - 2.f * ay);
-	}
+	absoluteBounds.width  = (layout.widthMode  == SizingMode::Stretch) ? availableSize.x * layout.width  : measuredSize.x;
+	absoluteBounds.height = (layout.heightMode == SizingMode::Stretch) ? availableSize.y * layout.height : measuredSize.y;
 
-	for (auto& child: children)
-		child->updateBounds(absoluteBounds);
+	absoluteBounds.position = parentBounds.position + layout.margin + (availableSize - absoluteBounds.size) * anchor + layout.offset;
+
+	Rectangle innerBounds;
+	innerBounds = absoluteBounds;
+	innerBounds.position += layout.padding;
+	innerBounds.size = max(glm::vec2(0.f), innerBounds.size - layout.padding * 2.f);
+
+	arrangeChildren(innerBounds);
 }
+
+void UINode::arrangeChildren(Rectangle innerBounds) {
+	for (auto& child: children)
+		if (child->isActive() && child->isVisible())
+			child->updateBounds(innerBounds);
+}
+
 
 bool UINode::contains(glm::vec2 point) const {
 	if (point.x < absoluteBounds.x || point.x > absoluteBounds.x + absoluteBounds.width ||

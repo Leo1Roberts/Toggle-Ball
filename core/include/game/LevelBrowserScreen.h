@@ -9,11 +9,12 @@ class LevelBrowserScreen : public Screen {
 public:
 	explicit LevelBrowserScreen(const std::function<void(std::string)>& playLevelCallback);
 
-	void processEvent(const Event& event) override;
-	void render() override;
+	void processEvent(const Event& event) override { uiManager.processEvent(event); }
+	void update(microseconds dt) override { uiManager.update(dt); }
+	void render() override { uiManager.render(); }
 
 private:
-	void doResize() override;
+	void doResize() override { uiManager.resize(width, height, dpiScale); }
 
 	UIManager uiManager{};
 };

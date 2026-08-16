@@ -1,6 +1,6 @@
 #include "editor/operation/TranslateOperation.h"
 
-#include "ui/UITextBubble.h"
+#include "ui/UIText.h"
 
 
 namespace Axis {
@@ -28,8 +28,7 @@ void TranslateOperation::updateDetailsText() {
 			text += floatToString(magnitude, 3, true);
 	}
 
-	detailsBubble->setText(text);
-	detailsBubble->updateBounds(detailsBubble->getParent()->getAbsoluteBounds());
+	detailsText->setText(text);
 }
 
 

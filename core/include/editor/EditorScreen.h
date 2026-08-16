@@ -11,7 +11,6 @@
 #include "ui/UIManager.h"
 
 
-class UITextBubble;
 class UIVerticalList;
 
 class EditorScreen : public Screen {
@@ -49,7 +48,7 @@ private:
 
 	UINode* viewportUI;
 
-	UITextBubble* stateIndicator;
+	UIPanel* stateIndicator;
 	void updateStateIndicator();
 	UIVerticalList* obstacleMotionPropertiesList;
 

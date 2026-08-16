@@ -10,7 +10,6 @@
 #include "ui/Theme.h"
 #include "ui/UIList.h"
 #include "ui/UITextBox.h"
-#include "ui/UITextBubble.h"
 
 
 const glm::vec3 groundColor = colorToLinear({76, 76, 76});
@@ -37,36 +36,33 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
 
 
-	auto layout = uiManager.addNode(std::make_unique<UIHorizontalList>(glm::vec2(0.f), 0.f, 0.f));
+	auto layout = uiManager.addNode(std::make_unique<UIHorizontalList>(0.f, 0.f));
 
 	viewportUI = layout->addChild(std::make_unique<UINode>(false));
 
 	auto propertiesPanel = layout->addChild(std::make_unique<UIPanel>(Theme::DarkPanel));
-	propertiesPanel->layout = {
-		.widthMode = SizingMode::Absolute,
-		.width = 300.f,
-	};
+	propertiesPanel->setLayout({
+		.widthMode = SizingMode::Absolute, .width = 300.f,
+	});
+	auto propertiesList = propertiesPanel->addChild(std::make_unique<UIVerticalList>(0.f, 0.f));
 
 
-	auto levelAndBallPropertiesList = propertiesPanel->addChild(std::make_unique<UIVerticalList>(glm::vec2(20.f), 10.f));
-	levelAndBallPropertiesList->layout = { .anchor = Anchor::TopCentre, .height = 0.5f };
+	auto levelAndBallPropertiesList = propertiesList->addChild(std::make_unique<UIVerticalList>(10.f));
+	levelAndBallPropertiesList->setLayout({ .padding = glm::vec2(20.f) });
 
 	auto makeListItem = [this](const std::string& labelText, float* property) {
-		auto item =  std::make_unique<UINode>();
-		item->layout = {
-			.heightMode = SizingMode::Absolute, .height = 50.f
-		};
-		auto label = item->addChild(std::make_unique<UIText>(labelText, TextStyle{
+		auto item =  std::make_unique<UIHorizontalList>(10.f, 0.f);
+		item->setLayout({
+			.widthMode = SizingMode::Stretch,
+			.heightMode = SizingMode::Wrap,
+		});
+		item->addChild(std::make_unique<UIText>(labelText, TextStyle{
 			.color = {200, 200, 200}, .alignVertical = TextAlignVertical::Middle}));
-		label->layout = {
-			.anchor = Anchor::CentreLeft,
-			.width = 0.5f
-		};
 		auto textField = item->addChild(std::make_unique<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-"));
-		textField->layout = {
-			.anchor = Anchor::CentreRight,
-			.width = 0.5f
-		};
+		textField->setLayout({
+			.heightMode = SizingMode::Wrap,
+			.padding = {0.f, 10.f}
+		});
 		textField->setOnTextChange([this, property](const UITextBox& tb) {
 			if (auto value = tb.getValue<std::optional<float>>())
 				*property = *value;
@@ -93,20 +89,24 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	levelAndBallPropertiesList->addChild(makeListItem("Ball position X", &scene.ball.descriptor->initialPosition.x));
 	levelAndBallPropertiesList->addChild(makeListItem("Ball position Y", &scene.ball.descriptor->initialPosition.y));
 
-	obstacleMotionPropertiesList = propertiesPanel->addChild(std::make_unique<UIVerticalList>(glm::vec2(20.f), 10.f));
-	obstacleMotionPropertiesList->layout = { .anchor = Anchor::BottomCentre, .height = 0.5f };
+	obstacleMotionPropertiesList = propertiesList->addChild(std::make_unique<UIVerticalList>(10.f));
+	obstacleMotionPropertiesList->setLayout({ .padding = glm::vec2(20.f) });
 
 	context.operationUI = viewportUI->addChild(std::make_unique<UINode>(false));
 
-	stateIndicator = viewportUI->addChild(std::make_unique<UITextBubble>("", glm::vec2(10.f), PanelStyle{}, TextStyle{
+	stateIndicator = viewportUI->addChild(std::make_unique<UIPanel>());
+	stateIndicator->setLayout({
+		.anchor = Anchor::TopRight,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(10.f),
+		.margin = glm::vec2(10.f)
+	});
+	stateIndicator->addChild(std::make_unique<UIText>("", TextStyle{
 		.color = Color::White,
 		.alignHorizontal = TextAlignHorizontal::Centre,
 		.alignVertical = TextAlignVertical::Middle
 	}));
-	stateIndicator->layout = {
-		.anchor = Anchor::TopRight,
-		.offset = {-10.f, 10.f}
-	};
 	updateStateIndicator();
 }
 
@@ -474,21 +474,18 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 
 	for (const auto& propertyDescriptor : commonProperties) {
 		auto makeListItem = [this, propertyDescriptor](col labelColor, bool toggled = false) {
-			auto item =  std::make_unique<UINode>();
-			item->layout = {
-				.heightMode = SizingMode::Absolute, .height = 50.f
-			};
-			auto label = item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(propertyDescriptor.property), TextStyle{
+			auto item =  std::make_unique<UIHorizontalList>(10.f, 0.f);
+			item->setLayout({
+				.widthMode = SizingMode::Stretch,
+				.heightMode = SizingMode::Wrap,
+			});
+			item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(propertyDescriptor.property), TextStyle{
 				.color = labelColor, .alignVertical = TextAlignVertical::Middle}));
-			label->layout = {
-				.anchor = Anchor::CentreLeft,
-				.width = 0.5f
-			};
 			auto textField = item->addChild(std::make_unique<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-"));
-			textField->layout = {
-				.anchor = Anchor::CentreRight,
-				.width = 0.5f
-			};
+			textField->setLayout({
+				.heightMode = SizingMode::Wrap,
+				.padding = {0.f, 10.f}
+			});
 			textField->setOnFocusGained([this, propertyDescriptor] {
 				switch (propertyDescriptor.property) {
 				case MotionSpecProperty::AngularSpeed_rpm:
@@ -544,22 +541,20 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 		} else
 			obstacleMotionPropertiesList->addChild(makeListItem({200, 200, 200}));
 	}
-
-	obstacleMotionPropertiesList->updateBounds(obstacleMotionPropertiesList->getParent()->getAbsoluteBounds());
 }
 
 
 void EditorScreen::updateStateIndicator() {
-	stateIndicator->setText(scene.isToggled() ? "State B" : "State A");
 	stateIndicator->panelStyle = {
 		.fillColor = scene.isToggled() ? Color::StateB : Color::StateA,
 		.cornerRadius = 10.f,
 	};
+	auto text = (UIText*)stateIndicator->getChildren()[0].get();
+	text->setText(scene.isToggled() ? "State B" : "State A");
 }
 
 
 Operation* EditorScreen::startOperation(std::unique_ptr<Operation> operation) {
-	context.operationUI->updateBounds(context.operationUI->getParent()->getAbsoluteBounds());
 	activeOperation = std::move(operation);
 	return activeOperation.get();
 }

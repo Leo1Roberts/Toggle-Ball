@@ -1,23 +1,28 @@
 #include "editor/operation/TransformOperation.h"
 
-#include "ui/UITextBubble.h"
+#include "ui/UIPanel.h"
+#include "ui/UIText.h"
 
 
 void TransformOperation::createUI() {
-	detailsBubble = context->operationUI->addChild(std::make_unique<UITextBubble>("", glm::vec2(6.f),
+	auto panel = context->operationUI->addChild(std::make_unique<UIPanel>(
 		PanelStyle{
 			.fillColor = {24, 26, 32, 150},
 			.cornerRadius = 4.f,
-		},
-		TextStyle{
-			.font = FontId::CourierNew,
-			.fontSize = 16.f,
-			.color = Color::White,
-			.alignHorizontal = TextAlignHorizontal::Centre,
-			.alignVertical = TextAlignVertical::Middle
 		}));
-	detailsBubble->layout = {
+	panel->setLayout({
 		.anchor = Anchor::TopCentre,
-		.offset = {0.f, 10.f}
-	};
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(6.f),
+		.margin  = glm::vec2(10.f),
+	});
+
+	detailsText = panel->addChild(std::make_unique<UIText>("", TextStyle{
+		.font = FontId::CourierNew,
+		.fontSize = 16.f,
+		.color = Color::White,
+		.alignHorizontal = TextAlignHorizontal::Centre,
+		.alignVertical = TextAlignVertical::Middle
+	}));
 }

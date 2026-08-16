@@ -21,47 +21,52 @@ void UIText::submitRender(UIManager& manager) {
 }
 
 
-
-void UIText::updateTextLayout() {
+glm::vec2 UIText::measure() {
 	textLayout.reset();
 
-	if (text.empty())
-		textLayout.cursorPositions.emplace_back(0.f);
+	if (text.empty()) {
+		float totalHeight = textStyle.fontSize;
+		float startY = 0.f;
+		if (layout.heightMode == SizingMode::Absolute) {
+			float availableHeight = layout.height - layout.padding.y * 2.f;
+			switch (textStyle.alignVertical) {
+			case TextAlignVertical::Top:    startY = 0.f; break;
+			case TextAlignVertical::Middle: startY = std::max(0.f, (availableHeight - totalHeight) * 0.5f); break;
+			case TextAlignVertical::Bottom: startY = std::max(0.f, availableHeight - totalHeight); break;
+			}
+		}
+
+		textLayout.cursorPositions.emplace_back(0.f, startY);
+		measuredSize = glm::vec2(0.f, totalHeight) + layout.padding * 2.f;
+		return measuredSize;
+	}
 
 	auto font = Fonts::get(textStyle.font);
 	auto typeface = font->typeface;
 	float scaleFactor = textStyle.fontSize / typeface->size;
 
-	textLayout.cursorPositions.resize(text.length() + 1);
-	textLayout.charAdvances.resize(text.length());
-
-	struct LineInfo {
-		int start;
-		int end;
-		float width;
-	};
-	std::vector<LineInfo> lines;
+	textLayout.lines.clear();
 
 	int currentLineStart = 0;
 	float currentLineWidth = 0.f;
 
-	for (int i = 0; i < text.length(); i++) {
+	for (int i = 0; i < (int)text.length(); i++) {
 		char c = text[i];
 		if (c == '\n') {
 			float lineWidth = currentLineWidth;
 			if (i > currentLineStart && text[i - 1] != ' ')
 				lineWidth -= font->charSpacing * scaleFactor;
 
-			lines.push_back({currentLineStart, i, std::max(0.f, lineWidth)});
+			textLayout.lines.push_back({currentLineStart, i, std::max(0.f, lineWidth)});
 			currentLineStart = i + 1;
 			currentLineWidth = 0.f;
 			continue;
 		}
 
 		float advance = 0.f;
-		if (c == ' ') {
+		if (c == ' ')
 			advance = font->wordSpacing * scaleFactor;
-		} else {
+		else {
 			CharBounds cb = typeface->charLocations[c];
 			if (cb.right == 0.f) cb = typeface->charLocations['?'];
 
@@ -80,42 +85,52 @@ void UIText::updateTextLayout() {
 	float finalLineWidth = currentLineWidth;
 	if ((int)text.length() > currentLineStart && text.back() != ' ')
 		finalLineWidth -= font->charSpacing * scaleFactor;
-	lines.push_back({currentLineStart, (int)text.length(), std::max(0.f, finalLineWidth)});
-	
-	float totalHeight = (float)lines.size() * textStyle.fontSize +
-						(float)(lines.size() - 1) * font->lineSpacing * scaleFactor;
-	textLayout.totalSize = {0.f, totalHeight};
+	textLayout.lines.push_back({currentLineStart, (int)text.length(), std::max(0.f, finalLineWidth)});
+
+	float maxLineWidth = 0.f;
+	for (const auto& line : textLayout.lines)
+		maxLineWidth = std::max(maxLineWidth, line.width);
+
+	float totalHeight = (float)textLayout.lines.size() * textStyle.fontSize +
+	                    (float)(textLayout.lines.size() - 1) * font->lineSpacing * scaleFactor;
+
+	textLayout.totalSize = {maxLineWidth, totalHeight};
+
+	// Ignore width and height modes, always behave like SizingMode::Wrap
+	measuredSize = textLayout.totalSize + layout.padding * 2.f;
+
+	return measuredSize;
+}
+
+
+void UIText::updateGlyphLayout() {
+	if (text.empty()) return;
+
+	auto font = Fonts::get(textStyle.font);
+	auto typeface = font->typeface;
+	float scaleFactor = textStyle.fontSize / typeface->size;
+
+	textLayout.glyphs.clear();
+	textLayout.cursorPositions.resize(text.length() + 1);
+	textLayout.charAdvances.resize(text.length());
 
 	const auto& bounds = getAbsoluteBounds();
-	
-	float startY;
+	float totalHeight = textLayout.totalSize.y;
+
+	float startY{};
 	switch (textStyle.alignVertical) {
-	case TextAlignVertical::Top:
-		startY = 0.f;
-		break;
-	case TextAlignVertical::Middle:
-		startY = (bounds.height - totalHeight) / 2.f;
-		break;
-	case TextAlignVertical::Bottom:
-		startY = bounds.height - totalHeight;
-		break;
+	case TextAlignVertical::Top:    startY = 0.f; break;
+	case TextAlignVertical::Middle: startY = (bounds.height - totalHeight) * 0.5f; break;
+	case TextAlignVertical::Bottom: startY = bounds.height - totalHeight; break;
 	}
 
 	float currentY = startY;
-	for (const auto& line : lines) {
-		textLayout.totalSize.x = std::max(textLayout.totalSize.x, line.width);
-
-		float currentX;
+	for (const auto& line : textLayout.lines) {
+		float currentX{};
 		switch (textStyle.alignHorizontal) {
-		case TextAlignHorizontal::Left:
-			currentX = 0.f;
-			break;
-		case TextAlignHorizontal::Centre:
-			currentX = (bounds.width - line.width) * 0.5f;
-			break;
-		case TextAlignHorizontal::Right:
-			currentX = bounds.width - line.width;
-			break;
+		case TextAlignHorizontal::Left:   currentX = 0.f; break;
+		case TextAlignHorizontal::Centre: currentX = (bounds.width - line.width) * 0.5f; break;
+		case TextAlignHorizontal::Right:  currentX = bounds.width - line.width; break;
 		}
 
 		if (line.start == line.end) {
@@ -151,7 +166,7 @@ void UIText::updateTextLayout() {
 
 				float glyphX = currentX + padding * scaleFactor;
 				float glyphWidth = charWidth * scaleFactor;
-				
+
 				visualBounds[localIdx].left = currentX;
 				visualBounds[localIdx].right = currentX + (charWidth + 2.f * padding) * scaleFactor;
 
@@ -191,64 +206,79 @@ void UIText::updateTextLayout() {
 
 
 int UIText::getIndexAtPosition(glm::vec2 localPos, bool cursor) const {
-	if (textLayout.cursorPositions.empty()) return 0;
+	if (textLayout.cursorPositions.empty() || textLayout.lines.empty()) return 0;
 
 	float lineHeight = textStyle.fontSize;
 	if (auto font = Fonts::get(textStyle.font))
 		lineHeight += font->lineSpacing * (textStyle.fontSize / font->typeface->size);
 
-	int bestIndex = 0;
-	float minLineDist = 999999.f;
-	float minXDist = 999999.f;
+	int bestLineIndex = 0;
+	float minLineDist = std::numeric_limits<float>::max();
 
-	int maxIndex = cursor ? (int)text.length() : std::max(0, (int)text.length() - 1);
-
-	for (int i = 0; i <= maxIndex; i++) {
-		glm::vec2 cursorPos = textLayout.cursorPositions[i];
-		float advance = (i < text.length()) ? textLayout.charAdvances[i] : 0.f;
-
-		float lineCenterY = cursorPos.y + lineHeight * 0.5f;
+	for (int l = 0; l < textLayout.lines.size(); l++) {
+		float lineY = textLayout.cursorPositions[textLayout.lines[l].start].y;
+		float lineCenterY = lineY + lineHeight * 0.5f;
 		float lineDist = std::abs(localPos.y - lineCenterY);
 
-		if (lineDist < minLineDist - 1.0f) { // Changed line
+		if (lineDist < minLineDist) {
 			minLineDist = lineDist;
-			minXDist = 999999.f;
-		}
-
-		if (std::abs(lineDist - minLineDist) < 1.0f) { // On the closest line
-			float targetX = cursor ? cursorPos.x : (cursorPos.x + advance * 0.5f);
-			float xDist = std::abs(localPos.x - targetX);
-
-			if (xDist < minXDist) {
-				minXDist = xDist;
-				bestIndex = i;
-			}
+			bestLineIndex = l;
 		}
 	}
+
+	const auto& line = textLayout.lines[bestLineIndex];
+	int bestIndex = line.start;
+	float minXDist = std::numeric_limits<float>::max();
+
+	int maxGlobalIndex = cursor ? (int)text.length() : std::max(0, (int)text.length() - 1);
+	int maxIndexForLine = std::min(line.end, maxGlobalIndex);
+
+	for (int i = line.start; i <= maxIndexForLine; i++) {
+		float cursorX = textLayout.cursorPositions[i].x;
+		float advance = (i < text.length()) ? textLayout.charAdvances[i] : 0.f;
+
+		float targetX = cursor ? cursorX : (cursorX + advance * 0.5f);
+		float xDist = std::abs(localPos.x - targetX);
+
+		if (xDist < minXDist) {
+			minXDist = xDist;
+			bestIndex = i;
+		}
+	}
+
 	return bestIndex;
 }
 
 
 std::vector<Rectangle> UIText::getHighlightRects(int start, int end) const {
 	std::vector<Rectangle> rects;
-	if (start == end) return rects;
+	if (start >= end) return rects;
+
+	int textLength = (int)text.length();
+	start = std::clamp(start, 0, textLength);
+	end   = std::clamp(end,   0, textLength);
+	if (start >= end) return rects;
 
 	float lineHeight = textStyle.fontSize;
-	float currentX = textLayout.cursorPositions[start].x;
-	float currentY = textLayout.cursorPositions[start].y;
-	float currentWidth = 0.f;
 
-	for (int i = start; i < end; i++) {
-		if (textLayout.cursorPositions[i].y != currentY) { // Start a new rectangle if new line reached
-			rects.push_back({.x = currentX, .y = currentY, .width = currentWidth, .height = lineHeight});
-			currentX = textLayout.cursorPositions[i].x;
-			currentY = textLayout.cursorPositions[i].y;
-			currentWidth = 0.f;
+	for (const auto& line : textLayout.lines) {
+		int lineStart = std::max(line.start, start);
+		int lineEnd   = std::min(line.end,   end);
+
+		if (lineStart < lineEnd) {
+			float startX = textLayout.cursorPositions[lineStart].x;
+			float endX   = textLayout.cursorPositions[lineEnd].x;
+			float y      = textLayout.cursorPositions[lineStart].y;
+
+			rects.push_back({
+				.x      = startX,
+				.y      = y,
+				.width  = endX - startX,
+				.height = lineHeight
+			});
 		}
-		currentWidth += textLayout.charAdvances[i];
 	}
 
-	rects.push_back({.x = currentX, .y = currentY, .width = currentWidth, .height = lineHeight});
 	return rects;
 }
 

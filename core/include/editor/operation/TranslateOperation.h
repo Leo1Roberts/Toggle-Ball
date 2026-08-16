@@ -2,7 +2,6 @@
 #define TRANSLATE_OPERATION_H
 
 #include "TransformOperation.h"
-#include "Operation.h"
 #include "editor/GizmoRenderer.h"
 
 

@@ -3,19 +3,52 @@
 
 UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxStyle& bStyle, std::string placeholderText)
 	: UIPanel(bStyle.normalPanel), textBoxStyle(bStyle), inputBuffer(validator), placeholder(std::move(placeholderText)) {
-	highlightContainer = addChild(std::make_unique<UINode>());
-	highlightContainer->setHitTestable(false);
-	highlightContainer->setHitTestableChildren(false); // Not safe to change - see updateCursorAndHighlight()
+	container = addChild(std::make_unique<UINode>());
+	container->setHitTestable(false);
+	container->setHitTestableChildren(false); // Not safe to change - see updateCursorAndHighlight()
+	container->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
 
-	textNode = addChild(std::make_unique<UIText>(placeholder, textBoxStyle.normalText));
-	highlightContainer->layout = textNode->layout = {
-		.anchor = Anchor::CentreLeft,
-		.offset = {10.f, 0.f}
-	};
-
-	cursorNode = textNode->addChild(std::make_unique<UIPanel>(textBoxStyle.cursor));
+	highlightContainer = container->addChild(std::make_unique<UINode>());
+	textNode = container->addChild(std::make_unique<UIText>(placeholder, textBoxStyle.normalText));
+	cursorNode = container->addChild(std::make_unique<UIPanel>(textBoxStyle.cursor));
 
 	updateAppearance();
+}
+
+
+glm::vec2 UITextBox::measure() {
+	bool cursorVisible = cursorNode ? cursorNode->isVisible() : false;
+	bool highlightVisible = highlightContainer ? highlightContainer->isVisible() : false;
+
+	cursorNode->hide();
+	highlightContainer->hide();
+
+	glm::vec2 size = UIPanel::measure();
+
+	if (cursorVisible) cursorNode->show();
+	if (highlightVisible) highlightContainer->show();
+
+	return size;
+}
+
+void UITextBox::arrangeChildren(Rectangle innerBounds) {
+	UIPanel::arrangeChildren(innerBounds);
+
+	updateCursorAndHighlight();
+
+	highlightContainer->measure();
+	cursorNode->measure();
+
+	Rectangle containerInner = container->getAbsoluteBounds();
+	containerInner.position += container->getLayout().padding;
+	containerInner.size = glm::max(glm::vec2(0.f), containerInner.size - container->getLayout().padding * 2.f);
+
+	highlightContainer->updateBounds(containerInner);
+	cursorNode->updateBounds(containerInner);
 }
 
 
@@ -27,11 +60,11 @@ UIResponse UITextBox::processEvent(const Event& event) {
 	if (effect == TextInputEventEffect::Cursor ||
 		effect == TextInputEventEffect::Buffer) {
 		updateText();
-		updateCursorAndHighlight();
 		cursorInactiveTime = 0;
 		if (onTextChangedCallback && effect == TextInputEventEffect::Buffer)
 			onTextChangedCallback(*this);
 
+		invalidateLayout();
 		return UIResponse::Consumed;
 	}
 
@@ -127,10 +160,8 @@ void UITextBox::doUpdate(microseconds dt) {
 
 	if (!focused && valueProvider) {
 		std::string newValue = valueProvider();
-		if (newValue != textNode->getText()) {
+		if (newValue != textNode->getText())
 			setText(newValue);
-			updateBounds(getParent()->getAbsoluteBounds());
-		}
 	}
 }
 
@@ -154,29 +185,26 @@ void UITextBox::setText(const std::string& text) {
 }
 
 void UITextBox::updateCursorAndHighlight() {
-	highlightContainer->clearChildren(); // Only safe because highlightContainer children are not hit testable
+	highlightContainer->clearChildren(); // Only safe because container children are not hit testable
 	for (const auto& highlightRect : textNode->getHighlightRects(inputBuffer.getSelectionStartIndex(), inputBuffer.getSelectionEndIndex())) {
 		auto highlightNode = highlightContainer->addChild(std::make_unique<UIPanel>(textBoxStyle.highlight));
-		highlightNode->layout = {
+		highlightNode->setLayout({
 			.anchor = Anchor::TopLeft,
-			.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-			.width = highlightRect.width, .height = highlightRect.height,
+			.widthMode = SizingMode::Absolute, .width = highlightRect.width,
+			.heightMode = SizingMode::Absolute, .height = highlightRect.height,
 			.offset = highlightRect.position
-		};
-		highlightNode->updateBounds(highlightContainer->getAbsoluteBounds());
+		});
 	}
 
 	float cursorWidth = 1.f;
 	glm::vec2 pos = textNode->getCursorPosition(inputBuffer.getCursorIndex());
 	pos.x -= cursorWidth / 2.f;
-	cursorNode->layout = {
+	cursorNode->setLayout({
 		.anchor = Anchor::TopLeft,
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = cursorWidth, .height = textNode->textStyle.fontSize,
+		.widthMode = SizingMode::Absolute, .width = cursorWidth,
+		.heightMode = SizingMode::Absolute, .height = textNode->textStyle.fontSize,
 		.offset = pos
-	};
-
-	cursorNode->updateBounds(textNode->getAbsoluteBounds());
+	});
 }
 
 void UITextBox::updateAppearance() {
@@ -207,7 +235,7 @@ void UITextBox::updateAppearance() {
 		case TextBoxState::Focused:  textNode->textStyle = textBoxStyle.focusedText;  break;
 		case TextBoxState::Disabled: textNode->textStyle = textBoxStyle.disabledText; break;
 		}
-		textNode->updateTextLayout();
-		updateCursorAndHighlight();
 	}
+
+	invalidateLayout();
 }

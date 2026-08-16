@@ -31,6 +31,9 @@ public:
 	void onPointerEntered() override;
 	void onPointerExited() override;
 
+	glm::vec2 measure() override;
+	void arrangeChildren(Rectangle innerBounds) override;
+
 	void disable() { state = TextBoxState::Disabled; updateAppearance(); }
 	void enable() { state = TextBoxState::Normal; updateAppearance(); }
 
@@ -53,6 +56,7 @@ private:
 
 	TextBoxStyle textBoxStyle;
 
+	UINode* container = nullptr;
 	UIText* textNode = nullptr;
 	UIPanel* cursorNode = nullptr;
 	UINode* highlightContainer = nullptr;

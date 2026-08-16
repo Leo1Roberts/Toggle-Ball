@@ -6,10 +6,11 @@
 
 class UIList : public UINode {
 public:
-	UIList(bool vertical, glm::vec2 padding, float spacing, float scrollSpeed)
-		: vertical(vertical), padding(padding), spacing(spacing), scrollSpeed(scrollSpeed) {}
+	UIList(bool vertical, float spacing, float scrollSpeed)
+		: vertical(vertical), spacing(spacing), scrollSpeed(scrollSpeed) {}
 
-	void updateBounds(Rectangle parentBounds) override;
+	glm::vec2 measure() override;
+	void arrangeChildren(Rectangle innerBounds) override;
 
 	UIResponse processEvent(const Event& event) override;
 
@@ -20,7 +21,6 @@ private:
 	void scrollTo(float offset);
 
 	bool vertical;
-	glm::vec2 padding;
 	float spacing;
 	float scrollSpeed;
 
@@ -33,14 +33,14 @@ private:
 
 class UIVerticalList : public UIList {
 public:
-	UIVerticalList(glm::vec2 padding, float spacing, float scrollSpeed = 20.f)
-		: UIList(true, padding, spacing, scrollSpeed) {}
+	UIVerticalList(float spacing, float scrollSpeed = 20.f)
+		: UIList(true, spacing, scrollSpeed) {}
 };
 
 class UIHorizontalList : public UIList {
 public:
-	UIHorizontalList(glm::vec2 padding, float spacing, float scrollSpeed = 20.f)
-		: UIList(false, padding, spacing, scrollSpeed) {}
+	UIHorizontalList(float spacing, float scrollSpeed = 20.f)
+		: UIList(false, spacing, scrollSpeed) {}
 };
 
 

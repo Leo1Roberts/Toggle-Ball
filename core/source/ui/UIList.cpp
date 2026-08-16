@@ -1,62 +1,134 @@
 #include "ui/UIList.h"
 
-void UIList::updateBounds(Rectangle parentBounds) {
-	UINode::updateBounds(parentBounds);
 
-	auto paddedBounds = getAbsoluteBounds();
-	paddedBounds.position += padding;
-	paddedBounds.size = max(glm::vec2(0.f), paddedBounds.size - padding * 2.f);
-	float viewLength = vertical ? paddedBounds.height : paddedBounds.width;
+glm::vec2 UIList::measure() {
+	glm::vec2 contentSize{0.f, 0.f};
+	int visibleCount = 0;
 
-	float freeLength = viewLength + spacing;
-	float relativeSizeTotal = 0.f;
-	for (const auto& child : getChildren()) {
-		if (!child->isActive() || !child->isVisible())
-			continue;
+	for (auto& child : getChildren()) {
+		if (!child->isActive() || !child->isVisible()) continue;
 
-		freeLength -= spacing;
+		glm::vec2 childSize = child->measure();
+		visibleCount++;
+
+		const auto& childLayout = child->getLayout();
+		float childOuterWidth  = childSize.x + (childLayout.margin.x * 2.f);
+		float childOuterHeight = childSize.y + (childLayout.margin.y * 2.f);
+
 		if (vertical) {
-			if (child->layout.heightMode == SizingMode::Absolute)
-				freeLength -= child->layout.height;
-			else if (child->layout.heightMode == SizingMode::Relative)
-				relativeSizeTotal += child->layout.height;
+			if (childLayout.heightMode != SizingMode::Stretch)
+				contentSize.y += childOuterHeight;
+			contentSize.x = std::max(contentSize.x, childOuterWidth);
 		} else {
-			if (child->layout.widthMode == SizingMode::Absolute)
-				freeLength -= child->layout.width;
-			else if (child->layout.widthMode == SizingMode::Relative)
-				relativeSizeTotal += child->layout.width;
+			if (childLayout.widthMode != SizingMode::Stretch)
+				contentSize.x += childOuterWidth;
+			contentSize.y = std::max(contentSize.y, childOuterHeight);
 		}
 	}
 
-	freeLength = std::clamp(freeLength, 0.f, viewLength);
-	float lengthPerRelativeSize = relativeSizeTotal > 0.f ? freeLength / relativeSizeTotal : 0.f;
+	if (visibleCount > 1) {
+		if (vertical)
+			contentSize.y += spacing * (float)(visibleCount - 1);
+		else
+			contentSize.x += spacing * (float)(visibleCount - 1);
+	}
+
+	switch (layout.widthMode) {
+	case SizingMode::Absolute:
+		measuredSize.x = layout.width;
+		break;
+	case SizingMode::Wrap:
+		measuredSize.x = contentSize.x + (layout.padding.x * 2.f);
+		break;
+	case SizingMode::Stretch:
+		measuredSize.x = 0.f;
+		break;
+	}
+	switch (layout.heightMode) {
+	case SizingMode::Absolute:
+		measuredSize.y = layout.height;
+		break;
+	case SizingMode::Wrap:
+		measuredSize.y = contentSize.y + (layout.padding.y * 2.f);
+		break;
+	case SizingMode::Stretch:
+		measuredSize.y = 0.f;
+		break;
+	}
+
+	return measuredSize;
+}
+
+void UIList::arrangeChildren(Rectangle innerBounds) {
+	float viewLength = vertical ? innerBounds.height : innerBounds.width;
+	float freeSpace = viewLength;
+	float relativeWeightTotal = 0.f; // Use relative sizes as weights for distributing free space
+	int visibleCount = 0;
+
+	for (const auto& child : getChildren()) {
+		if (!child->isActive() || !child->isVisible()) continue;
+		visibleCount++;
+
+		const auto& childLayout = child->getLayout();
+
+		if (vertical) {
+			if (childLayout.heightMode == SizingMode::Stretch)
+				relativeWeightTotal += childLayout.height;
+			else
+				freeSpace -= (child->getMeasuredSize().y + childLayout.margin.y * 2.f);
+		} else {
+			if (childLayout.widthMode == SizingMode::Stretch)
+				relativeWeightTotal += childLayout.width;
+			else
+				freeSpace -= (child->getMeasuredSize().x + childLayout.margin.x * 2.f);
+		}
+	}
+
+	if (visibleCount > 1)
+		freeSpace -= spacing * (float)(visibleCount - 1);
+	freeSpace = std::max(0.f, freeSpace);
+
+	float spacePerWeight = (relativeWeightTotal > 0.f) ? (freeSpace / relativeWeightTotal) : 0.f;
 
 	float currentPos = 0.f;
+
 	for (const auto& child : getChildren()) {
-		if (!child->isActive() || !child->isVisible())
-			continue;
+		if (!child->isActive() || !child->isVisible()) continue;
 
-		child->layout.anchor = Anchor::TopLeft;
+		const auto& childLayout = child->getLayout();
+		Rectangle slotBounds;
+		slotBounds = innerBounds;
 
-		Rectangle bounds;
-		bounds = paddedBounds;
 		if (vertical) {
-			bounds.y += currentPos - offset;
-			if (child->layout.heightMode == SizingMode::Relative)
-				bounds.height = lengthPerRelativeSize;
-		} else {
-			bounds.x += currentPos - offset;
-			if (child->layout.widthMode == SizingMode::Relative)
-				bounds.width = lengthPerRelativeSize;
-		}
-		child->updateBounds(bounds);
+			float childHeight = childLayout.heightMode == SizingMode::Stretch
+			                    ? spacePerWeight * childLayout.height
+			                    : child->getMeasuredSize().y;
 
-		float childLength = vertical ? child->getAbsoluteBounds().height : child->getAbsoluteBounds().width;
-		currentPos += childLength + spacing;
+			slotBounds.y += currentPos - offset;
+
+			slotBounds.height = childLayout.heightMode == SizingMode::Stretch && childLayout.height > 0.f
+			                    ? childHeight / childLayout.height + childLayout.margin.y * 2.f
+			                    : childHeight + childLayout.margin.y * 2.f;
+
+			currentPos += childHeight + childLayout.margin.y * 2.f + spacing;
+		} else {
+			float childWidth = childLayout.widthMode == SizingMode::Stretch
+			                    ? spacePerWeight * childLayout.width
+			                    : child->getMeasuredSize().x;
+
+			slotBounds.x += currentPos - offset;
+
+			slotBounds.width = childLayout.widthMode == SizingMode::Stretch && childLayout.width > 0.f
+			                    ? childWidth / childLayout.width + childLayout.margin.x * 2.f
+			                    : childWidth + childLayout.margin.x * 2.f;
+
+			currentPos += childWidth + childLayout.margin.x * 2.f + spacing;
+		}
+
+		child->updateBounds(slotBounds);
 	}
 
 	totalContentLength = currentPos > 0.f ? currentPos - spacing : 0.f;
-
 	maxOffset = std::max(0.f, totalContentLength - viewLength);
 	offset = std::clamp(offset, 0.f, maxOffset);
 }
@@ -87,6 +159,9 @@ UIResponse UIList::processEvent(const Event& event) {
 
 
 void UIList::scrollTo(float y) {
-	offset = std::clamp(y, 0.f, maxOffset);
-	updateBounds(getParent() ? getParent()->getAbsoluteBounds() : getAbsoluteBounds());
+	float newOffset = std::clamp(y, 0.f, maxOffset);
+	if (newOffset != offset) {
+		offset = newOffset;
+		invalidateLayout();
+	}
 }

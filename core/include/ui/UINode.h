@@ -31,11 +31,17 @@ public:
 		child->parent = this;
 		T* ptr = child.get();
 		children.push_back(std::move(child));
+		invalidateLayout();
 		return ptr;
 	}
-	void clearChildren() { children.clear(); }
+	void clearChildren() {
+		children.clear();
+		invalidateLayout();
+	}
 
+	virtual glm::vec2 measure();
 	virtual void updateBounds(Rectangle parentBounds);
+	virtual void arrangeChildren(Rectangle innerBounds);
 
 	[[nodiscard]] bool contains(glm::vec2 point) const;
 
@@ -47,8 +53,10 @@ public:
 	virtual UIResponse processEvent(const Event& event) { return UIResponse::Ignored; }
 
 	void update(microseconds dt) {
+		if (!active) return;
 		doUpdate(dt);
-		for (auto& child : children) child->update(dt);
+		for (auto& child : children)
+			child->update(dt);
 	}
 
 	void setAbsoluteBounds(Rectangle bounds) { absoluteBounds = bounds; }
@@ -56,14 +64,28 @@ public:
 
 	virtual void submitRender(UIManager& manager) {}
 
+	void invalidateLayout() {
+		layoutInvalid = true;
+		if (parent) parent->invalidateLayout();
+	}
+	void markLayoutValid() {
+		layoutInvalid = false;
+		for (auto& child : children)
+			child->markLayoutValid();
+	}
+
 	void show() { visible = true; }
 	void hide() { visible = false; }
 	void activate() { active = true; }
 	void deactivate() { active = false; }
 
+	void setLayout(const Layout& l) { layout = l; invalidateLayout(); }
 	void setHitTestable(bool canBeHit) { hitTestable = canBeHit; }
 	void setHitTestableChildren(bool canBeHit) { hitTestableChildren = canBeHit; }
 
+	[[nodiscard]] const Layout& getLayout() const { return layout; }
+	[[nodiscard]] glm::vec2 getMeasuredSize() const { return measuredSize; }
+	[[nodiscard]] bool layoutIsInvalid() const { return layoutInvalid; }
 	[[nodiscard]] UINode* getParent() const { return parent; }
 	[[nodiscard]] const std::vector<std::unique_ptr<UINode>>& getChildren() const { return children; }
 	[[nodiscard]] bool isVisible() const { return visible; }
@@ -72,11 +94,11 @@ public:
 	[[nodiscard]] bool childrenAreHitTestable() const { return hitTestableChildren && active; }
 	[[nodiscard]] virtual bool isFocusable() const { return false; }
 
-	Layout layout;
-
 protected:
 	[[nodiscard]] virtual bool containsPrecise(glm::vec2 point) const { return true; }
 
+	Layout layout;
+	glm::vec2 measuredSize{};
 	Rectangle absoluteBounds;
 
 private:
@@ -84,7 +106,9 @@ private:
 
 	UINode* parent = nullptr;
 	std::vector<std::unique_ptr<UINode>> children;
+	bool infertile = false;
 
+	bool layoutInvalid = true;
 	bool visible = true;
 	bool active = true;
 	bool hitTestable = true;

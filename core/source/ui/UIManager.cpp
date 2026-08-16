@@ -9,11 +9,22 @@ void UIManager::resize(int screenWidth, int screenHeight, float screenDPIScale) 
 	dpiScale = screenDPIScale;
 	logicalScreenSize = glm::vec2((float)screenWidth, (float)screenHeight) / getScale();
 	projectionMatrix = glm::ortho(0.f, logicalScreenSize.x, logicalScreenSize.y, 0.f);
+	rootNode.invalidateLayout();
+	update(0); // Immediately recalculate layout
+}
 
-	rootNode.updateBounds({
-		.position = glm::vec2(0.f),
-		.size = logicalScreenSize,
-	});
+
+void UIManager::update(microseconds dt) {
+	rootNode.update(dt);
+
+	if (rootNode.layoutIsInvalid()) {
+		rootNode.measure();
+		rootNode.updateBounds(Rectangle{
+			.position = glm::vec2(0.f),
+			.size = logicalScreenSize,
+		});
+		rootNode.markLayoutValid();
+	}
 }
 
 

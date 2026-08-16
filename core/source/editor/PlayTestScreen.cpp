@@ -11,32 +11,31 @@ PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 	levelCompleteDisplay = uiManager.addNode(std::move(levelCompleteBackground));
 	levelCompleteDisplay->setOnClick([this] { levelCompleteDisplay->deactivate(); });
 
-	auto levelCompleteButton = std::make_unique<UIButton>("Level complete!", Theme::SuccessButton);
-	levelCompleteButton->layout = {
+	auto levelCompleteButton = levelCompleteDisplay->addChild(std::make_unique<UIButton>("Level complete!", Theme::SuccessButton));
+	levelCompleteButton->setLayout({
 		.anchor = Anchor::Centre,
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = 280.f, .height = 80.f,
-	};
+		.widthMode = SizingMode::Absolute, .width = 280.f,
+		.heightMode = SizingMode::Absolute, .height = 80.f,
+	});
 	levelCompleteButton->setOnClick([this] {
 		levelCompleteDisplay->deactivate();
 		game.start();
 	});
 
-	levelCompleteDisplay->addChild(std::move(levelCompleteButton));
 	levelCompleteDisplay->deactivate();
 
-	auto restartButton = std::make_unique<UIButton>("Restart", Theme::PrimaryButton);
-	restartButton->layout = {
+
+	auto restartButton = uiManager.addNode(std::make_unique<UIButton>("Restart", Theme::PrimaryButton));
+	restartButton->setLayout({
 		.anchor = Anchor::TopRight,
-		.widthMode = SizingMode::Absolute, .heightMode = SizingMode::Absolute,
-		.width = 100.f, .height = 60.f,
-		.offset = {-20.f, 20.f}
-	};
+		.widthMode = SizingMode::Absolute, .width = 100.f,
+		.heightMode = SizingMode::Absolute, .height = 60.f,
+		.margin = glm::vec2(20.f)
+	});
 	restartButton->setOnClick([this] {
 		levelCompleteDisplay->deactivate();
 		game.start();
 	});
-	uiManager.addNode(std::move(restartButton));
 
 	game.start();
 }
@@ -54,6 +53,8 @@ void PlayTestScreen::update(microseconds dt) {
 	game.update(dt);
 	if (!wasComplete && game.levelIsComplete())
 		levelCompleteDisplay->activate();
+
+	uiManager.update(dt);
 }
 
 void PlayTestScreen::render() {

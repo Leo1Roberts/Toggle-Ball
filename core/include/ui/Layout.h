@@ -30,18 +30,19 @@ enum class Anchor {
 	BottomLeft, BottomCentre, BottomRight
 };
 
-enum class SizingMode { Absolute, Relative };
+enum class SizingMode { Absolute, Wrap, Stretch };
 
 struct Layout {
 	Anchor anchor = Anchor::TopLeft;
 
-	SizingMode widthMode  = SizingMode::Relative;
-	SizingMode heightMode = SizingMode::Relative;
-
+	SizingMode widthMode  = SizingMode::Stretch;
 	float width  = 1.f;
+	SizingMode heightMode = SizingMode::Stretch;
 	float height = 1.f;
 
-	glm::vec2 offset{0.f};
+	glm::vec2 padding{0.f}; // Inside
+	glm::vec2 margin{0.f}; // Outside
+	glm::vec2 offset{0.f}; // Final shift
 };
 
 

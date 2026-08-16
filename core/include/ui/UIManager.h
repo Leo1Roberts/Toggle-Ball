@@ -17,7 +17,7 @@ public:
 
 	bool processEvent(const Event& event);
 
-	void update(microseconds dt) { rootNode.update(dt); }
+	void update(microseconds dt);
 
 	void submitPanel(const UIPanel* panel);
 	void submitText(const UIText* text);

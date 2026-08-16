@@ -25,8 +25,15 @@ struct TextGlyph {
 	glm::vec2 uvRightBottom;
 };
 
+struct LineInfo {
+	int start;
+	int end;
+	float width;
+};
+
 struct TextLayout {
 	glm::vec2 totalSize{};
+	std::vector<LineInfo> lines;
 	// For UI interation
 	std::vector<glm::vec2> cursorPositions; // Absolute position
 	std::vector<float> charAdvances;
@@ -50,17 +57,18 @@ public:
 		: textStyle(style), text(std::move(text)) {
 		setHitTestable(false);
 		setHitTestableChildren(false);
-		updateTextLayout();
+		updateGlyphLayout();
 	}
 
+	glm::vec2 measure() override;
 	void updateBounds(Rectangle parentBounds) override {
 		UINode::updateBounds(parentBounds);
-		updateTextLayout();
+		updateGlyphLayout();
 	}
 
 	void submitRender(UIManager& manager) override;
 
-	void updateTextLayout();
+	void updateGlyphLayout();
 
 	[[nodiscard]] glm::vec2 getCursorPosition(int index) const { return textLayout.cursorPositions[index]; }
 	// Returns the index of the closest (cursor ? cursor : character)
@@ -70,8 +78,9 @@ public:
 	TextStyle textStyle;
 
 	void setText(const std::string& newText) {
+		if (text == newText) return;
 		text = newText;
-		updateTextLayout();
+		invalidateLayout();
 	}
 
 	[[nodiscard]] const std::string& getText() const { return text; }
