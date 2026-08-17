@@ -264,6 +264,129 @@ namespace Theme {
 		.cursor = {},
         .highlight = { .fillColor = {88, 101, 242, 140} }    // Translucent Indigo for text selection
     };
+
+	inline constexpr SegmentedControlStyle PrimarySegmentedControl {
+	    .track = {
+	        .fillColor = {14, 16, 20, 255},       // Dark inset background matching PrimaryTextBox
+	        .strokeColor = {48, 52, 64, 255},     // Muted border outline matching DarkCard
+	        .cornerRadius = 8.0f,
+	        .strokeWidth = 1.0f
+	    },
+	    .selectedOption = {
+	        // --- Panel States ---
+	        .normalPanel = {
+	            .fillColor = {88, 101, 242, 255},  // Crisp Indigo matching PrimaryButton
+	            .strokeColor = {0, 0, 0, 0},
+	            .cornerRadius = 6.0f,
+	            .strokeWidth = 0.0f
+	        },
+	        .hoveredPanel = {
+	            .fillColor = {71, 82, 196, 255},   // Slightly darker Indigo
+	            .strokeColor = {0, 0, 0, 0},
+	            .cornerRadius = 6.0f,
+	            .strokeWidth = 0.0f
+	        },
+	        .pressedPanel = {
+	            .fillColor = {58, 66, 160, 255},   // Deep Indigo
+	            .strokeColor = {0, 0, 0, 0},
+	            .cornerRadius = 6.0f,
+	            .strokeWidth = 0.0f
+	        },
+	        .disabledPanel = {
+	            .fillColor = {50, 54, 62, 128},    // Dimmed greyed-out
+	            .strokeColor = {0, 0, 0, 0},
+	            .cornerRadius = 6.0f,
+	            .strokeWidth = 0.0f
+	        },
+
+	        // --- Text States ---
+	        .normalText = {
+	            .font = FontId::Bahnschrift,
+	            .fontSize = 16.f,
+	            .color = Color::White,
+	            .alignHorizontal = TextAlignHorizontal::Centre,
+	            .alignVertical = TextAlignVertical::Middle
+	        },
+	        .hoveredText = {
+	            .font = FontId::Bahnschrift,
+	            .fontSize = 16.f,
+	            .color = Color::White,
+	            .alignHorizontal = TextAlignHorizontal::Centre,
+	            .alignVertical = TextAlignVertical::Middle
+	        },
+	        .pressedText = {
+	            .font = FontId::Bahnschrift,
+	            .fontSize = 16.f,
+	            .color = {220, 220, 220, 255},
+	            .alignHorizontal = TextAlignHorizontal::Centre,
+	            .alignVertical = TextAlignVertical::Middle
+	        },
+	        .disabledText = {
+	            .font = FontId::Bahnschrift,
+	            .fontSize = 16.f,
+	            .color = {140, 140, 140, 255},
+	            .alignHorizontal = TextAlignHorizontal::Centre,
+	            .alignVertical = TextAlignVertical::Middle
+	        }
+	    },
+	    .option = {
+	        // --- Panel States ---
+	        .normalPanel = {
+	            .fillColor = {0, 0, 0, 0},        // Transparent unselected pill
+	            .strokeColor = {0, 0, 0, 0},
+	            .cornerRadius = 6.0f,
+	            .strokeWidth = 0.0f
+	        },
+	        .hoveredPanel = {
+	            .fillColor = {255, 255, 255, 12}, // Subtle glass hover effect
+	            .strokeColor = {0, 0, 0, 0},
+	            .cornerRadius = 6.0f,
+	            .strokeWidth = 0.0f
+	        },
+	        .pressedPanel = {
+	            .fillColor = {255, 255, 255, 25},
+	            .strokeColor = {0, 0, 0, 0},
+	            .cornerRadius = 6.0f,
+	            .strokeWidth = 0.0f
+	        },
+	        .disabledPanel = {
+	            .fillColor = {0, 0, 0, 0},
+	            .strokeColor = {0, 0, 0, 0},
+	            .cornerRadius = 6.0f,
+	            .strokeWidth = 0.0f
+	        },
+
+	        // --- Text States ---
+	        .normalText = {
+	            .font = FontId::Bahnschrift,
+	            .fontSize = 16.f,
+	            .color = {220, 225, 235, 255},
+	            .alignHorizontal = TextAlignHorizontal::Centre,
+	            .alignVertical = TextAlignVertical::Middle
+	        },
+	        .hoveredText = {
+	            .font = FontId::Bahnschrift,
+	            .fontSize = 16.f,
+	            .color = Color::White,
+	            .alignHorizontal = TextAlignHorizontal::Centre,
+	            .alignVertical = TextAlignVertical::Middle
+	        },
+	        .pressedText = {
+	            .font = FontId::Bahnschrift,
+	            .fontSize = 16.f,
+	            .color = {180, 185, 195, 255},
+	            .alignHorizontal = TextAlignHorizontal::Centre,
+	            .alignVertical = TextAlignVertical::Middle
+	        },
+	        .disabledText = {
+	            .font = FontId::Bahnschrift,
+	            .fontSize = 16.f,
+	            .color = {100, 100, 100, 255},
+	            .alignHorizontal = TextAlignHorizontal::Centre,
+	            .alignVertical = TextAlignVertical::Middle
+	        }
+	    }
+	};
 }
 
 

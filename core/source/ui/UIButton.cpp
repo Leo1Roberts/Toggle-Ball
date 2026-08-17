@@ -19,8 +19,8 @@ UIResponse UIButton::processEvent(const Event& event) {
 		if (key->action == KeyAction::Down) {
 			switch (key->chord.code) {
 			case KeyCode::Enter:
-				if (onClickCallback)
-					onClickCallback();
+				if (onTriggerCallback)
+					onTriggerCallback();
 				return UIResponse::RequestConfirm;
 			case KeyCode::Escape:
 				return UIResponse::RequestCancel;
@@ -39,8 +39,8 @@ UIResponse UIButton::processEvent(const Event& event) {
 					pressed = false;
 					updateStyle();
 
-					if (hovered && onClickCallback)
-						onClickCallback();
+					if (hovered && onTriggerCallback)
+						onTriggerCallback();
 				}
 				return UIResponse::Consumed;
 			case PointerAction::StartDrag:

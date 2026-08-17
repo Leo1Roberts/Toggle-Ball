@@ -81,4 +81,10 @@ struct ToggleStyle {
 	PanelStyle handle;
 };
 
+struct SegmentedControlStyle {
+	PanelStyle track;
+	ButtonStyle selectedOption;
+	ButtonStyle option;
+};
+
 #endif // UI_STYLE_H

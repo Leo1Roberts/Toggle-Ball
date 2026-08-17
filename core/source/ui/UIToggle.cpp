@@ -12,17 +12,6 @@ UIToggle::UIToggle(bool initialState, const ToggleStyle& toggleStyle) :
 }
 
 
-void UIToggle::setState(bool newState, bool animate) {
-	if (state == newState) return;
-    
-	state = newState;
-	if (!animate && !valueProvider) {
-		handlePosition = state;
-		updateVisuals();
-	}
-}
-
-
 float UIToggle::getTrackWidth() const {
 	return std::max(0.f, getAbsoluteBounds().width()
 	                     - handleNode->getAbsoluteBounds().width()
@@ -31,72 +20,72 @@ float UIToggle::getTrackWidth() const {
 
 
 UIResponse UIToggle::processEvent(const Event& event) {
-    if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-        switch (pointer->action) {
-        case PointerAction::Down:
-            if (pointer->button == PointerButton::Primary) {
-            	pressed = true;
-            	updateVisuals();
-            	return UIResponse::Consumed;
-            } break;
-        case PointerAction::Up:
-            if (pointer->button == PointerButton::Primary) {
-            	if (pressed && !dragging) {
-            		pressed = false;
-            		setState(!state, true);
-            		if (onToggleCallback)
-            			onToggleCallback(state, pointer->modifiers);
-            	}
-            	pressed = false;
-            	updateVisuals();
-            	dragging = false;
-            	return UIResponse::Consumed;
-            } break;
-        case PointerAction::StartDrag:
-        	if (pointer->button == PointerButton::Primary) {
-        		if (pressed) {
-        			dragging = true;
-        			dragStartX = pointer->position.x;
-        			dragStartHandlePosition = handlePosition;
-        		}
-        		return UIResponse::Consumed;
-        	} break;
-        case PointerAction::Drag:
-            if (dragging && !valueProvider) { // Don't allow drag editing if externally driven
-                float trackWidth = getTrackWidth();
-                if (trackWidth > 0.f) {
-                    float deltaX = pointer->position.x - dragStartX;
-                    handlePosition = std::clamp(dragStartHandlePosition + (deltaX / trackWidth), 0.f, 1.f);
-                    updateVisuals();
-                }
-            }
-            return UIResponse::ConsumedNeedsHoverUpdate;
-        case PointerAction::FinishDrag:
-        case PointerAction::CancelDrag:
-            if (dragging) {
-                dragging = false;
-                pressed = false;
+	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
+		switch (pointer->action) {
+		case PointerAction::Down:
+			if (pointer->button == PointerButton::Primary) {
+				pressed = true;
+				updateVisuals();
+				return UIResponse::Consumed;
+			} break;
+		case PointerAction::Up:
+			if (pointer->button == PointerButton::Primary) {
+				if (pressed && !dragging) {
+					pressed = false;
+					state = !state;
+					if (onToggleCallback)
+						onToggleCallback(state, pointer->modifiers);
+				}
+				pressed = false;
+				updateVisuals();
+				dragging = false;
+				return UIResponse::Consumed;
+			} break;
+		case PointerAction::StartDrag:
+			if (pointer->button == PointerButton::Primary) {
+				if (pressed) {
+					dragging = true;
+					dragStartX = pointer->position.x;
+					dragStartHandlePosition = handlePosition;
+				}
+				return UIResponse::Consumed;
+			} break;
+		case PointerAction::Drag:
+			if (dragging && !valueProvider) { // Don't allow drag editing if externally driven
+				float trackWidth = getTrackWidth();
+				if (trackWidth > 0.f) {
+					float deltaX = pointer->position.x - dragStartX;
+					handlePosition = std::clamp(dragStartHandlePosition + (deltaX / trackWidth), 0.f, 1.f);
+					updateVisuals();
+				}
+			}
+			return UIResponse::ConsumedNeedsHoverUpdate;
+		case PointerAction::FinishDrag:
+		case PointerAction::CancelDrag:
+			if (dragging) {
+				dragging = false;
+				pressed = false;
 
-                bool newState = (handlePosition >= 0.5f);
-                if (newState != state) {
-                    state = newState;
-                    if (onToggleCallback)
-                        onToggleCallback(state, pointer->modifiers);
-                }
-            }
-            return UIResponse::Consumed;
-        default:;
-        }
-    } else if (auto* key = std::get_if<KeyEvent>(&event)) {
-        if (key->action == KeyAction::Down && key->chord.code == KeyCode::Enter) {
-            setState(!state, true);
-            if (onToggleCallback)
-            	onToggleCallback(state, key->chord.modifiers);
-            return UIResponse::Consumed;
-        }
-    }
-    
-    return UIResponse::Ignored;
+				bool newState = (handlePosition >= 0.5f);
+				if (newState != state) {
+					state = newState;
+					if (onToggleCallback)
+						onToggleCallback(state, pointer->modifiers);
+				}
+			}
+			return UIResponse::Consumed;
+		default:;
+		}
+	} else if (auto* key = std::get_if<KeyEvent>(&event)) {
+		if (key->action == KeyAction::Down && key->chord.code == KeyCode::Enter) {
+			state = !state;
+			if (onToggleCallback)
+				onToggleCallback(state, key->chord.modifiers);
+			return UIResponse::Consumed;
+		}
+	}
+
+	return UIResponse::Ignored;
 }
 
 
@@ -111,22 +100,22 @@ void UIToggle::onPointerExited() {
 
 
 void UIToggle::doUpdate(microseconds dt) {
-    float targetValue = state;
-    float currentHandlePosition = handlePosition;
+	float targetValue = state;
+	float currentHandlePosition = handlePosition;
 
-    if (valueProvider)
-        handlePosition = std::clamp(valueProvider(), 0.f, 1.f);
-    else if (!dragging && handlePosition != targetValue) {
-        float animationSpeed = 8.f * toSeconds(dt);
-        
-        if (targetValue > handlePosition)
-            handlePosition = std::min(handlePosition + animationSpeed, targetValue);
-        else
-            handlePosition = std::max(handlePosition - animationSpeed, targetValue);
-    }
+	if (valueProvider)
+		handlePosition = std::clamp(valueProvider(), 0.f, 1.f);
+	else if (!dragging && handlePosition != targetValue) {
+		float animationSpeed = 8.f * toSeconds(dt);
 
-    if (currentHandlePosition != handlePosition)
-        updateVisuals();
+		if (targetValue > handlePosition)
+			handlePosition = std::min(handlePosition + animationSpeed, targetValue);
+		else
+			handlePosition = std::max(handlePosition - animationSpeed, targetValue);
+	}
+
+	if (currentHandlePosition != handlePosition)
+		updateVisuals();
 }
 
 

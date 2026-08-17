@@ -9,7 +9,7 @@ PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<v
 	: game(levelToPlay) {
 	levelCompleteDisplay = uiManager.addNode<UIButton>();
 	levelCompleteDisplay->hide();
-	levelCompleteDisplay->setOnClick([this] { levelCompleteDisplay->deactivate(); });
+	levelCompleteDisplay->setOnTrigger([this] { levelCompleteDisplay->deactivate(); });
 
 	auto levelCompleteButton = levelCompleteDisplay->addChild<UIButton>("Level complete!", Theme::SuccessButton);
 	levelCompleteButton->setLayout({
@@ -17,7 +17,7 @@ PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<v
 		.widthMode = SizingMode::Absolute, .width = 280.f,
 		.heightMode = SizingMode::Absolute, .height = 80.f,
 	});
-	levelCompleteButton->setOnClick([this] {
+	levelCompleteButton->setOnTrigger([this] {
 		levelCompleteDisplay->deactivate();
 		game.start();
 	});
@@ -32,7 +32,7 @@ PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<v
 		.heightMode = SizingMode::Absolute, .height = 60.f,
 		.margin = glm::vec2(20.f)
 	});
-	restartButton->setOnClick([this] {
+	restartButton->setOnTrigger([this] {
 		levelCompleteDisplay->deactivate();
 		game.start();
 	});
@@ -44,7 +44,7 @@ PlayScreen::PlayScreen(const LevelDescriptor& levelToPlay, const std::function<v
 		.heightMode = SizingMode::Absolute, .height = 60.f,
 		.margin = glm::vec2(20.f)
 	});
-	levelButton->setOnClick(browseLevelsCallback);
+	levelButton->setOnTrigger(browseLevelsCallback);
 
 	game.start();
 }

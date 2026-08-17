@@ -10,6 +10,7 @@
 #include "ui/Theme.h"
 #include "ui/UIContainer.h"
 #include "ui/UIList.h"
+#include "ui/UISegmentedControl.h"
 #include "ui/UITextBox.h"
 #include "ui/UIToggle.h"
 
@@ -126,9 +127,9 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	});
 
 	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformBothStates))
-		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Toggle stateless transform")));
+		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Toggle transform state")));
 	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformIndividually))
-		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Toggle group transform")));
+		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Toggle transform mode")));
 
 	idleShortcutHints = shortcutsList->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
 	idleShortcutHints->setLayout({
@@ -149,13 +150,68 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	});
 
 
+	auto quickSettingsToolbar = statusBar->addChild<UIHorizontalList>(20.f, 0.f);
+	quickSettingsToolbar->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(4.f)
+	});
+
+	auto transformBothStatesSetting = quickSettingsToolbar->addChild<UIHorizontalList>(5.f, 0.f);
+	transformBothStatesSetting->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+
+	auto addEditorQuickSetting = [quickSettingsToolbar](const std::string& settingName, const std::vector<std::string>& options, bool* target) {
+		auto setting = quickSettingsToolbar->addChild<UIHorizontalList>(5.f, 0.f);
+		setting->setLayout({
+			.anchor = Anchor::Centre,
+			.widthMode = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+		});
+
+		auto label = setting->addChild<UIText>(settingName, TextStyle{
+			.fontSize = 16.f,
+			.color = Color::LightGrey,
+			.alignVertical = TextAlignVertical::Middle,
+		});
+		label->setLayout({
+			.widthMode = SizingMode::Wrap,
+		});
+
+		auto segmentedControl = setting->addChild<UISegmentedControl>(options, false, Theme::PrimarySegmentedControl, 4.f);
+		segmentedControl->setLayout({
+			.anchor = Anchor::Centre,
+			.widthMode = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+		});
+		segmentedControl->setOptionLayout({
+			.widthMode = SizingMode::Absolute, .width = 60.f,
+			.heightMode = SizingMode::Wrap,
+			.padding = glm::vec2(4.f)
+		});
+		segmentedControl->setOptionTextLayout({
+			.anchor = Anchor::Centre,
+			.heightMode = SizingMode::Wrap,
+		});
+		segmentedControl->setOnSelectedOptionChange([target](int selected) { *target = selected; });
+		segmentedControl->setValueProvider([target] { return *target; });
+	};
+
+	addEditorQuickSetting("Transform state:", {"Single", "Dual"}, &quickSettings.transformBothStates);
+	addEditorQuickSetting("Transform mode:", {"Group", "Individual"}, &quickSettings.transformIndividually);
+
+
 	auto stateToggle = statusBar->addChild<UIToggle>(scene.isToggled(),
 		ToggleStyle{
-			.normalTrackOff = PanelStyle{ .fillColor = Color::StateA, .cornerRadius = 8.f },
-			.hoveredTrackOff = PanelStyle{ .fillColor = Color::StateAHovered, .cornerRadius = 8.f },
-			.normalTrackOn  = PanelStyle{ .fillColor = Color::StateB, .cornerRadius = 8.f },
-			.hoveredTrackOn = PanelStyle{ .fillColor = Color::StateBHovered, .cornerRadius = 8.f },
-			.handle   = PanelStyle{ .fillColor = Color::White,  .cornerRadius = 3.f }
+			.normalTrackOff = PanelStyle{ .fillColor = Color::StateA, .cornerRadius = std::numeric_limits<float>::max() },
+			.hoveredTrackOff = PanelStyle{ .fillColor = Color::StateAHovered, .cornerRadius = std::numeric_limits<float>::max() },
+			.normalTrackOn  = PanelStyle{ .fillColor = Color::StateB, .cornerRadius = std::numeric_limits<float>::max() },
+			.hoveredTrackOn = PanelStyle{ .fillColor = Color::StateBHovered, .cornerRadius = std::numeric_limits<float>::max() },
+			.handle   = PanelStyle{ .fillColor = Color::White,  .cornerRadius = std::numeric_limits<float>::max() }
 		});
 	stateToggle->setLayout({
 		.anchor = Anchor::CentreRight,

@@ -19,6 +19,6 @@ LevelBrowserScreen::LevelBrowserScreen(const std::function<void(std::string)>& p
 			.padding = {0.f, 15.f}
 		});
 
-		button->setOnClick([=] { playLevelCallback(levelName); });
+		button->setOnTrigger([=] { playLevelCallback(levelName); });
 	}
 }

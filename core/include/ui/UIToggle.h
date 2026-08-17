@@ -11,9 +11,6 @@ public:
 	void setOnToggle(const std::function<void(bool, byte)>& callback) { onToggleCallback = callback; }
 	void setValueProvider(const std::function<float()>& provider) { valueProvider = provider; }
 
-	void setState(bool newState, bool animate = true);
-	[[nodiscard]] bool getState() const { return state; }
-
 	UIResponse processEvent(const Event& event) override;
 
 	void onPointerEntered() override;
