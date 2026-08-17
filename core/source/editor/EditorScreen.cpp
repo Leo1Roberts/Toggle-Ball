@@ -168,7 +168,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		.widthMode = SizingMode::Absolute, .width = 20.f,
 		.heightMode = SizingMode::Absolute, .height = 20.f,
 	});
-	stateToggle->setOnToggle([this](...) { scene.toggle(); });
+	stateToggle->setOnToggle([this](bool, byte mods) { scene.toggle(!(mods & MOD_CTRL)); });
 	stateToggle->setValueProvider([this] { return scene.getTogglePosition(); });
 }
 

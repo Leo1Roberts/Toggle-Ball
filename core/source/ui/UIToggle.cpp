@@ -45,7 +45,7 @@ UIResponse UIToggle::processEvent(const Event& event) {
             		pressed = false;
             		setState(!state, true);
             		if (onToggleCallback)
-            			onToggleCallback(state);
+            			onToggleCallback(state, pointer->modifiers);
             	}
             	pressed = false;
             	updateVisuals();
@@ -81,7 +81,7 @@ UIResponse UIToggle::processEvent(const Event& event) {
                 if (newState != state) {
                     state = newState;
                     if (onToggleCallback)
-                        onToggleCallback(state);
+                        onToggleCallback(state, pointer->modifiers);
                 }
             }
             return UIResponse::Consumed;
@@ -91,7 +91,7 @@ UIResponse UIToggle::processEvent(const Event& event) {
         if (key->action == KeyAction::Down && key->chord.code == KeyCode::Enter) {
             setState(!state, true);
             if (onToggleCallback)
-            	onToggleCallback(state);
+            	onToggleCallback(state, key->chord.modifiers);
             return UIResponse::Consumed;
         }
     }

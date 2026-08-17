@@ -8,7 +8,7 @@ class UIToggle : public UIPanel {
 public:
 	explicit UIToggle(bool initialState, const ToggleStyle& style = {});
 
-	void setOnToggle(const std::function<void(bool)>& callback) { onToggleCallback = callback; }
+	void setOnToggle(const std::function<void(bool, byte)>& callback) { onToggleCallback = callback; }
 	void setValueProvider(const std::function<float()>& provider) { valueProvider = provider; }
 
 	void setState(bool newState, bool animate = true);
@@ -44,7 +44,7 @@ private:
 	float dragStartX{};
 	float dragStartHandlePosition{};
 
-	std::function<void(bool)> onToggleCallback;
+	std::function<void(bool, byte)> onToggleCallback;
 	std::function<float()> valueProvider; // If set, this will be used to set the handle position
 };
 
