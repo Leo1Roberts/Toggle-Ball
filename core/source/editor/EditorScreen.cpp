@@ -166,7 +166,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	});
 
 	auto addEditorQuickSetting = [quickSettingsToolbar](const std::string& settingName, const std::vector<std::string>& options, bool* target) {
-		auto setting = quickSettingsToolbar->addChild<UIHorizontalList>(5.f, 0.f);
+		auto setting = quickSettingsToolbar->addChild<UIHorizontalList>(8.f, 0.f);
 		setting->setLayout({
 			.anchor = Anchor::Centre,
 			.widthMode = SizingMode::Wrap,
@@ -201,8 +201,8 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		segmentedControl->setValueProvider([target] { return *target; });
 	};
 
-	addEditorQuickSetting("Transform state:", {"Single", "Dual"}, &quickSettings.transformBothStates);
-	addEditorQuickSetting("Transform mode:", {"Group", "Individual"}, &quickSettings.transformIndividually);
+	addEditorQuickSetting("Transform state", {"Single", "Dual"}, &quickSettings.transformBothStates);
+	addEditorQuickSetting("Transform mode", {"Group", "Individual"}, &quickSettings.transformIndividually);
 
 
 	auto stateToggle = statusBar->addChild<UIToggle>(scene.isToggled(),

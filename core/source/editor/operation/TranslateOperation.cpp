@@ -11,10 +11,12 @@ namespace Axis {
 
 
 void TranslateOperation::createUI() {
-	if (auto binding = Settings::Bindings->findBinding(ActionCode::LockToXAxis))
-		context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "X axis")));
-	if (auto binding = Settings::Bindings->findBinding(ActionCode::LockToYAxis))
-		context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Y axis")));
+	if (trigger != TriggerType::ActionKey) {
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::LockToXAxis))
+			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "X axis")));
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::LockToYAxis))
+			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Y axis")));
+	}
 	if (trigger == TriggerType::TriggerKey) {
 		if (auto binding = Settings::Bindings->findBinding(ActionCode::Rotate))
 			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Rotate")));
@@ -91,11 +93,15 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
 				case ActionCode::LockToXAxis:
-					setConstraint(Axis::X);
-					return true;
+					if (trigger != TriggerType::ActionKey) {
+						setConstraint(Axis::X);
+						return true;
+					} break;
 				case ActionCode::LockToYAxis:
-					setConstraint(Axis::Y);
-					return true;
+					if (trigger != TriggerType::ActionKey) {
+						setConstraint(Axis::Y);
+						return true;
+					} break;
 				case ActionCode::Toggle:
 				case ActionCode::InstantToggle:
 					if (trigger == TriggerType::ActionKey) {
