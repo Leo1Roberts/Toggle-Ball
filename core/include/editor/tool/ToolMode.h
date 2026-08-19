@@ -1,34 +1,55 @@
 #ifndef TOOL_MODE_H
 #define TOOL_MODE_H
 
+#include "editor/operation/Operation.h"
 #include "io/Event.h"
 
-struct EditorContext;
 
+class UINode;
+class Camera;
+class EditorScene;
+class GizmoRenderer;
+
+
+struct ToolModeResponse {
+	bool consumedEvent = false;
+	bool operationChanged = false;
+};
 
 class ToolMode {
 public:
 	virtual ~ToolMode() = default;
 
-	bool processEvent(const Event& event);
+	[[nodiscard]] ToolModeResponse processEvent(const Event& event);
 
-	virtual void renderGizmos() {}
+	[[nodiscard]] virtual std::vector<BindingHint> getBindingHints() const { return {}; }
+	virtual void populateToolbar(UINode& toolbar) {}
+	void createOperationUI(UINode& container) const;
+	virtual void renderGizmos(GizmoRenderer& gizmoRenderer) {}
+
+	void cancelActiveOperation();
+	void commitActiveOperation();
+
+	[[nodiscard]] bool hasActiveOperation() const { return activeOperation != nullptr; }
 
 protected:
-	explicit ToolMode(const EditorContext* context)
-		: context(context) {}
+	explicit ToolMode(EditorScene* scene, const Camera* camera)
+		: scene(scene), camera(camera) {}
 
-	const EditorContext* context;
+	EditorScene* scene;
+	const Camera* camera;
+
+	std::unique_ptr<Operation> activeOperation;
 
 	PointerEvent pointerDownEvent;
 
 private:
-	virtual bool doProcessEvent(const Event& event) { return false; }
+	[[nodiscard]] virtual ToolModeResponse doProcessEvent(const Event& event) = 0;
 
 	// Pointer down and up on the same spot
 	virtual void performPrimaryAction(const PointerEvent& upEvent) = 0;
 	virtual void performSecondaryAction(const PointerEvent& upEvent) {}
-	virtual void startDrag(const PointerEvent& dragStartEvent) {}
+	[[nodiscard]] virtual std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) { return nullptr; }
 
 	bool dragging = false;
 	bool pointerPrimaryDown = false;

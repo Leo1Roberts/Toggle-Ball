@@ -2,23 +2,32 @@
 #define OPERATION_H
 
 #include "utilities/Camera.h"
-#include "editor/EditorContext.h"
+#include "editor/GizmoRenderer.h"
 #include "io/Event.h"
 
 
-enum class TriggerType {
-	Pointer,
-	TriggerKey,
-	ActionKey,
+class EditorScene;
+
+
+enum class TriggerType { Pointer, TriggerKey, ActionKey };
+
+enum class OperationStatus { Running, Committed, Cancelled };
+
+struct OperationResponse {
+	bool consumedEvent = false;
+	OperationStatus status = OperationStatus::Running;
 };
 
 class Operation {
 public:
 	virtual ~Operation() = default;
 
-	bool processEvent(const Event& event);
+	[[nodiscard]] OperationResponse processEvent(const Event& event);
 
-	virtual void renderGizmos() {}
+	[[nodiscard]] virtual std::vector<BindingHint> getBindingHints() const { return {}; }
+	virtual void createUI(UINode& container) {}
+	virtual bool updateUI() { return true; }
+	virtual void renderGizmos(GizmoRenderer& gizmoRenderer) {}
 
 	[[nodiscard]] bool start(byte mods) {
 		if (canStart()) {
@@ -28,39 +37,33 @@ public:
 		}
 		return false;
 	}
-	void cancel() const {
-		doCancel();
-		context->unloadOperation();
-	}
 	virtual void finish() const {}
-	void commit() const {
-		doCommit();
-		context->unloadOperation();
-	}
+
+	virtual void cancel() const = 0;
+	virtual void commit() const = 0;
 
 	void onQuickSettingsChanged() { applyOperation(); }
 
+	const TriggerType trigger;
+
 protected:
-	Operation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
-		: context(context), trigger(trigger), initialPointerPlanarPosition(context->camera->screenToPlanarPosition(initialPointerPosition)) {}
+	Operation(EditorScene* scene, const Camera* camera, TriggerType trigger, glm::vec2 initialPointerPosition)
+		: trigger(trigger), scene(scene), camera(camera), initialPointerPlanarPosition(camera->screenToPlanarPosition(initialPointerPosition)) {}
 	Operation(const Operation&) = default;
 
-	virtual void createUI() {}
-
-	virtual bool doProcessEvent(const Event& event) = 0;
+	[[nodiscard]] virtual OperationResponse doProcessEvent(const Event& event) = 0;
 
 	virtual void applyOperation() = 0;
 
-	const EditorContext* context;
-	TriggerType trigger{};
-	glm::vec2 initialPointerPlanarPosition{};
+	EditorScene* scene;
+	const Camera* camera;
+
+	glm::vec2 initialPointerPlanarPosition;
 
 private:
 	virtual void applyModifiers(byte mods) = 0;
 
 	[[nodiscard]] virtual bool canStart() const { return true; }
-	virtual void doCancel() const = 0;
-	virtual void doCommit() const = 0;
 };
 
 

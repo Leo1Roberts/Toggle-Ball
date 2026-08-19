@@ -9,25 +9,25 @@ enum class SelectionMode { Replace, Add, Subtract };
 
 class SelectOperation : public Operation {
 public:
-	SelectOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, bool instant = false)
-		: Operation(context, trigger, initialPointerPosition), box(initialPointerPlanarPosition), instant(instant) { SelectOperation::createUI(); }
+	SelectOperation(EditorScene* scene, const Camera* camera, TriggerType trigger, glm::vec2 initialPointerPosition, bool instant = false)
+		: Operation(scene, camera, trigger, initialPointerPosition), box(initialPointerPlanarPosition), instant(instant) {}
 
-	void renderGizmos() final;
+	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
+	void renderGizmos(GizmoRenderer& gizmoRenderer) final;
 
 	void finish() const final;
+
+	void cancel() const final { return scene->cancelSelectionChange(); }
+	void commit() const final { return scene->commitSelectionChange(); }
 
 	[[nodiscard]] SelectionMode getMode() const { return mode; }
 
 protected:
-	void createUI() override;
+	OperationResponse doProcessEvent(const Event& event) final;
+	void applyOperation() final;
 
 private:
 	void applyModifiers(byte mods) final;
-	bool doProcessEvent(const Event& event) final;
-	void applyOperation() final;
-
-	void doCancel() const final { context->scene->cancelSelectionChange(); }
-	void doCommit() const final { context->scene->commitSelectionChange(); }
 
 	SelectionMode mode = SelectionMode::Replace;
 	SelectBox box{};

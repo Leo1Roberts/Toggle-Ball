@@ -8,18 +8,17 @@ class UIText;
 
 class RotateOperation : public PivotOperation {
 public:
-	RotateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
-		: PivotOperation(context, trigger, initialPointerPosition, ActionCode::Rotate) { RotateOperation::createUI(); }
+	RotateOperation(EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPointerPosition = {})
+		: PivotOperation(scene, camera, settings, trigger, initialPointerPosition) {}
 	explicit RotateOperation(const TransformOperation& other)
-		: PivotOperation(other, ActionCode::Rotate) { RotateOperation::createUI(); }
+		: PivotOperation(other) {}
 
 	static std::optional<float> keyToRotationRadians(KeyCode key);
 
-protected:
-	void createUI() override;
-	void updateDetailsText() override;
+	bool updateUI() override;
 
-	bool doProcessEvent(const Event& event) override;
+protected:
+	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
 	void applyOperation() override;
 
 private:

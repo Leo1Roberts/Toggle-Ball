@@ -9,16 +9,16 @@
 
 class ScaleOperation : public PivotOperation {
 public:
-	ScaleOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
-		: PivotOperation(context, trigger, initialPointerPosition, ActionCode::Scale) { ScaleOperation::createUI(); }
+	ScaleOperation(EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPointerPosition = {})
+		: PivotOperation(scene, camera, settings, trigger, initialPointerPosition) {}
 	explicit ScaleOperation(const TransformOperation& other)
-		: PivotOperation(other, ActionCode::Scale) { ScaleOperation::createUI(); }
+		: PivotOperation(other) {}
+
+	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
+	bool updateUI() override;
 
 protected:
-	void createUI() override;
-	void updateDetailsText() override;
-
-	bool doProcessEvent(const Event& event) override;
+	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
 	void applyOperation() override;
 
 private:

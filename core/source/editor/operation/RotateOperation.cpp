@@ -1,25 +1,6 @@
 #include "editor/operation/RotateOperation.h"
 
-#include "ui/UIList.h"
 #include "ui/UIText.h"
-
-
-void RotateOperation::createUI() {
-	if (trigger == TriggerType::TriggerKey) {
-		if (auto binding = Settings::Bindings->findBinding(ActionCode::Translate))
-			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Translate")));
-		if (auto binding = Settings::Bindings->findBinding(ActionCode::Scale))
-			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Scale")));
-	}
-
-	updateDetailsText();
-}
-
-void RotateOperation::updateDetailsText() {
-	std::string text = "Rotation: ";
-	text += typing ? textInput.getValue<const std::string&>() : floatToString(to_deg(rotation), 3, true);
-	detailsText->setText(text);
-}
 
 
 std::optional<float> RotateOperation::keyToRotationRadians(KeyCode key) {
@@ -28,6 +9,17 @@ std::optional<float> RotateOperation::keyToRotationRadians(KeyCode key) {
 	// case KeyCode::Right: return -glm::quarter_pi<float>();
 	default: return std::nullopt;
 	}
+}
+
+
+bool RotateOperation::updateUI() {
+	if (!PivotOperation::updateUI()) return false;
+	
+	std::string text = "Rotation: ";
+	text += typing ? textInput.getValue<const std::string&>() : floatToString(to_deg(rotation), 3, true);
+	detailsText->setText(text);
+	
+	return true;
 }
 
 
@@ -40,23 +32,33 @@ float RotateOperation::angleDifference(glm::vec2 newPos, glm::vec2 oldPos, glm::
 	return std::atan2(v1.x * v2.y - v1.y * v2.x, dot(v1, v2));
 }
 
-bool RotateOperation::doProcessEvent(const Event& event) {
-	if (TransformOperation::doProcessEvent(event))
-		return true;
+OperationResponse RotateOperation::doProcessEvent(const Event& event) {
+	auto response = PivotOperation::doProcessEvent(event);
+	if (response.consumedEvent)
+		return response;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
+		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
+			if (key->action == KeyAction::Down) {
+				if (*actionCode == ActionCode::Rotate)
+					return {.consumedEvent = trigger != TriggerType::ActionKey, .status = OperationStatus::Running};
+
+				return {.consumedEvent = false, .status = OperationStatus::Running};
+			}
+		}
 		if (trigger == TriggerType::ActionKey) {
 			if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 				if (auto amount = keyToRotationRadians(key->chord.code)) {
-					setRotation(rotation + *amount * precisionMultiplier);
-					applyOperation();
-					return true;
+					if (trigger == TriggerType::ActionKey) {
+						setRotation(rotation + *amount * precisionMultiplier);
+						applyOperation();
+						return {.consumedEvent = true, .status = OperationStatus::Running};
+					}
 				}
 			}
-			return false;
 		}
 	}
-	return false;
+	return {.consumedEvent = false, .status = OperationStatus::Running};
 }
 
 
@@ -65,30 +67,30 @@ void RotateOperation::applyOperation() {
 		if (auto value = textInput.getValue<std::optional<float>>())
 			setRotation(to_rad(*value));
 		else {
-			updateDetailsText();
-			context->scene->cancelLevelChange();
+			updateUI();
+			scene->cancelLevelChange();
 			return;
 		}
 	}
 
-	auto ball = &context->scene->ball;
-	auto& obstacles = context->scene->obstacles;
+	auto ball = &scene->ball;
+	auto& obstacles = scene->obstacles;
 
 	if (ball->isSelected())
-		ball->rotateBy(rotationMatrix, pivot, context->quickSettings->transformIndividually, context->scene->getCurrentNode()->level.ballDescriptor.get());
+		ball->rotateBy(rotationMatrix, pivot, settings.transformIndividually, scene->getCurrentNode()->level.ballDescriptor.get());
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			obstacle.rotateBy(rotation, rotationMatrix, pivot, context->quickSettings->transformBothStates, context->scene->isToggled(), context->quickSettings->transformIndividually,
-				context->scene->getCurrentNode()->level.obstacleDescriptors[i].get());
+			obstacle.rotateBy(rotation, rotationMatrix, pivot, settings.transformBothStates, scene->isToggled(), settings.transformIndividually,
+				scene->getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
-			obstacle.generateDomainMesh(*context->uiToWorldScale);
+			obstacle.generateDomainMesh();
 		}
 	}
 
-	updateDetailsText();
+	updateUI();
 }
 
 

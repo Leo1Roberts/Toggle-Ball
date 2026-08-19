@@ -3,8 +3,6 @@
 #include "editor/tool/TransformMode.h"
 #include "editor/EditorObstacle.h"
 #include "Settings.h"
-#include "editor/operation/RotateOperation.h"
-#include "editor/operation/ScaleOperation.h"
 #include "opengl/Shader.h"
 #include "editor/operation/TranslateOperation.h"
 #include "ui/Theme.h"
@@ -29,11 +27,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	scene(
 		std::move(levelToEdit),
 		[this] { updateEphemeralMeshes(); }),
-	context(
-		&quickSettings, &scene, &camera, &gizmoRenderer, &uiToWorldScale, nullptr, nullptr,
-		[this](std::unique_ptr<Operation> operation) { return loadOperation(std::move(operation)); },
-		[this] { unloadOperation(); }),
-	currentToolMode(std::make_unique<TransformMode>(&context)) {
+	currentToolMode(std::make_unique<TransformMode>(&scene, &camera)) {
 	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
@@ -49,10 +43,22 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		}));
 	statusBar->setLayout({
 		.anchor = Anchor::TopCentre,
+		.widthMode = SizingMode::Stretch,
 		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(4.f)
 	});
 
+	toolbar = statusBar->addChild<UIContainer>();
+	toolbar->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(4.f)
+	});
+	updateToolbar();
+
 	viewportUI = mainArea->addChild<UIContainer>();
+	operationUI = viewportUI->addChild<UIContainer>();
 
 	auto propertiesPanel = layout->addChild<UIPanel>(Theme::DarkPanel);
 	propertiesPanel->setLayout({
@@ -109,8 +115,6 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	obstacleMotionPropertiesList = propertiesList->addChild<UIVerticalList>(10.f);
 	obstacleMotionPropertiesList->setLayout({ .padding = glm::vec2(20.f) });
 
-	context.operationUI = viewportUI->addChild<UIContainer>();
-
 	auto helpBar = mainArea->addChild(std::make_unique<UIPanel>(
 		PanelStyle{
 			.fillColor = {24, 26, 32, 150},
@@ -120,89 +124,11 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		.heightMode = SizingMode::Wrap,
 	});
 
-	auto shortcutsList = helpBar->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
-	shortcutsList->setLayout({
+	bindingHints = helpBar->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
+	bindingHints->setLayout({
 		.heightMode = SizingMode::Wrap,
 		.padding = glm::vec2(5.f),
 	});
-
-	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformBothStates))
-		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Toggle transform state")));
-	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformIndividually))
-		shortcutsList->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Toggle transform mode")));
-
-	idleShortcutHints = shortcutsList->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
-	idleShortcutHints->setLayout({
-		.widthMode = SizingMode::Wrap,
-		.heightMode = SizingMode::Wrap,
-	});
-	if (auto binding = Settings::Bindings->findBinding(ActionCode::Translate))
-		idleShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Translate")));
-	if (auto binding = Settings::Bindings->findBinding(ActionCode::Rotate))
-		idleShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Rotate")));
-	if (auto binding = Settings::Bindings->findBinding(ActionCode::Scale))
-		idleShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Scale")));
-
-	context.operationShortcutHints = shortcutsList->addChild(std::make_unique<UIHorizontalList>(10.f, 0.f));
-	context.operationShortcutHints->setLayout({
-		.widthMode = SizingMode::Wrap,
-		.heightMode = SizingMode::Wrap,
-	});
-
-
-	auto quickSettingsToolbar = statusBar->addChild<UIHorizontalList>(20.f, 0.f);
-	quickSettingsToolbar->setLayout({
-		.anchor = Anchor::Centre,
-		.widthMode = SizingMode::Wrap,
-		.heightMode = SizingMode::Wrap,
-		.padding = glm::vec2(4.f)
-	});
-
-	auto transformBothStatesSetting = quickSettingsToolbar->addChild<UIHorizontalList>(5.f, 0.f);
-	transformBothStatesSetting->setLayout({
-		.anchor = Anchor::Centre,
-		.widthMode = SizingMode::Wrap,
-		.heightMode = SizingMode::Wrap,
-	});
-
-	auto addEditorQuickSetting = [quickSettingsToolbar](const std::string& settingName, const std::vector<std::string>& options, bool* target) {
-		auto setting = quickSettingsToolbar->addChild<UIHorizontalList>(8.f, 0.f);
-		setting->setLayout({
-			.anchor = Anchor::Centre,
-			.widthMode = SizingMode::Wrap,
-			.heightMode = SizingMode::Wrap,
-		});
-
-		auto label = setting->addChild<UIText>(settingName, TextStyle{
-			.fontSize = 16.f,
-			.color = Color::LightGrey,
-			.alignVertical = TextAlignVertical::Middle,
-		});
-		label->setLayout({
-			.widthMode = SizingMode::Wrap,
-		});
-
-		auto segmentedControl = setting->addChild<UISegmentedControl>(options, false, Theme::PrimarySegmentedControl, 0.f);
-		segmentedControl->setLayout({
-			.anchor = Anchor::Centre,
-			.widthMode = SizingMode::Wrap,
-			.heightMode = SizingMode::Wrap,
-		});
-		segmentedControl->setOptionLayout({
-			.widthMode = SizingMode::Absolute, .width = 60.f,
-			.heightMode = SizingMode::Wrap,
-			.padding = glm::vec2(4.f)
-		});
-		segmentedControl->setOptionTextLayout({
-			.anchor = Anchor::Centre,
-			.heightMode = SizingMode::Wrap,
-		});
-		segmentedControl->setOnSelectedOptionChange([target](int selected) { *target = selected; });
-		segmentedControl->setValueProvider([target] { return *target; });
-	};
-
-	addEditorQuickSetting("Transform state", {"Single", "Dual"}, &quickSettings.transformBothStates);
-	addEditorQuickSetting("Transform mode", {"Group", "Individual"}, &quickSettings.transformIndividually);
 
 
 	auto stateToggle = statusBar->addChild<UIToggle>(scene.isToggled(),
@@ -226,137 +152,71 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	});
 	stateToggle->setOnToggle([this](bool, byte mods) { scene.toggle(!(mods & MOD_CTRL)); });
 	stateToggle->setValueProvider([this] { return scene.getTogglePosition(); });
+
+	updateDynamicUI();
 }
 
 
 void EditorScreen::processEvent(const Event& event) {
-	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (pointer->id == 0)
-			pointer0Position = pointer->position;
+	if (currentToolMode->hasActiveOperation()) { // Active operation takes priority over UI
+		auto response = currentToolMode->processEvent(event);
+		if (response.operationChanged)
+			updateDynamicUI();
+		if (response.consumedEvent)
+			return;
+
+		if (uiManager.processEvent(event))
+			return;
+	} else {
+		if (uiManager.processEvent(event))
+			return;
+
+		auto response = currentToolMode->processEvent(event);
+		if (response.operationChanged)
+			updateDynamicUI();
+		if (response.consumedEvent)
+			return;
 	}
-
-	if (activeOperation && activeOperation->processEvent(event))
-		return;
-
-	if (uiManager.processEvent(event))
-		return;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			switch (*actionCode) {
 			case ActionCode::Undo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
-					if (activeOperation) {
-						activeOperation->finish();
-						activeOperation->commit();
-					}
+					currentToolMode->commitActiveOperation();
 					scene.undo();
+					updateDynamicUI();
 					return;
 				} break;
 			case ActionCode::Redo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
-					if (activeOperation)
-						activeOperation->cancel();
+					currentToolMode->cancelActiveOperation();
 					scene.redo();
-					return;
-				} break;
-			case ActionCode::Translate:
-				if (key->action == KeyAction::Down) {
-					if (activeOperation) {
-						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
-							auto oldOperation = std::move(activeOperation);
-							oldOperation->cancel();
-							loadOperation(std::make_unique<TranslateOperation>(*transform));
-							if (activeOperation->start(key->chord.modifiers))
-								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
-							else
-								unloadOperation();
-						}
-					} else {
-						loadOperation(std::make_unique<TranslateOperation>(&context, TriggerType::TriggerKey, pointer0Position));
-						if (!activeOperation->start(key->chord.modifiers))
-							unloadOperation();
-					}
-					return;
-				} break;
-			case ActionCode::Rotate:
-				if (key->action == KeyAction::Down) {
-					if (activeOperation) {
-						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
-							auto oldOperation = std::move(activeOperation);
-							oldOperation->cancel();
-							loadOperation(std::make_unique<RotateOperation>(*transform));
-							if (activeOperation->start(key->chord.modifiers))
-								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
-							else
-								unloadOperation();
-						}
-					} else {
-						loadOperation(std::make_unique<RotateOperation>(&context, TriggerType::TriggerKey, pointer0Position));
-						if (!activeOperation->start(key->chord.modifiers))
-							unloadOperation();
-					}
-					return;
-				} break;
-			case ActionCode::Scale:
-				if (key->action == KeyAction::Down) {
-					if (activeOperation) {
-						if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
-							auto oldOperation = std::move(activeOperation);
-							oldOperation->cancel();
-							loadOperation(std::make_unique<ScaleOperation>(*transform));
-							if (activeOperation->start(key->chord.modifiers))
-								activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move));
-							else
-								unloadOperation();
-						}
-					} else {
-						loadOperation(std::make_unique<ScaleOperation>(&context, TriggerType::TriggerKey, pointer0Position));
-						if (!activeOperation->start(key->chord.modifiers))
-							unloadOperation();
-					}
-					return;
-				} break;
-			case ActionCode::ToggleTransformBothStates:
-				if (key->action == KeyAction::Down) {
-					quickSettings.transformBothStates = !quickSettings.transformBothStates;
-					if (activeOperation)
-						activeOperation->onQuickSettingsChanged();
-					return;
-				} break;
-			case ActionCode::ToggleTransformIndividually:
-				if (key->action == KeyAction::Down) {
-					quickSettings.transformIndividually = !quickSettings.transformIndividually;
-					if (activeOperation)
-						activeOperation->onQuickSettingsChanged();
+					updateDynamicUI();
 					return;
 				} break;
 			default:;
 			}
 
-			if (!activeOperation)
+			if (!currentToolMode->hasActiveOperation())
 				switch (*actionCode) {
 				case ActionCode::Toggle:
-					if (key->action == KeyAction::Down) {
+					if (key->action == KeyAction::Down)
 						scene.toggle();
-						return;
-					} break;
+					break;
 				case ActionCode::InstantToggle:
-					if (key->action == KeyAction::Down) {
+					if (key->action == KeyAction::Down)
 						scene.toggle(false);
-						return;
-					} break;
+					break;
 				case ActionCode::SelectAll:
 					if (key->action == KeyAction::Down) {
 						scene.selectAll();
 						scene.commitSelectionChange();
-						return;
 					} break;
 				case ActionCode::DeselectAll:
 					if (key->action == KeyAction::Down) {
 						scene.deselectAll();
 						scene.commitSelectionChange();
-						return;
 					} break;
 				default:;
 				}
@@ -367,19 +227,16 @@ void EditorScreen::processEvent(const Event& event) {
 			if (pointer->button == PointerButton::Tertiary) {
 				panning = true;
 				camera.startPan(pointer->position);
-				return;
 			} break;
 		case PointerAction::Move:
 		case PointerAction::Drag:
-			if (panning) {
+			if (panning)
 				camera.updatePan(pointer->position);
-				return;
-			} break;
+			break;
 		case PointerAction::Up:
-			if (pointer->button == PointerButton::Tertiary) {
+			if (pointer->button == PointerButton::Tertiary)
 				panning = false;
-				return;
-			} break;
+			break;
 		case PointerAction::Scroll: {
 			float zoomChange = 1.f;
 			if (pointer->scroll.y > 0)
@@ -388,14 +245,10 @@ void EditorScreen::processEvent(const Event& event) {
 				zoomChange = 1.f / 1.2f;
 			camera.zoom(zoomChange, pointer->position);
 			updateEphemeralMeshes();
-			return;
 		}
 		default:;
 		}
 	}
-
-	if (currentToolMode && (int)scene.getTogglePosition() == scene.isToggled())
-		currentToolMode->processEvent(event);
 }
 
 
@@ -512,10 +365,7 @@ void EditorScreen::render() {
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	if (activeOperation)
-		activeOperation->renderGizmos();
-	else if (currentToolMode)
-		currentToolMode->renderGizmos();
+	currentToolMode->renderGizmos(gizmoRenderer);
 
 	uiManager.render();
 
@@ -564,13 +414,15 @@ void EditorScreen::drawObstacleOutline(const EditorObstacle& obstacle) const {
 void EditorScreen::updateEphemeralMeshes() {
 	uiToWorldScale = uiManager.getScale() * camera.getHalfHeight() * 2.f / (float)height;
 	scene.ball.updateOutlineRadius(uiToWorldScale);
-	for (auto& obstacle : scene.obstacles)
-		obstacle.generateEphemeralMeshes(uiToWorldScale);
+	for (auto& obstacle : scene.obstacles) {
+		obstacle.uiToWorldScale = uiToWorldScale;
+		obstacle.generateEphemeralMeshes();
+	}
 }
 
 void EditorScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
-	auto viewportBounds = viewportUI->getAbsoluteBounds() * uiManager.getScale();
+	auto viewportBounds = operationUI->getAbsoluteBounds() * uiManager.getScale();
 	viewportBounds.y() = (float)height - viewportBounds.height() - viewportBounds.y();
 	camera.update((float)width, (float)height, scene.level->arenaWidth, scene.level->arenaHeight, viewportBounds);
 	updateEphemeralMeshes();
@@ -626,7 +478,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 						if (obstacle.isSelected()) {
 							obstacle.setMotionProperty(*value, propertyDescriptor.property, toggled);
 							obstacle.initKinematicState();
-							obstacle.generateDomainMesh(uiToWorldScale);
+							obstacle.generateDomainMesh();
 						}
 				} else
 					scene.cancelLevelChange();
@@ -670,14 +522,83 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 }
 
 
-Operation* EditorScreen::loadOperation(std::unique_ptr<Operation> operation) {
-	idleShortcutHints->deactivate();
-	activeOperation = std::move(operation);
-	return activeOperation.get();
+void EditorScreen::updateDynamicUI() {
+	uiManager.removeAllChildrenOfNode(operationUI);
+	currentToolMode->createOperationUI(*operationUI);
+
+
+	uiManager.removeAllChildrenOfNode(bindingHints);
+
+	std::vector<BindingHint> hints;
+	// Add editor-wide shortcut hints...
+	hints.append_range(currentToolMode->getBindingHints());
+
+	for (const auto& hint : hints) {
+		auto hintUI = bindingHints->addChild<UIHorizontalList>(2.f, 0.f);
+		hintUI->setLayout({
+			.anchor = Anchor::Centre,
+			.widthMode = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+		});
+
+		TextStyle textStyle = {
+			.fontSize = 14.f,
+			.color = Color::LightGrey,
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle,
+		};
+
+		auto addKeySymbol = [&hintUI, textStyle](std::string_view name) {
+			auto box = hintUI->addChild<UIPanel>(
+				PanelStyle{
+					.fillColor = Color::Transparent,
+					.strokeColor = Color::LightGrey,
+					.cornerRadius = 3.f,
+					.strokeWidth = 1.f,
+				});
+			float paddingY = textStyle.fontSize / 8.f;
+			if (name.length() == 1)
+				box->setLayout({
+					.anchor = Anchor::Centre,
+					.widthMode = SizingMode::Absolute, .width = textStyle.fontSize + paddingY * 2.f,
+					.heightMode = SizingMode::Absolute, .height = textStyle.fontSize + paddingY * 2.f,
+				});
+			else
+				box->setLayout({
+					.anchor = Anchor::Centre,
+					.widthMode = SizingMode::Wrap,
+					.heightMode = SizingMode::Wrap,
+					.padding = {paddingY * 1.75f, paddingY}
+				});
+			auto text = box->addChild<UIText>(std::string(name), textStyle);
+			text->setLayout({
+				.anchor = Anchor::Centre,
+				.widthMode = SizingMode::Wrap,
+				.heightMode = SizingMode::Wrap,
+			});
+			return box;
+		};
+
+		if (hint.keyChord.modifiers & MOD_CTRL)
+			addKeySymbol(KeyRegistry::toString(KeyCode::Ctrl));
+		if (hint.keyChord.modifiers & MOD_SHIFT)
+			addKeySymbol(KeyRegistry::toString(KeyCode::Shift));
+		if (hint.keyChord.modifiers & MOD_ALT)
+			addKeySymbol(KeyRegistry::toString(KeyCode::Alt));
+		if (hint.keyChord.code != KeyCode::Unknown)
+			addKeySymbol(KeyRegistry::toString(hint.keyChord.code));
+
+		auto effectNode = hintUI->addChild(std::make_unique<UIText>(hint.label, textStyle));
+		effectNode->setLayout({
+			.anchor = Anchor::Centre,
+			.widthMode = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+			.margin = {3.f, 0.f}
+		});
+	}
 }
-void EditorScreen::unloadOperation() {
-	activeOperation.reset();
-	uiManager.removeAllChildrenOfNode(context.operationUI);
-	uiManager.removeAllChildrenOfNode(context.operationShortcutHints);
-	idleShortcutHints->activate();
+
+void EditorScreen::updateToolbar() {
+	uiManager.removeAllChildrenOfNode(toolbar);
+	currentToolMode->populateToolbar(*toolbar);
 }

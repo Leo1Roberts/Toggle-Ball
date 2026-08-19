@@ -27,15 +27,15 @@ public:
 	EditorObstacle(EditorObstacle&&) = default;
 	EditorObstacle& operator=(EditorObstacle&&) = default;
 
-	void generateMeshes(float uiToWorldScale) {
+	void generateMeshes() {
 		descriptor->generateObstacleMesh(obstacleMesh);
-		generateEphemeralMeshes(uiToWorldScale);
+		generateEphemeralMeshes();
 	}
-	void generateEphemeralMeshes(float uiToWorldScale) {
+	void generateEphemeralMeshes() {
 		descriptor->generateOutlineMesh(outlineMesh, uiToWorldScale);
-		generateDomainMesh(uiToWorldScale);
+		generateDomainMesh();
 	}
-	void generateDomainMesh(float uiToWorldScale) {
+	void generateDomainMesh() {
 		descriptor->generateDomainMesh(domainMesh, uiToWorldScale);
 	}
 
@@ -77,6 +77,8 @@ public:
 	[[nodiscard]] glm::vec2 getDomainPosition() const { return descriptor->getDomainPosition(worldToPlanar(kinematicState.getPosition())); }
 
 	ObstacleDescriptor* descriptor;
+
+	float uiToWorldScale{};
 
 private:
 	ObstacleKinematicState kinematicState;

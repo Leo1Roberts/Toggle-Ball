@@ -1,12 +1,45 @@
 #include "editor/operation/TransformOperation.h"
 
+#include "editor/operation/RotateOperation.h"
+#include "editor/operation/ScaleOperation.h"
+#include "editor/operation/TranslateOperation.h"
 #include "ui/UIList.h"
 #include "ui/UIPanel.h"
 #include "ui/UIText.h"
 
 
-void TransformOperation::createUI() {
-	auto panel = context->operationUI->addChild(std::make_unique<UIPanel>(
+std::unique_ptr<TransformOperation> TransformOperation::make(ActionCode actionCode, EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPointerPosition) {
+	switch (actionCode) {
+	case ActionCode::Translate:
+		return std::make_unique<TranslateOperation>(scene, camera, settings, trigger, initialPointerPosition);
+	case ActionCode::Rotate:
+		return std::make_unique<RotateOperation>(scene, camera, settings, trigger, initialPointerPosition);
+	case ActionCode::Scale:
+		return std::make_unique<ScaleOperation>(scene, camera, settings, trigger, initialPointerPosition);
+	default:
+		return nullptr;
+	}
+}
+std::unique_ptr<TransformOperation> TransformOperation::makeFromExisting(ActionCode actionCode, const TransformOperation* existingOperation) {
+	switch (actionCode) {
+	case ActionCode::Translate:
+		return std::make_unique<TranslateOperation>(*existingOperation);
+	case ActionCode::Rotate:
+		return std::make_unique<RotateOperation>(*existingOperation);
+	case ActionCode::Scale:
+		return std::make_unique<ScaleOperation>(*existingOperation);
+	default:
+		return nullptr;
+	}
+}
+
+
+std::vector<BindingHint> TransformOperation::getBindingHints() const {
+	return {{KeyChord(KeyCode::Unknown, MOD_SHIFT), "Precision mode"}};
+}
+
+void TransformOperation::createUI(UINode& container) {
+	auto panel = container.addChild(std::make_unique<UIPanel>(
 		PanelStyle{
 			.fillColor = {24, 26, 32, 150},
 			.cornerRadius = 4.f,
@@ -26,16 +59,18 @@ void TransformOperation::createUI() {
 		.alignHorizontal = TextAlignHorizontal::Centre,
 		.alignVertical = TextAlignVertical::Middle
 	}));
+}
 
-	context->operationShortcutHints->addChild(EditorContext::makeShortcutHint(
-		KeyChord(KeyCode::Unknown, MOD_SHIFT), "Precision mode"));
+bool TransformOperation::updateUI() {
+	if (!Operation::updateUI()) return false;
+	return detailsText != nullptr;
 }
 
 
-bool TransformOperation::doProcessEvent(const Event& event) {
+OperationResponse TransformOperation::doProcessEvent(const Event& event) {
 	if (typing && textInput.processEvent(event) == TextInputEventEffect::Buffer) {
 		applyOperation();
-		return true;
+		return {.consumedEvent = true, .status = OperationStatus::Running};
 	}
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
@@ -47,30 +82,30 @@ bool TransformOperation::doProcessEvent(const Event& event) {
 					if (trigger == TriggerType::ActionKey) {
 						finish();
 						commit();
-						return false;
+						return {.consumedEvent = false, .status = OperationStatus::Committed};
 					}
-					return true;
+					return {.consumedEvent = true, .status = OperationStatus::Running};
 				default:
-					return false;
+					return {.consumedEvent = false, .status = OperationStatus::Running};
 				}
 			}
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
-			glm::vec2 newPointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
+			glm::vec2 newPointerPlanarPosition = camera->screenToPlanarPosition(pointer->position);
 			updateTransformation(newPointerPlanarPosition);
 			pointerPlanarPosition = newPointerPlanarPosition;
 			applyOperation();
-			return false; // Allow pointer move events to pass through
+			return {.consumedEvent = false, .status = OperationStatus::Running};
 		}
 	} else if (auto* c = std::get_if<char>(&event)) {
 		if (!typing && TextInputBuffer::Float(*c)) {
 			typing = true;
 			if (textInput.processEvent(*c) == TextInputEventEffect::Buffer) {
 				applyOperation();
-				return true;
+				return {.consumedEvent = true, .status = OperationStatus::Running};
 			}
 		}
 	}
-	return false;
+	return {.consumedEvent = false, .status = OperationStatus::Running};
 }

@@ -4,23 +4,23 @@
 
 
 void PivotOperation::init() {
-	auto focus = context->scene->selectionFocus;
+	auto focus = scene->selectionFocus;
 	if (focus.type == EntityType::Ball)
-		pivot = context->scene->ball.descriptor->initialPosition;
+		pivot = scene->ball.descriptor->initialPosition;
 	else if (focus.type == EntityType::Obstacle)
-		pivot = worldToPlanar(context->scene->obstacles[focus.index].getKinematicState()->getPosition());
+		pivot = worldToPlanar(scene->obstacles[focus.index].getKinematicState()->getPosition());
 }
 
 
-void PivotOperation::renderGizmos() {
+void PivotOperation::renderGizmos(GizmoRenderer& gizmoRenderer) {
 	if (typing) return;
 
-	context->gizmoRenderer->addLine(pivot, pointerPlanarPosition, {
+	gizmoRenderer.addLine(pivot, pointerPlanarPosition, {
 		.primaryColor = Color::PointerConnectorLine1,
 		.secondaryColor = Color::PointerConnectorLine2,
 		.width = Settings::Sizes.lineWidth,
 		.dashLength = Settings::Sizes.lineWidth * 3.f,
 	});
 
-	context->gizmoRenderer->render();
+	gizmoRenderer.render();
 }

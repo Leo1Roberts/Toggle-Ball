@@ -218,4 +218,10 @@ private:
 };
 
 
+struct BindingHint {
+	KeyChord keyChord;
+	std::string label;
+};
+
+
 #endif // KEY_BINDINGS_H

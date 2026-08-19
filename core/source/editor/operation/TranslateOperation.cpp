@@ -1,6 +1,5 @@
 #include "editor/operation/TranslateOperation.h"
 
-#include "ui/UIList.h"
 #include "ui/UIText.h"
 
 
@@ -10,30 +9,37 @@ namespace Axis {
 } // namespace Axis
 
 
-void TranslateOperation::createUI() {
-	if (trigger != TriggerType::ActionKey) {
-		if (auto binding = Settings::Bindings->findBinding(ActionCode::LockToXAxis))
-			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "X axis")));
-		if (auto binding = Settings::Bindings->findBinding(ActionCode::LockToYAxis))
-			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Y axis")));
+std::optional<glm::vec2> TranslateOperation::keyToTranslationVector(KeyCode key) {
+	switch (key) {
+	case KeyCode::Left:  return glm::vec2(-1.f, 0.f);
+	case KeyCode::Right: return glm::vec2( 1.f, 0.f);
+	case KeyCode::Up:    return glm::vec2( 0.f, 1.f);
+	case KeyCode::Down:  return glm::vec2( 0.f,-1.f);
+	default: return std::nullopt;
 	}
-	if (trigger == TriggerType::TriggerKey) {
-		if (auto binding = Settings::Bindings->findBinding(ActionCode::Rotate))
-			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Rotate")));
-		if (auto binding = Settings::Bindings->findBinding(ActionCode::Scale))
-			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Scale")));
-	}
-
-	updateDetailsText();
 }
 
-void TranslateOperation::updateDetailsText() {
+
+std::vector<BindingHint> TranslateOperation::getBindingHints() const {
+	std::vector<BindingHint> hints = TransformOperation::getBindingHints();
+	if (trigger != TriggerType::ActionKey) {
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::LockToXAxis))
+			hints.emplace_back(*binding, "X axis");
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::LockToYAxis))
+			hints.emplace_back(*binding, "Y axis");
+	}
+	return hints;
+}
+
+bool TranslateOperation::updateUI() {
+	if (!TransformOperation::updateUI()) return false;
+
 	std::string text = "Translation ";
 	if (constraint == ConstraintType::None)
 		text += "X: " + floatToString(translation.x, 3, true) + "  Y: " + floatToString(translation.y, 3, true);
 	else {
 		if (constraint == ConstraintType::LocalAxis ||
-		   (constraint == ConstraintType::GlobalAxis && context->quickSettings->transformIndividually))
+		   (constraint == ConstraintType::GlobalAxis && settings.transformIndividually))
 			text += "along local ";
 		else if (constraint == ConstraintType::GlobalAxis)
 			text += "along global ";
@@ -48,60 +54,53 @@ void TranslateOperation::updateDetailsText() {
 	}
 
 	detailsText->setText(text);
+
+	return true;
 }
 
-
-std::optional<glm::vec2> TranslateOperation::keyToTranslationVector(KeyCode key) {
-	switch (key) {
-	case KeyCode::Left:  return glm::vec2(-1.f, 0.f);
-	case KeyCode::Right: return glm::vec2( 1.f, 0.f);
-	case KeyCode::Up:    return glm::vec2( 0.f, 1.f);
-	case KeyCode::Down:  return glm::vec2( 0.f,-1.f);
-	default: return std::nullopt;
-	}
-}
-
-
-void TranslateOperation::renderGizmos() {
+void TranslateOperation::renderGizmos(GizmoRenderer& gizmoRenderer) {
 	if (constraint == ConstraintType::None) return;
 
 	col color = baseAxis == Axis::X ? Color::AxisX : Color::AxisY;
-	context->gizmoRenderer->addLine(focusedAxisLine, {
+	gizmoRenderer.addLine(focusedAxisLine, {
 		.primaryColor = color,
 		.width = Settings::Sizes.lineWidth
 	});
 
 	color = col(color, 0.3f);
 	for (auto line : otherAxisLines)
-		context->gizmoRenderer->addLine(line, {
+		gizmoRenderer.addLine(line, {
 		.primaryColor = color,
 		.width = Settings::Sizes.lineWidth
 	});
 
-	context->gizmoRenderer->render();
+	gizmoRenderer.render();
 }
 
 
-bool TranslateOperation::doProcessEvent(const Event& event) {
-	if (TransformOperation::doProcessEvent(event))
-		return true;
+OperationResponse TranslateOperation::doProcessEvent(const Event& event) {
+	auto response = TransformOperation::doProcessEvent(event);
+	if (response.consumedEvent)
+		return response;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
+				case ActionCode::Translate:
+					return {.consumedEvent = trigger != TriggerType::ActionKey, .status = OperationStatus::Running};
 				case ActionCode::LockToXAxis:
 					if (trigger != TriggerType::ActionKey) {
 						setConstraint(Axis::X);
-						return true;
+						return {.consumedEvent = true, .status = OperationStatus::Running};
 					} break;
 				case ActionCode::LockToYAxis:
 					if (trigger != TriggerType::ActionKey) {
 						setConstraint(Axis::Y);
-						return true;
+						return {.consumedEvent = true, .status = OperationStatus::Running};
 					} break;
 				default:
-					return false;
+					return {.consumedEvent = false, .status = OperationStatus::Running};
 				}
 			}
 		}
@@ -111,22 +110,22 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 				if (trigger == TriggerType::ActionKey) {
 					rawTranslation += *vector * precisionMultiplier;
 					applyOperation();
+					return {.consumedEvent = true, .status = OperationStatus::Running};
 				}
-				return true;
 			}
 		}
 	}
-	return false;
+	return {.consumedEvent = false, .status = OperationStatus::Running};
 }
 
 
 void TranslateOperation::applyOperation() {
 	otherAxisLines.clear();
 
-	auto ball = &context->scene->ball;
-	auto& obstacles = context->scene->obstacles;
+	auto ball = &scene->ball;
+	auto& obstacles = scene->obstacles;
 
-	auto focus = &context->scene->selectionFocus;
+	auto focus = &scene->selectionFocus;
 	float focusAngle = 0.f;
 	if (focus->type == EntityType::Obstacle)
 		focusAngle = obstacles[focus->index].getKinematicState()->getAngle();
@@ -141,7 +140,7 @@ void TranslateOperation::applyOperation() {
 				direction = glm::vec2(0.f);
 			else
 				direction = normalize(rawTranslation);
-		} else if (!context->quickSettings->transformIndividually && constraint == ConstraintType::GlobalAxis)
+		} else if (!settings.transformIndividually && constraint == ConstraintType::GlobalAxis)
 			direction = baseAxis;
 		else
 			direction = angleToRotation2D(focusAngle) * baseAxis;
@@ -150,24 +149,24 @@ void TranslateOperation::applyOperation() {
 			if (auto value = textInput.getValue<std::optional<float>>())
 				magnitude = *value;
 			else {
-				updateDetailsText();
-				context->scene->cancelLevelChange();
+				updateUI();
+				scene->cancelLevelChange();
 				return;
 			}
 		} else
 			magnitude = dot(rawTranslation, direction);
 
-		if (!context->quickSettings->transformIndividually)
+		if (!settings.transformIndividually)
 			translation = direction * magnitude;
 	}
 
 	if (ball->isSelected()) {
-		if (context->quickSettings->transformIndividually && trigger != TriggerType::ActionKey)
+		if (settings.transformIndividually && trigger != TriggerType::ActionKey)
 			translation = (angleToRotation2D(-focusAngle) * direction) * magnitude;
 
-		ball->translateBy(translation, context->scene->getCurrentNode()->level.ballDescriptor.get());
+		ball->translateBy(translation, scene->getCurrentNode()->level.ballDescriptor.get());
 
-		if (context->quickSettings->transformIndividually && constraint != ConstraintType::None && focus->type != EntityType::Ball)
+		if (settings.transformIndividually && constraint != ConstraintType::None && focus->type != EntityType::Ball)
 			otherAxisLines.push_back({
 				.point = ball->descriptor->initialPosition,
 				.direction = baseAxis,
@@ -178,18 +177,18 @@ void TranslateOperation::applyOperation() {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
 			glm::vec2 individualDirection = direction;
-			if (context->quickSettings->transformIndividually && trigger != TriggerType::ActionKey) {
+			if (settings.transformIndividually && trigger != TriggerType::ActionKey) {
 				individualDirection = angleToRotation2D(obstacle.getKinematicState()->getAngle() - focusAngle) * direction;
 				translation = individualDirection * magnitude;
 			}
 
-			obstacle.translateBy(translation, context->quickSettings->transformBothStates, context->scene->isToggled(),
-				context->scene->getCurrentNode()->level.obstacleDescriptors[i].get());
+			obstacle.translateBy(translation, settings.transformBothStates, scene->isToggled(),
+				scene->getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
-			obstacle.generateDomainMesh(*context->uiToWorldScale);
+			obstacle.generateDomainMesh();
 
-			if (context->quickSettings->transformIndividually && constraint != ConstraintType::None &&
+			if (settings.transformIndividually && constraint != ConstraintType::None &&
 				!(focus->type == EntityType::Obstacle && i == focus->index))
 				otherAxisLines.push_back({
 					.point = worldToPlanar(obstacle.getKinematicState()->getPosition()),
@@ -198,7 +197,7 @@ void TranslateOperation::applyOperation() {
 		}
 	}
 
-	if (trigger != TriggerType::ActionKey && context->quickSettings->transformIndividually)
+	if (trigger != TriggerType::ActionKey && settings.transformIndividually)
 		translation = angleToRotation2D(-focusAngle) * direction * magnitude;
 
 	glm::vec2 focusPos{};
@@ -213,7 +212,7 @@ void TranslateOperation::applyOperation() {
 		.direction = direction,
 	};
 
-	updateDetailsText();
+	updateUI();
 }
 
 
@@ -221,8 +220,8 @@ void TranslateOperation::setConstraint(glm::vec2 requestedAxis) {
 	if (constraint == ConstraintType::None || (typing && constraint == ConstraintType::LocalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::GlobalAxis && baseAxis != requestedAxis)) {
 		constraint = ConstraintType::GlobalAxis;
 		baseAxis = requestedAxis;
-	} else if (context->scene->selectionFocus.type == EntityType::Obstacle &&
-		((!context->quickSettings->transformIndividually && constraint == ConstraintType::GlobalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::LocalAxis && baseAxis != requestedAxis))) {
+	} else if (scene->selectionFocus.type == EntityType::Obstacle &&
+		((!settings.transformIndividually && constraint == ConstraintType::GlobalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::LocalAxis && baseAxis != requestedAxis))) {
 		constraint = ConstraintType::LocalAxis;
 		baseAxis = requestedAxis;
 	} else

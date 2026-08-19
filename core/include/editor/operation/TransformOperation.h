@@ -8,25 +8,33 @@
 class UIText;
 
 
+struct TransformQuickSettings {
+	bool transformBothStates = false;
+	bool transformIndividually = false;
+};
+
+
 class TransformOperation : public Operation {
 public:
-	TransformOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, ActionCode code)
-		: Operation(context, trigger, initialPointerPosition), associatedCode(code), pointerPlanarPosition(initialPointerPlanarPosition) {
-		TransformOperation::createUI();
-	}
-	TransformOperation(const TransformOperation&) = delete;
-	TransformOperation(const TransformOperation& other, ActionCode code) // Reset typing
-		: Operation(other), associatedCode(code), pointerPlanarPosition(initialPointerPlanarPosition) {
-		TransformOperation::createUI();
-	}
+	TransformOperation(EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPointerPosition)
+		: Operation(scene, camera, trigger, initialPointerPosition), settings(settings), pointerPlanarPosition(initialPointerPlanarPosition) {}
+	TransformOperation(const TransformOperation& other) // Reset typing
+		: Operation(other), settings(other.settings), pointerPlanarPosition(initialPointerPlanarPosition) {}
 
-	const ActionCode associatedCode;
+	[[nodiscard]] static std::unique_ptr<TransformOperation> make(ActionCode actionCode, EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPointerPosition);
+	[[nodiscard]] static std::unique_ptr<TransformOperation> makeFromExisting(ActionCode actionCode, const TransformOperation* existingOperation);
+
+	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
+	void createUI(UINode& container) override;
+	bool updateUI() override;
+
+	void cancel() const final { return scene->cancelLevelChange(); }
+	void commit() const final { return scene->commitLevelChange(); }
 
 protected:
-	void createUI() override;
-	virtual void updateDetailsText() = 0;
+	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
 
-	bool doProcessEvent(const Event& event) override;
+	const TransformQuickSettings& settings;
 
 	glm::vec2 pointerPlanarPosition;
 
@@ -44,9 +52,7 @@ private:
 		precisionMultiplier = mods & MOD_SHIFT ? 0.1f : 1.f;
 	}
 
-	[[nodiscard]] bool canStart() const final { return context->scene->anythingIsSelected(); }
-	void doCancel() const final { context->scene->cancelLevelChange(); }
-	void doCommit() const final { context->scene->commitLevelChange(); }
+	[[nodiscard]] bool canStart() const final { return scene->anythingIsSelected(); }
 };
 
 

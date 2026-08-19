@@ -2,7 +2,6 @@
 #define EDITOR_H
 
 #include "utilities/Camera.h"
-#include "editor/EditorContext.h"
 #include "editor/EditorScene.h"
 #include "editor/GizmoRenderer.h"
 #include "editor/operation/Operation.h"
@@ -11,6 +10,7 @@
 #include "ui/UIManager.h"
 
 
+class UIHorizontalList;
 class UIVerticalList;
 
 class EditorScreen : public Screen {
@@ -35,26 +35,23 @@ private:
 	void updateEphemeralMeshes();
 	void updateObstacleMotionPropertiesList();
 
-	glm::vec2 pointer0Position{};
-
-	EditorQuickSettings quickSettings;
 	EditorScene scene;
+	std::unique_ptr<ToolMode> currentToolMode;
 	Camera camera;
 	UIManager uiManager;
 	GizmoRenderer gizmoRenderer{&uiManager, &camera};
-	EditorContext context;
 
 	SelectionState cachedSelectionState{};
 
-	UINode* viewportUI;
-	UIHorizontalList* idleShortcutHints;
+	UIContainer* viewportUI;
+
+	void updateDynamicUI();
+	UIContainer* operationUI;
+	UIHorizontalList* bindingHints;
+	void updateToolbar();
+	UIContainer* toolbar;
 
 	UIVerticalList* obstacleMotionPropertiesList;
-
-	std::unique_ptr<ToolMode> currentToolMode;
-	std::unique_ptr<Operation> activeOperation;
-	Operation* loadOperation(std::unique_ptr<Operation> operation);
-	void unloadOperation();
 };
 
 #endif // EDITOR_H

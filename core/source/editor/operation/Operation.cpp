@@ -1,17 +1,17 @@
 #include "editor/operation/Operation.h"
 
 
-bool Operation::processEvent(const Event& event) {
+OperationResponse Operation::processEvent(const Event& event) {
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (key->action == KeyAction::Down) {
 			if (key->chord.code == KeyCode::Escape) {
 				cancel();
-				return true;
+				return {true, OperationStatus::Cancelled};
 			}
 			if (key->chord.code == KeyCode::Enter) {
 				finish();
 				commit();
-				return true;
+				return {true, OperationStatus::Committed};
 			}
 		}
 		switch (key->chord.code) {
@@ -27,20 +27,20 @@ bool Operation::processEvent(const Event& event) {
 		case PointerAction::FinishDrag:
 			finish();
 			commit();
-			return true;
+			return {true, OperationStatus::Committed};
 		case PointerAction::CancelDrag:
 			cancel();
-			return true;
+			return {true, OperationStatus::Cancelled};
 		case PointerAction::Down:
 			if (trigger == TriggerType::TriggerKey || trigger == TriggerType::ActionKey) {
 				if (pointer->button == PointerButton::Primary) {
 					finish();
 					commit();
-					return trigger == TriggerType::TriggerKey;
+					return {trigger == TriggerType::TriggerKey, OperationStatus::Committed};
 				}
 				if (pointer->button == PointerButton::Secondary) {
 					cancel();
-					return trigger == TriggerType::TriggerKey;
+					return {trigger == TriggerType::TriggerKey, OperationStatus::Cancelled};
 				}
 			}
 			break;

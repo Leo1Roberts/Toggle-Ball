@@ -6,12 +6,12 @@
 
 class PivotOperation : public TransformOperation {
 public:
-	PivotOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, ActionCode code)
-		: TransformOperation(context, trigger, initialPointerPosition, code) { init(); }
-	PivotOperation(const TransformOperation& other, ActionCode code)
-		: TransformOperation(other, code) { init(); }
+	PivotOperation(EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPointerPosition)
+		: TransformOperation(scene, camera, settings, trigger, initialPointerPosition) { init(); }
+	PivotOperation(const TransformOperation& other)
+		: TransformOperation(other) { init(); }
 
-	void renderGizmos() override;
+	void renderGizmos(GizmoRenderer& gizmoRenderer) override;
 
 protected:
 	glm::vec2 pivot{};

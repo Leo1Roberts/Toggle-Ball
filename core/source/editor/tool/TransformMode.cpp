@@ -1,46 +1,160 @@
 #include "editor/tool/TransformMode.h"
 
 #include "editor/operation/RotateOperation.h"
+#include "editor/operation/ScaleOperation.h"
 #include "editor/operation/SelectOperation.h"
 #include "editor/operation/TranslateOperation.h"
+#include "ui/Theme.h"
+#include "ui/UIList.h"
+#include "ui/UISegmentedControl.h"
 
 
-bool TransformMode::doProcessEvent(const Event& event) {
-	if (auto key = std::get_if<KeyEvent>(&event)) {
+std::vector<BindingHint> TransformMode::getBindingHints() const {
+	std::vector<BindingHint> hints;
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformBothStates))
+		hints.emplace_back(*binding, "Toggle transform state");
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformIndividually))
+		hints.emplace_back(*binding, "Toggle transform mode");
+
+	if (activeOperation)
+		hints.append_range(activeOperation->getBindingHints());
+
+	if (!activeOperation || activeOperation->trigger == TriggerType::TriggerKey) {
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::Translate))
+			if (!dynamic_cast<TranslateOperation*>(activeOperation.get()))
+				hints.emplace_back(*binding, "Translate");
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::Rotate))
+			if (!dynamic_cast<RotateOperation*>(activeOperation.get()))
+				hints.emplace_back(*binding, "Rotate");
+		if (auto binding = Settings::Bindings->findBinding(ActionCode::Scale))
+			if (!dynamic_cast<ScaleOperation*>(activeOperation.get()))
+				hints.emplace_back(*binding, "Scale");
+	}
+
+	return hints;
+}
+
+void TransformMode::populateToolbar(UINode& toolbar) {
+	auto settingsList = toolbar.addChild<UIHorizontalList>(20.f, 0.f);
+	settingsList->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(4.f)
+	});
+
+	auto addEditorQuickSetting = [&settingsList](const std::string& settingName, const std::vector<std::string>& options, bool* target) {
+		auto setting = settingsList->addChild<UIHorizontalList>(8.f, 0.f);
+		setting->setLayout({
+			.anchor = Anchor::Centre,
+			.widthMode = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+		});
+
+		auto label = setting->addChild<UIText>(settingName, TextStyle{
+			.fontSize = 16.f,
+			.color = Color::LightGrey,
+			.alignVertical = TextAlignVertical::Middle,
+		});
+		label->setLayout({
+			.widthMode = SizingMode::Wrap,
+		});
+
+		auto segmentedControl = setting->addChild<UISegmentedControl>(options, false, Theme::PrimarySegmentedControl, 0.f);
+		segmentedControl->setLayout({
+			.anchor = Anchor::Centre,
+			.widthMode = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+		});
+		segmentedControl->setOptionLayout({
+			.widthMode = SizingMode::Absolute, .width = 60.f,
+			.heightMode = SizingMode::Wrap,
+			.padding = glm::vec2(4.f)
+		});
+		segmentedControl->setOptionTextLayout({
+			.anchor = Anchor::Centre,
+			.heightMode = SizingMode::Wrap,
+		});
+		segmentedControl->setOnSelectedOptionChange([target](int selected) { *target = selected; });
+		segmentedControl->setValueProvider([target] { return *target; });
+	};
+
+	addEditorQuickSetting("Transform state", {"Single", "Dual"}, &settings.transformBothStates);
+	addEditorQuickSetting("Transform mode", {"Group", "Individual"}, &settings.transformIndividually);
+}
+
+void TransformMode::renderGizmos(GizmoRenderer& gizmoRenderer) {
+	if (activeOperation)
+		activeOperation->renderGizmos(gizmoRenderer);
+}
+
+
+ToolModeResponse TransformMode::doProcessEvent(const Event& event) {
+	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
+		if (pointer->id == 0)
+			pointer0Position = pointer->position;
+	} else if (auto key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
 				case ActionCode::Translate:
 				case ActionCode::Rotate:
 				case ActionCode::Scale:
-					// Todo: switch action
-					return true;
+					if (activeOperation) {
+						if (activeOperation->trigger == TriggerType::ActionKey) {
+							activeOperation->finish();
+							activeOperation->commit();
+							activeOperation.reset();
+						} else if (activeOperation->trigger == TriggerType::TriggerKey) {
+							if (auto transform = dynamic_cast<TransformOperation*>(activeOperation.get())) {
+								transform->cancel();
+								activeOperation = TransformOperation::makeFromExisting(*actionCode, transform);
+								if (!activeOperation->start(key->chord.modifiers) ||
+									activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move)).status != OperationStatus::Running)
+									activeOperation.reset();
+
+								return {.consumedEvent = true, .operationChanged = true};
+							}
+							return {.consumedEvent = true, .operationChanged = false};
+						} else
+							return {.consumedEvent = true, .operationChanged = false};
+					}
+					activeOperation = TransformOperation::make(*actionCode, scene, camera, settings, TriggerType::TriggerKey, pointer0Position);
+					if (!activeOperation->start(key->chord.modifiers))
+						activeOperation.reset();
+					return {.consumedEvent = true, .operationChanged = true};
 				case ActionCode::ToggleTransformBothStates:
+					settings.transformBothStates = !settings.transformBothStates;
+					return {.consumedEvent = true, .operationChanged = false};
 				case ActionCode::ToggleTransformIndividually:
-					// Todo: change quick setting
-					return true;
+					settings.transformIndividually = !settings.transformIndividually;
+					return {.consumedEvent = true, .operationChanged = false};
 				default:
-					return false;
+					return {.consumedEvent = false, .operationChanged = false};
 				}
 			}
 		}
 
 		if (key->action == KeyAction::Down) {
 			if (TranslateOperation::keyToTranslationVector(key->chord.code)) {
-				auto translateOperation = std::make_unique<TranslateOperation>(context, TriggerType::ActionKey);
-				if (translateOperation->start(key->chord.modifiers))
-					context->loadOperation(std::move(translateOperation))->processEvent(event);
-				return true;
+				activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::ActionKey);
+				bool success =
+					activeOperation->start(key->chord.modifiers) &&
+					activeOperation->processEvent(event).status == OperationStatus::Running;
+				if (!success)
+					activeOperation.reset();
+				return {.consumedEvent = true, .operationChanged = success};
 			}
 		}
 	}
-	return false;
+
+	return {.consumedEvent = false, .operationChanged = false};
 }
 
 
 void TransformMode::performPrimaryAction(const PointerEvent& upEvent) {
 	auto selectOperation = SelectOperation(
-		context, TriggerType::Pointer,
+		scene, camera, TriggerType::Pointer,
 		pointerDownEvent.position, true);
 	if (selectOperation.start(pointerDownEvent.modifiers)) {
 		selectOperation.finish();
@@ -48,55 +162,52 @@ void TransformMode::performPrimaryAction(const PointerEvent& upEvent) {
 	}
 }
 
-void TransformMode::startDrag(const PointerEvent& dragStartEvent) {
+std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStartEvent) {
 	bool hit = false;
-	auto hitTestBox = SelectBox(context->camera->screenToPlanarPosition(pointerDownEvent.position));
-	if (context->scene->ball.isInSelectBox(hitTestBox))
+	auto hitTestBox = SelectBox(camera->screenToPlanarPosition(pointerDownEvent.position));
+	if (scene->ball.isInSelectBox(hitTestBox))
 		hit = true;
 	else
-		for (const auto& obstacle : context->scene->obstacles)
+		for (const auto& obstacle : scene->obstacles)
 			if (obstacle.isInSelectBox(hitTestBox)) {
 				hit = true;
 				break;
 			}
 
 	if (hit) {
-		auto selectOperation = (SelectOperation*)context->loadOperation(std::make_unique<SelectOperation>(
-			context, TriggerType::Pointer,
-			pointerDownEvent.position, true));
-		if (selectOperation->start(pointerDownEvent.modifiers)) {
-			selectOperation->finish();
-			context->unloadOperation();
-		}
-		else return;
+		auto selectOperation = SelectOperation(scene, camera, TriggerType::Pointer, pointerDownEvent.position, true);
+		if (selectOperation.start(pointerDownEvent.modifiers))
+			selectOperation.finish();
+		else return nullptr;
 
-		if (selectOperation->getMode() == SelectionMode::Subtract) {
-			selectOperation->cancel();
-			return;
+		if (selectOperation.getMode() == SelectionMode::Subtract) {
+			selectOperation.cancel();
+			return nullptr;
 		}
 	}
 
 	if (dragStartEvent.button == PointerButton::Primary) {
 		if (hit) {
-			auto translateOperation = std::make_unique<TranslateOperation>(
-				context, TriggerType::Pointer,
-				pointerDownEvent.position);
+			auto translateOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::Pointer, pointerDownEvent.position);
 			if (translateOperation->start(pointerDownEvent.modifiers))
-				context->loadOperation(std::move(translateOperation));
-		} else {
-			auto selectOperation = std::make_unique<SelectOperation>(
-				context, TriggerType::Pointer,
-				pointerDownEvent.position);
-			if (selectOperation->start(pointerDownEvent.modifiers))
-				context->loadOperation(std::move(selectOperation));
+				return translateOperation;
+			return nullptr;
 		}
-	} else if (dragStartEvent.button == PointerButton::Secondary) {
+
+		auto selectOperation = std::make_unique<SelectOperation>(scene, camera, TriggerType::Pointer, pointerDownEvent.position);
+		if (selectOperation->start(pointerDownEvent.modifiers))
+			return selectOperation;
+		return nullptr;
+	}
+
+	if (dragStartEvent.button == PointerButton::Secondary) {
 		if (hit) {
-			auto rotateOperation = std::make_unique<RotateOperation>(
-				context, TriggerType::Pointer,
-				pointerDownEvent.position);
+			auto rotateOperation = std::make_unique<RotateOperation>(scene, camera, settings, TriggerType::Pointer, pointerDownEvent.position);
 			if (rotateOperation->start(pointerDownEvent.modifiers))
-				context->loadOperation(std::move(rotateOperation));
+				return rotateOperation;
+			return nullptr;
 		}
 	}
+
+	return nullptr;
 }

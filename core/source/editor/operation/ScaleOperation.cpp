@@ -1,23 +1,18 @@
 #include "editor/operation/ScaleOperation.h"
 
-#include "ui/UIList.h"
 #include "ui/UIText.h"
 
 
-void ScaleOperation::createUI() {
+std::vector<BindingHint> ScaleOperation::getBindingHints() const {
+	std::vector<BindingHint> hints = TransformOperation::getBindingHints();
 	if (auto binding = Settings::Bindings->findBinding(ActionCode::Scale))
-		context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Cycle dimension")));
-	if (trigger == TriggerType::TriggerKey) {
-		if (auto binding = Settings::Bindings->findBinding(ActionCode::Translate))
-			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Translate")));
-		if (auto binding = Settings::Bindings->findBinding(ActionCode::Rotate))
-			context->operationShortcutHints->addChild(std::move(EditorContext::makeShortcutHint(*binding, "Rotate")));
-	}
-
-	updateDetailsText();
+		hints.emplace_back(*binding, "Cycle dimension");
+	return hints;
 }
 
-void ScaleOperation::updateDetailsText() {
+bool ScaleOperation::updateUI() {
+	if (!PivotOperation::updateUI()) return false;
+
 	std::string dimensionString;
 	switch (dimension) {
 	case Dimension::Major:
@@ -32,12 +27,15 @@ void ScaleOperation::updateDetailsText() {
 	std::string text = "Scale" + dimensionString + ": ";
 	text += typing ? textInput.getValue<const std::string&>() : floatToString(scale, 3, true);
 	detailsText->setText(text);
+
+	return true;
 }
 
 
-bool ScaleOperation::doProcessEvent(const Event& event) {
-	if (TransformOperation::doProcessEvent(event))
-		return true;
+OperationResponse ScaleOperation::doProcessEvent(const Event& event) {
+	auto response = PivotOperation::doProcessEvent(event);
+	if (response.consumedEvent)
+		return response;
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
@@ -45,13 +43,12 @@ bool ScaleOperation::doProcessEvent(const Event& event) {
 				if (*actionCode == ActionCode::Scale) {
 					dimension = (Dimension)(((int)dimension + 1) % (int)Dimension::COUNT);
 					applyOperation();
-					return true;
+					return {.consumedEvent = true, .status = OperationStatus::Running};
 				}
-				return false;
 			}
 		}
 	}
-	return false;
+	return {.consumedEvent = false, .status = OperationStatus::Running};
 }
 
 
@@ -60,14 +57,14 @@ void ScaleOperation::applyOperation() {
 		if (auto value = textInput.getValue<std::optional<float>>())
 			scale = *value;
 		else {
-			updateDetailsText();
-			context->scene->cancelLevelChange();
+			updateUI();
+			scene->cancelLevelChange();
 			return;
 		}
 	}
 
-	auto ball = &context->scene->ball;
-	auto& obstacles = context->scene->obstacles;
+	auto ball = &scene->ball;
+	auto& obstacles = scene->obstacles;
 
 	bool affectMinorRadius = false;
 	bool affectMajorRadius = false;
@@ -86,23 +83,23 @@ void ScaleOperation::applyOperation() {
 	}
 
 	if (ball->isSelected())
-		ball->scaleBy(scale, pivot, context->quickSettings->transformIndividually,
-			context->scene->getCurrentNode()->level.ballDescriptor.get());
+		ball->scaleBy(scale, pivot, settings.transformIndividually,
+			scene->getCurrentNode()->level.ballDescriptor.get());
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			obstacle.scaleBy(scale, pivot, context->quickSettings->transformIndividually,
+			obstacle.scaleBy(scale, pivot, settings.transformIndividually,
 				affectMinorRadius, affectMajorRadius,
-				context->scene->getCurrentNode()->level.obstacleDescriptors[i].get());
+				scene->getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
 			if (affectMinorRadius || affectMajorRadius)
-				obstacle.generateMeshes(*context->uiToWorldScale);
+				obstacle.generateMeshes();
 			else
-				obstacle.generateDomainMesh(*context->uiToWorldScale);
+				obstacle.generateDomainMesh();
 		}
 	}
 
-	updateDetailsText();
+	updateUI();
 }

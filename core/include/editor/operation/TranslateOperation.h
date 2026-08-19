@@ -7,20 +7,19 @@
 
 class TranslateOperation : public TransformOperation {
 public:
-	TranslateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
-		: TransformOperation(context, trigger, initialPointerPosition, ActionCode::Translate) { TranslateOperation::createUI(); }
+	TranslateOperation(EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPointerPosition = {})
+		: TransformOperation(scene, camera, settings, trigger, initialPointerPosition) {}
 	explicit TranslateOperation(const TransformOperation& other)
-		: TransformOperation(other, ActionCode::Translate) { TranslateOperation::createUI(); }
+		: TransformOperation(other) {}
 
 	static std::optional<glm::vec2> keyToTranslationVector(KeyCode key);
 
-	void renderGizmos() override;
+	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
+	bool updateUI() override;
+	void renderGizmos(GizmoRenderer& gizmoRenderer) override;
 
 protected:
-	void createUI() override;
-	void updateDetailsText() override;
-
-	bool doProcessEvent(const Event& event) override;
+	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
 	void applyOperation() override;
 
 private:

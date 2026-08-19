@@ -2,43 +2,41 @@
 
 #include "editor/EditorObstacle.h"
 #include "editor/GizmoRenderer.h"
-#include "ui/UIList.h"
 
 
-void SelectOperation::createUI() {
-	context->operationShortcutHints->addChild(EditorContext::makeShortcutHint(
-		KeyChord(KeyCode::Unknown, MOD_CTRL), "Add to selection"));
-	context->operationShortcutHints->addChild(EditorContext::makeShortcutHint(
-		KeyChord(KeyCode::Unknown, MOD_SHIFT), "Remove from selection"));
+std::vector<BindingHint> SelectOperation::getBindingHints() const {
+	return {
+		{KeyChord(KeyCode::Unknown, MOD_CTRL), "Add to selection"},
+		{KeyChord(KeyCode::Unknown, MOD_SHIFT), "Remove from selection"},
+	};
 }
 
-
-void SelectOperation::renderGizmos() {
-	context->gizmoRenderer->addBox(box, {
+void SelectOperation::renderGizmos(GizmoRenderer& gizmoRenderer) {
+	gizmoRenderer.addBox(box, {
 		.fillColor = Color::SelectBox,
 		.strokeColor = Color::Selected,
 		.cornerRadius = 0.f,
 		.strokeWidth = Settings::Sizes.outlineWidth,
 	});
 
-	context->gizmoRenderer->render();
+	gizmoRenderer.render();
 }
 
 
 void SelectOperation::finish() const {
-	auto ball = &context->scene->ball;
-	auto& obstacles = context->scene->obstacles;
-	auto focus = &context->scene->selectionFocus;
+	auto ball = &scene->ball;
+	auto& obstacles = scene->obstacles;
+	auto focus = &scene->selectionFocus;
 
 	if (instant && (mode == SelectionMode::Replace || mode == SelectionMode::Add)) {
-		const auto& originalSelection = context->scene->getCurrentNode()->selectionNode->selectionState;
+		const auto& originalSelection = scene->getCurrentNode()->selectionNode->selectionState;
 		bool revertSelection = false;
 
 		if (ball->isInSelectBox(box)) {
 			if (originalSelection.ball || mode == SelectionMode::Add)
 				revertSelection = true;
 			else {
-				context->scene->deselectAll();
+				scene->deselectAll();
 				ball->select();
 			}
 			*focus = {EntityType::Ball};
@@ -55,7 +53,7 @@ void SelectOperation::finish() const {
 				if (originalSelection.obstacles[topObstacleIndex] || mode == SelectionMode::Add)
 					revertSelection = true;
 				else {
-					context->scene->deselectAll();
+					scene->deselectAll();
 					obstacles[topObstacleIndex].select();
 				}
 				*focus = {EntityType::Obstacle, topObstacleIndex};
@@ -94,39 +92,25 @@ void SelectOperation::applyModifiers(byte mods) {
 		mode = SelectionMode::Replace;
 }
 
-bool SelectOperation::doProcessEvent(const Event& event) {
-	if (auto* key = std::get_if<KeyEvent>(&event)) {
-		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
-			if (key->action == KeyAction::Down) {
-				switch (*actionCode) {
-				case ActionCode::Toggle:
-				case ActionCode::InstantToggle:
-				case ActionCode::ToggleTransformIndividually:
-				case ActionCode::ToggleTransformBothStates:
-					return false;
-				default:
-					return true;
-				}
-			}
-		}
-	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
+OperationResponse SelectOperation::doProcessEvent(const Event& event) {
+	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
-			glm::vec2 pointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
+			glm::vec2 pointerPlanarPosition = camera->screenToPlanarPosition(pointer->position);
 			box = {
 				initialPointerPlanarPosition.x, pointerPlanarPosition.x,
 				initialPointerPlanarPosition.y, pointerPlanarPosition.y,
 			};
 			applyOperation();
-			return false; // Allow pointer move events to pass through
+			return {.consumedEvent = false, .status = OperationStatus::Running};
 		}
 	}
-	return false;
+	return {.consumedEvent = false, .status = OperationStatus::Running};
 }
 
 void SelectOperation::applyOperation() {
-	auto ball = &context->scene->ball;
-	auto& obstacles = context->scene->obstacles;
-	const auto& originalSelection = context->scene->getCurrentNode()->selectionNode->selectionState;
+	auto ball = &scene->ball;
+	auto& obstacles = scene->obstacles;
+	const auto& originalSelection = scene->getCurrentNode()->selectionNode->selectionState;
 
 	switch (mode) {
 	case SelectionMode::Replace:
