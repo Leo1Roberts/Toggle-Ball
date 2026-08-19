@@ -47,14 +47,16 @@ protected:
 
 	virtual void createUI() {}
 
+	virtual bool doProcessEvent(const Event& event) = 0;
+
+	virtual void applyOperation() = 0;
+
 	const EditorContext* context;
 	TriggerType trigger{};
 	glm::vec2 initialPointerPlanarPosition{};
 
 private:
 	virtual void applyModifiers(byte mods) = 0;
-	virtual bool doProcessEvent(const Event& event) = 0;
-	virtual void applyOperation() = 0;
 
 	[[nodiscard]] virtual bool canStart() const { return true; }
 	virtual void doCancel() const = 0;

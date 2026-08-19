@@ -4,9 +4,9 @@
 #include "ToolMode.h"
 
 
-class DefaultMode : public ToolMode {
+class TransformMode : public ToolMode {
 public:
-	explicit DefaultMode(const EditorContext* context)
+	explicit TransformMode(const EditorContext* context)
 		: ToolMode(context) {}
 
 private:

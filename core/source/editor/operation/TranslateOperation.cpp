@@ -83,10 +83,8 @@ void TranslateOperation::renderGizmos() {
 
 
 bool TranslateOperation::doProcessEvent(const Event& event) {
-	if (typing && textInput.processEvent(event) == TextInputEventEffect::Buffer) {
-		applyOperation();
+	if (TransformOperation::doProcessEvent(event))
 		return true;
-	}
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
@@ -102,24 +100,8 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 						setConstraint(Axis::Y);
 						return true;
 					} break;
-				case ActionCode::Toggle:
-				case ActionCode::InstantToggle:
-					if (trigger == TriggerType::ActionKey) {
-						finish();
-						commit();
-						return false;
-					}
-					return true;
-				case ActionCode::Rotate:
-				case ActionCode::Scale:
-					if (trigger != TriggerType::TriggerKey) return true;
-				case ActionCode::Undo:
-				case ActionCode::Redo:
-				case ActionCode::ToggleTransformIndividually:
-				case ActionCode::ToggleTransformBothStates:
-					return false;
 				default:
-					return true;
+					return false;
 				}
 			}
 		}
@@ -130,22 +112,6 @@ bool TranslateOperation::doProcessEvent(const Event& event) {
 					rawTranslation += *vector * precisionMultiplier;
 					applyOperation();
 				}
-				return true;
-			}
-		}
-	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
-			glm::vec2 newPointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
-			rawTranslation += (newPointerPlanarPosition - pointerPlanarPosition) * precisionMultiplier;
-			pointerPlanarPosition = newPointerPlanarPosition;
-			applyOperation();
-			return false; // Allow pointer move events to pass through
-		}
-	} else if (auto* c = std::get_if<char>(&event)) {
-		if (!typing && TextInputBuffer::Float(*c) && constraint != ConstraintType::None) {
-			typing = true;
-			if (textInput.processEvent(*c) == TextInputEventEffect::Buffer) {
-				applyOperation();
 				return true;
 			}
 		}

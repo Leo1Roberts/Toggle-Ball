@@ -31,7 +31,7 @@ std::optional<float> RotateOperation::keyToRotationRadians(KeyCode key) {
 }
 
 
-float angleDifference(glm::vec2 newPos, glm::vec2 oldPos, glm::vec2 pivot) {
+float RotateOperation::angleDifference(glm::vec2 newPos, glm::vec2 oldPos, glm::vec2 pivot) {
 	glm::vec2 v1 = oldPos - pivot;
 	glm::vec2 v2 = newPos - pivot;
 
@@ -41,29 +41,10 @@ float angleDifference(glm::vec2 newPos, glm::vec2 oldPos, glm::vec2 pivot) {
 }
 
 bool RotateOperation::doProcessEvent(const Event& event) {
-	if (typing && textInput.processEvent(event) == TextInputEventEffect::Buffer) {
-		applyOperation();
+	if (TransformOperation::doProcessEvent(event))
 		return true;
-	}
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
-		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
-			if (key->action == KeyAction::Down) {
-				switch (*actionCode) {
-				case ActionCode::Translate:
-				case ActionCode::Scale:
-					if (trigger != TriggerType::TriggerKey) return true;
-				case ActionCode::Undo:
-				case ActionCode::Redo:
-				case ActionCode::ToggleTransformIndividually:
-				case ActionCode::ToggleTransformBothStates:
-					return false;
-				default:
-					return true;
-				}
-			}
-		}
-
 		if (trigger == TriggerType::ActionKey) {
 			if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 				if (auto amount = keyToRotationRadians(key->chord.code)) {
@@ -73,22 +54,6 @@ bool RotateOperation::doProcessEvent(const Event& event) {
 				}
 			}
 			return false;
-		}
-	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
-			glm::vec2 newPointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
-			setRotation(rotation + angleDifference(newPointerPlanarPosition, pointerPlanarPosition, pivot) * precisionMultiplier);
-			pointerPlanarPosition = newPointerPlanarPosition;
-			applyOperation();
-			return false; // Allow pointer move events to pass through
-		}
-	} else if (auto* c = std::get_if<char>(&event)) {
-		if (!typing && TextInputBuffer::Float(*c)) {
-			typing = true;
-			if (textInput.processEvent(*c) == TextInputEventEffect::Buffer) {
-				applyOperation();
-				return true;
-			}
 		}
 	}
 	return false;

@@ -6,10 +6,10 @@
 
 class PivotOperation : public TransformOperation {
 public:
-	PivotOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
-		: TransformOperation(context, trigger, initialPointerPosition) { init(); }
-	explicit PivotOperation(const TransformOperation& other)
-		: TransformOperation(other) { init(); }
+	PivotOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, ActionCode code)
+		: TransformOperation(context, trigger, initialPointerPosition, code) { init(); }
+	PivotOperation(const TransformOperation& other, ActionCode code)
+		: TransformOperation(other, code) { init(); }
 
 	void renderGizmos() override;
 

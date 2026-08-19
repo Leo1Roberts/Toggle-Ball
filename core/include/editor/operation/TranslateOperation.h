@@ -8,9 +8,9 @@
 class TranslateOperation : public TransformOperation {
 public:
 	TranslateOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition = {})
-		: TransformOperation(context, trigger, initialPointerPosition) { TranslateOperation::createUI(); }
+		: TransformOperation(context, trigger, initialPointerPosition, ActionCode::Translate) { TranslateOperation::createUI(); }
 	explicit TranslateOperation(const TransformOperation& other)
-		: TransformOperation(other) { TranslateOperation::createUI(); }
+		: TransformOperation(other, ActionCode::Translate) { TranslateOperation::createUI(); }
 
 	static std::optional<glm::vec2> keyToTranslationVector(KeyCode key);
 
@@ -20,9 +20,13 @@ protected:
 	void createUI() override;
 	void updateDetailsText() override;
 
-private:
 	bool doProcessEvent(const Event& event) override;
 	void applyOperation() override;
+
+private:
+	void updateTransformation(glm::vec2 newPointerPlanarPosition) override {
+		rawTranslation += (newPointerPlanarPosition - pointerPlanarPosition) * precisionMultiplier;
+	}
 
 	void setConstraint(glm::vec2 requestedAxis);
 

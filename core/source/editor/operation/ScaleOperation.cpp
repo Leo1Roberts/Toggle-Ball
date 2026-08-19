@@ -3,9 +3,6 @@
 #include "ui/UIList.h"
 #include "ui/UIText.h"
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/norm.hpp"
-
 
 void ScaleOperation::createUI() {
 	if (auto binding = Settings::Bindings->findBinding(ActionCode::Scale))
@@ -39,46 +36,18 @@ void ScaleOperation::updateDetailsText() {
 
 
 bool ScaleOperation::doProcessEvent(const Event& event) {
-	if (typing && textInput.processEvent(event) == TextInputEventEffect::Buffer) {
-		applyOperation();
+	if (TransformOperation::doProcessEvent(event))
 		return true;
-	}
 
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
-				switch (*actionCode) {
-				case ActionCode::Scale:
+				if (*actionCode == ActionCode::Scale) {
 					dimension = (Dimension)(((int)dimension + 1) % (int)Dimension::COUNT);
 					applyOperation();
 					return true;
-				case ActionCode::Translate:
-				case ActionCode::Rotate:
-					if (trigger != TriggerType::TriggerKey) return true;
-				case ActionCode::Undo:
-				case ActionCode::Redo:
-				case ActionCode::ToggleTransformIndividually:
-				case ActionCode::ToggleTransformBothStates:
-					return false;
-				default:
-					return true;
 				}
-			}
-		}
-	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
-			glm::vec2 newPointerPlanarPosition = context->camera->screenToPlanarPosition(pointer->position);
-			scale *= std::pow(std::sqrt(length2(newPointerPlanarPosition - pivot) / length2(pointerPlanarPosition - pivot)), precisionMultiplier);
-			pointerPlanarPosition = newPointerPlanarPosition;
-			applyOperation();
-			return false; // Allow pointer move events to pass through
-		}
-	} else if (auto* c = std::get_if<char>(&event)) {
-		if (!typing && TextInputBuffer::Float(*c)) {
-			typing = true;
-			if (textInput.processEvent(*c) == TextInputEventEffect::Buffer) {
-				applyOperation();
-				return true;
+				return false;
 			}
 		}
 	}

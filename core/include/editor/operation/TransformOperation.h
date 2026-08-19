@@ -10,18 +10,23 @@ class UIText;
 
 class TransformOperation : public Operation {
 public:
-	TransformOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition)
-		: Operation(context, trigger, initialPointerPosition), pointerPlanarPosition(initialPointerPlanarPosition) {
+	TransformOperation(const EditorContext* context, TriggerType trigger, glm::vec2 initialPointerPosition, ActionCode code)
+		: Operation(context, trigger, initialPointerPosition), associatedCode(code), pointerPlanarPosition(initialPointerPlanarPosition) {
 		TransformOperation::createUI();
 	}
-	TransformOperation(const TransformOperation& other) // Reset typing
-		: Operation(other), pointerPlanarPosition(initialPointerPlanarPosition) {
+	TransformOperation(const TransformOperation&) = delete;
+	TransformOperation(const TransformOperation& other, ActionCode code) // Reset typing
+		: Operation(other), associatedCode(code), pointerPlanarPosition(initialPointerPlanarPosition) {
 		TransformOperation::createUI();
 	}
+
+	const ActionCode associatedCode;
 
 protected:
 	void createUI() override;
 	virtual void updateDetailsText() = 0;
+
+	bool doProcessEvent(const Event& event) override;
 
 	glm::vec2 pointerPlanarPosition;
 
@@ -32,8 +37,9 @@ protected:
 
 	UIText* detailsText = nullptr;
 
-
 private:
+	virtual void updateTransformation(glm::vec2 newPointerPlanarPosition) = 0;
+
 	void applyModifiers(byte mods) final {
 		precisionMultiplier = mods & MOD_SHIFT ? 0.1f : 1.f;
 	}

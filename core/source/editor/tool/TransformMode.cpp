@@ -1,12 +1,30 @@
-#include "editor/tool/DefaultMode.h"
+#include "editor/tool/TransformMode.h"
 
 #include "editor/operation/RotateOperation.h"
 #include "editor/operation/SelectOperation.h"
 #include "editor/operation/TranslateOperation.h"
 
 
-bool DefaultMode::doProcessEvent(const Event& event) {
+bool TransformMode::doProcessEvent(const Event& event) {
 	if (auto key = std::get_if<KeyEvent>(&event)) {
+		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
+			if (key->action == KeyAction::Down) {
+				switch (*actionCode) {
+				case ActionCode::Translate:
+				case ActionCode::Rotate:
+				case ActionCode::Scale:
+					// Todo: switch action
+					return true;
+				case ActionCode::ToggleTransformBothStates:
+				case ActionCode::ToggleTransformIndividually:
+					// Todo: change quick setting
+					return true;
+				default:
+					return false;
+				}
+			}
+		}
+
 		if (key->action == KeyAction::Down) {
 			if (TranslateOperation::keyToTranslationVector(key->chord.code)) {
 				auto translateOperation = std::make_unique<TranslateOperation>(context, TriggerType::ActionKey);
@@ -20,7 +38,7 @@ bool DefaultMode::doProcessEvent(const Event& event) {
 }
 
 
-void DefaultMode::performPrimaryAction(const PointerEvent& upEvent) {
+void TransformMode::performPrimaryAction(const PointerEvent& upEvent) {
 	auto selectOperation = SelectOperation(
 		context, TriggerType::Pointer,
 		pointerDownEvent.position, true);
@@ -30,7 +48,7 @@ void DefaultMode::performPrimaryAction(const PointerEvent& upEvent) {
 	}
 }
 
-void DefaultMode::startDrag(const PointerEvent& dragStartEvent) {
+void TransformMode::startDrag(const PointerEvent& dragStartEvent) {
 	bool hit = false;
 	auto hitTestBox = SelectBox(context->camera->screenToPlanarPosition(pointerDownEvent.position));
 	if (context->scene->ball.isInSelectBox(hitTestBox))

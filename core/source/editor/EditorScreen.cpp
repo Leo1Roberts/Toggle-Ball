@@ -1,6 +1,6 @@
 #include "editor/EditorScreen.h"
 
-#include "editor/tool/DefaultMode.h"
+#include "editor/tool/TransformMode.h"
 #include "editor/EditorObstacle.h"
 #include "Settings.h"
 #include "editor/operation/RotateOperation.h"
@@ -33,7 +33,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 		&quickSettings, &scene, &camera, &gizmoRenderer, &uiToWorldScale, nullptr, nullptr,
 		[this](std::unique_ptr<Operation> operation) { return loadOperation(std::move(operation)); },
 		[this] { unloadOperation(); }),
-	currentToolMode(std::make_unique<DefaultMode>(&context)) {
+	currentToolMode(std::make_unique<TransformMode>(&context)) {
 	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
@@ -182,7 +182,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 			.widthMode = SizingMode::Wrap,
 		});
 
-		auto segmentedControl = setting->addChild<UISegmentedControl>(options, false, Theme::PrimarySegmentedControl, 4.f);
+		auto segmentedControl = setting->addChild<UISegmentedControl>(options, false, Theme::PrimarySegmentedControl, 0.f);
 		segmentedControl->setLayout({
 			.anchor = Anchor::Centre,
 			.widthMode = SizingMode::Wrap,
@@ -244,28 +244,6 @@ void EditorScreen::processEvent(const Event& event) {
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			switch (*actionCode) {
-			case ActionCode::Toggle:
-				if (key->action == KeyAction::Down) {
-					scene.toggle();
-					return;
-				} break;
-			case ActionCode::InstantToggle:
-				if (key->action == KeyAction::Down) {
-					scene.toggle(false);
-					return;
-				} break;
-			case ActionCode::SelectAll:
-				if (key->action == KeyAction::Down) {
-					scene.selectAll();
-					scene.commitSelectionChange();
-					return;
-				} break;
-			case ActionCode::DeselectAll:
-				if (key->action == KeyAction::Down) {
-					scene.deselectAll();
-					scene.commitSelectionChange();
-					return;
-				} break;
 			case ActionCode::Undo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					if (activeOperation) {
@@ -355,6 +333,33 @@ void EditorScreen::processEvent(const Event& event) {
 				} break;
 			default:;
 			}
+
+			if (!activeOperation)
+				switch (*actionCode) {
+				case ActionCode::Toggle:
+					if (key->action == KeyAction::Down) {
+						scene.toggle();
+						return;
+					} break;
+				case ActionCode::InstantToggle:
+					if (key->action == KeyAction::Down) {
+						scene.toggle(false);
+						return;
+					} break;
+				case ActionCode::SelectAll:
+					if (key->action == KeyAction::Down) {
+						scene.selectAll();
+						scene.commitSelectionChange();
+						return;
+					} break;
+				case ActionCode::DeselectAll:
+					if (key->action == KeyAction::Down) {
+						scene.deselectAll();
+						scene.commitSelectionChange();
+						return;
+					} break;
+				default:;
+				}
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		switch (pointer->action) {
