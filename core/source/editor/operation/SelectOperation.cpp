@@ -58,7 +58,7 @@ void SelectOperation::finish() const {
 				}
 				*focus = {EntityType::Obstacle, topObstacleIndex};
 			} else if (mode == SelectionMode::Replace)
-				*focus = {EntityType::None};
+				*focus = {};
 		}
 
 		if (revertSelection) {
@@ -69,7 +69,7 @@ void SelectOperation::finish() const {
 	} else if (focus->type == EntityType::None ||
 		      (focus->type == EntityType::Ball && !ball->isSelected()) ||
 		      (focus->type == EntityType::Obstacle && !obstacles[focus->index].isSelected())) {
-		*focus = {EntityType::None};
+		*focus = {};
 		if (ball->isSelected())
 			*focus = {EntityType::Ball};
 		else {

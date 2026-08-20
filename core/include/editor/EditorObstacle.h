@@ -83,7 +83,7 @@ public:
 private:
 	ObstacleKinematicState kinematicState;
 
-	bool selected = false;
+	bool selected = true;
 
 	Mesh<ObjectVertex> obstacleMesh = Mesh<ObjectVertex>(GL_STATIC_DRAW);
 	Mesh<ObjectVertex> outlineMesh = Mesh<ObjectVertex>(GL_STATIC_DRAW);

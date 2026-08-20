@@ -8,6 +8,7 @@ EditorScene::EditorScene(std::unique_ptr<LevelDescriptor> levelToEdit, const std
 
 	obstacles.append_range(level->obstacleDescriptors
 		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
+	deselectAll();
 
 	currentNode = std::make_shared<UndoNode>(*level, std::make_shared<SelectionUndoNode>(getSelectionState()));
 }
@@ -29,6 +30,78 @@ void EditorScene::toggle(bool transition) {
 		togglePosition.setDestination(toggled, 0.f, level->transitionTime);
 	else
 		togglePosition.setPosition(toggled);
+}
+
+
+bool EditorScene::copySelection(std::vector<ObstacleDescriptor>* target) {
+	if (!target) target = &clipboard;
+	bool anythingIsSelected = false;
+	for (const auto& obstacle: obstacles)
+		if (obstacle.isSelected()) {
+			if (!anythingIsSelected) {
+				target->clear();
+				anythingIsSelected = true;
+			}
+			target->emplace_back(*obstacle.descriptor);
+		}
+	return anythingIsSelected;
+}
+void EditorScene::deleteSelection() {
+	int writeIndex = 0;
+	for (int readIndex = 0; readIndex < obstacles.size(); readIndex++)
+		if (!obstacles[readIndex].isSelected()) {
+			if (writeIndex != readIndex) {
+				level->obstacleDescriptors[writeIndex] = std::move(level->obstacleDescriptors[readIndex]);
+				obstacles[writeIndex] = std::move(obstacles[readIndex]);
+			}
+			writeIndex++;
+		}
+	level->obstacleDescriptors.erase(level->obstacleDescriptors.begin() + writeIndex, level->obstacleDescriptors.end());
+	obstacles.erase(obstacles.begin() + writeIndex, obstacles.end());
+
+	deselectAll();
+
+	commitLevelChange();
+}
+bool EditorScene::cutSelection() {
+	if (!copySelection())
+		return false;
+	deleteSelection();
+	return true;
+}
+bool EditorScene::paste(std::vector<ObstacleDescriptor>* source) {
+	if (!source) source = &clipboard;
+	if (source->size() == 0) return false;
+	int originalObstaclesCount = level->obstacleDescriptors.size();
+
+	level->obstacleDescriptors.append_range(
+		*source | std::views::transform([](const auto& clipboardObstacle) {
+			return std::make_unique<ObstacleDescriptor>(clipboardObstacle);
+		})
+	);
+
+	deselectAll();
+	obstacles.append_range(std::span(level->obstacleDescriptors).subspan(originalObstaclesCount)
+		| std::views::transform([](const auto& d) { return EditorObstacle(d.get()); }));
+	syncLevelCallback();
+
+	for (int i = (int)obstacles.size() - 1; i >= 0; i--)
+		if (obstacles[i].isSelected()) {
+			selectionFocus = {EntityType::Obstacle, i};
+			break;
+		}
+
+	commitLevelChange();
+
+	return true;
+}
+bool EditorScene::duplicateSelection() {
+	std::vector<ObstacleDescriptor> temporaryClipboard;
+	if (copySelection(&temporaryClipboard)) {
+		paste(&temporaryClipboard);
+		return true;
+	}
+	return false;
 }
 
 
@@ -113,10 +186,6 @@ SelectionState EditorScene::getSelectionState() const {
 }
 
 
-void EditorScene::setSelectionFocus(EntityReference focus) {
-	selectionFocus = focus;
-}
-
 void EditorScene::selectAll() {
 	ball.select();
 	for (auto& obstacle: obstacles)
@@ -128,5 +197,5 @@ void EditorScene::deselectAll() {
 	ball.deselect();
 	for (auto& obstacle: obstacles)
 		obstacle.deselect();
-	selectionFocus = {EntityType::None};
+	selectionFocus = {};
 }

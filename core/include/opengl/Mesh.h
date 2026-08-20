@@ -24,7 +24,7 @@ struct ObjectVertex {
 template <typename TVertex>
 class Mesh {
 public:
-	Mesh(GLenum usage) : usage(usage) {
+	explicit Mesh(GLenum usage) : usage(usage) {
 		glGenVertexArrays(1, VAO.ptr());
 		glGenBuffers(1, VBO.ptr());
 		glGenBuffers(1, EBO.ptr());

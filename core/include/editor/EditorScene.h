@@ -53,6 +53,12 @@ public:
 	void update(microseconds dt);
 	void toggle(bool transition = true);
 
+	bool copySelection(std::vector<ObstacleDescriptor>* target = nullptr);
+	void deleteSelection();
+	bool cutSelection();
+	bool paste(std::vector<ObstacleDescriptor>* source = nullptr);
+	bool duplicateSelection();
+
 	void undo();
 	void redo();
 	void cancelLevelChange();
@@ -60,7 +66,6 @@ public:
 	void commitLevelChange();
 	void commitSelectionChange();
 
-	void setSelectionFocus(EntityReference focus);
 	void selectAll();
 	void deselectAll();
 	[[nodiscard]] bool anythingIsSelected() const;
@@ -74,18 +79,20 @@ public:
 	EditorBall ball;
 	std::vector<EditorObstacle> obstacles;
 
-	EntityReference selectionFocus = {EntityType::None};
+	EntityReference selectionFocus = {};
 	bool demonstrateMotion = false;
 
 private:
-	void syncLevel();
+	void syncLevel(); // Uses level as the source of truth
 	std::function<void()> syncLevelCallback;
-	void syncSelection();
+	void syncSelection(); // Uses current node selection state as the source of truth
 
 	bool toggled = false;
 	Smoother togglePosition{};
 
 	std::shared_ptr<UndoNode> currentNode;
+
+	std::vector<ObstacleDescriptor> clipboard;
 };
 
 

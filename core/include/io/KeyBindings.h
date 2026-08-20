@@ -61,7 +61,7 @@ enum class ActionCode {
 	Quit,
 	Fullscreen,
 
-	Copy, Paste,
+	Copy, Delete, Cut, Paste, Duplicate,
 
 	TestLevel,
 
@@ -104,7 +104,10 @@ private:
 		{ ActionCode::Quit,                        "Quit"                          },
 		{ ActionCode::Fullscreen,                  "Fullscreen"                    },
 		{ ActionCode::Copy,                        "Copy"                          },
+		{ ActionCode::Delete,                      "Delete"                        },
+		{ ActionCode::Cut,                         "Cut"                           },
 		{ ActionCode::Paste,                       "Paste"                         },
+		{ ActionCode::Duplicate,                   "Duplicate"                     },
 		{ ActionCode::TestLevel,                   "Test level"                    },
 		{ ActionCode::Toggle,                      "Toggle"                        },
 		{ ActionCode::InstantToggle,               "Instant toggle"                },

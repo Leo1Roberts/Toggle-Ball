@@ -198,28 +198,42 @@ void EditorScreen::processEvent(const Event& event) {
 			default:;
 			}
 
-			if (!currentToolMode->hasActiveOperation())
+			if (!currentToolMode->hasActiveOperation() && key->action == KeyAction::Down) {
 				switch (*actionCode) {
+				case ActionCode::Copy:
+					scene.copySelection();
+					break;
+				case ActionCode::Delete:
+					scene.deleteSelection();
+					break;
+				case ActionCode::Cut:
+					scene.cutSelection();
+					break;
+				case ActionCode::Paste:
+					scene.paste();
+					// TODO: pick up selection (jump to cursor)
+					break;
+				case ActionCode::Duplicate:
+					scene.duplicateSelection();
+					// TODO: pick up selection (stay in place)
+					break;
 				case ActionCode::Toggle:
-					if (key->action == KeyAction::Down)
-						scene.toggle();
+					scene.toggle();
 					break;
 				case ActionCode::InstantToggle:
-					if (key->action == KeyAction::Down)
-						scene.toggle(false);
+					scene.toggle(false);
 					break;
 				case ActionCode::SelectAll:
-					if (key->action == KeyAction::Down) {
-						scene.selectAll();
-						scene.commitSelectionChange();
-					} break;
+					scene.selectAll();
+					scene.commitSelectionChange();
+					break;
 				case ActionCode::DeselectAll:
-					if (key->action == KeyAction::Down) {
-						scene.deselectAll();
-						scene.commitSelectionChange();
-					} break;
+					scene.deselectAll();
+					scene.commitSelectionChange();
+					break;
 				default:;
 				}
+			}
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		switch (pointer->action) {
