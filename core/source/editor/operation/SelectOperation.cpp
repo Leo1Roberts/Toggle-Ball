@@ -97,8 +97,8 @@ OperationResponse SelectOperation::doProcessEvent(const Event& event) {
 		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
 			glm::vec2 pointerPlanarPosition = camera->screenToPlanarPosition(pointer->position);
 			box = {
-				initialPointerPlanarPosition.x, pointerPlanarPosition.x,
-				initialPointerPlanarPosition.y, pointerPlanarPosition.y,
+				initialPlanarPosition.x, pointerPlanarPosition.x,
+				initialPlanarPosition.y, pointerPlanarPosition.y,
 			};
 			applyOperation();
 			return {.consumedEvent = false, .status = OperationStatus::Running};

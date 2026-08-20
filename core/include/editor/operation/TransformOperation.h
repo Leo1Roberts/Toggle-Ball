@@ -16,12 +16,12 @@ struct TransformQuickSettings {
 
 class TransformOperation : public Operation {
 public:
-	TransformOperation(EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPointerPosition)
-		: Operation(scene, camera, trigger, initialPointerPosition), settings(settings), pointerPlanarPosition(initialPointerPlanarPosition) {}
+	TransformOperation(EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition)
+		: Operation(scene, camera, trigger, initialPlanarPosition), settings(settings), pointerPlanarPosition(initialPlanarPosition) {}
 	TransformOperation(const TransformOperation& other) // Reset typing
-		: Operation(other), settings(other.settings), pointerPlanarPosition(initialPointerPlanarPosition) {}
+		: Operation(other), settings(other.settings), pointerPlanarPosition(initialPlanarPosition) {}
 
-	[[nodiscard]] static std::unique_ptr<TransformOperation> make(ActionCode actionCode, EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPointerPosition);
+	[[nodiscard]] static std::unique_ptr<TransformOperation> make(ActionCode actionCode, EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition);
 	[[nodiscard]] static std::unique_ptr<TransformOperation> makeFromExisting(ActionCode actionCode, const TransformOperation* existingOperation);
 
 	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;

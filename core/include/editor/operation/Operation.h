@@ -47,8 +47,8 @@ public:
 	const TriggerType trigger;
 
 protected:
-	Operation(EditorScene* scene, const Camera* camera, TriggerType trigger, glm::vec2 initialPointerPosition)
-		: trigger(trigger), scene(scene), camera(camera), initialPointerPlanarPosition(camera->screenToPlanarPosition(initialPointerPosition)) {}
+	Operation(EditorScene* scene, const Camera* camera, TriggerType trigger, glm::vec2 initialPlanarPosition)
+		: trigger(trigger), scene(scene), camera(camera), initialPlanarPosition(initialPlanarPosition) {}
 	Operation(const Operation&) = default;
 
 	[[nodiscard]] virtual OperationResponse doProcessEvent(const Event& event) = 0;
@@ -58,7 +58,7 @@ protected:
 	EditorScene* scene;
 	const Camera* camera;
 
-	glm::vec2 initialPointerPlanarPosition;
+	glm::vec2 initialPlanarPosition;
 
 private:
 	virtual void applyModifiers(byte mods) = 0;

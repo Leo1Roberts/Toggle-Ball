@@ -8,14 +8,14 @@
 #include "ui/UIText.h"
 
 
-std::unique_ptr<TransformOperation> TransformOperation::make(ActionCode actionCode, EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPointerPosition) {
+std::unique_ptr<TransformOperation> TransformOperation::make(ActionCode actionCode, EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition) {
 	switch (actionCode) {
 	case ActionCode::Translate:
-		return std::make_unique<TranslateOperation>(scene, camera, settings, trigger, initialPointerPosition);
+		return std::make_unique<TranslateOperation>(scene, camera, settings, trigger, initialPlanarPosition);
 	case ActionCode::Rotate:
-		return std::make_unique<RotateOperation>(scene, camera, settings, trigger, initialPointerPosition);
+		return std::make_unique<RotateOperation>(scene, camera, settings, trigger, initialPlanarPosition);
 	case ActionCode::Scale:
-		return std::make_unique<ScaleOperation>(scene, camera, settings, trigger, initialPointerPosition);
+		return std::make_unique<ScaleOperation>(scene, camera, settings, trigger, initialPlanarPosition);
 	default:
 		return nullptr;
 	}
