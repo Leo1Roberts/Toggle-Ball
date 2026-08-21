@@ -43,7 +43,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		}));
 	statusBar->setLayout({
 		.anchor = Anchor::TopCentre,
-		.widthMode = SizingMode::Stretch,
+		.widthMode  = SizingMode::Stretch,
 		.heightMode = SizingMode::Wrap,
 		.padding = glm::vec2(4.f)
 	});
@@ -51,7 +51,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	toolbar = statusBar->addChild<UIContainer>();
 	toolbar->setLayout({
 		.anchor = Anchor::Centre,
-		.widthMode = SizingMode::Wrap,
+		.widthMode  = SizingMode::Wrap,
 		.heightMode = SizingMode::Wrap,
 		.padding = glm::vec2(4.f)
 	});
@@ -62,7 +62,8 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 
 	auto propertiesPanel = layout->addChild<UIPanel>(Theme::DarkPanel);
 	propertiesPanel->setLayout({
-		.widthMode = SizingMode::Absolute, .width = 300.f,
+		.widthMode  = SizingMode::Absolute, .width = 300.f,
+		.heightMode = SizingMode::Stretch
 	});
 	auto propertiesList = propertiesPanel->addChild<UIVerticalList>(0.f, 0.f);
 
@@ -73,7 +74,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	auto makeListItem = [this](const std::string& labelText, float* property) {
 		auto item =  std::make_unique<UIHorizontalList>(10.f, 0.f);
 		item->setLayout({
-			.widthMode = SizingMode::Stretch,
+			.widthMode  = SizingMode::Stretch,
 			.heightMode = SizingMode::Wrap,
 		});
 		item->addChild(std::make_unique<UIText>(labelText,
@@ -121,6 +122,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		}));
 	helpBar->setLayout({
 		.anchor = Anchor::BottomCentre,
+		.widthMode  = SizingMode::Stretch,
 		.heightMode = SizingMode::Wrap,
 	});
 
@@ -458,7 +460,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 		auto makeListItem = [this, propertyDescriptor](col labelColor, bool toggled = false) {
 			auto item =  std::make_unique<UIHorizontalList>(10.f, 0.f);
 			item->setLayout({
-				.widthMode = SizingMode::Stretch,
+				.widthMode  = SizingMode::Stretch,
 				.heightMode = SizingMode::Wrap,
 			});
 			item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(propertyDescriptor.property),
@@ -468,6 +470,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 				}));
 			auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
 			textField->setLayout({
+				.widthMode  = SizingMode::Stretch,
 				.heightMode = SizingMode::Wrap,
 				.padding = {0.f, 10.f}
 			});
@@ -546,7 +549,7 @@ void EditorScreen::updateDynamicUI() {
 		auto hintUI = bindingHints->addChild<UIHorizontalList>(2.f, 0.f);
 		hintUI->setLayout({
 			.anchor = Anchor::Centre,
-			.widthMode = SizingMode::Wrap,
+			.widthMode  = SizingMode::Wrap,
 			.heightMode = SizingMode::Wrap,
 		});
 
@@ -569,20 +572,20 @@ void EditorScreen::updateDynamicUI() {
 			if (name.length() == 1)
 				box->setLayout({
 					.anchor = Anchor::Centre,
-					.widthMode = SizingMode::Absolute, .width = textStyle.fontSize + paddingY * 2.f,
+					.widthMode  = SizingMode::Absolute, .width  = textStyle.fontSize + paddingY * 2.f,
 					.heightMode = SizingMode::Absolute, .height = textStyle.fontSize + paddingY * 2.f,
 				});
 			else
 				box->setLayout({
 					.anchor = Anchor::Centre,
-					.widthMode = SizingMode::Wrap,
+					.widthMode  = SizingMode::Wrap,
 					.heightMode = SizingMode::Wrap,
 					.padding = {paddingY * 1.75f, paddingY}
 				});
 			auto text = box->addChild<UIText>(std::string(name), textStyle);
 			text->setLayout({
 				.anchor = Anchor::Centre,
-				.widthMode = SizingMode::Wrap,
+				.widthMode  = SizingMode::Wrap,
 				.heightMode = SizingMode::Wrap,
 			});
 			return box;
@@ -600,7 +603,7 @@ void EditorScreen::updateDynamicUI() {
 		auto effectNode = hintUI->addChild(std::make_unique<UIText>(hint.label, textStyle));
 		effectNode->setLayout({
 			.anchor = Anchor::Centre,
-			.widthMode = SizingMode::Wrap,
+			.widthMode  = SizingMode::Wrap,
 			.heightMode = SizingMode::Wrap,
 			.margin = {3.f, 0.f}
 		});

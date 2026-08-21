@@ -1,5 +1,5 @@
-#ifndef DEFAULT_MODE_H
-#define DEFAULT_MODE_H
+#ifndef TRANSFORM_MODE_H
+#define TRANSFORM_MODE_H
 
 #include "ToolMode.h"
 #include "editor/operation/TransformOperation.h"
@@ -25,4 +25,4 @@ private:
 };
 
 
-#endif // DEFAULT_MODE_H
+#endif // TRANSFORM_MODE_H
