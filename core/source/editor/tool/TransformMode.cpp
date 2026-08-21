@@ -98,20 +98,36 @@ ToolModeResponse TransformMode::doProcessEvent(const Event& event) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
 				case ActionCode::Copy:
-					if (!activeOperation)
-						scene->copySelection();
-					break;
-				case ActionCode::Delete:
-					if (!activeOperation)
-						scene->deleteSelection();
-					break;
-				case ActionCode::Cut:
-					if (!activeOperation)
-						scene->cutSelection();
-					break;
+					scene->copySelection();
+					return {.consumedEvent = true, .operationChanged = false};
+				case ActionCode::Delete: {
+					bool operationChanged = false;
+					if (activeOperation) {
+						auto ss = scene->getSelectionState();
+						activeOperation->cancel();
+						activeOperation.reset();
+						operationChanged = true;
+						scene->applySelectionState(ss);
+					}
+					scene->deleteSelection();
+					return {.consumedEvent = true, .operationChanged = operationChanged};
+				}
+				case ActionCode::Cut: {
+					scene->copySelection();
+					bool operationChanged = false;
+					if (activeOperation) {
+						auto ss = scene->getSelectionState();
+						activeOperation->cancel();
+						activeOperation.reset();
+						operationChanged = true;
+						scene->applySelectionState(ss);
+					}
+					scene->deleteSelection();
+					return {.consumedEvent = true, .operationChanged = operationChanged};
+				}
 				case ActionCode::Paste:
 					if (!activeOperation && scene->paste()) {
-						glm::vec2 meanCentre = glm::vec2(0.f);
+						auto meanCentre = glm::vec2(0.f);
 						int selectedCount = 0;
 						for (const auto& obstacle : scene->obstacles)
 							if (obstacle.isSelected()) {

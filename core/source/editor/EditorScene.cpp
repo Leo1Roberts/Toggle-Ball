@@ -63,12 +63,6 @@ void EditorScene::deleteSelection() {
 
 	commitLevelChange();
 }
-bool EditorScene::cutSelection() {
-	if (!copySelection())
-		return false;
-	deleteSelection();
-	return true;
-}
 bool EditorScene::paste(std::vector<ObstacleDescriptor>* source) {
 	if (!source) source = &clipboard;
 	if (source->size() == 0) return false;
@@ -175,6 +169,7 @@ bool EditorScene::anythingIsSelected() const {
 	ball.isSelected() ||
 	std::ranges::any_of(obstacles, &EditorObstacle::isSelected);
 }
+
 SelectionState EditorScene::getSelectionState() const {
 	return {
 		selectionFocus,
@@ -183,6 +178,12 @@ SelectionState EditorScene::getSelectionState() const {
 			| std::views::transform(&EditorObstacle::isSelected)
 			| std::ranges::to<std::vector<bool>>()
 	};
+}
+void EditorScene::applySelectionState(const SelectionState& state) {
+	selectionFocus = state.focus;
+	ball.setSelected(state.ball);
+	for (int i = 0; i < obstacles.size(); i++)
+		obstacles[i].setSelected(state.obstacles[i]);
 }
 
 

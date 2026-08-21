@@ -55,7 +55,6 @@ public:
 
 	bool copySelection(std::vector<ObstacleDescriptor>* target = nullptr);
 	void deleteSelection();
-	bool cutSelection();
 	bool paste(std::vector<ObstacleDescriptor>* source = nullptr);
 	bool duplicateSelection();
 
@@ -70,6 +69,7 @@ public:
 	void deselectAll();
 	[[nodiscard]] bool anythingIsSelected() const;
 	[[nodiscard]] SelectionState getSelectionState() const;
+	void applySelectionState(const SelectionState& state);
 
 	[[nodiscard]] bool isToggled() const { return toggled; }
 	[[nodiscard]] float getTogglePosition() const { return togglePosition.getCurrentPosition(); }
