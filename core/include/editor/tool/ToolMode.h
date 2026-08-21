@@ -43,8 +43,14 @@ protected:
 
 	PointerEvent pointerDownEvent;
 
+	[[nodiscard]] bool pointedAtBall(glm::vec2 pointerPosition) const;
+	[[nodiscard]] bool pointedAtObstacle(glm::vec2 pointerPosition) const;
+	[[nodiscard]] bool pointedAtEntity(glm::vec2 pointerPosition) const {
+		return pointedAtBall(pointerPosition) || pointedAtObstacle(pointerPosition);
+	}
+
 private:
-	[[nodiscard]] virtual ToolModeResponse doProcessEvent(const Event& event) = 0;
+	[[nodiscard]] virtual ToolModeResponse doProcessEvent(const Event& event) { return {}; }
 
 	// Pointer down and up on the same spot
 	virtual void performPrimaryAction(const PointerEvent& upEvent) {}

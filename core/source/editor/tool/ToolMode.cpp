@@ -1,5 +1,8 @@
 #include "editor/tool/ToolMode.h"
 
+#include "editor/EditorScene.h"
+#include "editor/SelectBox.h"
+
 
 ToolModeResponse ToolMode::processEvent(const Event& event) {
 	bool operationChanged = false;
@@ -86,4 +89,17 @@ void ToolMode::commitActiveOperation() {
 		activeOperation->commit();
 	}
 	activeOperation.reset();
+}
+
+
+bool ToolMode::pointedAtBall(glm::vec2 pointerPosition) const {
+	auto hitTestBox = SelectBox(camera->screenToPlanarPosition(pointerPosition));
+	return scene->ball.isInSelectBox(hitTestBox);
+}
+bool ToolMode::pointedAtObstacle(glm::vec2 pointerPosition) const {
+	auto hitTestBox = SelectBox(camera->screenToPlanarPosition(pointerPosition));
+	return std::ranges::any_of(scene->obstacles,
+		[&hitTestBox](const auto& obstacle) {
+			return obstacle.isInSelectBox(hitTestBox);
+		});
 }

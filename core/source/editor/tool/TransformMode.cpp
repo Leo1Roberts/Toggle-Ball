@@ -217,16 +217,7 @@ void TransformMode::performPrimaryAction(const PointerEvent& upEvent) {
 }
 
 std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStartEvent) {
-	bool hit = false;
-	auto hitTestBox = SelectBox(camera->screenToPlanarPosition(pointerDownEvent.position));
-	if (scene->ball.isInSelectBox(hitTestBox))
-		hit = true;
-	else
-		for (const auto& obstacle : scene->obstacles)
-			if (obstacle.isInSelectBox(hitTestBox)) {
-				hit = true;
-				break;
-			}
+	bool hit = pointedAtEntity(pointerDownEvent.position);
 
 	if (hit) {
 		auto selectOperation = SelectOperation(scene, camera, TriggerType::Pointer, camera->screenToPlanarPosition(pointerDownEvent.position), true);

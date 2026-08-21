@@ -1,6 +1,6 @@
 #include "editor/tool/ShapeMode.h"
 
 
-ToolModeResponse ShapeMode::doProcessEvent(const Event& event) {
-	return {};
+std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEvent) {
+	return nullptr;
 }
