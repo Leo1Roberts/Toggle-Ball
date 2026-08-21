@@ -23,7 +23,7 @@ const glm::vec3 sunDirection = normalize(glm::vec3(2, 2, 3));
 static glm::vec3 viewSunDirection;
 
 
-EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
+EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& testLevelCallback) :
 	scene(
 		std::move(levelToEdit),
 		[this] { updateEphemeralMeshes(); }),
@@ -140,7 +140,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 			.handle   = PanelStyle{ .fillColor = Color::White,  .cornerRadius = std::numeric_limits<float>::max() }
 		});
 	stateToggle->setLayout({
-		.anchor = Anchor::CentreRight,
+		.anchor = Anchor::CentreLeft,
 		.widthMode  = SizingMode::Absolute, .width = 60.f,
 		.heightMode = SizingMode::Wrap,
 		.padding = glm::vec2(5.f),
@@ -152,6 +152,16 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit) :
 	});
 	stateToggle->setOnToggle([this](bool, byte mods) { scene.toggle(!(mods & MOD_CTRL)); });
 	stateToggle->setValueProvider([this] { return scene.getTogglePosition(); });
+
+	auto testButton = statusBar->addChild<UIButton>("Test level", Theme::SecondaryOutline);
+	testButton->setLayout({
+		.anchor = Anchor::CentreRight,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = {8.f, 6.f},
+		.margin = glm::vec2(5.f)
+	});
+	testButton->setOnTrigger(testLevelCallback);
 
 	updateDynamicUI();
 }

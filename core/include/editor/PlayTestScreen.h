@@ -9,7 +9,7 @@
 class UIButton;
 class PlayTestScreen : public Screen {
 public:
-	explicit PlayTestScreen(const LevelDescriptor& levelToPlay);
+	explicit PlayTestScreen(const LevelDescriptor& levelToPlay, const std::function<void()>& editLevelCallback);
 
 	void processEvent(const Event& event) override;
 	void update(microseconds dt) override;

@@ -3,7 +3,7 @@
 #include "level/Level.h"
 
 EditorMode::EditorMode() {
-	editorScreen = std::make_unique<EditorScreen>(LevelDescriptor::load("Level 1"));
+	editorScreen = std::make_unique<EditorScreen>(LevelDescriptor::load("Level 1"), [this] { testLevel(); });
 	activeScreen = editorScreen.get();
 }
 
@@ -13,7 +13,7 @@ void EditorMode::processEvent(const Event& event) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
-				case ActionCode::TestLevel:
+				case ActionCode::TestOrEditLevel:
 					if (activeScreen == editorScreen.get())
 						testLevel();
 					else if (activeScreen == playTestScreen.get())
@@ -34,7 +34,7 @@ void EditorMode::resumeEditing() {
 }
 
 void EditorMode::testLevel() {
-	playTestScreen = std::make_unique<PlayTestScreen>(*editorScreen->getLevel());
+	playTestScreen = std::make_unique<PlayTestScreen>(*editorScreen->getLevel(), [this] { resumeEditing(); });
 	resizeToMatchActiveScreen(playTestScreen.get());
 	activeScreen = playTestScreen.get();
 }

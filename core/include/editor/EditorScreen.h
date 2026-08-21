@@ -15,7 +15,7 @@ class UIVerticalList;
 
 class EditorScreen : public Screen {
 public:
-	explicit EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit);
+	explicit EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& testLevelCallback);
 
 	void processEvent(const Event& event) override;
 	void update(microseconds dt) override;

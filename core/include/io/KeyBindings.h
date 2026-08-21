@@ -63,7 +63,7 @@ enum class ActionCode {
 
 	Copy, Delete, Cut, Paste, Duplicate,
 
-	TestLevel,
+	TestOrEditLevel,
 
 	Toggle, InstantToggle,
 
@@ -108,7 +108,7 @@ private:
 		{ ActionCode::Cut,                         "Cut"                           },
 		{ ActionCode::Paste,                       "Paste"                         },
 		{ ActionCode::Duplicate,                   "Duplicate"                     },
-		{ ActionCode::TestLevel,                   "Test level"                    },
+		{ ActionCode::TestOrEditLevel,             "Test/edit level"               },
 		{ ActionCode::Toggle,                      "Toggle"                        },
 		{ ActionCode::InstantToggle,               "Instant toggle"                },
 		{ ActionCode::Undo,                        "Undo"                          },

@@ -4,7 +4,7 @@
 #include "ui/UIButton.h"
 
 
-PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
+PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay, const std::function<void()>& editLevelCallback)
 	: game(levelToPlay) {
 	levelCompleteDisplay = uiManager.addNode<UIButton>();
 	levelCompleteDisplay->hide();
@@ -23,7 +23,6 @@ PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 
 	levelCompleteDisplay->deactivate();
 
-
 	auto restartButton = uiManager.addNode(std::make_unique<UIButton>("Restart", Theme::PrimaryButton));
 	restartButton->setLayout({
 		.anchor = Anchor::TopRight,
@@ -35,6 +34,15 @@ PlayTestScreen::PlayTestScreen(const LevelDescriptor& levelToPlay)
 		levelCompleteDisplay->deactivate();
 		game.start();
 	});
+
+	auto editButton = uiManager.addNode(std::make_unique<UIButton>("Edit", Theme::SecondaryOutline));
+	editButton->setLayout({
+		.anchor = Anchor::TopLeft,
+		.widthMode = SizingMode::Absolute, .width = 100.f,
+		.heightMode = SizingMode::Absolute, .height = 60.f,
+		.margin = glm::vec2(20.f)
+	});
+	editButton->setOnTrigger(editLevelCallback);
 
 	game.start();
 }

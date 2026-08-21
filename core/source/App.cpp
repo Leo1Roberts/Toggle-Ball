@@ -14,9 +14,9 @@ void ScreenVertex::setupLayout() {
 }
 
 App::App(std::unique_ptr<AbstractWindow> appWindow, std::unique_ptr<AppMode> appMode) : window(std::move(appWindow)), content(std::move(appMode)) {
-	auto fps = std::make_unique<FPSOverlay>();
-	fps->setLayout({ .margin = glm::vec2(10.f) });
-	fpsOverlay = overlayUI.addNode(std::move(fps));
+	// auto fps = std::make_unique<FPSOverlay>();
+	// fps->setLayout({ .margin = glm::vec2(10.f) });
+	// fpsOverlay = overlayUI.addNode(std::move(fps));
 
 	quadVertices.emplace_back(glm::vec2(-1, 1), glm::vec2(0, 1));
 	quadVertices.emplace_back(glm::vec2(-1, -1), glm::vec2(0, 0));
