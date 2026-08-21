@@ -135,9 +135,9 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		ToggleStyle{
 			.normalTrackOff = PanelStyle{ .fillColor = Color::StateA, .cornerRadius = std::numeric_limits<float>::max() },
 			.hoveredTrackOff = PanelStyle{ .fillColor = Color::StateAHovered, .cornerRadius = std::numeric_limits<float>::max() },
-			.normalTrackOn  = PanelStyle{ .fillColor = Color::StateB, .cornerRadius = std::numeric_limits<float>::max() },
+			.normalTrackOn = PanelStyle{ .fillColor = Color::StateB, .cornerRadius = std::numeric_limits<float>::max() },
 			.hoveredTrackOn = PanelStyle{ .fillColor = Color::StateBHovered, .cornerRadius = std::numeric_limits<float>::max() },
-			.handle   = PanelStyle{ .fillColor = Color::White,  .cornerRadius = std::numeric_limits<float>::max() }
+			.handle = PanelStyle{ .fillColor = Color::White,  .cornerRadius = std::numeric_limits<float>::max() }
 		});
 	stateToggle->setLayout({
 		.anchor = Anchor::CentreLeft,
@@ -147,7 +147,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		.margin = glm::vec2(5.f)
 	});
 	stateToggle->setHandleLayout({
-		.widthMode = SizingMode::Absolute, .width = 20.f,
+		.widthMode  = SizingMode::Absolute, .width  = 20.f,
 		.heightMode = SizingMode::Absolute, .height = 20.f,
 	});
 	stateToggle->setOnToggle([this](bool, byte mods) { scene.toggle(!(mods & MOD_CTRL)); });
@@ -533,11 +533,13 @@ void EditorScreen::updateDynamicUI() {
 	uiManager.removeAllChildrenOfNode(operationUI);
 	currentToolMode->createOperationUI(*operationUI);
 
-
 	uiManager.removeAllChildrenOfNode(bindingHints);
 
 	std::vector<BindingHint> hints;
-	// Add editor-wide shortcut hints...
+
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::TestOrEditLevel))
+		hints.emplace_back(*binding, "Test level");
+
 	hints.append_range(currentToolMode->getBindingHints());
 
 	for (const auto& hint : hints) {
