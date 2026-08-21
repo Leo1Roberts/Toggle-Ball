@@ -27,7 +27,8 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	scene(
 		std::move(levelToEdit),
 		[this] { updateEphemeralMeshes(); }),
-	currentToolMode(std::make_unique<TransformMode>(&scene, &camera)) {
+	transformMode(&scene, &camera),
+	shapeMode(&scene, &camera) {
 	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
@@ -55,7 +56,6 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		.heightMode = SizingMode::Wrap,
 		.padding = glm::vec2(4.f)
 	});
-	updateToolbar();
 
 	viewportUI = mainArea->addChild<UIContainer>();
 	operationUI = viewportUI->addChild<UIContainer>();
@@ -165,13 +165,13 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	});
 	testButton->setOnTrigger(testLevelCallback);
 
-	updateDynamicUI();
+	selectMode(&transformMode);
 }
 
 
 void EditorScreen::processEvent(const Event& event) {
-	if (currentToolMode->hasActiveOperation()) { // Active operation takes priority over UI
-		auto response = currentToolMode->processEvent(event);
+	if (currentMode->hasActiveOperation()) { // Active operation takes priority over UI
+		auto response = currentMode->processEvent(event);
 		if (response.operationChanged)
 			updateDynamicUI();
 		if (response.consumedEvent)
@@ -183,7 +183,7 @@ void EditorScreen::processEvent(const Event& event) {
 		if (uiManager.processEvent(event))
 			return;
 
-		auto response = currentToolMode->processEvent(event);
+		auto response = currentMode->processEvent(event);
 		if (response.operationChanged)
 			updateDynamicUI();
 		if (response.consumedEvent)
@@ -195,14 +195,14 @@ void EditorScreen::processEvent(const Event& event) {
 			switch (*actionCode) {
 			case ActionCode::Undo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
-					currentToolMode->commitActiveOperation();
+					currentMode->commitActiveOperation();
 					scene.undo();
 					updateDynamicUI();
 					return;
 				} break;
 			case ActionCode::Redo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
-					currentToolMode->cancelActiveOperation();
+					currentMode->cancelActiveOperation();
 					scene.redo();
 					updateDynamicUI();
 					return;
@@ -210,8 +210,14 @@ void EditorScreen::processEvent(const Event& event) {
 			default:;
 			}
 
-			if (!currentToolMode->hasActiveOperation() && key->action == KeyAction::Down) {
+			if (!currentMode->hasActiveOperation() && key->action == KeyAction::Down) {
 				switch (*actionCode) {
+				case ActionCode::TransformMode:
+					selectMode(&transformMode);
+					break;
+				case ActionCode::ShapeMode:
+					selectMode(&shapeMode);
+					break;
 				case ActionCode::Toggle:
 					scene.toggle();
 					break;
@@ -374,7 +380,7 @@ void EditorScreen::render() {
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	currentToolMode->renderGizmos(gizmoRenderer);
+	currentMode->renderGizmos(gizmoRenderer);
 
 	uiManager.render();
 
@@ -532,9 +538,17 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 }
 
 
+void EditorScreen::selectMode(ToolMode* mode) {
+	if (mode == currentMode) return;
+	currentMode = mode;
+	updateToolbar();
+	updateDynamicUI();
+}
+
+
 void EditorScreen::updateDynamicUI() {
 	uiManager.removeAllChildrenOfNode(operationUI);
-	currentToolMode->createOperationUI(*operationUI);
+	currentMode->createOperationUI(*operationUI);
 
 	uiManager.removeAllChildrenOfNode(bindingHints);
 
@@ -543,7 +557,7 @@ void EditorScreen::updateDynamicUI() {
 	if (auto binding = Settings::Bindings->findBinding(ActionCode::TestOrEditLevel))
 		hints.emplace_back(*binding, "Test level");
 
-	hints.append_range(currentToolMode->getBindingHints());
+	hints.append_range(currentMode->getBindingHints());
 
 	for (const auto& hint : hints) {
 		auto hintUI = bindingHints->addChild<UIHorizontalList>(2.f, 0.f);
@@ -612,5 +626,5 @@ void EditorScreen::updateDynamicUI() {
 
 void EditorScreen::updateToolbar() {
 	uiManager.removeAllChildrenOfNode(toolbar);
-	currentToolMode->populateToolbar(*toolbar);
+	currentMode->populateToolbar(*toolbar);
 }

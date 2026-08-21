@@ -15,7 +15,7 @@ public:
 	void renderGizmos(GizmoRenderer& gizmoRenderer) override;
 
 private:
-	ToolModeResponse doProcessEvent(const Event& event) override;
+	[[nodiscard]] ToolModeResponse doProcessEvent(const Event& event) override;
 
 	void performPrimaryAction(const PointerEvent& upEvent) override;
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;

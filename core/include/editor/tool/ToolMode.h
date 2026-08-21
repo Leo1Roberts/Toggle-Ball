@@ -47,7 +47,7 @@ private:
 	[[nodiscard]] virtual ToolModeResponse doProcessEvent(const Event& event) = 0;
 
 	// Pointer down and up on the same spot
-	virtual void performPrimaryAction(const PointerEvent& upEvent) = 0;
+	virtual void performPrimaryAction(const PointerEvent& upEvent) {}
 	virtual void performSecondaryAction(const PointerEvent& upEvent) {}
 	[[nodiscard]] virtual std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) { return nullptr; }
 

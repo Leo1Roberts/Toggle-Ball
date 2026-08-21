@@ -7,6 +7,8 @@
 #include "editor/operation/Operation.h"
 #include "Screen.h"
 #include "editor/tool/ToolMode.h"
+#include "tool/ShapeMode.h"
+#include "tool/TransformMode.h"
 #include "ui/UIManager.h"
 
 
@@ -36,7 +38,6 @@ private:
 	void updateObstacleMotionPropertiesList();
 
 	EditorScene scene;
-	std::unique_ptr<ToolMode> currentToolMode;
 	Camera camera;
 	UIManager uiManager;
 	GizmoRenderer gizmoRenderer{&uiManager, &camera};
@@ -44,6 +45,11 @@ private:
 	SelectionState cachedSelectionState{};
 
 	UIContainer* viewportUI;
+
+	TransformMode transformMode;
+	ShapeMode shapeMode;
+	ToolMode* currentMode = nullptr;
+	void selectMode(ToolMode* mode);
 
 	void updateDynamicUI();
 	UIContainer* operationUI;
