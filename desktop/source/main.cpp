@@ -296,10 +296,10 @@ static void mouseButtonCallback(GLFWwindow* window, int button, int action, int 
 		getUpdatedMods(window), {}, false, clickCount));
 
 	if (cancelDrag) {
-		app->processEvent(PointerEvent(0, mousePosition, PointerAction::CancelDrag));
+		app->processEvent(PointerEvent(0, mousePosition, PointerAction::CancelDrag, buttonT, getUpdatedMods(window)));
 		readyToStartDrag = false;
 	} else if (finishDrag)
-		app->processEvent(PointerEvent(0, mousePosition, PointerAction::FinishDrag));
+		app->processEvent(PointerEvent(0, mousePosition, PointerAction::FinishDrag, buttonT, getUpdatedMods(window)));
 	if (cancelDrag || finishDrag)
 		dragging = false;
 }
@@ -324,18 +324,18 @@ static void cursorPosCallback(GLFWwindow* window, double x, double y) {
 		else
 			button = PointerButton::Secondary;
 
-		app->processEvent(PointerEvent(0, mousePosition, PointerAction::StartDrag, button));
+		app->processEvent(PointerEvent(0, mousePosition, PointerAction::StartDrag, button, getUpdatedMods(window)));
 	}
 
 	mousePosition = newPosition;
 
-	app->processEvent(PointerEvent(0, mousePosition, dragging ? PointerAction::Drag : PointerAction::Move));
+	app->processEvent(PointerEvent(0, mousePosition, dragging ? PointerAction::Drag : PointerAction::Move, PointerButton::Unknown, getUpdatedMods(window)));
 }
 
 static void scrollCallback(GLFWwindow* window, double xOffset, double yOffset) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
-	app->processEvent(PointerEvent(0, mousePosition, PointerAction::Scroll, PointerButton::Unknown, 0, {xOffset, yOffset}));
+	app->processEvent(PointerEvent(0, mousePosition, PointerAction::Scroll, PointerButton::Unknown, getUpdatedMods(window), {xOffset, yOffset}));
 }
 
 
