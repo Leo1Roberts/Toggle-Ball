@@ -57,6 +57,7 @@ private:
 	void updateToolbar();
 	UIContainer* toolbar;
 
+	bool obstacleMotionPropertiesListValid = false;
 	UIVerticalList* obstacleMotionPropertiesList;
 };
 

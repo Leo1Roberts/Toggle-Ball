@@ -16,7 +16,7 @@ std::unique_ptr<TransformOperation> TransformOperation::make(ActionCode actionCo
 		return std::make_unique<RotateOperation>(scene, camera, settings, trigger, initialPlanarPosition);
 	case ActionCode::Scale:
 		return std::make_unique<ScaleOperation>(scene, camera, settings, trigger, initialPlanarPosition);
-	default:
+	default:;
 		return nullptr;
 	}
 }
@@ -28,7 +28,7 @@ std::unique_ptr<TransformOperation> TransformOperation::makeFromExisting(ActionC
 		return std::make_unique<RotateOperation>(*existingOperation);
 	case ActionCode::Scale:
 		return std::make_unique<ScaleOperation>(*existingOperation);
-	default:
+	default:;
 		return nullptr;
 	}
 }
@@ -85,7 +85,7 @@ OperationResponse TransformOperation::doProcessEvent(const Event& event) {
 						return {.consumedEvent = false, .status = OperationStatus::Committed};
 					}
 					return {.consumedEvent = true, .status = OperationStatus::Running};
-				default:
+				default:;
 					return {.consumedEvent = false, .status = OperationStatus::Running};
 				}
 			}

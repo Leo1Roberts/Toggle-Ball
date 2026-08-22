@@ -11,6 +11,85 @@
 #include <sstream>
 
 
+std::unique_ptr<IMotionSpec> IMotionSpec::make(Type type, const IncompletePropertyValues& values, bool toggled) {
+	PropertyValues allValues;
+	for (int property = 0; property < values.size(); property++) {
+		const auto& propertyValues = values[property];
+		for (int state = 0; state < propertyValues.size(); state++) {
+			auto value = propertyValues[state];
+			if (!value) {
+				switch ((Property)property) {
+				case Property::Position_X:
+				case Property::Position_Y:
+				case Property::Angle:
+					switch ((State)state) {
+					case State::_:
+						if (toggled) {
+							if (auto v = propertyValues[(int)State::B])
+								value = *v;
+						} else {
+							if (auto v = propertyValues[(int)State::A])
+								value = *v;
+						}
+						break;
+					case State::A:
+					case State::B:
+						if (auto v = propertyValues[(int)State::_])
+							value = *v;
+						break;
+					default:;
+					}
+					break;
+				case Property::Position1_X:
+				case Property::Position2_X:
+					if (auto v = values[(int)Property::Position_X][(int)State::_])
+						value = *v;
+					break;
+				case Property::Position1_Y:
+				case Property::Position2_Y:
+					if (auto v = values[(int)Property::Position_Y][(int)State::_])
+						value = *v;
+					break;
+				case Property::InitialAngle:
+					if (toggled) {
+						if (auto v = values[(int)Property::Angle][(int)State::B])
+							value = *v;
+					} else {
+						if (auto v = values[(int)Property::Angle][(int)State::A])
+							value = *v;
+					}
+					break;
+				case Property::Angle1:
+				case Property::Angle2:
+					if (auto v = values[(int)Property::Angle][(int)State::_])
+						value = *v;
+					break;
+				default:;
+				}
+			}
+			allValues[property][state] = value ? *value : 0.f;
+		}
+	}
+
+	switch (type) {
+	case Type::Static:
+		return std::make_unique<StaticSpec>(allValues);
+	case Type::TogglingPosition:
+		return std::make_unique<TogglingPositionSpec>(allValues);
+	case Type::TogglingAngle:
+		return std::make_unique<TogglingAngleSpec>(allValues);
+	case Type::Spinning:
+		return std::make_unique<SpinningSpec>(allValues);
+	case Type::OscillatingPosition:
+		return std::make_unique<OscillatingPositionSpec>(allValues);
+	case Type::OscillatingAngle:
+		return std::make_unique<OscillatingAngleSpec>(allValues);
+	default:;
+		return nullptr;
+	}
+}
+
+
 std::string IMotionSpec::serialize() const {
 	std::ostringstream ss;
 

@@ -99,7 +99,7 @@ OperationResponse TranslateOperation::doProcessEvent(const Event& event) {
 						setConstraint(Axis::Y);
 						return {.consumedEvent = true, .status = OperationStatus::Running};
 					} break;
-				default:
+				default:;
 					return {.consumedEvent = false, .status = OperationStatus::Running};
 				}
 			}

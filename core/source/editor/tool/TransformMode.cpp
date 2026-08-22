@@ -183,7 +183,7 @@ ToolModeResponse TransformMode::doProcessEvent(const Event& event) {
 				case ActionCode::ToggleTransformIndividually:
 					settings.transformIndividually = !settings.transformIndividually;
 					return {.consumedEvent = true, .operationChanged = false};
-				default:
+				default:;
 					return {.consumedEvent = false, .operationChanged = false};
 				}
 			}

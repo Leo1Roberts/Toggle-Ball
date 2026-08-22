@@ -93,7 +93,7 @@ TextInputEventEffect TextInputBuffer::processEvent(const Event& event) {
 						return TextInputEventEffect::Cursor;
 					}
 					return TextInputEventEffect::None;
-				default:
+				default:;
 					return TextInputEventEffect::None;
 				}
 			}

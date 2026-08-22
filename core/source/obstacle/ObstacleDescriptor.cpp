@@ -61,3 +61,88 @@ void ObstacleDescriptor::scale(float factor) {
 	shape->scale(factor);
 	motion->scale(factor);
 }
+
+
+void ObstacleDescriptor::changeMotion(IMotionSpec::Type type, IMotionSpec::IncompletePropertyValues& values, bool toggled) {
+	for (const auto& desc : motion->getPropertyDescriptors()) {
+		auto value = motion->getProperty(false, desc);
+		values[(int)desc.property][(int)desc.associatedState] = value;
+
+		switch (desc.property) {
+		case IMotionSpec::Property::Position_X:
+			if (desc.associatedState == IMotionSpec::State::A) {
+				values[(int)IMotionSpec::Property::Position1_X][(int)IMotionSpec::State::_] = value;
+				if (!toggled)
+					values[(int)IMotionSpec::Property::Position_X][(int)IMotionSpec::State::_] = value;
+			} else if (desc.associatedState == IMotionSpec::State::B) {
+				values[(int)IMotionSpec::Property::Position2_X][(int)IMotionSpec::State::_] = value;
+				if (toggled)
+					values[(int)IMotionSpec::Property::Position_X][(int)IMotionSpec::State::_] = value;
+			}
+			break;
+		case IMotionSpec::Property::Position_Y:
+			if (desc.associatedState == IMotionSpec::State::A) {
+				values[(int)IMotionSpec::Property::Position1_Y][(int)IMotionSpec::State::_] = value;
+				if (!toggled)
+					values[(int)IMotionSpec::Property::Position_Y][(int)IMotionSpec::State::_] = value;
+			} else if (desc.associatedState == IMotionSpec::State::B) {
+				values[(int)IMotionSpec::Property::Position2_Y][(int)IMotionSpec::State::_] = value;
+				if (toggled)
+					values[(int)IMotionSpec::Property::Position_Y][(int)IMotionSpec::State::_] = value;
+			}
+			break;
+		case IMotionSpec::Property::Position1_X:
+			if (!toggled)
+				values[(int)IMotionSpec::Property::Position_X][(int)IMotionSpec::State::_] = value;
+			values[(int)IMotionSpec::Property::Position_X][(int)IMotionSpec::State::A] = value;
+			break;
+		case IMotionSpec::Property::Position1_Y:
+			if (!toggled)
+				values[(int)IMotionSpec::Property::Position_Y][(int)IMotionSpec::State::_] = value;
+			values[(int)IMotionSpec::Property::Position_Y][(int)IMotionSpec::State::A] = value;
+			break;
+		case IMotionSpec::Property::Position2_X:
+			if (toggled)
+				values[(int)IMotionSpec::Property::Position_X][(int)IMotionSpec::State::_] = value;
+			values[(int)IMotionSpec::Property::Position_X][(int)IMotionSpec::State::B] = value;
+			break;
+		case IMotionSpec::Property::Position2_Y:
+			if (toggled)
+				values[(int)IMotionSpec::Property::Position_Y][(int)IMotionSpec::State::_] = value;
+			values[(int)IMotionSpec::Property::Position_Y][(int)IMotionSpec::State::B] = value;
+			break;
+		case IMotionSpec::Property::Angle:
+			if (desc.associatedState == IMotionSpec::State::A) {
+				values[(int)IMotionSpec::Property::Angle1][(int)IMotionSpec::State::_] = value;
+				if (!toggled) {
+					values[(int)IMotionSpec::Property::Angle][(int)IMotionSpec::State::_] = value;
+					values[(int)IMotionSpec::Property::InitialAngle][(int)IMotionSpec::State::_] = value;
+				}
+			} else if (desc.associatedState == IMotionSpec::State::B) {
+				values[(int)IMotionSpec::Property::Angle2][(int)IMotionSpec::State::_] = value;
+				if (toggled) {
+					values[(int)IMotionSpec::Property::Angle][(int)IMotionSpec::State::_] = value;
+					values[(int)IMotionSpec::Property::InitialAngle][(int)IMotionSpec::State::_] = value;
+				}
+			}
+			break;
+		case IMotionSpec::Property::InitialAngle:
+			values[(int)IMotionSpec::Property::Angle][(int)IMotionSpec::State::_] = value;
+			break;
+		case IMotionSpec::Property::Angle1:
+			if (!toggled)
+				values[(int)IMotionSpec::Property::Angle][(int)IMotionSpec::State::_] = value;
+			values[(int)IMotionSpec::Property::Angle][(int)IMotionSpec::State::A] = value;
+			break;
+		case IMotionSpec::Property::Angle2:
+			if (toggled)
+				values[(int)IMotionSpec::Property::Angle][(int)IMotionSpec::State::_] = value;
+			values[(int)IMotionSpec::Property::Angle][(int)IMotionSpec::State::B] = value;
+			break;
+		default:;
+		}
+	}
+
+	motion = IMotionSpec::make(type, values, toggled);
+	updateColor();
+}

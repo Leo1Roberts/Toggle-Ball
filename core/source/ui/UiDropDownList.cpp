@@ -47,9 +47,9 @@ public:
 };
 
 
-UIDropDownList::UIDropDownList(const std::vector<std::string>& options, int defaultOption, const DropDownListStyle& style, float gapToList, float optionsSpacing, glm::vec2 optionsPadding)
+UIDropDownList::UIDropDownList(const std::vector<std::string>& options, int defaultOption, const DropDownListStyle& style, float gapToList, float optionsSpacing)
 	: UIVerticalList(gapToList, 0.f), selectedOption(defaultOption), keyboardHoveredOption(defaultOption), options(options), dropDownStyle(style) {
-	std::string defaultText = (defaultOption >= 0 && defaultOption < options.size()) ? options[defaultOption] : "";
+	std::string defaultText = (defaultOption >= 0 && defaultOption < options.size()) ? options[defaultOption] : " ";
 
 	mainButton = addChild<DropdownMainButton>(defaultText);
 	mainButton->setButtonStyle(style.mainButton);
@@ -62,20 +62,9 @@ UIDropDownList::UIDropDownList(const std::vector<std::string>& options, int defa
 	});
 
 	optionsPanel = addChild<UIPanel>(style.listBackground);
-	optionsPanel->setLayout({
-		.anchor = Anchor::TopLeft,
-		.widthMode  = SizingMode::Wrap,
-		.heightMode = SizingMode::Wrap,
-		.padding = optionsPadding
-	});
 	optionsPanel->setActive(open);
 
-	auto optionsList = optionsPanel->addChild<UIVerticalList>(optionsSpacing, 0.f);
-	optionsList->setLayout({
-		.anchor = Anchor::Centre,
-		.widthMode = SizingMode::Wrap,
-		.heightMode = SizingMode::Wrap,
-	});
+	optionsList = optionsPanel->addChild<UIVerticalList>(optionsSpacing, 0.f);
 
 	for (int i = 0; i < options.size(); i++) {
 		const auto& option = options[i];
@@ -88,15 +77,30 @@ UIDropDownList::UIDropDownList(const std::vector<std::string>& options, int defa
 	}
 
 	updateStyle();
+
+	UIDropDownList::setLayout(layout);
+	setOptionsListLayout({
+		.anchor = Anchor::TopLeft,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+	setOptionLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Stretch,
+		.heightMode = SizingMode::Wrap,
+	});
+	setOptionTextLayout({
+		.anchor = Anchor::CentreLeft,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
 }
 
 void UIDropDownList::selectOption(int option) {
 	if (option == selectedOption) return;
 
 	selectedOption = option;
-
-	if (mainButton && option >= 0 && option < options.size())
-		mainButton->setText(options[option]);
+	mainButton->setText(option >= 0 && option < options.size() ? options[option] : " ");
 
 	updateStyle();
 
@@ -127,8 +131,21 @@ void UIDropDownList::setLayout(Layout l) {
 
 	l.margin = margin;
 	l.padding = glm::vec2(0.f);
-	l.widthMode = l.heightMode = SizingMode::Wrap;
+	if (l.widthMode != SizingMode::Stretch)
+		l.widthMode = SizingMode::Wrap;
+	if (l.heightMode != SizingMode::Stretch)
+		l.heightMode = SizingMode::Wrap;
 	UIVerticalList::setLayout(l);
+}
+void UIDropDownList::setOptionsListLayout(Layout l) {
+	optionsPanel->setLayout(l);
+	if (l.widthMode != SizingMode::Stretch)
+		l.widthMode = SizingMode::Wrap;
+	if (l.heightMode != SizingMode::Stretch)
+		l.heightMode = SizingMode::Wrap;
+	l.anchor = Anchor::Centre;
+	l.padding = l.margin = glm::vec2(0.f);
+	optionsList->setLayout(l);
 }
 void UIDropDownList::setOptionLayout(const Layout& l) {
 	for (const auto& optionButton : optionButtons)
@@ -160,7 +177,7 @@ UIResponse UIDropDownList::processEvent(const Event& event) {
 				case KeyCode::Escape:
 					setOpen(false);
 					return UIResponse::RequestCancel;
-				default:
+				default:;
 					break;
 				}
 			}

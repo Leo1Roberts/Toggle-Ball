@@ -60,7 +60,7 @@ struct BallProperties {
 
 constexpr BallProperties getBallProperties(BallType type) {
 	switch (type) {
-	default:
+	default:;
 	case BallType::Basketball:
 		return {
 			MAT_BASKETBALL,
@@ -78,7 +78,7 @@ inline Texture* getBallTexture(BallType type) {
 	switch (type) {
 	case BallType::Basketball:
 		return Textures::basketball.get();
-	default:
+	default:;
 		return Textures::white.get();
 	}
 }

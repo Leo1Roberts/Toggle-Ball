@@ -27,6 +27,12 @@ public:
 	EditorObstacle(EditorObstacle&&) = default;
 	EditorObstacle& operator=(EditorObstacle&&) = default;
 
+	void changeMotion(IMotionSpec::Type type, bool toggled) {
+		descriptor->changeMotion(type, motionPropertyValues, toggled);
+		initKinematicState();
+		generateMeshes();
+	}
+
 	void generateMeshes() {
 		descriptor->generateObstacleMesh(obstacleMesh);
 		generateEphemeralMeshes();
@@ -56,11 +62,11 @@ public:
 		descriptor->shape->scaleBy(factor, affectMinorRadius, affectMajorRadius, base->shape.get());
 	}
 
-	void setMotionProperty(float value, MotionSpecProperty property, bool toggled = false) const {
-		descriptor->motion->setProperty(value, property, toggled);
+	void setMotionProperty(float value, IMotionSpec::PropertyDescriptor property) const {
+		descriptor->motion->setProperty(value, property);
 	}
-	[[nodiscard]] float getMotionProperty(MotionSpecProperty property, bool toggled = false) const {
-		return descriptor->motion->getProperty(property, toggled);
+	[[nodiscard]] std::optional<float> getMotionProperty(IMotionSpec::PropertyDescriptor property) const {
+		return descriptor->motion->getProperty(true, property);
 	}
 
 	[[nodiscard]] bool isSelected() const { return selected; }
@@ -81,6 +87,8 @@ public:
 	float uiToWorldScale{};
 
 private:
+	IMotionSpec::IncompletePropertyValues motionPropertyValues{std::nullopt};
+
 	ObstacleKinematicState kinematicState;
 
 	bool selected = true;

@@ -21,7 +21,7 @@ bool ScaleOperation::updateUI() {
 	case Dimension::Minor:
 		dimensionString = " width";
 		break;
-	default:
+	default:;
 		dimensionString = "";
 	}
 	std::string text = "Scale" + dimensionString + ": ";

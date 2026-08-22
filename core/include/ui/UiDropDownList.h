@@ -10,7 +10,7 @@ class UIButton;
 
 class UIDropDownList : public UIVerticalList {
 public:
-	UIDropDownList(const std::vector<std::string>& options, int defaultOption, const DropDownListStyle& style = {}, float gapToList = 0.f, float optionsSpacing = 0.f, glm::vec2 optionsPadding = glm::vec2(0.f));
+	UIDropDownList(const std::vector<std::string>& options, int defaultOption, const DropDownListStyle& style = {}, float gapToList = 0.f, float optionsSpacing = 0.f);
 
 	void setOnSelectedOptionChange(const std::function<void(int)>& callback) { onSelectedOptionChangeCallback = callback; }
 	void setValueProvider(const std::function<int()>& provider) { valueProvider = provider; }
@@ -19,6 +19,7 @@ public:
 	void setOpen(bool nowOpen);
 
 	void setLayout(Layout l) override;
+	void setOptionsListLayout(Layout l);
 	void setOptionLayout(const Layout& l);
 	void setOptionTextLayout(const Layout& l);
 
@@ -42,6 +43,7 @@ private:
 
 	class DropdownMainButton* mainButton;
 	UIPanel* optionsPanel;
+	UIVerticalList* optionsList;
 	std::vector<class DropdownOptionButton*> optionButtons;
 
 	std::function<void(int)> onSelectedOptionChangeCallback;

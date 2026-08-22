@@ -166,13 +166,19 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	});
 	testButton->setOnTrigger(testLevelCallback);
 
-	auto modeSelector = viewportUI->addChild<UIDropDownList>(std::vector<std::string>{"Transform Mode", "Shape Mode"}, 0, Theme::PrimaryDropDownList, 2.f, 5.f, glm::vec2(5.f));
+	auto modeSelector = viewportUI->addChild<UIDropDownList>(std::vector<std::string>{"Transform Mode", "Shape Mode"}, 0, Theme::PrimaryDropDownList, 2.f, 5.f);
 	modeSelector->setLayout({
 		.anchor = Anchor::TopLeft,
 		.widthMode  = SizingMode::Wrap,
 		.heightMode = SizingMode::Wrap,
 		.padding = glm::vec2(8.f),
 		.margin = glm::vec2(10.f)
+	});
+	modeSelector->setOptionsListLayout({
+		.anchor = Anchor::TopLeft,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(5.f),
 	});
 	modeSelector->setOptionLayout({
 		.anchor = Anchor::Centre,
@@ -310,7 +316,7 @@ void EditorScreen::update(microseconds dt) {
 	scene.update(dt);
 
 	auto selectionState = scene.getSelectionState();
-	if (cachedSelectionState.obstacles != selectionState.obstacles) {
+	if (!obstacleMotionPropertiesListValid || cachedSelectionState.obstacles != selectionState.obstacles) {
 		updateObstacleMotionPropertiesList();
 		cachedSelectionState = selectionState;
 	}
@@ -486,9 +492,16 @@ void EditorScreen::doResize() {
 void EditorScreen::updateObstacleMotionPropertiesList() {
 	uiManager.removeAllChildrenOfNode(obstacleMotionPropertiesList);
 
-	std::vector<MotionSpecPropertyDescriptor> commonProperties;
+	std::optional commonType = IMotionSpec::Type::COUNT;
+	std::vector<IMotionSpec::PropertyDescriptor> commonProperties;
 	for (const auto& obstacle : scene.obstacles)
 		if (obstacle.isSelected()) {
+			auto type = obstacle.descriptor->motion->getType();
+			if (commonType == IMotionSpec::Type::COUNT)
+				commonType = type;
+			else if (type != commonType)
+				commonType = std::nullopt;
+
 			const auto& properties = obstacle.descriptor->motion->getPropertyDescriptors();
 
 			if (commonProperties.empty())
@@ -501,79 +514,128 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 			}
 		}
 
-	for (const auto& propertyDescriptor : commonProperties) {
-		auto makeListItem = [this, propertyDescriptor](col labelColor, bool toggled = false) {
-			auto item =  std::make_unique<UIHorizontalList>(10.f, 0.f);
-			item->setLayout({
-				.widthMode  = SizingMode::Stretch,
-				.heightMode = SizingMode::Wrap,
-			});
-			item->addChild(std::make_unique<UIText>(getMotionSpecPropertyName(propertyDescriptor.property),
-				TextStyle{
-					.color = labelColor,
-					.alignVertical = TextAlignVertical::Middle
-				}));
-			auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
-			textField->setLayout({
-				.widthMode  = SizingMode::Stretch,
-				.heightMode = SizingMode::Wrap,
-				.padding = {0.f, 10.f}
-			});
-			textField->setOnFocusGained([this, propertyDescriptor] {
-				switch (propertyDescriptor.property) {
-				case MotionSpecProperty::AngularSpeed_rpm:
-				case MotionSpecProperty::AngularFrequency_opm:
-					scene.demonstrateMotion = true;
-				default:;
+	if (!commonType || commonType && *commonType != IMotionSpec::Type::COUNT) {
+		std::vector<std::string> types;
+		for (int i = 0; i < (int)IMotionSpec::Type::COUNT; i++)
+			types.push_back(IMotionSpec::getTypeName((IMotionSpec::Type)i));
+
+		auto motionOptionsList = obstacleMotionPropertiesList->addChild<UIDropDownList>(types, commonType ? (int)*commonType : -1, Theme::PrimaryDropDownList);
+		motionOptionsList->setLayout({
+			.widthMode  = SizingMode::Stretch,
+			.heightMode = SizingMode::Wrap,
+			.padding = glm::vec2(8.f),
+		});
+		motionOptionsList->setOptionsListLayout({
+			.anchor = Anchor::Centre,
+			.widthMode  = SizingMode::Stretch,
+			.heightMode = SizingMode::Wrap,
+		});
+		motionOptionsList->setOptionLayout({
+			.anchor = Anchor::Centre,
+			.widthMode  = SizingMode::Stretch,
+			.heightMode = SizingMode::Wrap,
+			.padding = glm::vec2(5.f),
+		});
+		motionOptionsList->setOptionTextLayout({
+			.anchor = Anchor::Centre,
+			.widthMode  = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+		});
+		motionOptionsList->setOnSelectedOptionChange([this](int selected) {
+			if (selected >= 0 && selected < (int)IMotionSpec::Type::COUNT) {
+				for (auto& obstacle : scene.obstacles)
+					if (obstacle.isSelected())
+						obstacle.changeMotion((IMotionSpec::Type)selected, scene.isToggled());
+				scene.commitLevelChange();
+			}
+			obstacleMotionPropertiesListValid = false;
+		});
+		motionOptionsList->setValueProvider([this] {
+			std::optional commonType = IMotionSpec::Type::COUNT;
+			for (const auto& obstacle : scene.obstacles)
+				if (obstacle.isSelected()) {
+					auto type = obstacle.descriptor->motion->getType();
+					if (commonType == IMotionSpec::Type::COUNT)
+						commonType = type;
+					else if (type != commonType)
+						commonType = std::nullopt;
 				}
-			});
-			textField->setOnTextChange([this, propertyDescriptor, toggled](const UITextBox& tb) {
-				if (auto value = tb.getValue<std::optional<float>>()) {
-					for (auto& obstacle : scene.obstacles)
-						if (obstacle.isSelected()) {
-							obstacle.setMotionProperty(*value, propertyDescriptor.property, toggled);
-							obstacle.initKinematicState();
-							obstacle.generateDomainMesh();
-						}
-				} else
-					scene.cancelLevelChange();
-			});
-			textField->setOnConfirm([this](const UITextBox& tb) {
-				if (tb.isEmpty())
-					scene.cancelLevelChange();
-				else
-					scene.commitLevelChange();
-				scene.demonstrateMotion = false;
-			});
-			textField->setOnCancel([this](const UITextBox&) {
-				scene.cancelLevelChange();
-				scene.demonstrateMotion = false;
-			});
-			textField->setValueProvider([this, propertyDescriptor, toggled] {
-				float value = NAN;
-				for (const auto& obstacle : scene.obstacles)
-					if (obstacle.isSelected()) {
-						float v = obstacle.getMotionProperty(propertyDescriptor.property, toggled);
-						if (std::isnan(value))
-							value = v;
-						else if (v != value) {
-							value = NAN;
-							break;
-						}
-					}
-
-				return std::isnan(value) ? "" : floatToString(value, 3);
-			});
-
-			return item;
-		};
-
-		if (propertyDescriptor.stateful) {
-			obstacleMotionPropertiesList->addChild(makeListItem(Color::StateA, false));
-			obstacleMotionPropertiesList->addChild(makeListItem(Color::StateB, true));
-		} else
-			obstacleMotionPropertiesList->addChild(makeListItem(Color::LightGrey));
+			return commonType ? (int)*commonType : -1;
+		});
 	}
+
+	for (const auto& propertyDescriptor : commonProperties) {
+		auto item = obstacleMotionPropertiesList->addChild<UIHorizontalList>(10.f, 0.f);
+		item->setLayout({
+			.widthMode  = SizingMode::Stretch,
+			.heightMode = SizingMode::Wrap,
+		});
+
+		col labelColor = Color::LightGrey;
+		if (propertyDescriptor.associatedState == IMotionSpec::State::A)
+			labelColor = Color::StateA;
+		else if (propertyDescriptor.associatedState == IMotionSpec::State::B)
+			labelColor = Color::StateB;
+
+		item->addChild(std::make_unique<UIText>(IMotionSpec::getPropertyName(propertyDescriptor.property),
+			TextStyle{
+				.color = labelColor,
+				.alignVertical = TextAlignVertical::Middle
+			}));
+		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
+		textField->setLayout({
+			.widthMode  = SizingMode::Stretch,
+			.heightMode = SizingMode::Wrap,
+			.padding = {0.f, 10.f}
+		});
+		textField->setOnFocusGained([this, propertyDescriptor] {
+			switch (propertyDescriptor.property) {
+			case IMotionSpec::Property::AngularSpeed:
+			case IMotionSpec::Property::AngularFrequency:
+				scene.demonstrateMotion = true;
+			default:;
+			}
+		});
+		textField->setOnTextChange([this, propertyDescriptor](const UITextBox& tb) {
+			if (auto value = tb.getValue<std::optional<float>>()) {
+				for (auto& obstacle : scene.obstacles)
+					if (obstacle.isSelected()) {
+						obstacle.setMotionProperty(*value, propertyDescriptor);
+						obstacle.initKinematicState();
+						obstacle.generateDomainMesh();
+					}
+			} else
+				scene.cancelLevelChange();
+		});
+		textField->setOnConfirm([this](const UITextBox& tb) {
+			if (tb.isEmpty())
+				scene.cancelLevelChange();
+			else
+				scene.commitLevelChange();
+			scene.demonstrateMotion = false;
+		});
+		textField->setOnCancel([this](const UITextBox&) {
+			scene.cancelLevelChange();
+			scene.demonstrateMotion = false;
+		});
+		textField->setValueProvider([this, propertyDescriptor] {
+			std::optional<float> value = std::nullopt;
+			for (const auto& obstacle : scene.obstacles)
+				if (obstacle.isSelected()) {
+					auto v = obstacle.getMotionProperty(propertyDescriptor);
+					if (!value)
+						value = v;
+					else if (v != value) {
+						value = std::nullopt;
+						break;
+					}
+				}
+
+			return value ? floatToString(*value, 3) : "";
+		});
+	}
+
+	obstacleMotionPropertiesListValid = true;
 }
 
 

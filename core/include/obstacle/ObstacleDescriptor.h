@@ -12,8 +12,9 @@ struct ObstacleDescriptor {
 		shape(std::move(shape)),
 		motion(std::move(motion)),
 		goal(goal),
-		color(goal ? Color::SoftGreen : this->motion->getColor()),
-		material(MAT_CONCRETE) {}
+		material(MAT_CONCRETE) {
+		updateColor();
+	}
 
 	ObstacleDescriptor(const ObstacleDescriptor& other);
 	ObstacleDescriptor& operator=(const ObstacleDescriptor& other);
@@ -24,6 +25,8 @@ struct ObstacleDescriptor {
 	bool operator==(const ObstacleDescriptor& other) const;
 
 	void scale(float factor);
+
+	void changeMotion(IMotionSpec::Type type, IMotionSpec::IncompletePropertyValues& values, bool toggled);
 
 	void generateObstacleMesh(Mesh<ObjectVertex>& obstacleMesh) const {
 		shape->generateObstacleMesh(obstacleMesh, color);
@@ -44,6 +47,11 @@ struct ObstacleDescriptor {
 	bool goal = false;
 	col color;
 	byte material;
+
+private:
+	void updateColor() {
+		color = goal ? Color::SoftGreen : this->motion->getColor();
+	}
 };
 
 
