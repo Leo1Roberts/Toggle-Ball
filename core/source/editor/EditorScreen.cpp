@@ -197,9 +197,9 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		}
 	});
 	modeSelector->setValueProvider([this] {
-		if (dynamic_cast<TransformMode*>(currentMode))
+		if (currentMode == &transformMode)
 			return 0;
-		if (dynamic_cast<ShapeMode*>(currentMode))
+		if (currentMode == &shapeMode)
 			return 1;
 		return -1;
 	});
