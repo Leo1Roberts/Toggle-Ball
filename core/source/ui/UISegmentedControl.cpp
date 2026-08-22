@@ -12,12 +12,14 @@ UISegmentedControl::UISegmentedControl(const std::vector<std::string>& options, 
 		.widthMode = SizingMode::Wrap,
 		.heightMode = SizingMode::Wrap,
 	});
+
 	for (int i = 0; i < options.size(); i++) {
 		const auto& option = options[i];
 		auto optionButton = list->addChild<UIButton>(option);
 		optionButton->setOnTrigger([this, i] { selectOption(i); });
 		optionButtons.push_back(optionButton);
 	}
+
 	updateStyle();
 }
 

@@ -12,6 +12,12 @@
 
 class UIManager {
 public:
+	UIManager() {
+		rootNode.setChangeFocusCallback([this](UINode* newFocus, bool cancel) {
+			return changeFocus(newFocus, cancel);
+		});
+	}
+
 	void resize(int screenWidth, int screenHeight, float screenDPIScale);
 
 	bool changeFocus(UINode* newFocus, bool cancel);

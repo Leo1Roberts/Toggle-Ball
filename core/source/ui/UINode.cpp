@@ -17,14 +17,30 @@ glm::vec2 UINode::measure() {
 				child->measure();
 
 	switch (layout.widthMode) {
-	case SizingMode::Absolute: measuredSize.x = layout.width; break;
-	case SizingMode::Wrap:     measuredSize.x = contentSize.x + layout.padding.x * 2.f; break;
-	case SizingMode::Stretch:  measuredSize.x = 0.f; break;
+	case SizingMode::Absolute:
+		measuredSize.x = layout.width;
+		break;
+	case SizingMode::Stretch:
+		if (!getParent() || getParent()->getLayout().widthMode != SizingMode::Wrap) {
+			measuredSize.x = 0.f;
+			break;
+		}
+	case SizingMode::Wrap:
+		measuredSize.x = contentSize.x + layout.padding.x * 2.f;
+		break;
 	}
 	switch (layout.heightMode) {
-	case SizingMode::Absolute: measuredSize.y = layout.height; break;
-	case SizingMode::Wrap:     measuredSize.y = contentSize.y + layout.padding.y * 2.f; break;
-	case SizingMode::Stretch:  measuredSize.y = 0.f; break;
+	case SizingMode::Absolute:
+		measuredSize.y = layout.height;
+		break;
+	case SizingMode::Stretch:
+		if (!getParent() || getParent()->getLayout().heightMode != SizingMode::Wrap) {
+			measuredSize.y = 0.f;
+			break;
+		}
+	case SizingMode::Wrap:
+		measuredSize.y = contentSize.y + layout.padding.y * 2.f;
+		break;
 	}
 
 	return measuredSize;

@@ -27,6 +27,7 @@ public:
 	void disable() { state = ButtonState::Disabled; updateStyle(); }
 	void enable() { state = ButtonState::Normal; updateStyle(); }
 
+	void setText(const std::string& text) { labelNode->setText(text); }
 	void setTextLayout(const Layout& l) { labelNode->setLayout(l); }
 
 	void setButtonStyle(const ButtonStyle& style) { buttonStyle = style; updateStyle(); }

@@ -11,6 +11,7 @@
 #include "ui/UISegmentedControl.h"
 #include "ui/UITextBox.h"
 #include "ui/UIToggle.h"
+#include "ui/UiDropDownList.h"
 
 
 const glm::vec3 groundColor = colorToLinear({76, 76, 76});
@@ -164,6 +165,44 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		.margin = glm::vec2(5.f)
 	});
 	testButton->setOnTrigger(testLevelCallback);
+
+	auto modeSelector = viewportUI->addChild<UIDropDownList>(std::vector<std::string>{"Transform Mode", "Shape Mode"}, 0, Theme::PrimaryDropDownList, 2.f, 5.f, glm::vec2(5.f));
+	modeSelector->setLayout({
+		.anchor = Anchor::TopLeft,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(8.f),
+		.margin = glm::vec2(10.f)
+	});
+	modeSelector->setOptionLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Stretch,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(5.f),
+	});
+	modeSelector->setOptionTextLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+	modeSelector->setOnSelectedOptionChange([this](int selected) {
+		switch (selected) {
+		case 0:
+			selectMode(&transformMode);
+			break;
+		case 1:
+			selectMode(&shapeMode);
+			break;
+		default:;
+		}
+	});
+	modeSelector->setValueProvider([this] {
+		if (dynamic_cast<TransformMode*>(currentMode))
+			return 0;
+		if (dynamic_cast<ShapeMode*>(currentMode))
+			return 1;
+		return -1;
+	});
 
 	selectMode(&transformMode);
 }

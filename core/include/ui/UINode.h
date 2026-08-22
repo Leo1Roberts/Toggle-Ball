@@ -28,6 +28,7 @@ public:
 	template <typename T>
 	T* addChild(std::unique_ptr<T> child) {
 		child->parent = this;
+		child->setChangeFocusCallback(changeFocusCallback);
 		T* ptr = child.get();
 		children.push_back(std::move(child));
 		invalidateLayout();
@@ -82,10 +83,15 @@ public:
 	void hide() { visible = false; invalidateLayout(); }
 	void activate() { active = true; invalidateLayout(); }
 	void deactivate() { active = false; invalidateLayout(); }
+	void setActive(bool nowActive) { active = nowActive; invalidateLayout(); }
 
-	void setLayout(const Layout& l) { layout = l; invalidateLayout(); }
+	virtual void setLayout(Layout l) { layout = l; invalidateLayout(); }
 	void setHitTestable(bool canBeHit) { hitTestable = canBeHit; }
 	void setHitTestableChildren(bool canBeHit) { hitTestableChildren = canBeHit; }
+
+	void setChangeFocusCallback(const std::function<bool(UINode*, bool)>& callback) {
+		changeFocusCallback = callback;
+	}
 
 	[[nodiscard]] const Layout& getLayout() const { return layout; }
 	[[nodiscard]] glm::vec2 getMeasuredSize() const { return measuredSize; }
@@ -104,6 +110,8 @@ protected:
 	Layout layout;
 	glm::vec2 measuredSize{};
 	Rectangle absoluteBounds;
+
+	std::function<bool(UINode*, bool)> changeFocusCallback;
 
 private:
 	virtual void doUpdate(microseconds dt) {}

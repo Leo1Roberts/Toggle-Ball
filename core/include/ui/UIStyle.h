@@ -87,4 +87,11 @@ struct SegmentedControlStyle {
 	ButtonStyle option;
 };
 
+struct DropDownListStyle {
+	ButtonStyle mainButton;
+	PanelStyle listBackground;
+	ButtonStyle option;
+	ButtonStyle selectedOption;
+};
+
 #endif // UI_STYLE_H
