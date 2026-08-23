@@ -2,6 +2,8 @@
 
 #include "editor/EditorScene.h"
 #include "editor/SelectBox.h"
+#include "editor/operation/SelectOperation.h"
+#include "editor/operation/TranslateOperation.h"
 
 
 ToolModeResponse ToolMode::processEvent(const Event& event) {
@@ -18,6 +20,9 @@ ToolModeResponse ToolMode::processEvent(const Event& event) {
 	}
 
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
+		if (pointer->id == 0)
+			pointer0Position = pointer->position;
+
 		switch (pointer->action) {
 		case PointerAction::Down:
 			pointerDownEvent = *pointer;
@@ -69,6 +74,68 @@ ToolModeResponse ToolMode::processEvent(const Event& event) {
 	return response;
 }
 
+ToolModeResponse ToolMode::processObstacleExistenceAction(ActionCode actionCode, byte modifiers, const TransformQuickSettings& settings) {
+	switch (actionCode) {
+	case ActionCode::Copy:
+		scene->copySelection();
+		return {.consumedEvent = true, .operationChanged = false};
+	case ActionCode::Delete: {
+		bool operationChanged = false;
+		if (activeOperation) {
+			auto ss = scene->getSelectionState();
+			activeOperation->cancel();
+			activeOperation.reset();
+			operationChanged = true;
+			scene->applySelectionState(ss);
+		}
+		scene->deleteSelection();
+		return {.consumedEvent = true, .operationChanged = operationChanged};
+	}
+	case ActionCode::Cut: {
+		scene->copySelection();
+		bool operationChanged = false;
+		if (activeOperation) {
+			auto ss = scene->getSelectionState();
+			activeOperation->cancel();
+			activeOperation.reset();
+			operationChanged = true;
+			scene->applySelectionState(ss);
+		}
+		scene->deleteSelection();
+		return {.consumedEvent = true, .operationChanged = operationChanged};
+	}
+	case ActionCode::Paste:
+		if (!activeOperation && scene->paste()) {
+			auto meanCentre = glm::vec2(0.f);
+			int selectedCount = 0;
+			for (const auto& obstacle : scene->obstacles)
+				if (obstacle.isSelected()) {
+					meanCentre += worldToPlanar(obstacle.getKinematicState()->getPosition());
+					selectedCount++;
+				}
+			meanCentre /= selectedCount;
+
+			activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::TriggerKey, meanCentre);
+			if (!activeOperation->start(modifiers) ||
+				activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move)).status != OperationStatus::Running)
+				activeOperation.reset();
+			return {.consumedEvent = true, .operationChanged = true};
+		}
+		break;
+	case ActionCode::Duplicate:
+		if (!activeOperation && scene->duplicateSelection()) {
+			activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::TriggerKey, camera->screenToPlanarPosition(pointer0Position));
+			if (!activeOperation->start(modifiers))
+				activeOperation.reset();
+			return {.consumedEvent = true, .operationChanged = true};
+		}
+		break;
+	default:;
+	}
+
+	return {.consumedEvent = false, .operationChanged = false};
+}
+
 
 void ToolMode::createOperationUI(UINode& container) const {
 	if (activeOperation) {
@@ -102,4 +169,15 @@ bool ToolMode::pointedAtObstacle(glm::vec2 pointerPosition) const {
 		[&hitTestBox](const auto& obstacle) {
 			return obstacle.isInSelectBox(hitTestBox);
 		});
+}
+
+
+void ToolMode::performPrimaryAction(const PointerEvent& upEvent) {
+	auto selectOperation = SelectOperation(
+		scene, camera, TriggerType::Pointer,
+		camera->screenToPlanarPosition(pointerDownEvent.position), true);
+	if (selectOperation.start(pointerDownEvent.modifiers)) {
+		selectOperation.finish();
+		selectOperation.commit();
+	}
 }

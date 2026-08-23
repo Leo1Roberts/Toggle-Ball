@@ -10,7 +10,11 @@ public:
 		: ToolMode(scene, camera) {}
 	
 private:
+	[[nodiscard]] ToolModeResponse doProcessEvent(const Event& event) override;
+
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;
+
+	float minorRadius = 0.7f;
 };
 
 

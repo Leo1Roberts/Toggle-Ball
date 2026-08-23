@@ -90,67 +90,14 @@ void TransformMode::renderGizmos(GizmoRenderer& gizmoRenderer) {
 
 
 ToolModeResponse TransformMode::doProcessEvent(const Event& event) {
-	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (pointer->id == 0)
-			pointer0Position = pointer->position;
-	} else if (auto key = std::get_if<KeyEvent>(&event)) {
+	if (auto key = std::get_if<KeyEvent>(&event)) {
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			if (key->action == KeyAction::Down) {
-				switch (*actionCode) {
-				case ActionCode::Copy:
-					scene->copySelection();
-					return {.consumedEvent = true, .operationChanged = false};
-				case ActionCode::Delete: {
-					bool operationChanged = false;
-					if (activeOperation) {
-						auto ss = scene->getSelectionState();
-						activeOperation->cancel();
-						activeOperation.reset();
-						operationChanged = true;
-						scene->applySelectionState(ss);
-					}
-					scene->deleteSelection();
-					return {.consumedEvent = true, .operationChanged = operationChanged};
-				}
-				case ActionCode::Cut: {
-					scene->copySelection();
-					bool operationChanged = false;
-					if (activeOperation) {
-						auto ss = scene->getSelectionState();
-						activeOperation->cancel();
-						activeOperation.reset();
-						operationChanged = true;
-						scene->applySelectionState(ss);
-					}
-					scene->deleteSelection();
-					return {.consumedEvent = true, .operationChanged = operationChanged};
-				}
-				case ActionCode::Paste:
-					if (!activeOperation && scene->paste()) {
-						auto meanCentre = glm::vec2(0.f);
-						int selectedCount = 0;
-						for (const auto& obstacle : scene->obstacles)
-							if (obstacle.isSelected()) {
-								meanCentre += worldToPlanar(obstacle.getKinematicState()->getPosition());
-								selectedCount++;
-							}
-						meanCentre /= selectedCount;
+				auto result = processObstacleExistenceAction(*actionCode, key->chord.modifiers, settings);
+				if (result.consumedEvent)
+					return result;
 
-						activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::TriggerKey, meanCentre);
-						if (!activeOperation->start(key->chord.modifiers) ||
-							activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move)).status != OperationStatus::Running)
-							activeOperation.reset();
-						return {.consumedEvent = true, .operationChanged = true};
-					}
-					break;
-				case ActionCode::Duplicate:
-					if (!activeOperation && scene->duplicateSelection()) {
-						activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::TriggerKey, camera->screenToPlanarPosition(pointer0Position));
-						if (!activeOperation->start(key->chord.modifiers))
-							activeOperation.reset();
-						return {.consumedEvent = true, .operationChanged = true};
-					}
-					break;
+				switch (*actionCode) {
 				case ActionCode::Translate:
 				case ActionCode::Rotate:
 				case ActionCode::Scale:
@@ -183,7 +130,7 @@ ToolModeResponse TransformMode::doProcessEvent(const Event& event) {
 				case ActionCode::ToggleTransformIndividually:
 					settings.transformIndividually = !settings.transformIndividually;
 					return {.consumedEvent = true, .operationChanged = false};
-				default:;
+				default:
 					return {.consumedEvent = false, .operationChanged = false};
 				}
 			}
@@ -205,16 +152,6 @@ ToolModeResponse TransformMode::doProcessEvent(const Event& event) {
 	return {.consumedEvent = false, .operationChanged = false};
 }
 
-
-void TransformMode::performPrimaryAction(const PointerEvent& upEvent) {
-	auto selectOperation = SelectOperation(
-		scene, camera, TriggerType::Pointer,
-		camera->screenToPlanarPosition(pointerDownEvent.position), true);
-	if (selectOperation.start(pointerDownEvent.modifiers)) {
-		selectOperation.finish();
-		selectOperation.commit();
-	}
-}
 
 std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStartEvent) {
 	bool hit = pointedAtEntity(pointerDownEvent.position);

@@ -2,6 +2,7 @@
 #define TOOL_MODE_H
 
 #include "editor/operation/Operation.h"
+#include "editor/operation/TransformOperation.h"
 #include "io/Event.h"
 
 
@@ -21,6 +22,7 @@ public:
 	virtual ~ToolMode() = default;
 
 	[[nodiscard]] ToolModeResponse processEvent(const Event& event);
+	[[nodiscard]] ToolModeResponse processObstacleExistenceAction(ActionCode actionCode, byte modifiers, const TransformQuickSettings& settings = {});
 
 	[[nodiscard]] virtual std::vector<BindingHint> getBindingHints() const { return {}; }
 	virtual void populateToolbar(UINode& toolbar) {}
@@ -42,6 +44,7 @@ protected:
 	std::unique_ptr<Operation> activeOperation;
 
 	PointerEvent pointerDownEvent;
+	glm::vec2 pointer0Position{};
 
 	[[nodiscard]] bool pointedAtBall(glm::vec2 pointerPosition) const;
 	[[nodiscard]] bool pointedAtObstacle(glm::vec2 pointerPosition) const;
@@ -53,7 +56,7 @@ private:
 	[[nodiscard]] virtual ToolModeResponse doProcessEvent(const Event& event) { return {}; }
 
 	// Pointer down and up on the same spot
-	virtual void performPrimaryAction(const PointerEvent& upEvent) {}
+	virtual void performPrimaryAction(const PointerEvent& upEvent);
 	virtual void performSecondaryAction(const PointerEvent& upEvent) {}
 	[[nodiscard]] virtual std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) { return nullptr; }
 
@@ -61,6 +64,5 @@ private:
 	bool pointerPrimaryDown = false;
 	bool pointerSecondaryDown = false;
 };
-
 
 #endif // TOOL_MODE_H

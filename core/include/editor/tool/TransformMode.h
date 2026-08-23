@@ -17,11 +17,9 @@ public:
 private:
 	[[nodiscard]] ToolModeResponse doProcessEvent(const Event& event) override;
 
-	void performPrimaryAction(const PointerEvent& upEvent) override;
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;
 
 	TransformQuickSettings settings;
-	glm::vec2 pointer0Position{};
 };
 
 
