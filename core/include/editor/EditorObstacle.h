@@ -45,7 +45,7 @@ public:
 		descriptor->generateDomainMesh(domainMesh, uiToWorldScale);
 	}
 
-	void initKinematicState() { descriptor->motion->initKinematicState(kinematicState); }
+	void initKinematicState(bool keepPhase = false) { descriptor->motion->initKinematicState(kinematicState, keepPhase); }
 	// Only provide numSteps if demonstrating the continuous motion of an obstacle
 	void updateKinematicState(const Smoother& smoother, int numSteps = -1);
 

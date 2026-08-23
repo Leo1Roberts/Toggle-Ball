@@ -606,7 +606,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 				for (auto& obstacle : scene.obstacles)
 					if (obstacle.isSelected()) {
 						obstacle.setMotionProperty(*value, propertyDescriptor);
-						obstacle.initKinematicState();
+						obstacle.initKinematicState(true);
 						obstacle.generateDomainMesh();
 					}
 			} else

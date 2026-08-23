@@ -861,48 +861,51 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 }
 
 
-void StaticSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+void StaticSpec::initKinematicState(ObstacleKinematicState& kinematicState, bool) const {
 	kinematicState.setPosition(planarToWorld(position));
 	kinematicState.setAngle(angle);
 	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularSpeed(0.f);
 }
 
-void TogglingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+void TogglingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState, bool) const {
 	kinematicState.setPosition(planarToWorld(positionA));
 	kinematicState.setAngle(angle);
 	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularSpeed(0.f);
 }
 
-void TogglingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+void TogglingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState, bool) const {
 	kinematicState.setPosition(planarToWorld(position));
 	kinematicState.setAngle(angleA);
 	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularSpeed(0.f);
 }
 
-void SpinningSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+void SpinningSpec::initKinematicState(ObstacleKinematicState& kinematicState, bool keepPhase) const {
 	kinematicState.setPosition(planarToWorld(position));
-	kinematicState.setAngle(initialAngle);
+	if (!keepPhase)
+		kinematicState.setAngle(initialAngle);
 	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularSpeed(angularSpeedA);
 }
 
-void OscillatingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+void OscillatingPositionSpec::initKinematicState(ObstacleKinematicState& kinematicState, bool keepPhase) const {
 	kinematicState.setPosition(planarToWorld(position1));
 	kinematicState.setAngle(angle);
 	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularSpeed(0.f);
-	kinematicState.setPhase(0.f);
+	if (!keepPhase)
+		kinematicState.setPhase(0.f);
 }
 
-void OscillatingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState) const {
+void OscillatingAngleSpec::initKinematicState(ObstacleKinematicState& kinematicState, bool keepPhase) const {
 	kinematicState.setPosition(planarToWorld(position));
 	kinematicState.setAngle(angle1);
 	kinematicState.setVelocity(glm::vec3(0.f));
 	kinematicState.setAngularSpeed(0.f);
-	kinematicState.setPhase(0.f);
+	if (!keepPhase)
+		kinematicState.setPhase(0.f);
 }
 
 

@@ -109,7 +109,7 @@ public:
 	void generateDomainMesh(Mesh<ObjectVertex>& domainMesh, const AbstractShapeSpec* shapeSpec, float uiToWorldScale) const;
 
 	// Initialises the kinematic state
-	virtual void initKinematicState(ObstacleKinematicState& kinematicState) const = 0;
+	virtual void initKinematicState(ObstacleKinematicState& kinematicState, bool keepPhase = false) const = 0;
 	// Updates the kinematic state by one physics frame. Purely incremental - kinematicState must be initialised separately.
 	virtual void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const = 0;
 	// Updates the (stationary) kinematic state for obstacles in the editor. Purely incremental - kinematicState must be initialised separately.
@@ -166,7 +166,7 @@ public:
 		*this = StaticSpec(position * factor, angle);
 	}
 
-	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void initKinematicState(ObstacleKinematicState& kinematicState, bool) const override;
 	void stepKinematicState(ObstacleKinematicState&, const Smoother&) const override {}
 	void updateEditorKinematicState(ObstacleKinematicState&, const Smoother&) const override {}
 
@@ -252,7 +252,7 @@ public:
 		*this = TogglingPositionSpec(angle, positionA * factor, positionB * factor);
 	}
 
-	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void initKinematicState(ObstacleKinematicState& kinematicState, bool) const override;
 	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
@@ -337,7 +337,7 @@ public:
 		*this = TogglingAngleSpec(position * factor, angleA, angleB);
 	}
 
-	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void initKinematicState(ObstacleKinematicState& kinematicState, bool) const override;
 	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
@@ -424,7 +424,7 @@ public:
 		*this = SpinningSpec(position * factor, initialAngle, angularSpeedA, angularSpeedB);
 	}
 
-	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void initKinematicState(ObstacleKinematicState& kinematicState, bool keepPhase) const override;
 	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother&) const override;
 
@@ -522,7 +522,7 @@ public:
 		*this = OscillatingPositionSpec(angle, position1 * factor, position2 * factor, angularFrequencyA, angularFrequencyB);
 	}
 
-	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void initKinematicState(ObstacleKinematicState& kinematicState, bool keepPhase) const override;
 	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
@@ -625,7 +625,7 @@ public:
 		*this = OscillatingAngleSpec(position * factor, angle1, angle2, angularFrequencyA, angularFrequencyB);
 	}
 
-	void initKinematicState(ObstacleKinematicState& kinematicState) const override;
+	void initKinematicState(ObstacleKinematicState& kinematicState, bool keepPhase) const override;
 	void stepKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 	void updateEditorKinematicState(ObstacleKinematicState& kinematicState, const Smoother& smoother) const override;
 
