@@ -8,21 +8,22 @@ glm::vec2 UIList::measure() {
 	for (auto& child : getChildren()) {
 		if (!child->isActive()) continue;
 
-		glm::vec2 childSize = child->measure();
-		visibleCount++;
-
 		const auto& childLayout = child->getLayout();
-		float childOuterWidth  = childSize.x + (childLayout.margin.x * 2.f);
-		float childOuterHeight = childSize.y + (childLayout.margin.y * 2.f);
+		glm::vec2 childSize = child->measure() + childLayout.margin * 2.f;
+
+		if (child->isOverlay)
+			continue;
+
+		visibleCount++;
 
 		if (vertical) {
 			if (childLayout.heightMode != SizingMode::Stretch)
-				contentSize.y += childOuterHeight;
-			contentSize.x = std::max(contentSize.x, childOuterWidth);
+				contentSize.y += childSize.y;
+			contentSize.x = std::max(contentSize.x, childSize.x);
 		} else {
 			if (childLayout.widthMode != SizingMode::Stretch)
-				contentSize.x += childOuterWidth;
-			contentSize.y = std::max(contentSize.y, childOuterHeight);
+				contentSize.x += childSize.x;
+			contentSize.y = std::max(contentSize.y, childSize.y);
 		}
 	}
 
@@ -70,20 +71,22 @@ void UIList::arrangeChildren(Rectangle innerBounds) {
 	int visibleCount = 0;
 
 	for (const auto& child : getChildren()) {
-		if (!child->isActive()) continue;
-		visibleCount++;
+		if (!child->isActive() || child->isOverlay) continue;
 
+		visibleCount++;
 		const auto& childLayout = child->getLayout();
 
 		if (vertical) {
-			if (childLayout.heightMode == SizingMode::Stretch)
+			if (childLayout.heightMode == SizingMode::Stretch) {
 				relativeWeightTotal += childLayout.height;
-			else
+				freeSpace -= childLayout.margin.y * 2.f;
+			} else
 				freeSpace -= (child->getMeasuredSize().y + childLayout.margin.y * 2.f);
 		} else {
-			if (childLayout.widthMode == SizingMode::Stretch)
+			if (childLayout.widthMode == SizingMode::Stretch) {
 				relativeWeightTotal += childLayout.width;
-			else
+				freeSpace -= childLayout.margin.x * 2.f;
+			} else
 				freeSpace -= (child->getMeasuredSize().x + childLayout.margin.x * 2.f);
 		}
 	}
@@ -113,7 +116,8 @@ void UIList::arrangeChildren(Rectangle innerBounds) {
 			                    ? childHeight / childLayout.height + childLayout.margin.y * 2.f
 			                    : childHeight + childLayout.margin.y * 2.f;
 
-			currentPos += childHeight + childLayout.margin.y * 2.f + spacing;
+			if (!child->isOverlay)
+				currentPos += childHeight + childLayout.margin.y * 2.f + spacing;
 		} else {
 			float childWidth = childLayout.widthMode == SizingMode::Stretch
 			                    ? spacePerWeight * childLayout.width
@@ -125,7 +129,8 @@ void UIList::arrangeChildren(Rectangle innerBounds) {
 			                    ? childWidth / childLayout.width + childLayout.margin.x * 2.f
 			                    : childWidth + childLayout.margin.x * 2.f;
 
-			currentPos += childWidth + childLayout.margin.x * 2.f + spacing;
+			if (!child->isOverlay)
+				currentPos += childWidth + childLayout.margin.x * 2.f + spacing;
 		}
 
 		child->updateBounds(slotBounds);

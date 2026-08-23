@@ -42,9 +42,11 @@ public:
 	[[nodiscard]] const glm::mat4& getProjectionMatrix() const { return projectionMatrix; }
 
 private:
-	[[nodiscard]] static UINode* findNodePointedTo(UINode* currentNode, glm::vec2 pointerPosition);
+	[[nodiscard]] UINode* findNodePointedTo(glm::vec2 pointerPosition);
+	[[nodiscard]] static UINode* findNodePointedToRecursive(UINode* currentNode, glm::vec2 pointerPosition);
 
-	void drawNodeRecursive(UINode* node);
+	std::vector<UINode*> overlays;
+	void drawNodeRecursive(UINode* node, bool drawingOverlays);
 
 	[[nodiscard]] glm::vec2 screenToLogicalPosition(glm::vec2 screenPosition) const { return screenPosition / getScale(); }
 

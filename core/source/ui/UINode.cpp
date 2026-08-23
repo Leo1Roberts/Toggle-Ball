@@ -9,7 +9,9 @@ glm::vec2 UINode::measure() {
 			if (!child->isActive()) continue;
 
 			glm::vec2 childSize = child->measure() + child->layout.margin * 2.f + abs(child->layout.offset);
-			contentSize = max(contentSize, childSize);
+
+			if (!child->isOverlay)
+				contentSize = max(contentSize, childSize);
 		}
 	else
 		for (auto& child : children)

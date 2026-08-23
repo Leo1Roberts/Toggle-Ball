@@ -31,7 +31,6 @@ public:
 	void onPointerEntered() override;
 	void onPointerExited() override;
 
-	glm::vec2 measure() override;
 	void arrangeChildren(Rectangle innerBounds) override;
 
 	void disable() { state = TextBoxState::Disabled; updateAppearance(); }

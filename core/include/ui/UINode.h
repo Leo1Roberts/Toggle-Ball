@@ -104,6 +104,8 @@ public:
 	[[nodiscard]] bool childrenAreHitTestable() const { return hitTestableChildren && active; }
 	[[nodiscard]] virtual bool isFocusable() const { return false; }
 
+	bool isOverlay = false;
+
 protected:
 	[[nodiscard]] virtual bool containsPrecise(glm::vec2 point) const { return true; }
 

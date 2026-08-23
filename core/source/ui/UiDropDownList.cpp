@@ -63,6 +63,7 @@ UIDropDownList::UIDropDownList(const std::vector<std::string>& options, int defa
 
 	optionsPanel = addChild<UIPanel>(style.listBackground);
 	optionsPanel->setActive(open);
+	optionsPanel->isOverlay = true;
 
 	optionsList = optionsPanel->addChild<UIVerticalList>(optionsSpacing, 0.f);
 

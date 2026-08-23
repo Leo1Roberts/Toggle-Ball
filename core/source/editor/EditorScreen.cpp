@@ -78,11 +78,14 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 			.widthMode  = SizingMode::Stretch,
 			.heightMode = SizingMode::Wrap,
 		});
-		item->addChild(std::make_unique<UIText>(labelText,
+
+		auto label = item->addChild<UIText>(labelText,
 			TextStyle{
 				.color = Color::LightGrey,
 				.alignVertical = TextAlignVertical::Middle
-			}));
+			});
+		label->setLayout({ .margin = {5.f, 0.f} });
+
 		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
 		textField->setLayout({
 			.heightMode = SizingMode::Wrap,
@@ -577,11 +580,13 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 		else if (propertyDescriptor.associatedState == IMotionSpec::State::B)
 			labelColor = Color::StateB;
 
-		item->addChild(std::make_unique<UIText>(IMotionSpec::getPropertyName(propertyDescriptor.property),
+		auto label = item->addChild<UIText>(IMotionSpec::getPropertyName(propertyDescriptor.property),
 			TextStyle{
 				.color = labelColor,
 				.alignVertical = TextAlignVertical::Middle
-			}));
+			});
+		label->setLayout({ .margin = {5.f, 0.f} });
+
 		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
 		textField->setLayout({
 			.widthMode  = SizingMode::Stretch,

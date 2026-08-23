@@ -21,21 +21,6 @@ UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxS
 }
 
 
-glm::vec2 UITextBox::measure() {
-	bool cursorVisible = cursorNode->isVisible();
-	bool highlightVisible = highlightContainer->isVisible();
-
-	// cursorNode->deactivate();
-	// highlightContainer->deactivate();
-
-	glm::vec2 size = UIPanel::measure();
-
-	// if (cursorVisible) cursorNode->activate();
-	// if (highlightVisible) highlightContainer->activate();
-
-	return size;
-}
-
 void UITextBox::arrangeChildren(Rectangle innerBounds) {
 	UIPanel::arrangeChildren(innerBounds);
 

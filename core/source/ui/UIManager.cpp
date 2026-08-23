@@ -85,7 +85,7 @@ bool UIManager::processEvent(const Event& event) {
 		
 		UINode* nodePointedTo = nullptr;
 		if (rootNode.contains(pointer.position))
-			nodePointedTo = findNodePointedTo(&rootNode, pointer.position);
+			nodePointedTo = findNodePointedTo(pointer.position);
 
 
 		// Track pointer entry
@@ -176,11 +176,19 @@ bool UIManager::processEvent(const Event& event) {
 }
 
 
-UINode* UIManager::findNodePointedTo(UINode* currentNode, glm::vec2 pointerPosition) {
+UINode* UIManager::findNodePointedTo(glm::vec2 pointerPosition) {
+	for (auto* overlay : std::views::reverse(overlays))
+		if (overlay->contains(pointerPosition))
+			if (auto hit = findNodePointedToRecursive(overlay, pointerPosition))
+				return hit;
+
+	return findNodePointedToRecursive(&rootNode, pointerPosition);
+}
+UINode* UIManager::findNodePointedToRecursive(UINode* currentNode, glm::vec2 pointerPosition) {
 	if (currentNode->childrenAreHitTestable())
 		for (const auto& child: std::views::reverse(currentNode->getChildren()))
 			if (child->contains(pointerPosition))
-				if (auto node = findNodePointedTo(child.get(), pointerPosition)) return node;
+				if (auto node = findNodePointedToRecursive(child.get(), pointerPosition)) return node;
 
 	return currentNode->isHitTestable() ? currentNode : nullptr;
 }
@@ -207,14 +215,19 @@ void UIManager::setRenderer(IUIRenderer* newRenderer) {
 	}
 }
 
-void UIManager::drawNodeRecursive(UINode* node) {
+void UIManager::drawNodeRecursive(UINode* node, bool drawingOverlays) {
 	if (!node->isActive()) return;
+
+	if (!drawingOverlays && node->isOverlay) {
+		overlays.push_back(node);
+		return;
+	}
 
 	if (node->isVisible())
 		node->submitRender(*this);
 
 	for (auto& child : node->getChildren())
-		drawNodeRecursive(child.get());
+		drawNodeRecursive(child.get(), drawingOverlays);
 }
 
 void UIManager::render() {
@@ -224,7 +237,10 @@ void UIManager::render() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	drawNodeRecursive(&rootNode);
+	overlays.clear();
+	drawNodeRecursive(&rootNode, false);
+	for (auto overlay : overlays)
+		drawNodeRecursive(overlay, true);
 
 	if (activeRenderer)
 		activeRenderer->flush(projectionMatrix);
