@@ -15,7 +15,7 @@ public:
 	void setOnSelectedOptionChange(const std::function<void(int)>& callback) { onSelectedOptionChangeCallback = callback; }
 	void setValueProvider(const std::function<int()>& provider) { valueProvider = provider; }
 
-	void selectOption(int option);
+	void selectOption(int option, bool silent = false);
 	void setOpen(bool nowOpen);
 
 	void setLayout(Layout l) override;
@@ -47,7 +47,7 @@ private:
 	std::vector<class DropdownOptionButton*> optionButtons;
 
 	std::function<void(int)> onSelectedOptionChangeCallback;
-	std::function<int()> valueProvider; // If set, this will be used to set the selected option
+	std::function<int()> valueProvider;
 };
 
 

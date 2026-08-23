@@ -146,3 +146,9 @@ void ObstacleDescriptor::changeMotion(IMotionSpec::Type type, IMotionSpec::Incom
 	motion = IMotionSpec::make(type, values, toggled);
 	updateColor();
 }
+
+
+void ObstacleDescriptor::setIsGoal(bool isGoal) {
+	goal = isGoal;
+	updateColor();
+}

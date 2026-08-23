@@ -36,6 +36,9 @@ public:
 		return state != ButtonState::Disabled && isVisible() && isActive();
 	}
 
+protected:
+	virtual void updateStyle();
+
 private:
 	bool hovered = false;
 	bool pressed = false;
@@ -45,8 +48,6 @@ private:
 
 	UIText* labelNode = nullptr;
 	std::function<void()> onTriggerCallback;
-
-	void updateStyle();
 };
 
 

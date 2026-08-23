@@ -27,7 +27,7 @@ private:
 
 	std::vector<UIButton*> optionButtons;
 	std::function<void(int)> onSelectedOptionChangeCallback;
-	std::function<int()> valueProvider; // If set, this will be used to set the selected option
+	std::function<int()> valueProvider;
 
 	void updateStyle();
 };

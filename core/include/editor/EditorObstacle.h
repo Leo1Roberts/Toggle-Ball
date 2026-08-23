@@ -32,6 +32,10 @@ public:
 		initKinematicState();
 		generateMeshes();
 	}
+	void setIsGoal(bool isGoal) {
+		descriptor->setIsGoal(isGoal);
+		generateMeshes();
+	}
 
 	void generateMeshes() {
 		descriptor->generateObstacleMesh(obstacleMesh);

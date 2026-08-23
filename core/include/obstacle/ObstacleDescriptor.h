@@ -27,6 +27,7 @@ struct ObstacleDescriptor {
 	void scale(float factor);
 
 	void changeMotion(IMotionSpec::Type type, IMotionSpec::IncompletePropertyValues& values, bool toggled);
+	void setIsGoal(bool isGoal);
 
 	void generateObstacleMesh(Mesh<ObjectVertex>& obstacleMesh) const {
 		shape->generateObstacleMesh(obstacleMesh, color);
@@ -42,9 +43,10 @@ struct ObstacleDescriptor {
 		return motion->getDomainPosition(obstaclePosition);
 	}
 
+	[[nodiscard]] bool isGoal() const {	return goal; }
+
 	std::unique_ptr<AbstractShapeSpec> shape;
 	std::unique_ptr<IMotionSpec> motion;
-	bool goal = false;
 	col color;
 	byte material;
 
@@ -52,6 +54,8 @@ private:
 	void updateColor() {
 		color = goal ? Color::SoftGreen : this->motion->getColor();
 	}
+
+	bool goal = false;
 };
 
 

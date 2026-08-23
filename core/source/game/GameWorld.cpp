@@ -136,7 +136,7 @@ void GameWorld::updatePhysics(microseconds dt) {
 			ball.collideWithPlane(plane);
 
 		for (auto& obstacle: obstacles)
-			levelComplete |= ball.collideWithObstacle(obstacle) && obstacle.getDescriptor()->goal;
+			levelComplete |= ball.collideWithObstacle(obstacle) && obstacle.getDescriptor()->isGoal();
 
 		ball.applyForces();
 

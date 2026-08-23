@@ -6,12 +6,13 @@
 #include "opengl/Shader.h"
 #include "editor/operation/TranslateOperation.h"
 #include "ui/Theme.h"
+#include "ui/UICheckbox.h"
 #include "ui/UIContainer.h"
 #include "ui/UIList.h"
 #include "ui/UISegmentedControl.h"
 #include "ui/UITextBox.h"
 #include "ui/UIToggle.h"
-#include "ui/UiDropDownList.h"
+#include "ui/UIDropDownList.h"
 
 
 const glm::vec3 groundColor = colorToLinear({76, 76, 76});
@@ -495,19 +496,13 @@ void EditorScreen::doResize() {
 void EditorScreen::updateObstacleMotionPropertiesList() {
 	uiManager.removeAllChildrenOfNode(obstacleMotionPropertiesList);
 
-	std::optional commonType = IMotionSpec::Type::COUNT;
+	bool anySelectedObstacles = false;
 	std::vector<IMotionSpec::PropertyDescriptor> commonProperties;
 	for (const auto& obstacle : scene.obstacles)
 		if (obstacle.isSelected()) {
-			auto type = obstacle.descriptor->motion->getType();
-			if (commonType == IMotionSpec::Type::COUNT)
-				commonType = type;
-			else if (type != commonType)
-				commonType = std::nullopt;
-
 			const auto& properties = obstacle.descriptor->motion->getPropertyDescriptors();
 
-			if (commonProperties.empty())
+			if (!anySelectedObstacles)
 				commonProperties = properties;
 			else {
 				std::erase_if(commonProperties, [&](const auto& property) {
@@ -515,14 +510,16 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 
 				if (commonProperties.empty()) break;
 			}
+
+			anySelectedObstacles = true;
 		}
 
-	if (!commonType || commonType && *commonType != IMotionSpec::Type::COUNT) {
+	if (anySelectedObstacles) {
 		std::vector<std::string> types;
 		for (int i = 0; i < (int)IMotionSpec::Type::COUNT; i++)
 			types.push_back(IMotionSpec::getTypeName((IMotionSpec::Type)i));
 
-		auto motionOptionsList = obstacleMotionPropertiesList->addChild<UIDropDownList>(types, commonType ? (int)*commonType : -1, Theme::PrimaryDropDownList);
+		auto motionOptionsList = obstacleMotionPropertiesList->addChild<UIDropDownList>(types, -1, Theme::PrimaryDropDownList);
 		motionOptionsList->setLayout({
 			.widthMode  = SizingMode::Stretch,
 			.heightMode = SizingMode::Wrap,
@@ -554,14 +551,16 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 			obstacleMotionPropertiesListValid = false;
 		});
 		motionOptionsList->setValueProvider([this] {
-			std::optional commonType = IMotionSpec::Type::COUNT;
+			std::optional<IMotionSpec::Type> commonType = std::nullopt;
 			for (const auto& obstacle : scene.obstacles)
 				if (obstacle.isSelected()) {
 					auto type = obstacle.descriptor->motion->getType();
-					if (commonType == IMotionSpec::Type::COUNT)
+					if (!commonType)
 						commonType = type;
-					else if (type != commonType)
+					else if (type != commonType) {
 						commonType = std::nullopt;
+						break;
+					}
 				}
 			return commonType ? (int)*commonType : -1;
 		});
@@ -637,6 +636,52 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 				}
 
 			return value ? floatToString(*value, 3) : "";
+		});
+	}
+
+	if (anySelectedObstacles) {
+		auto item = obstacleMotionPropertiesList->addChild<UIHorizontalList>(10.f, 0.f);
+		item->setLayout({
+			.anchor = Anchor::Centre,
+			.widthMode  = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+		});
+
+		auto label = item->addChild<UIText>("Goal obstacle",
+			TextStyle{
+				.color = Color::LightGrey,
+				.alignVertical = TextAlignVertical::Middle
+			});
+		label->setLayout({ .widthMode = SizingMode::Wrap });
+
+		auto checkbox = item->addChild<UICheckbox>(Theme::PrimaryCheckbox);
+		checkbox->setLayout({
+			.widthMode  = SizingMode::Absolute, .width  = 25.f,
+			.heightMode = SizingMode::Absolute, .height = 25.f,
+		});
+		checkbox->setOnCheckChange([this](bool goal) {
+			for (auto& obstacle : scene.obstacles)
+				if (obstacle.isSelected()) {
+					obstacle.descriptor->setIsGoal(goal);
+					obstacle.generateMeshes();
+				}
+			scene.commitLevelChange();
+		});
+		checkbox->setValueProvider([this] {
+			std::optional<UICheckbox::State> goalCheckboxState = std::nullopt;
+
+			for (const auto& obstacle : scene.obstacles)
+				if (obstacle.isSelected()) {
+					if (!goalCheckboxState)
+						goalCheckboxState = obstacle.descriptor->isGoal() ? UICheckbox::State::Checked : UICheckbox::State::Unchecked;
+					else if (goalCheckboxState != UICheckbox::State::Indeterminate) {
+						auto state = obstacle.descriptor->isGoal() ? UICheckbox::State::Checked : UICheckbox::State::Unchecked;
+						if (state != goalCheckboxState)
+							goalCheckboxState = UICheckbox::State::Indeterminate;
+					}
+				}
+
+			return *goalCheckboxState;
 		});
 	}
 

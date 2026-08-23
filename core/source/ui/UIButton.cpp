@@ -7,7 +7,7 @@ UIButton::UIButton(const std::string& labelText, const ButtonStyle& bStyle)
 	: UIPanel(bStyle.normalPanel), buttonStyle(bStyle) {
 	if (!labelText.empty())
 		labelNode = addChild<UIText>(labelText, buttonStyle.normalText);
-	updateStyle();
+	UIButton::updateStyle();
 }
 
 

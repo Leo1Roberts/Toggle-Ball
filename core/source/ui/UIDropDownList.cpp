@@ -1,4 +1,4 @@
-#include "ui/UiDropDownList.h"
+#include "ui/UIDropDownList.h"
 
 #include "ui/UIButton.h"
 #include "ui/UIList.h"
@@ -49,7 +49,7 @@ public:
 
 UIDropDownList::UIDropDownList(const std::vector<std::string>& options, int defaultOption, const DropDownListStyle& style, float gapToList, float optionsSpacing)
 	: UIVerticalList(gapToList, 0.f), selectedOption(defaultOption), keyboardHoveredOption(defaultOption), options(options), dropDownStyle(style) {
-	std::string defaultText = (defaultOption >= 0 && defaultOption < options.size()) ? options[defaultOption] : " ";
+	std::string defaultText = (defaultOption >= 0 && defaultOption < options.size()) ? options[defaultOption] : "-";
 
 	mainButton = addChild<DropdownMainButton>(defaultText);
 	mainButton->setButtonStyle(style.mainButton);
@@ -97,7 +97,7 @@ UIDropDownList::UIDropDownList(const std::vector<std::string>& options, int defa
 	});
 }
 
-void UIDropDownList::selectOption(int option) {
+void UIDropDownList::selectOption(int option, bool silent) {
 	if (option == selectedOption) return;
 
 	selectedOption = option;
@@ -105,7 +105,7 @@ void UIDropDownList::selectOption(int option) {
 
 	updateStyle();
 
-	if (onSelectedOptionChangeCallback)
+	if (!silent && onSelectedOptionChangeCallback)
 		onSelectedOptionChangeCallback(option);
 }
 
@@ -214,7 +214,7 @@ void UIDropDownList::doUpdate(microseconds dt) {
 	mainButton->pressedThisFrame = false;
 
 	if (valueProvider)
-		selectOption(valueProvider());
+		selectOption(valueProvider(), true);
 }
 
 void UIDropDownList::updateStyle() {

@@ -21,6 +21,12 @@ struct PanelStyle {
 	}
 };
 
+struct CheckboxStyle {
+	PanelStyle unchecked;
+	PanelStyle indeterminate;
+	PanelStyle checked;
+};
+
 struct LineStyle {
 	col primaryColor = Color::Black;
 	col secondaryColor = Color::White; // Only used if dashLength > 0.f

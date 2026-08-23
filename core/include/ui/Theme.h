@@ -558,6 +558,35 @@ namespace Theme {
 			}
 		},
 	};
+
+	inline constexpr CheckboxStyle PrimaryCheckbox {
+		// --- Unchecked State ---
+		// Matches PrimaryTextBox normalPanel: Dark inset background with a muted border outline
+		.unchecked = {
+			.fillColor = {14, 16, 20, 255},       // Dark inset background
+			.strokeColor = {48, 52, 64, 255},     // Muted border matches DarkCard
+			.cornerRadius = 4.0f,                 // Slightly tighter radius for small target
+			.strokeWidth = 1.0f
+		},
+
+		// --- Indeterminate State ---
+		// Semi-active state: Accent outline with an inset fill to show partial selection
+		.indeterminate = {
+			.fillColor = {35, 42, 80, 255},       // Darkened Indigo tint
+			.strokeColor = {88, 101, 242, 255},   // Crisp Indigo accent border
+			.cornerRadius = 4.0f,
+			.strokeWidth = 1.5f
+		},
+
+		// --- Checked State ---
+		// Matches PrimaryButton normalPanel: Crisp Indigo fill with borderless finish
+		.checked = {
+			.fillColor = {88, 101, 242, 255},     // Crisp Indigo accent
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 4.0f,
+			.strokeWidth = 0.0f
+		}
+	};
 }
 
 
