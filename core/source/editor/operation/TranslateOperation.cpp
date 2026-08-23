@@ -220,12 +220,16 @@ void TranslateOperation::setConstraint(glm::vec2 requestedAxis) {
 	if (constraint == ConstraintType::None || (typing && constraint == ConstraintType::LocalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::GlobalAxis && baseAxis != requestedAxis)) {
 		constraint = ConstraintType::GlobalAxis;
 		baseAxis = requestedAxis;
+		canStartTyping = true;
 	} else if (scene->selectionFocus.type == EntityType::Obstacle &&
 		((!settings.transformIndividually && constraint == ConstraintType::GlobalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::LocalAxis && baseAxis != requestedAxis))) {
 		constraint = ConstraintType::LocalAxis;
 		baseAxis = requestedAxis;
-	} else
+		canStartTyping = true;
+	} else {
 		constraint = ConstraintType::None;
+		canStartTyping = false;
+	}
 
 	applyOperation();
 }

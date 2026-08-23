@@ -40,6 +40,7 @@ protected:
 
 	float precisionMultiplier = 1.f;
 
+	bool canStartTyping = true;
 	bool typing = false;
 	TextInputBuffer textInput{TextInputBuffer::Float, TextInputMode::Simple};
 

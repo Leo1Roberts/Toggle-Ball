@@ -99,7 +99,7 @@ OperationResponse TransformOperation::doProcessEvent(const Event& event) {
 			return {.consumedEvent = false, .status = OperationStatus::Running};
 		}
 	} else if (auto* c = std::get_if<char>(&event)) {
-		if (!typing && TextInputBuffer::Float(*c)) {
+		if (!typing && canStartTyping && TextInputBuffer::Float(*c)) {
 			typing = true;
 			if (textInput.processEvent(*c) == TextInputEventEffect::Buffer) {
 				applyOperation();
