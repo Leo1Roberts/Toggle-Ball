@@ -95,9 +95,9 @@ void ScaleOperation::applyOperation() {
 
 			obstacle.initKinematicState();
 			if (affectMinorRadius || affectMajorRadius)
-				obstacle.generateMeshes();
+				obstacle.invalidateAllMeshes();
 			else
-				obstacle.generateDomainMesh();
+				obstacle.invalidateDomainMesh();
 		}
 	}
 

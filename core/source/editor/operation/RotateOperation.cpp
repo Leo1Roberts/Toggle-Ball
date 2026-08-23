@@ -86,7 +86,7 @@ void RotateOperation::applyOperation() {
 				scene->getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
-			obstacle.generateDomainMesh();
+			obstacle.invalidateDomainMesh();
 		}
 	}
 

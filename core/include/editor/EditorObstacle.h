@@ -17,7 +17,6 @@ public:
 	explicit EditorObstacle(ObstacleDescriptor* descriptor) :
 	    descriptor(descriptor) {
 		initKinematicState();
-		descriptor->generateObstacleMesh(obstacleMesh);
 	}
 
 	~EditorObstacle() = default;
@@ -30,23 +29,21 @@ public:
 	void changeMotion(IMotionSpec::Type type, bool toggled) {
 		descriptor->changeMotion(type, motionPropertyValues, toggled);
 		initKinematicState();
-		generateMeshes();
+		invalidateAllMeshes();
 	}
 	void setIsGoal(bool isGoal) {
 		descriptor->setIsGoal(isGoal);
-		generateMeshes();
+		invalidateAllMeshes();
 	}
 
-	void generateMeshes() {
-		descriptor->generateObstacleMesh(obstacleMesh);
-		generateEphemeralMeshes();
+	void invalidateAllMeshes() {
+		obstacleMeshValid = outlineMeshValid = domainMeshValid = false;
 	}
-	void generateEphemeralMeshes() {
-		descriptor->generateOutlineMesh(outlineMesh, uiToWorldScale);
-		generateDomainMesh();
+	void invalidateEphemeralMeshes() {
+		outlineMeshValid = domainMeshValid = false;
 	}
-	void generateDomainMesh() {
-		descriptor->generateDomainMesh(domainMesh, uiToWorldScale);
+	void invalidateDomainMesh() {
+		domainMeshValid = false;
 	}
 
 	void initKinematicState(bool keepPhase = false) { descriptor->motion->initKinematicState(kinematicState, keepPhase); }
@@ -66,8 +63,10 @@ public:
 		descriptor->shape->scaleBy(factor, affectMinorRadius, affectMajorRadius, base->shape.get());
 	}
 
-	void setMotionProperty(float value, IMotionSpec::PropertyDescriptor property) const {
+	void setMotionProperty(float value, IMotionSpec::PropertyDescriptor property) {
 		descriptor->motion->setProperty(value, property);
+		initKinematicState(true);
+		invalidateAllMeshes();
 	}
 	[[nodiscard]] std::optional<float> getMotionProperty(IMotionSpec::PropertyDescriptor property) const {
 		return descriptor->motion->getProperty(true, property);
@@ -80,15 +79,14 @@ public:
 	[[nodiscard]] bool isInSelectBox(SelectBox box) const { return descriptor->shape->isInSelectBox(kinematicState, box); }
 
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
-	[[nodiscard]] const Mesh<ObjectVertex>* getObstacleMesh() const { return &obstacleMesh; }
-	[[nodiscard]] const Mesh<ObjectVertex>* getOutlineMesh() const { return &outlineMesh; }
-	[[nodiscard]] const Mesh<ObjectVertex>* getDomainMesh() const { return &domainMesh; }
+
+	[[nodiscard]] const Mesh<ObjectVertex>* getObstacleMesh();
+	[[nodiscard]] const Mesh<ObjectVertex>* getOutlineMesh(float uiToWorldScale);
+	[[nodiscard]] const Mesh<ObjectVertex>* getDomainMesh(float uiToWorldScale);
 
 	[[nodiscard]] glm::vec2 getDomainPosition() const { return descriptor->getDomainPosition(worldToPlanar(kinematicState.getPosition())); }
 
 	ObstacleDescriptor* descriptor;
-
-	float uiToWorldScale{};
 
 private:
 	IMotionSpec::IncompletePropertyValues motionPropertyValues{std::nullopt};
@@ -100,6 +98,7 @@ private:
 	Mesh<ObjectVertex> obstacleMesh = Mesh<ObjectVertex>(GL_STATIC_DRAW);
 	Mesh<ObjectVertex> outlineMesh = Mesh<ObjectVertex>(GL_STATIC_DRAW);
 	Mesh<ObjectVertex> domainMesh = Mesh<ObjectVertex>(GL_STATIC_DRAW);
+	bool obstacleMeshValid = false, outlineMeshValid = false, domainMeshValid = false;
 };
 
 

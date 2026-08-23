@@ -356,7 +356,7 @@ void EditorScreen::render() {
 	glEnable(GL_BLEND);
 	glDisable(GL_CULL_FACE);
 	for (int i = 0; i < scene.obstacles.size(); i++) {
-		const auto& obstacle = scene.obstacles[i];
+		auto& obstacle = scene.obstacles[i];
 		if (obstacle.isSelected()) {
 			Shaders::outline->setVec4("uOutlineColor", col(obstacle.descriptor->color, Settings::Colors.domainOpacity));
 
@@ -366,13 +366,13 @@ void EditorScreen::render() {
 			glm::mat4 worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), position);
 			Shaders::outline->setMat4("uProjectionFull", camera.getProjectionMatrix() * camera.getViewMatrix() * worldMatrix);
 
-			obstacle.getDomainMesh()->draw();
+			obstacle.getDomainMesh(uiToWorldScale)->draw();
 		}
 	}
 	glEnable(GL_CULL_FACE);
 
 	Shaders::object->use();
-	for (const auto& obstacle: scene.obstacles) {
+	for (auto& obstacle: scene.obstacles) {
 		Shaders::object->setFloat("uAlpha", getObstacleOpacity(obstacle));
 
 		drawObject(obstacle.getObstacleMesh(), Textures::white.get(),
@@ -392,7 +392,7 @@ void EditorScreen::render() {
 	glEnable(GL_BLEND);
 
 	for (int i = 0; i < scene.obstacles.size(); i++) {
-		const auto& obstacle = scene.obstacles[i];
+		auto& obstacle = scene.obstacles[i];
 		if (obstacle.isSelected() && (i != scene.selectionFocus.index || scene.selectionFocus.type != EntityType::Obstacle)) {
 			glm::vec4 outlineColor = Color::Selected;
 			outlineColor.a *= getObstacleOpacity(obstacle);
@@ -403,7 +403,7 @@ void EditorScreen::render() {
 	}
 
 	if (scene.selectionFocus.type == EntityType::Obstacle) {
-		const auto& obstacle = scene.obstacles[scene.selectionFocus.index];
+		auto& obstacle = scene.obstacles[scene.selectionFocus.index];
 		if (obstacle.isSelected()) {
 			glm::vec4 outlineColor = Color::Focused;
 			outlineColor.a *= getObstacleOpacity(obstacle);
@@ -462,10 +462,10 @@ void EditorScreen::drawObject(const Mesh<ObjectVertex>* model, const Texture* te
 	model->draw();
 }
 
-void EditorScreen::drawObstacleOutline(const EditorObstacle& obstacle) const {
+void EditorScreen::drawObstacleOutline(EditorObstacle& obstacle) const {
 	glm::mat4 worldMatrix = buildScaledWorldMatrix(obstacle.getKinematicState()->getRotation(), obstacle.getKinematicState()->getPosition());
 	Shaders::outline->setMat4("uProjectionFull", camera.getProjectionMatrix() * camera.getViewMatrix() * worldMatrix);
-	obstacle.getOutlineMesh()->draw();
+	obstacle.getOutlineMesh(uiToWorldScale)->draw();
 
 	glDisable(GL_DEPTH_TEST);
 	worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), obstacle.getKinematicState()->getPosition(), glm::vec3(uiToWorldScale * Settings::Sizes.centreDotRadius));
@@ -478,10 +478,8 @@ void EditorScreen::drawObstacleOutline(const EditorObstacle& obstacle) const {
 void EditorScreen::updateEphemeralMeshes() {
 	uiToWorldScale = uiManager.getScale() * camera.getHalfHeight() * 2.f / (float)height;
 	scene.ball.updateOutlineRadius(uiToWorldScale);
-	for (auto& obstacle : scene.obstacles) {
-		obstacle.uiToWorldScale = uiToWorldScale;
-		obstacle.generateEphemeralMeshes();
-	}
+	for (auto& obstacle : scene.obstacles)
+		obstacle.invalidateEphemeralMeshes();
 }
 
 void EditorScreen::doResize() {
@@ -603,11 +601,8 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 		textField->setOnTextChange([this, propertyDescriptor](const UITextBox& tb) {
 			if (auto value = tb.getValue<std::optional<float>>()) {
 				for (auto& obstacle : scene.obstacles)
-					if (obstacle.isSelected()) {
+					if (obstacle.isSelected())
 						obstacle.setMotionProperty(*value, propertyDescriptor);
-						obstacle.initKinematicState(true);
-						obstacle.generateDomainMesh();
-					}
 			} else
 				scene.cancelLevelChange();
 		});
@@ -663,7 +658,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 			for (auto& obstacle : scene.obstacles)
 				if (obstacle.isSelected()) {
 					obstacle.descriptor->setIsGoal(goal);
-					obstacle.generateMeshes();
+					obstacle.invalidateAllMeshes();
 				}
 			scene.commitLevelChange();
 		});

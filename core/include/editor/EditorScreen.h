@@ -29,7 +29,7 @@ private:
 	void doResize() override;
 
 	void drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 position, const glm::mat3& rotation, glm::vec3 scale = glm::vec3(1.f)) const;
-	void drawObstacleOutline(const EditorObstacle& obstacle) const;
+	void drawObstacleOutline(EditorObstacle& obstacle) const;
 	[[nodiscard]] float getObstacleOpacity(const EditorObstacle& obstacle) const;
 
 	bool panning = false;

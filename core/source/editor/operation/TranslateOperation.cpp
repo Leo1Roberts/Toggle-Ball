@@ -186,7 +186,7 @@ void TranslateOperation::applyOperation() {
 				scene->getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
-			obstacle.generateDomainMesh();
+			obstacle.invalidateDomainMesh();
 
 			if (settings.transformIndividually && constraint != ConstraintType::None &&
 				!(focus->type == EntityType::Obstacle && i == focus->index))
