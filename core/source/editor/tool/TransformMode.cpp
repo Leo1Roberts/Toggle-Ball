@@ -1,28 +1,8 @@
 #include "editor/tool/TransformMode.h"
 
 #include "editor/operation/RotateOperation.h"
-#include "editor/operation/ScaleOperation.h"
 #include "editor/operation/SelectOperation.h"
 #include "editor/operation/TranslateOperation.h"
-
-
-ToolModeResponse TransformMode::doProcessEvent(const Event& event) {
-	if (auto key = std::get_if<KeyEvent>(&event)) {
-		if (key->action == KeyAction::Down) {
-			if (TranslateOperation::keyToTranslationVector(key->chord.code)) {
-				activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::ActionKey);
-				bool success =
-					activeOperation->start(key->chord.modifiers) &&
-					activeOperation->processEvent(event).status == OperationStatus::Running;
-				if (!success)
-					activeOperation.reset();
-				return {.consumedEvent = true, .operationChanged = success};
-			}
-		}
-	}
-
-	return {.consumedEvent = false, .operationChanged = false};
-}
 
 
 std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStartEvent) {

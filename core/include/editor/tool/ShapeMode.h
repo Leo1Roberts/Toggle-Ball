@@ -12,8 +12,6 @@ public:
 	std::optional<Cursor> queryCursor() const override;
 	
 private:
-	[[nodiscard]] ToolModeResponse doProcessEvent(const Event& event) override;
-
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;
 
 	const float& uiToWorldScale;

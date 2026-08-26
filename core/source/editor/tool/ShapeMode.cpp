@@ -23,16 +23,6 @@ std::optional<Cursor> ShapeMode::queryCursor() const {
 }
 
 
-ToolModeResponse ShapeMode::doProcessEvent(const Event& event) {
-	if (auto key = std::get_if<KeyEvent>(&event))
-		if (auto actionCode = Settings::Bindings->translate(key->chord))
-			if (key->action == KeyAction::Down)
-				return processObstacleExistenceAction(*actionCode, key->chord.modifiers);
-
-	return {.consumedEvent = false, .operationChanged = false};
-}
-
-
 std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEvent) {
 	if (dragStartEvent.button == PointerButton::Primary) {
 		auto pointerPlanarPosition = camera.screenToPlanarPosition(pointerDownEvent.position);

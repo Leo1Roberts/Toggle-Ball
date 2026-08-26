@@ -73,8 +73,8 @@ ToolModeResponse ToolMode::processEvent(const Event& event) {
 		default:;
 		}
 	} else if (auto key = std::get_if<KeyEvent>(&event)) {
-		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
-			if (key->action == KeyAction::Down) {
+		if (key->action == KeyAction::Down) {
+			if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 				auto result = processObstacleExistenceAction(*actionCode, key->chord.modifiers);
 				if (result.consumedEvent)
 					return result;
@@ -114,6 +114,16 @@ ToolModeResponse ToolMode::processEvent(const Event& event) {
 					return {.consumedEvent = true, .operationChanged = false};
 				default:;
 				}
+			}
+
+			if (TranslateOperation::keyToTranslationVector(key->chord.code)) {
+				activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::ActionKey);
+				bool success =
+					activeOperation->start(key->chord.modifiers) &&
+					activeOperation->processEvent(event).status == OperationStatus::Running;
+				if (!success)
+					activeOperation.reset();
+				return {.consumedEvent = true, .operationChanged = success};
 			}
 		}
 	}
