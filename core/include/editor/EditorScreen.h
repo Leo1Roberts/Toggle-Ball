@@ -40,7 +40,7 @@ private:
 	EditorScene scene;
 	Camera camera;
 	UIManager uiManager;
-	GizmoRenderer gizmoRenderer{&uiManager, &camera};
+	GizmoRenderer gizmoRenderer{uiManager, camera};
 
 	SelectionState cachedSelectionState{};
 

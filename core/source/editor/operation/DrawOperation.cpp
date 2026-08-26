@@ -4,22 +4,22 @@
 #include "glm/gtx/norm.hpp"
 
 
-DrawOperation::DrawOperation(EditorScene* scene, const Camera* camera, TriggerType trigger, glm::vec2 initialPlanarPosition, float minorRadius, glm::vec2 tangent)
+DrawOperation::DrawOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, float minorRadius, glm::vec2 tangent)
 	: Operation(scene, camera, trigger, initialPlanarPosition), minorRadius(minorRadius), tangent(tangent), terminalPlanarPosition(initialPlanarPosition) {
-	scene->deselectAll();
+	scene.deselectAll();
 	auto shape = std::make_unique<SegmentSpec>(minorRadius, 0.f, 0.f);
 	auto motion = std::make_unique<StaticSpec>(initialPlanarPosition, 0.f); // Later code assumes this is a StaticSpec
-	auto descriptor = scene->level->obstacleDescriptors.emplace_back(
+	auto descriptor = scene.level->obstacleDescriptors.emplace_back(
 		std::make_unique<ObstacleDescriptor>(std::move(shape), std::move(motion))).get();
-	obstacle = &scene->obstacles.emplace_back(descriptor);
-	scene->selectionFocus = {EntityType::Obstacle, (int)scene->obstacles.size() - 1};
+	obstacle = &scene.obstacles.emplace_back(descriptor);
+	scene.selectionFocus = {EntityType::Obstacle, (int)scene.obstacles.size() - 1};
 }
 
 
 OperationResponse DrawOperation::doProcessEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
-			terminalPlanarPosition = camera->screenToPlanarPosition(pointer->position);
+			terminalPlanarPosition = camera.screenToPlanarPosition(pointer->position);
 			applyOperation();
 			return {.consumedEvent = false, .status = OperationStatus::Running};
 		}

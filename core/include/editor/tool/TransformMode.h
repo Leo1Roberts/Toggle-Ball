@@ -7,7 +7,7 @@
 
 class TransformMode : public ToolMode {
 public:
-	explicit TransformMode(EditorScene* scene, const Camera* camera)
+	explicit TransformMode(EditorScene& scene, const Camera& camera)
 		: ToolMode(scene, camera) {}
 
 	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;

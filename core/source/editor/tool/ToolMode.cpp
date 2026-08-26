@@ -77,38 +77,38 @@ ToolModeResponse ToolMode::processEvent(const Event& event) {
 ToolModeResponse ToolMode::processObstacleExistenceAction(ActionCode actionCode, byte modifiers, const TransformQuickSettings& settings) {
 	switch (actionCode) {
 	case ActionCode::Copy:
-		scene->copySelection();
+		scene.copySelection();
 		return {.consumedEvent = true, .operationChanged = false};
 	case ActionCode::Delete: {
 		bool operationChanged = false;
 		if (activeOperation) {
-			auto ss = scene->getSelectionState();
+			auto ss = scene.getSelectionState();
 			activeOperation->cancel();
 			activeOperation.reset();
 			operationChanged = true;
-			scene->applySelectionState(ss);
+			scene.applySelectionState(ss);
 		}
-		scene->deleteSelection();
+		scene.deleteSelection();
 		return {.consumedEvent = true, .operationChanged = operationChanged};
 	}
 	case ActionCode::Cut: {
-		scene->copySelection();
+		scene.copySelection();
 		bool operationChanged = false;
 		if (activeOperation) {
-			auto ss = scene->getSelectionState();
+			auto ss = scene.getSelectionState();
 			activeOperation->cancel();
 			activeOperation.reset();
 			operationChanged = true;
-			scene->applySelectionState(ss);
+			scene.applySelectionState(ss);
 		}
-		scene->deleteSelection();
+		scene.deleteSelection();
 		return {.consumedEvent = true, .operationChanged = operationChanged};
 	}
 	case ActionCode::Paste:
-		if (!activeOperation && scene->paste()) {
+		if (!activeOperation && scene.paste()) {
 			auto meanCentre = glm::vec2(0.f);
 			int selectedCount = 0;
-			for (const auto& obstacle : scene->obstacles)
+			for (const auto& obstacle : scene.obstacles)
 				if (obstacle.isSelected()) {
 					meanCentre += worldToPlanar(obstacle.getKinematicState()->getPosition());
 					selectedCount++;
@@ -123,8 +123,8 @@ ToolModeResponse ToolMode::processObstacleExistenceAction(ActionCode actionCode,
 		}
 		break;
 	case ActionCode::Duplicate:
-		if (!activeOperation && scene->duplicateSelection()) {
-			activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::TriggerKey, camera->screenToPlanarPosition(pointer0Position));
+		if (!activeOperation && scene.duplicateSelection()) {
+			activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::TriggerKey, camera.screenToPlanarPosition(pointer0Position));
 			if (!activeOperation->start(modifiers))
 				activeOperation.reset();
 			return {.consumedEvent = true, .operationChanged = true};
@@ -160,12 +160,12 @@ void ToolMode::commitActiveOperation() {
 
 
 bool ToolMode::pointedAtBall(glm::vec2 pointerPosition) const {
-	auto hitTestBox = SelectBox(camera->screenToPlanarPosition(pointerPosition));
-	return scene->ball.isInSelectBox(hitTestBox);
+	auto hitTestBox = SelectBox(camera.screenToPlanarPosition(pointerPosition));
+	return scene.ball.isInSelectBox(hitTestBox);
 }
 bool ToolMode::pointedAtObstacle(glm::vec2 pointerPosition) const {
-	auto hitTestBox = SelectBox(camera->screenToPlanarPosition(pointerPosition));
-	return std::ranges::any_of(scene->obstacles,
+	auto hitTestBox = SelectBox(camera.screenToPlanarPosition(pointerPosition));
+	return std::ranges::any_of(scene.obstacles,
 		[&hitTestBox](const auto& obstacle) {
 			return obstacle.isInSelectBox(hitTestBox);
 		});
@@ -175,7 +175,7 @@ bool ToolMode::pointedAtObstacle(glm::vec2 pointerPosition) const {
 void ToolMode::performPrimaryAction(const PointerEvent& upEvent) {
 	auto selectOperation = SelectOperation(
 		scene, camera, TriggerType::Pointer,
-		camera->screenToPlanarPosition(pointerDownEvent.position), true);
+		camera.screenToPlanarPosition(pointerDownEvent.position), true);
 	if (selectOperation.start(pointerDownEvent.modifiers)) {
 		selectOperation.finish();
 		selectOperation.commit();

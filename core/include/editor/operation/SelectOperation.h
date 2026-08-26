@@ -9,7 +9,7 @@ enum class SelectionMode { Replace, Add, Subtract };
 
 class SelectOperation : public Operation {
 public:
-	SelectOperation(EditorScene* scene, const Camera* camera, TriggerType trigger, glm::vec2 initialPlanarPosition, bool instant = false)
+	SelectOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, bool instant = false)
 		: Operation(scene, camera, trigger, initialPlanarPosition), box(initialPlanarPosition), instant(instant) {}
 
 	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
@@ -17,8 +17,8 @@ public:
 
 	void finish() final;
 
-	void cancel() const final { return scene->cancelSelectionChange(); }
-	void commit() const final { return scene->commitSelectionChange(); }
+	void cancel() const final { return scene.cancelSelectionChange(); }
+	void commit() const final { return scene.commitSelectionChange(); }
 
 	[[nodiscard]] SelectionMode getMode() const { return mode; }
 

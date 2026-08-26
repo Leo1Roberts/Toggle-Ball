@@ -122,10 +122,10 @@ OperationResponse TranslateOperation::doProcessEvent(const Event& event) {
 void TranslateOperation::applyOperation() {
 	otherAxisLines.clear();
 
-	auto ball = &scene->ball;
-	auto& obstacles = scene->obstacles;
+	auto ball = &scene.ball;
+	auto& obstacles = scene.obstacles;
 
-	auto focus = &scene->selectionFocus;
+	auto focus = &scene.selectionFocus;
 	float focusAngle = 0.f;
 	if (focus->type == EntityType::Obstacle)
 		focusAngle = obstacles[focus->index].getKinematicState()->getAngle();
@@ -150,7 +150,7 @@ void TranslateOperation::applyOperation() {
 				magnitude = *value;
 			else {
 				updateUI();
-				scene->cancelLevelChange();
+				scene.cancelLevelChange();
 				return;
 			}
 		} else
@@ -164,7 +164,7 @@ void TranslateOperation::applyOperation() {
 		if (settings.transformIndividually && trigger != TriggerType::ActionKey)
 			translation = (angleToRotation2D(-focusAngle) * direction) * magnitude;
 
-		ball->translateBy(translation, scene->getCurrentNode()->level.ballDescriptor.get());
+		ball->translateBy(translation, scene.getCurrentNode()->level.ballDescriptor.get());
 
 		if (settings.transformIndividually && constraint != ConstraintType::None && focus->type != EntityType::Ball)
 			otherAxisLines.push_back({
@@ -182,8 +182,8 @@ void TranslateOperation::applyOperation() {
 				translation = individualDirection * magnitude;
 			}
 
-			obstacle.translateBy(translation, settings.transformBothStates, scene->isToggled(),
-				scene->getCurrentNode()->level.obstacleDescriptors[i].get());
+			obstacle.translateBy(translation, settings.transformBothStates, scene.isToggled(),
+				scene.getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
 			obstacle.invalidateDomainMesh();
@@ -221,7 +221,7 @@ void TranslateOperation::setConstraint(glm::vec2 requestedAxis) {
 		constraint = ConstraintType::GlobalAxis;
 		baseAxis = requestedAxis;
 		canStartTyping = true;
-	} else if (scene->selectionFocus.type == EntityType::Obstacle &&
+	} else if (scene.selectionFocus.type == EntityType::Obstacle &&
 		((!settings.transformIndividually && constraint == ConstraintType::GlobalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::LocalAxis && baseAxis != requestedAxis))) {
 		constraint = ConstraintType::LocalAxis;
 		baseAxis = requestedAxis;

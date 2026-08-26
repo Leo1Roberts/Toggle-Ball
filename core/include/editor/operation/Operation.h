@@ -50,7 +50,7 @@ public:
 	const TriggerType trigger;
 
 protected:
-	Operation(EditorScene* scene, const Camera* camera, TriggerType trigger, glm::vec2 initialPlanarPosition)
+	Operation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition)
 		: trigger(trigger), scene(scene), camera(camera), initialPlanarPosition(initialPlanarPosition) {}
 	Operation(const Operation&) = default;
 
@@ -58,8 +58,8 @@ protected:
 
 	virtual void applyOperation() = 0;
 
-	EditorScene* scene;
-	const Camera* camera;
+	EditorScene& scene;
+	const Camera& camera;
 
 	glm::vec2 initialPlanarPosition;
 

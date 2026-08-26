@@ -16,20 +16,20 @@ struct TransformQuickSettings {
 
 class TransformOperation : public Operation {
 public:
-	TransformOperation(EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition)
+	TransformOperation(EditorScene& scene, const Camera& camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition)
 		: Operation(scene, camera, trigger, initialPlanarPosition), settings(settings), pointerPlanarPosition(initialPlanarPosition) {}
 	TransformOperation(const TransformOperation& other) // Reset typing
 		: Operation(other), settings(other.settings), pointerPlanarPosition(initialPlanarPosition) {}
 
-	[[nodiscard]] static std::unique_ptr<TransformOperation> make(ActionCode actionCode, EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition);
+	[[nodiscard]] static std::unique_ptr<TransformOperation> make(ActionCode actionCode, EditorScene& scene, const Camera& camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition);
 	[[nodiscard]] static std::unique_ptr<TransformOperation> makeFromExisting(ActionCode actionCode, const TransformOperation* existingOperation);
 
 	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
 	void createUI(UINode& container) override;
 	bool updateUI() override;
 
-	void cancel() const final { return scene->cancelLevelChange(); }
-	void commit() const final { return scene->commitLevelChange(); }
+	void cancel() const final { return scene.cancelLevelChange(); }
+	void commit() const final { return scene.commitLevelChange(); }
 
 protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
@@ -53,7 +53,7 @@ private:
 		precisionMultiplier = mods & MOD_SHIFT ? 0.1f : 1.f;
 	}
 
-	[[nodiscard]] bool canStart() const final { return scene->anythingIsSelected(); }
+	[[nodiscard]] bool canStart() const final { return scene.anythingIsSelected(); }
 };
 
 

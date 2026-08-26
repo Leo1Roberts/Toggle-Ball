@@ -35,11 +35,11 @@ public:
 	[[nodiscard]] bool hasActiveOperation() const { return activeOperation != nullptr; }
 
 protected:
-	explicit ToolMode(EditorScene* scene, const Camera* camera)
+	explicit ToolMode(EditorScene& scene, const Camera& camera)
 		: scene(scene), camera(camera) {}
 
-	EditorScene* scene;
-	const Camera* camera;
+	EditorScene& scene;
+	const Camera& camera;
 
 	std::unique_ptr<Operation> activeOperation;
 

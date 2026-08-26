@@ -58,13 +58,13 @@ void ScaleOperation::applyOperation() {
 			scale = *value;
 		else {
 			updateUI();
-			scene->cancelLevelChange();
+			scene.cancelLevelChange();
 			return;
 		}
 	}
 
-	auto ball = &scene->ball;
-	auto& obstacles = scene->obstacles;
+	auto ball = &scene.ball;
+	auto& obstacles = scene.obstacles;
 
 	bool affectMinorRadius = false;
 	bool affectMajorRadius = false;
@@ -84,14 +84,14 @@ void ScaleOperation::applyOperation() {
 
 	if (ball->isSelected())
 		ball->scaleBy(scale, pivot, settings.transformIndividually,
-			scene->getCurrentNode()->level.ballDescriptor.get());
+			scene.getCurrentNode()->level.ballDescriptor.get());
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
 			obstacle.scaleBy(scale, pivot, settings.transformIndividually,
 				affectMinorRadius, affectMajorRadius,
-				scene->getCurrentNode()->level.obstacleDescriptors[i].get());
+				scene.getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
 			if (affectMinorRadius || affectMajorRadius)

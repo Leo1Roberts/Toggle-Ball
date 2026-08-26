@@ -120,7 +120,7 @@ ToolModeResponse TransformMode::doProcessEvent(const Event& event) {
 						} else
 							return {.consumedEvent = true, .operationChanged = false};
 					}
-					activeOperation = TransformOperation::make(*actionCode, scene, camera, settings, TriggerType::TriggerKey, camera->screenToPlanarPosition(pointer0Position));
+					activeOperation = TransformOperation::make(*actionCode, scene, camera, settings, TriggerType::TriggerKey, camera.screenToPlanarPosition(pointer0Position));
 					if (!activeOperation->start(key->chord.modifiers))
 						activeOperation.reset();
 					return {.consumedEvent = true, .operationChanged = true};
@@ -157,7 +157,7 @@ std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStar
 	bool hit = pointedAtEntity(pointerDownEvent.position);
 
 	if (hit) {
-		auto selectOperation = SelectOperation(scene, camera, TriggerType::Pointer, camera->screenToPlanarPosition(pointerDownEvent.position), true);
+		auto selectOperation = SelectOperation(scene, camera, TriggerType::Pointer, camera.screenToPlanarPosition(pointerDownEvent.position), true);
 		if (selectOperation.start(pointerDownEvent.modifiers))
 			selectOperation.finish();
 		else return nullptr;
@@ -170,13 +170,13 @@ std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStar
 
 	if (dragStartEvent.button == PointerButton::Primary) {
 		if (hit) {
-			auto translateOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::Pointer, camera->screenToPlanarPosition(pointerDownEvent.position));
+			auto translateOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::Pointer, camera.screenToPlanarPosition(pointerDownEvent.position));
 			if (translateOperation->start(pointerDownEvent.modifiers))
 				return translateOperation;
 			return nullptr;
 		}
 
-		auto selectOperation = std::make_unique<SelectOperation>(scene, camera, TriggerType::Pointer, camera->screenToPlanarPosition(pointerDownEvent.position));
+		auto selectOperation = std::make_unique<SelectOperation>(scene, camera, TriggerType::Pointer, camera.screenToPlanarPosition(pointerDownEvent.position));
 		if (selectOperation->start(pointerDownEvent.modifiers))
 			return selectOperation;
 		return nullptr;
@@ -184,7 +184,7 @@ std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStar
 
 	if (dragStartEvent.button == PointerButton::Secondary) {
 		if (hit) {
-			auto rotateOperation = std::make_unique<RotateOperation>(scene, camera, settings, TriggerType::Pointer, camera->screenToPlanarPosition(pointerDownEvent.position));
+			auto rotateOperation = std::make_unique<RotateOperation>(scene, camera, settings, TriggerType::Pointer, camera.screenToPlanarPosition(pointerDownEvent.position));
 			if (rotateOperation->start(pointerDownEvent.modifiers))
 				return rotateOperation;
 			return nullptr;

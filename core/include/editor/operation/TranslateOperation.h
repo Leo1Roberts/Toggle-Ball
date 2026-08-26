@@ -7,7 +7,7 @@
 
 class TranslateOperation : public TransformOperation {
 public:
-	TranslateOperation(EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition = {})
+	TranslateOperation(EditorScene& scene, const Camera& camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition = {})
 		: TransformOperation(scene, camera, settings, trigger, initialPlanarPosition) { canStartTyping = false; }
 	explicit TranslateOperation(const TransformOperation& other)
 		: TransformOperation(other) {}

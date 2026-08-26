@@ -16,22 +16,22 @@ ToolModeResponse ShapeMode::doProcessEvent(const Event& event) {
 
 std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEvent) {
 	if (dragStartEvent.button == PointerButton::Primary) {
-		auto pointerPlanarPosition = camera->screenToPlanarPosition(pointerDownEvent.position);
+		auto pointerPlanarPosition = camera.screenToPlanarPosition(pointerDownEvent.position);
 
-		if (auto index = Operation::getTopObstacleIndex(scene->obstacles, [this, pointerPlanarPosition](const EditorObstacle& obstacle) {
+		if (auto index = Operation::getTopObstacleIndex(scene.obstacles, [this, pointerPlanarPosition](const EditorObstacle& obstacle) {
 			return std::abs(obstacle.getRimProximity(pointerPlanarPosition).distance) < Settings::Sizes.obstaclePerimeterHitRadius * uiToWorldScale;
 		})) {
-			if (!scene->obstacles[*index].isSelected()) {
-				scene->deselectAll();
-				scene->obstacles[*index].select();
+			if (!scene.obstacles[*index].isSelected()) {
+				scene.deselectAll();
+				scene.obstacles[*index].select();
 			}
-			scene->selectionFocus = {EntityType::Obstacle, *index};
+			scene.selectionFocus = {EntityType::Obstacle, *index};
 
 			auto minorRadiusOperation = std::make_unique<MinorRadiusOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition);
 			if (minorRadiusOperation->start(pointerDownEvent.modifiers))
 				return minorRadiusOperation;
 
-			scene->cancelSelectionChange(); // Clean up if minor radius operation fails to start
+			scene.cancelSelectionChange(); // Clean up if minor radius operation fails to start
 			return nullptr;
 		}
 

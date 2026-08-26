@@ -8,7 +8,7 @@
 #include "ui/UIText.h"
 
 
-std::unique_ptr<TransformOperation> TransformOperation::make(ActionCode actionCode, EditorScene* scene, const Camera* camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition) {
+std::unique_ptr<TransformOperation> TransformOperation::make(ActionCode actionCode, EditorScene& scene, const Camera& camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition) {
 	switch (actionCode) {
 	case ActionCode::Translate:
 		return std::make_unique<TranslateOperation>(scene, camera, settings, trigger, initialPlanarPosition);
@@ -92,7 +92,7 @@ OperationResponse TransformOperation::doProcessEvent(const Event& event) {
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
-			glm::vec2 newPointerPlanarPosition = camera->screenToPlanarPosition(pointer->position);
+			glm::vec2 newPointerPlanarPosition = camera.screenToPlanarPosition(pointer->position);
 			updateTransformation(newPointerPlanarPosition);
 			pointerPlanarPosition = newPointerPlanarPosition;
 			applyOperation();

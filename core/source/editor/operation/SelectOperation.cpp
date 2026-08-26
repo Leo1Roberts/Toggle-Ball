@@ -24,28 +24,28 @@ void SelectOperation::renderGizmos(GizmoRenderer& gizmoRenderer) {
 
 
 void SelectOperation::finish() {
-	auto ball = &scene->ball;
-	auto& obstacles = scene->obstacles;
-	auto focus = &scene->selectionFocus;
+	auto ball = &scene.ball;
+	auto& obstacles = scene.obstacles;
+	auto focus = &scene.selectionFocus;
 
 	if (instant && (mode == SelectionMode::Replace || mode == SelectionMode::Add)) {
-		const auto& originalSelection = scene->getCurrentNode()->selectionNode->selectionState;
+		const auto& originalSelection = scene.getCurrentNode()->selectionNode->selectionState;
 		bool revertSelection = false;
 
 		if (ball->isInSelectBox(box)) {
 			if (originalSelection.ball || mode == SelectionMode::Add)
 				revertSelection = true;
 			else {
-				scene->deselectAll();
+				scene.deselectAll();
 				ball->select();
 			}
 			*focus = {EntityType::Ball};
 		} else {
-			if (auto index = getTopObstacleIndex(scene->obstacles, [this](const EditorObstacle& obstacle) { return obstacle.isInSelectBox(box); })) {
+			if (auto index = getTopObstacleIndex(scene.obstacles, [this](const EditorObstacle& obstacle) { return obstacle.isInSelectBox(box); })) {
 				if (originalSelection.obstacles[*index] || mode == SelectionMode::Add)
 					revertSelection = true;
 				else {
-					scene->deselectAll();
+					scene.deselectAll();
 					obstacles[*index].select();
 				}
 				*focus = {EntityType::Obstacle, *index};
@@ -87,7 +87,7 @@ void SelectOperation::applyModifiers(byte mods) {
 OperationResponse SelectOperation::doProcessEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
-			glm::vec2 pointerPlanarPosition = camera->screenToPlanarPosition(pointer->position);
+			glm::vec2 pointerPlanarPosition = camera.screenToPlanarPosition(pointer->position);
 			box = {
 				initialPlanarPosition.x, pointerPlanarPosition.x,
 				initialPlanarPosition.y, pointerPlanarPosition.y,
@@ -100,9 +100,9 @@ OperationResponse SelectOperation::doProcessEvent(const Event& event) {
 }
 
 void SelectOperation::applyOperation() {
-	auto ball = &scene->ball;
-	auto& obstacles = scene->obstacles;
-	const auto& originalSelection = scene->getCurrentNode()->selectionNode->selectionState;
+	auto ball = &scene.ball;
+	auto& obstacles = scene.obstacles;
+	const auto& originalSelection = scene.getCurrentNode()->selectionNode->selectionState;
 
 	switch (mode) {
 	case SelectionMode::Replace:

@@ -5,9 +5,9 @@
 
 
 void GizmoRenderer::addBox(const SelectBox& box, const PanelStyle& style) {
-	float physicalToLogical = 1.f / ui->getScale();
-	glm::vec2 boundsPosition = camera->planarToScreenPosition(glm::vec2(box.left, box.top)) * physicalToLogical;
-	glm::vec2 boundsOppositePosition = camera->planarToScreenPosition(glm::vec2(box.right, box.bottom)) * physicalToLogical;
+	float physicalToLogical = 1.f / ui.getScale();
+	glm::vec2 boundsPosition = camera.planarToScreenPosition(glm::vec2(box.left, box.top)) * physicalToLogical;
+	glm::vec2 boundsOppositePosition = camera.planarToScreenPosition(glm::vec2(box.right, box.bottom)) * physicalToLogical;
 	glm::vec2 boundsSize = boundsOppositePosition - boundsPosition;
 
 	Rectangle bounds = {
@@ -23,16 +23,16 @@ void GizmoRenderer::addBox(const SelectBox& box, const PanelStyle& style) {
 
 
 void GizmoRenderer::addLine(glm::vec2 p1, glm::vec2 p2, const LineStyle& style) {
-	float physicalToLogical = 1.f / ui->getScale();
-	p1 = camera->planarToScreenPosition(p1) * physicalToLogical;
-	p2 = camera->planarToScreenPosition(p2) * physicalToLogical;
+	float physicalToLogical = 1.f / ui.getScale();
+	p1 = camera.planarToScreenPosition(p1) * physicalToLogical;
+	p2 = camera.planarToScreenPosition(p2) * physicalToLogical;
 	panelRenderer.addLine(p1, p2, style);
 }
 void GizmoRenderer::addLine(InfiniteLine line, const LineStyle& style) {
-	line.point = camera->planarToScreenPosition(line.point) / ui->getScale();
+	line.point = camera.planarToScreenPosition(line.point) / ui.getScale();
 	line.direction = normalize(Camera::planarToScreenDirection(line.direction));
 
-	glm::vec2 screenSize = ui->getLogicalScreenSize();
+	glm::vec2 screenSize = ui.getLogicalScreenSize();
 
 	glm::vec2 corners[4] = {
 		glm::vec2(0.f),
