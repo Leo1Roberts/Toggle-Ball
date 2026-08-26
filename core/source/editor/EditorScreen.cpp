@@ -261,6 +261,12 @@ void EditorScreen::processEvent(const Event& event) {
 
 			if (!currentMode->hasActiveOperation() && key->action == KeyAction::Down) {
 				switch (*actionCode) {
+				case ActionCode::CycleToolMode:
+					if (currentMode == &transformMode)
+						selectMode(&shapeMode);
+					else if (currentMode == &shapeMode)
+						selectMode(&transformMode);
+					break;
 				case ActionCode::TransformMode:
 					selectMode(&transformMode);
 					break;
@@ -716,6 +722,8 @@ void EditorScreen::updateDynamicUI() {
 
 	if (auto binding = Settings::Bindings->findBinding(ActionCode::TestOrEditLevel))
 		hints.emplace_back(*binding, "Test level");
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::CycleToolMode))
+		hints.emplace_back(*binding, "Cycle tool mode");
 
 	hints.append_range(currentMode->getBindingHints());
 

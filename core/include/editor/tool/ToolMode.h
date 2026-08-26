@@ -22,12 +22,15 @@ public:
 	~ToolMode() override = default;
 
 	[[nodiscard]] ToolModeResponse processEvent(const Event& event);
-	[[nodiscard]] ToolModeResponse processObstacleExistenceAction(ActionCode actionCode, byte modifiers, const TransformQuickSettings& settings = {});
+	[[nodiscard]] ToolModeResponse processObstacleExistenceAction(ActionCode actionCode, byte modifiers);
 
-	[[nodiscard]] virtual std::vector<BindingHint> getBindingHints() const { return {}; }
-	virtual void populateToolbar(UINode& toolbar) {}
+	[[nodiscard]] virtual std::vector<BindingHint> getBindingHints() const;
+	virtual void populateToolbar(UINode& toolbar);
 	void createOperationUI(UINode& container) const;
-	virtual void renderGizmos(GizmoRenderer& gizmoRenderer) {}
+	virtual void renderGizmos(GizmoRenderer& gizmoRenderer) {
+		if (activeOperation)
+			activeOperation->renderGizmos(gizmoRenderer);
+	}
 
 	void cancelActiveOperation();
 	void commitActiveOperation();
@@ -53,6 +56,8 @@ protected:
 	[[nodiscard]] bool pointedAtEntity(glm::vec2 pointerPosition) const {
 		return pointedAtBall(pointerPosition) || pointedAtObstacle(pointerPosition);
 	}
+
+	TransformQuickSettings settings;
 
 private:
 	[[nodiscard]] virtual ToolModeResponse doProcessEvent(const Event& event) { return {}; }

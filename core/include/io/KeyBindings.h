@@ -64,6 +64,7 @@ enum class ActionCode {
 	Copy, Delete, Cut, Paste, Duplicate,
 
 	TestOrEditLevel,
+	CycleToolMode,
 	TransformMode, ShapeMode,
 
 	Toggle, InstantToggle,
@@ -110,6 +111,7 @@ private:
 		{ ActionCode::Paste,                       "Paste"                         },
 		{ ActionCode::Duplicate,                   "Duplicate"                     },
 		{ ActionCode::TestOrEditLevel,             "Test/edit level"               },
+		{ ActionCode::CycleToolMode,               "Cycle tool mode"               },
 		{ ActionCode::TransformMode,               "Transform mode"                },
 		{ ActionCode::ShapeMode,                   "Shape mode"                    },
 		{ ActionCode::Toggle,                      "Toggle"                        },
