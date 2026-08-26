@@ -1,6 +1,9 @@
 #include "system/System.h"
 
 #include <GLFW/glfw3.h>
+#if defined(PLATFORM_WINDOWS)
+  #include <windows.h>
+#endif
 
 namespace System {
 	void setClipboardText(const std::string& text) {
