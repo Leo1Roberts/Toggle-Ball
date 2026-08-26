@@ -1,8 +1,7 @@
 #ifndef LEVEL_BROWSER_SCREEN_H
 #define LEVEL_BROWSER_SCREEN_H
 
-#include "../Screen.h"
-#include "ui/UIManager.h"
+#include "Screen.h"
 
 
 class LevelBrowserScreen : public Screen {
@@ -15,8 +14,6 @@ public:
 
 private:
 	void doResize() override { uiManager.resize(width, height, dpiScale); }
-
-	UIManager uiManager{};
 };
 
 

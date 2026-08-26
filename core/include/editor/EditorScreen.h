@@ -9,7 +9,6 @@
 #include "editor/tool/ToolMode.h"
 #include "tool/ShapeMode.h"
 #include "tool/TransformMode.h"
-#include "ui/UIManager.h"
 
 
 class UIHorizontalList;
@@ -25,6 +24,8 @@ public:
 
 	[[nodiscard]] const LevelDescriptor* getLevel() const { return scene.level.get(); }
 
+	std::optional<Cursor> queryCursor() const override;
+
 private:
 	void doResize() override;
 
@@ -39,7 +40,6 @@ private:
 
 	EditorScene scene;
 	Camera camera;
-	UIManager uiManager;
 	GizmoRenderer gizmoRenderer{uiManager, camera};
 
 	SelectionState cachedSelectionState{};

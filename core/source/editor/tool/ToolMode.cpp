@@ -159,6 +159,13 @@ void ToolMode::commitActiveOperation() {
 }
 
 
+std::optional<Cursor> ToolMode::queryCursor() const {
+	if (activeOperation)
+		return activeOperation->queryCursor();
+	return std::nullopt;
+}
+
+
 bool ToolMode::pointedAtBall(glm::vec2 pointerPosition) const {
 	auto hitTestBox = SelectBox(camera.screenToPlanarPosition(pointerPosition));
 	return scene.ball.isInSelectBox(hitTestBox);

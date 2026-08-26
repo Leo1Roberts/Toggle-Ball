@@ -3,6 +3,7 @@
 
 #include "io/Event.h"
 #include "Layout.h"
+#include "system/Cursor.h"
 
 #include <memory>
 #include <vector>
@@ -19,11 +20,9 @@ enum class UIResponse {
 
 class UIManager;
 
-class UINode {
+class UINode : public ICursorProvider {
 public:
-	UINode() = default;
-
-	virtual ~UINode() = default;
+	~UINode() override = default;
 
 	template <typename T>
 	T* addChild(std::unique_ptr<T> child) {
@@ -104,9 +103,13 @@ public:
 	[[nodiscard]] bool childrenAreHitTestable() const { return hitTestableChildren && active; }
 	[[nodiscard]] virtual bool isFocusable() const { return false; }
 
+	std::optional<Cursor> queryCursor() const override { return std::nullopt; }
+
 	bool isOverlay = false;
 
 protected:
+	UINode() = default;
+
 	[[nodiscard]] virtual bool containsPrecise(glm::vec2 point) const { return true; }
 
 	Layout layout;

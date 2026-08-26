@@ -308,12 +308,7 @@ static void cursorPosCallback(GLFWwindow* window, double x, double y) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
 
-	glm::vec2 newPosition;
-#if defined(PLATFORM_LINUX)
-	newPosition = glm::vec2(x, y) * app->window->config.dpiScale;
-#else
-	newPosition = {x, y};
-#endif
+	auto newPosition = ((GlfwWindow*)app->window.get())->translateMousePosition(x, y);
 
 	if (readyToStartDrag && !dragging && primaryDown != secondaryDown && length2(newPosition - pointerDownPosition) > dragThreshold * dragThreshold) {
 		dragging = true;
@@ -407,6 +402,7 @@ int main() {
 	Shaders::load();
 	Textures::load();
 	Fonts::load();
+	Cursor::loadTextures();
 
 	App app(std::make_unique<GlfwWindow>(rawWindow), std::make_unique<EditorMode>());
 

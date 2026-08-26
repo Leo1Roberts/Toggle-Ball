@@ -42,6 +42,8 @@ public:
 	[[nodiscard]] bool isEmpty() const { return inputBuffer.isEmpty(); }
 	[[nodiscard]] bool isFocusable() const override { return isVisible() && isActive(); }
 
+	std::optional<Cursor> queryCursor() const override { return Cursor{.style = Cursor::Style::Text}; }
+
 private:
 	void doUpdate(microseconds dt) override;
 

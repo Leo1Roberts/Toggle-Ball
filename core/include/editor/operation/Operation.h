@@ -4,6 +4,7 @@
 #include "utilities/Camera.h"
 #include "editor/GizmoRenderer.h"
 #include "io/Event.h"
+#include "system/Cursor.h"
 
 
 class EditorObstacle;
@@ -19,9 +20,9 @@ struct OperationResponse {
 	OperationStatus status = OperationStatus::Running;
 };
 
-class Operation {
+class Operation : public ICursorProvider {
 public:
-	virtual ~Operation() = default;
+	~Operation() override = default;
 
 	[[nodiscard]] OperationResponse processEvent(const Event& event);
 
@@ -51,7 +52,7 @@ public:
 
 protected:
 	Operation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition)
-		: trigger(trigger), scene(scene), camera(camera), initialPlanarPosition(initialPlanarPosition) {}
+		: trigger(trigger), scene(scene), camera(camera), initialPlanarPosition(initialPlanarPosition), pointerPlanarPosition(initialPlanarPosition) {}
 	Operation(const Operation&) = default;
 
 	[[nodiscard]] virtual OperationResponse doProcessEvent(const Event& event) = 0;
@@ -62,6 +63,7 @@ protected:
 	const Camera& camera;
 
 	glm::vec2 initialPlanarPosition;
+	glm::vec2 pointerPlanarPosition;
 
 private:
 	virtual void applyModifiers(byte mods) = 0;

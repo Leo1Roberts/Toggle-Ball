@@ -17,9 +17,9 @@ struct ToolModeResponse {
 	bool operationChanged = false;
 };
 
-class ToolMode {
+class ToolMode : public ICursorProvider {
 public:
-	virtual ~ToolMode() = default;
+	~ToolMode() override = default;
 
 	[[nodiscard]] ToolModeResponse processEvent(const Event& event);
 	[[nodiscard]] ToolModeResponse processObstacleExistenceAction(ActionCode actionCode, byte modifiers, const TransformQuickSettings& settings = {});
@@ -33,6 +33,8 @@ public:
 	void commitActiveOperation();
 
 	[[nodiscard]] bool hasActiveOperation() const { return activeOperation != nullptr; }
+
+	std::optional<Cursor> queryCursor() const override;
 
 protected:
 	explicit ToolMode(EditorScene& scene, const Camera& camera)

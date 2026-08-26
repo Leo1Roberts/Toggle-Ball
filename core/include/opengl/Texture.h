@@ -4,10 +4,12 @@
 #include "opengl/GLUtilities.h"
 
 #include <memory>
+#include <vector>
+
 
 class Texture {
 public:
-	Texture(const std::string& fileName, bool monochrome = false);
+	explicit Texture(const std::string& fileName, bool monochrome = false, bool saveData = false);
 
 	Texture(const Texture&) = delete;
 	Texture& operator=(const Texture&) = delete;
@@ -16,24 +18,23 @@ public:
 		glActiveTexture(GL_TEXTURE0 + i);
 		glBindTexture(GL_TEXTURE_2D, texture);
 	}
-
 	static void unbind() {
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
+	[[nodiscard]] unsigned char* getData() { return data.data(); }
+	[[nodiscard]] int getWidth() const { return width; }
+	[[nodiscard]] int getHeight() const { return height; }
+
 private:
 	GLTexture texture;
+	std::vector<unsigned char> data;
+	int width, height;
 };
 
 namespace Textures {
 	extern std::unique_ptr<Texture> white;
 	extern std::unique_ptr<Texture> basketball;
-
-	// namespace Cursors {
-	// 	extern std::unique_ptr<Texture> arrow;
-	// 	extern std::unique_ptr<Texture> hand;
-	// 	extern std::unique_ptr<Texture> resize;
-	// }
 
 	void load();
 }

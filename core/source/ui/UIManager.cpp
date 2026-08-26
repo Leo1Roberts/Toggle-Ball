@@ -83,7 +83,7 @@ bool UIManager::processEvent(const Event& event) {
 
 		pointer.position = screenToLogicalPosition(pointer.position);
 		
-		UINode* nodePointedTo = nullptr;
+		nodePointedTo = nullptr;
 		if (rootNode.contains(pointer.position))
 			nodePointedTo = findNodePointedTo(pointer.position);
 
@@ -173,6 +173,13 @@ bool UIManager::processEvent(const Event& event) {
 		return targetNode != nullptr && response != UIResponse::Ignored;
 	}
 	return false;
+}
+
+
+std::optional<Cursor> UIManager::queryCursor() const {
+	if (nodePointedTo)
+		return nodePointedTo->queryCursor();
+	return std::nullopt;
 }
 
 

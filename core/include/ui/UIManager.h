@@ -5,12 +5,13 @@
 #include "UIContainer.h"
 #include "UIPanel.h"
 #include "UIText.h"
+#include "system/Cursor.h"
 
 #include <glm/glm.hpp>
 #include <unordered_map>
 
 
-class UIManager {
+class UIManager : public ICursorProvider {
 public:
 	UIManager() {
 		rootNode.setChangeFocusCallback([this](UINode* newFocus, bool cancel) {
@@ -41,6 +42,8 @@ public:
 	[[nodiscard]] glm::vec2 getLogicalScreenSize() const { return logicalScreenSize; }
 	[[nodiscard]] const glm::mat4& getProjectionMatrix() const { return projectionMatrix; }
 
+	std::optional<Cursor> queryCursor() const override;
+
 private:
 	[[nodiscard]] UINode* findNodePointedTo(glm::vec2 pointerPosition);
 	[[nodiscard]] static UINode* findNodePointedToRecursive(UINode* currentNode, glm::vec2 pointerPosition);
@@ -55,6 +58,7 @@ private:
 	void unregisterNode(UINode* node);
 
 	UIContainer rootNode;
+	UINode* nodePointedTo = nullptr;
 	UINode* focusedNode = nullptr;
 	std::unordered_map<int, UINode*> hoveredNodes;
 	std::unordered_map<int, UINode*> downCapturedNodes;

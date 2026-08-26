@@ -23,6 +23,16 @@ bool RotateOperation::updateUI() {
 }
 
 
+std::optional<Cursor> RotateOperation::queryCursor() const {
+	auto diff = camera.planarToScreenDirection(pointerPlanarPosition - pivot);
+	return Cursor{
+		.style = Cursor::Style::DynamicResize,
+		.dynamic = true,
+		.angle = std::atan2(diff.y, diff.x),
+	};
+}
+
+
 float RotateOperation::angleDifference(glm::vec2 newPos, glm::vec2 oldPos, glm::vec2 pivot) {
 	glm::vec2 v1 = oldPos - pivot;
 	glm::vec2 v2 = newPos - pivot;

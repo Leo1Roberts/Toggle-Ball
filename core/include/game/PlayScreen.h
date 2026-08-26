@@ -3,7 +3,6 @@
 
 #include "GameWorld.h"
 #include "Screen.h"
-#include "ui/UIManager.h"
 
 
 class UIButton;
@@ -19,7 +18,6 @@ private:
 	void doResize() override;
 
 	GameWorld game;
-	UIManager uiManager{};
 
 	UIButton* levelCompleteDisplay = nullptr;
 };

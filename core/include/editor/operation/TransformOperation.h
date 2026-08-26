@@ -17,9 +17,9 @@ struct TransformQuickSettings {
 class TransformOperation : public Operation {
 public:
 	TransformOperation(EditorScene& scene, const Camera& camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition)
-		: Operation(scene, camera, trigger, initialPlanarPosition), settings(settings), pointerPlanarPosition(initialPlanarPosition) {}
+		: Operation(scene, camera, trigger, initialPlanarPosition), settings(settings) {}
 	TransformOperation(const TransformOperation& other) // Reset typing
-		: Operation(other), settings(other.settings), pointerPlanarPosition(initialPlanarPosition) {}
+		: Operation(other), settings(other.settings) {}
 
 	[[nodiscard]] static std::unique_ptr<TransformOperation> make(ActionCode actionCode, EditorScene& scene, const Camera& camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition);
 	[[nodiscard]] static std::unique_ptr<TransformOperation> makeFromExisting(ActionCode actionCode, const TransformOperation* existingOperation);
@@ -35,8 +35,6 @@ protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
 
 	const TransformQuickSettings& settings;
-
-	glm::vec2 pointerPlanarPosition;
 
 	float precisionMultiplier = 1.f;
 

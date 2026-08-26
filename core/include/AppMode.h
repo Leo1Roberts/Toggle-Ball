@@ -4,9 +4,9 @@
 #include "Screen.h"
 
 
-class AppMode {
+class AppMode : public ICursorProvider {
 public:
-	virtual ~AppMode() = default;
+	~AppMode() override = default;
 
 	virtual void tick(microseconds dt) {
 		if (activeScreen) { activeScreen->update(dt); activeScreen->render(); }
@@ -16,6 +16,12 @@ public:
 	}
 	virtual void processEvent(const Event& event) {
 		if (activeScreen) activeScreen->processEvent(event);
+	}
+
+	std::optional<Cursor> queryCursor() const override {
+		if (activeScreen)
+			return activeScreen->queryCursor();
+		return std::nullopt;
 	}
 
 protected:

@@ -32,6 +32,16 @@ bool ScaleOperation::updateUI() {
 }
 
 
+std::optional<Cursor> ScaleOperation::queryCursor() const {
+	auto diff = camera.planarToScreenDirection(pointerPlanarPosition - pivot);
+	return Cursor{
+		.style = Cursor::Style::DynamicResize,
+		.dynamic = true,
+		.angle = std::atan2(diff.y, diff.x) + glm::half_pi<float>(),
+	};
+}
+
+
 OperationResponse ScaleOperation::doProcessEvent(const Event& event) {
 	auto response = PivotOperation::doProcessEvent(event);
 	if (response.consumedEvent)

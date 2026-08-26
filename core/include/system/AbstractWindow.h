@@ -1,5 +1,7 @@
-#ifndef I_WINDOW_H
-#define I_WINDOW_H
+#ifndef ABSTRACT_WINDOW_H
+#define ABSTRACT_WINDOW_H
+
+#include "Cursor.h"
 
 
 struct WindowConfiguration {
@@ -21,10 +23,14 @@ public:
 	void updateWindowConfiguration() {
 		updateWindowSize();
 		updateWindowDPIScale();
-	};
+	}
+
+	virtual void setCursor(const Cursor& cursor = {}) {}
 
 	WindowConfiguration config{};
+	Cursor activeCursor{.style = Cursor::Style::COUNT}; // Make sure default cursor is generated
+	int cursorSize;
 };
 
 
-#endif // I_WINDOW_H
+#endif // ABSTRACT_WINDOW_H

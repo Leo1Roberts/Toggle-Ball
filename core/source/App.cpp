@@ -54,6 +54,12 @@ void App::tick(microseconds dt) {
 	overlayUI.update(dt);
 
 	overlayUI.render();
+
+	std::optional<Cursor> c;
+	if (((c = overlayUI.queryCursor())) || ((c = content->queryCursor())))
+		window->setCursor(*c);
+	else
+		window->setCursor();
 }
 
 

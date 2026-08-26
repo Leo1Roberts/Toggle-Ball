@@ -48,7 +48,6 @@ else()
     # Inject the shared Desktop platform macro
     target_compile_definitions(core PUBLIC PLATFORM_DESKTOP)
 
-    # Split the desktop-specific flavors
     if(WIN32)
         target_compile_definitions(core PUBLIC PLATFORM_WINDOWS)
     else()

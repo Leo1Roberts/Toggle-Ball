@@ -17,6 +17,8 @@ public:
 
 	bool updateUI() override;
 
+	std::optional<Cursor> queryCursor() const override;
+
 protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
 	void applyOperation() override;

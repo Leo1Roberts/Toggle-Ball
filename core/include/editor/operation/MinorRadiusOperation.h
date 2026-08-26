@@ -7,19 +7,15 @@
 
 class MinorRadiusOperation : public Operation {
 public:
-	MinorRadiusOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition)
-		: Operation(scene, camera, trigger, initialPlanarPosition) {
+	MinorRadiusOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, float& minorRadius)
+		: Operation(scene, camera, trigger, initialPlanarPosition), minorRadius(minorRadius) {
 		initialDistance = scene.obstacles[scene.selectionFocus.index].getRimProximity(initialPlanarPosition).distance;
-	}
-
-	[[nodiscard]] float getFinalRadius() const { return finalRadius; } // Only call after finish()
-
-	void finish() override {
-		finalRadius = scene.obstacles[scene.selectionFocus.index].descriptor->shape->minorRadius;
 	}
 
 	void cancel() const override { scene.cancelLevelChange(); }
 	void commit() const override { scene.commitLevelChange(); }
+
+	std::optional<Cursor> queryCursor() const override;
 
 protected:
 	OperationResponse doProcessEvent(const Event& event) override;
@@ -28,9 +24,10 @@ protected:
 private:
 	void applyModifiers(byte mods) final {}
 
+	float& minorRadius;
+
 	float initialDistance;
 	float adjustment = 0.f;
-	float finalRadius{};
 };
 
 

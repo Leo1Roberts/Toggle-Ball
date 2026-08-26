@@ -482,6 +482,20 @@ void EditorScreen::updateEphemeralMeshes() {
 		obstacle.invalidateEphemeralMeshes();
 }
 
+
+std::optional<Cursor> EditorScreen::queryCursor() const {
+	if (currentMode->hasActiveOperation()) {
+		if (auto c = currentMode->queryCursor())
+			return c;
+		return uiManager.queryCursor();
+	}
+
+	if (auto c = uiManager.queryCursor())
+		return c;
+	return currentMode->queryCursor();
+}
+
+
 void EditorScreen::doResize() {
 	uiManager.resize(width, height, dpiScale);
 	auto viewportBounds = operationUI->getAbsoluteBounds() * uiManager.getScale();
