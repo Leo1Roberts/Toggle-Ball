@@ -677,6 +677,60 @@ bool ArcSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, SelectBox
 }
 
 
+RimProximityInfo AbstractShapeSpec::getRimProximity(const ObstacleKinematicState& kinematicState, glm::vec2 point) const {
+	auto position = worldToPlanar(kinematicState.getPosition());
+	auto rotation = angleToRotation2D(kinematicState.getAngle());
+
+	auto capDividerDistance = [&](glm::vec2 cap, float capAngle) {
+		float angle = kinematicState.getAngle() + capAngle;
+		glm::vec2 normal = { std::cos(angle), std::sin(angle) };
+		float dotProduct = dot(position + rotation * cap, normal);
+		return dot(normal, point) - dotProduct;
+	};
+
+	if (pointIsBetweenCaps(capDividerDistance(leftCap, getLeftCapAngle()), capDividerDistance(rightCap, getRightCapAngle())))
+		return getMidsectionRimProximity(position, rotation, point);
+
+	auto  leftCapToPoint = point - (position + rotation *  leftCap);
+	auto rightCapToPoint = point - (position + rotation * rightCap);
+	float  leftCapDistance = length( leftCapToPoint) - minorRadius;
+	float rightCapDistance = length(rightCapToPoint) - minorRadius;
+
+	if (std::abs(leftCapDistance) < std::abs(rightCapDistance))
+		return {  leftCapDistance,  leftCapDistance >= 0 ?  leftCapToPoint : - leftCapToPoint };
+		return { rightCapDistance, rightCapDistance >= 0 ? rightCapToPoint : -rightCapToPoint };
+}
+
+RimProximityInfo SegmentSpec::getMidsectionRimProximity(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const {
+	auto  leftCapPos = position + rotation *  leftCap;
+	auto rightCapPos = position + rotation * rightCap;
+
+	glm::vec2 seg = rightCapPos - leftCapPos;
+	glm::vec2 v = point - leftCapPos;
+	float t = dot(v, seg) / dot(seg, seg);
+	glm::vec2 closestPointOnSegment = leftCapPos + t * seg;
+
+	glm::vec2 segmentToPoint = point - closestPointOnSegment;
+	float distance = length(segmentToPoint) - minorRadius;
+
+	return { distance, distance >= 0.f ? segmentToPoint : -segmentToPoint };
+}
+
+RimProximityInfo ArcSpec::getMidsectionRimProximity(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const {
+	glm::vec2 centreToPoint = point - position;
+	float distToCentre = length(centreToPoint);
+
+	glm::vec2 unitDir = distToCentre > 0.000001f
+		? centreToPoint / distToCentre
+		: rotation * glm::vec2(0.f, -1.f);
+
+	glm::vec2 arcToPoint = centreToPoint - getMajorRadius() * unitDir;
+	float distance = length(arcToPoint) - minorRadius;
+
+	return { distance, distance >= 0.f ? arcToPoint : -arcToPoint };
+}
+
+
 PlaneDescriptor SegmentSpec::getTopPlane(const ObstacleKinematicState& kinematicState) const {
 	glm::vec3 normal = planarToWorld({-std::sin(kinematicState.getAngle()), std::cos(kinematicState.getAngle())});
 	return { normal, kinematicState.getPosition() + kinematicState.getRotation() * planarToWorld({0.f, getMinorRadius()}) };

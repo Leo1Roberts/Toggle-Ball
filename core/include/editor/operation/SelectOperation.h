@@ -15,7 +15,7 @@ public:
 	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
 	void renderGizmos(GizmoRenderer& gizmoRenderer) final;
 
-	void finish() const final;
+	void finish() final;
 
 	void cancel() const final { return scene->cancelSelectionChange(); }
 	void commit() const final { return scene->commitSelectionChange(); }

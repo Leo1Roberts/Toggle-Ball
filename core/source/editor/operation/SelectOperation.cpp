@@ -23,7 +23,7 @@ void SelectOperation::renderGizmos(GizmoRenderer& gizmoRenderer) {
 }
 
 
-void SelectOperation::finish() const {
+void SelectOperation::finish() {
 	auto ball = &scene->ball;
 	auto& obstacles = scene->obstacles;
 	auto focus = &scene->selectionFocus;
@@ -41,22 +41,14 @@ void SelectOperation::finish() const {
 			}
 			*focus = {EntityType::Ball};
 		} else {
-			int topObstacleIndex = -1;
-			float maxHalfDepth = 0.f;
-			for (int i = 0; i < obstacles.size(); i++) {
-				if (obstacles[i].isInSelectBox(box) && obstacles[i].descriptor->shape->getHalfDepth() >= maxHalfDepth) {
-					maxHalfDepth = obstacles[i].descriptor->shape->getHalfDepth();
-					topObstacleIndex = i;
-				}
-			}
-			if (topObstacleIndex >= 0) {
-				if (originalSelection.obstacles[topObstacleIndex] || mode == SelectionMode::Add)
+			if (auto index = getTopObstacleIndex(scene->obstacles, [this](const EditorObstacle& obstacle) { return obstacle.isInSelectBox(box); })) {
+				if (originalSelection.obstacles[*index] || mode == SelectionMode::Add)
 					revertSelection = true;
 				else {
 					scene->deselectAll();
-					obstacles[topObstacleIndex].select();
+					obstacles[*index].select();
 				}
-				*focus = {EntityType::Obstacle, topObstacleIndex};
+				*focus = {EntityType::Obstacle, *index};
 			} else if (mode == SelectionMode::Replace)
 				*focus = {};
 		}

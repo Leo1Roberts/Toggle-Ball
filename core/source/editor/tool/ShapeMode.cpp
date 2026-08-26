@@ -1,6 +1,7 @@
 #include "editor/tool/ShapeMode.h"
 
 #include "editor/operation/DrawOperation.h"
+#include "editor/operation/MinorRadiusOperation.h"
 
 
 ToolModeResponse ShapeMode::doProcessEvent(const Event& event) {
@@ -15,8 +16,26 @@ ToolModeResponse ShapeMode::doProcessEvent(const Event& event) {
 
 std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEvent) {
 	if (dragStartEvent.button == PointerButton::Primary) {
-		auto drawOperation = std::make_unique<DrawOperation>(scene, camera, TriggerType::Pointer,
-			camera->screenToPlanarPosition(pointerDownEvent.position), minorRadius);
+		auto pointerPlanarPosition = camera->screenToPlanarPosition(pointerDownEvent.position);
+
+		if (auto index = Operation::getTopObstacleIndex(scene->obstacles, [this, pointerPlanarPosition](const EditorObstacle& obstacle) {
+			return std::abs(obstacle.getRimProximity(pointerPlanarPosition).distance) < Settings::Sizes.obstaclePerimeterHitRadius * uiToWorldScale;
+		})) {
+			if (!scene->obstacles[*index].isSelected()) {
+				scene->deselectAll();
+				scene->obstacles[*index].select();
+			}
+			scene->selectionFocus = {EntityType::Obstacle, *index};
+
+			auto minorRadiusOperation = std::make_unique<MinorRadiusOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition);
+			if (minorRadiusOperation->start(pointerDownEvent.modifiers))
+				return minorRadiusOperation;
+
+			scene->cancelSelectionChange(); // Clean up if minor radius operation fails to start
+			return nullptr;
+		}
+
+		auto drawOperation = std::make_unique<DrawOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition, minorRadius);
 		if (drawOperation->start(pointerDownEvent.modifiers))
 			return drawOperation;
 	}

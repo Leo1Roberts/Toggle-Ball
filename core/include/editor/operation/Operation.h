@@ -6,6 +6,7 @@
 #include "io/Event.h"
 
 
+class EditorObstacle;
 class EditorScene;
 
 
@@ -37,10 +38,12 @@ public:
 		}
 		return false;
 	}
-	virtual void finish() const {}
+	virtual void finish() {}
 
 	virtual void cancel() const = 0;
 	virtual void commit() const = 0;
+
+	[[nodiscard]] static std::optional<int> getTopObstacleIndex(const std::vector<EditorObstacle>& obstacles, const std::function<bool(const EditorObstacle&)>& includePredicate);
 
 	void onQuickSettingsChanged() { applyOperation(); }
 

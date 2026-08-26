@@ -26,7 +26,7 @@ bool GameObstacle::collideWithCap(GameBall& ball, glm::vec3 cap) const {
 }
 
 bool GameObstacle::collideWithMidsection(GameBall& ball) const {
-	BallCollisionInfo collision = descriptor->shape->getMidsectionCollision(kinematicState, ball);
+	auto collision = descriptor->shape->getMidsectionCollision(kinematicState, ball);
 	if (collision.colliding)
 		ball.collideWithPointOnObstacle(*this, collision.normal, collision.separation);
 	return collision.colliding;

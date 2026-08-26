@@ -6,13 +6,15 @@
 
 class ShapeMode : public ToolMode {
 public:
-	explicit ShapeMode(EditorScene* scene, const Camera* camera)
-		: ToolMode(scene, camera) {}
+	explicit ShapeMode(EditorScene* scene, const Camera* camera, const float& uiToWorldScale)
+		: ToolMode(scene, camera), uiToWorldScale(uiToWorldScale) {}
 	
 private:
 	[[nodiscard]] ToolModeResponse doProcessEvent(const Event& event) override;
 
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;
+
+	const float& uiToWorldScale;
 
 	float minorRadius = 0.7f;
 };

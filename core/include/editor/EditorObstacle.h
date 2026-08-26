@@ -78,6 +78,8 @@ public:
 	void setSelected(bool select) { selected = select; }
 	[[nodiscard]] bool isInSelectBox(SelectBox box) const { return descriptor->shape->isInSelectBox(kinematicState, box); }
 
+	[[nodiscard]] RimProximityInfo getRimProximity(glm::vec2 point) const { return descriptor->shape->getRimProximity(kinematicState, point); }
+
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
 
 	[[nodiscard]] const Mesh<ObjectVertex>* getObstacleMesh();

@@ -30,7 +30,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		std::move(levelToEdit),
 		[this] { updateEphemeralMeshes(); }),
 	transformMode(&scene, &camera),
-	shapeMode(&scene, &camera) {
+	shapeMode(&scene, &camera, uiToWorldScale) {
 	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
