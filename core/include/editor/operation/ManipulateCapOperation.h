@@ -25,6 +25,7 @@ private:
 	}
 	bool alignWithTangent = false;
 
+	ObstacleDescriptor initialDescriptor;
 	EditorObstacle& obstacle;
 	bool leftCap;
 	glm::vec2 tangent;

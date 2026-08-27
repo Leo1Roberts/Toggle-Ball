@@ -7,7 +7,7 @@ DrawOperation::DrawOperation(EditorScene& scene, const Camera& camera, TriggerTy
 	: Operation(scene, camera, trigger, initialPlanarPosition) {
 	scene.deselectAll();
 	auto shape = std::make_unique<SegmentSpec>(minorRadius, 0.f, 0.f);
-	auto motion = std::make_unique<StaticSpec>(initialPlanarPosition, 0.f); // Later code assumes this is a StaticSpec
+	auto motion = std::make_unique<StaticSpec>(initialPlanarPosition, 0.f);
 	auto descriptor = scene.level->obstacleDescriptors.emplace_back(
 		std::make_unique<ObstacleDescriptor>(std::move(shape), std::move(motion))).get();
 	auto& obstacle = scene.obstacles.emplace_back(descriptor);
