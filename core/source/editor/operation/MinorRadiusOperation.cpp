@@ -2,7 +2,7 @@
 
 
 std::optional<Cursor> MinorRadiusOperation::queryCursor() const {
-	auto dir = camera.planarToScreenDirection(scene.obstacles[scene.selectionFocus.index].getRimProximity(pointerPlanarPosition).direction);
+	auto dir = Camera::planarToScreenDirection(scene.obstacles[scene.selectionFocus.index].getRimProximity(pointerPlanarPosition).direction);
 	return Cursor{
 		.style = Cursor::Style::DynamicResize,
 		.dynamic = true,
@@ -28,12 +28,8 @@ void MinorRadiusOperation::applyOperation() {
 	for (int i = 0; i < scene.obstacles.size(); i++) {
 		auto& obstacle = scene.obstacles[i];
 		if (obstacle.isSelected()) {
-			float r = scene.getCurrentNode()->level.obstacleDescriptors[i]->shape->minorRadius + adjustment;
-
-			obstacle.descriptor->shape->minorRadius = r;
-			if (i == scene.selectionFocus.index)
-				minorRadius = obstacle.descriptor->shape->minorRadius;
-
+			obstacle.descriptor->shape->minorRadius =
+				scene.getCurrentNode()->level.obstacleDescriptors[i]->shape->minorRadius + adjustment;
 			obstacle.invalidateAllMeshes();
 		}
 	}

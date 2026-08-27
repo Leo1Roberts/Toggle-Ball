@@ -2,6 +2,7 @@
 
 #include "editor/operation/DrawOperation.h"
 #include "editor/operation/MinorRadiusOperation.h"
+#include "editor/operation/SelectOperation.h"
 
 
 std::optional<Cursor> ShapeMode::queryCursor() const {
@@ -12,7 +13,7 @@ std::optional<Cursor> ShapeMode::queryCursor() const {
 	if (auto index = Operation::getTopObstacleIndex(scene.obstacles, [this, pointerPlanarPosition](const EditorObstacle& obstacle) {
 		return std::abs(obstacle.getRimProximity(pointerPlanarPosition).distance) < Settings::Sizes.obstaclePerimeterHitRadius * uiToWorldScale;
 	})) {
-		auto dir = camera.planarToScreenDirection(scene.obstacles[*index].getRimProximity(pointerPlanarPosition).direction);
+		auto dir = Camera::planarToScreenDirection(scene.obstacles[*index].getRimProximity(pointerPlanarPosition).direction);
 		return Cursor{
 			.style = Cursor::Style::DynamicResize,
 			.dynamic = true,
@@ -24,9 +25,9 @@ std::optional<Cursor> ShapeMode::queryCursor() const {
 
 
 std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEvent) {
-	if (dragStartEvent.button == PointerButton::Primary) {
-		auto pointerPlanarPosition = camera.screenToPlanarPosition(pointerDownEvent.position);
+	auto pointerPlanarPosition = camera.screenToPlanarPosition(pointerDownEvent.position);
 
+	if (dragStartEvent.button == PointerButton::Primary) {
 		if (auto index = Operation::getTopObstacleIndex(scene.obstacles, [this, pointerPlanarPosition](const EditorObstacle& obstacle) {
 			return std::abs(obstacle.getRimProximity(pointerPlanarPosition).distance) < Settings::Sizes.obstaclePerimeterHitRadius * uiToWorldScale;
 		})) {
@@ -44,6 +45,10 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 			return nullptr;
 		}
 
+		auto selectOperation = std::make_unique<SelectOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition);
+		if (selectOperation->start(pointerDownEvent.modifiers))
+			return selectOperation;
+	} else if (dragStartEvent.button == PointerButton::Secondary) {
 		auto drawOperation = std::make_unique<DrawOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition, minorRadius);
 		if (drawOperation->start(pointerDownEvent.modifiers))
 			return drawOperation;

@@ -31,7 +31,7 @@ OperationResponse DrawOperation::doProcessEvent(const Event& event) {
 void DrawOperation::applyOperation() {
 	auto diff = terminalPlanarPosition - initialPlanarPosition;
 	float lengthSq = length2(diff);
-	float length = lengthSq ? std::sqrt(lengthSq) : 0.f;
+	float length = lengthSq > 0.000001f ? std::sqrt(lengthSq) : 0.f;
 	obstacle->descriptor->shape = std::make_unique<SegmentSpec>(minorRadius, 0.f, length);
 	auto staticSpec = (StaticSpec*)obstacle->descriptor->motion.get();
 	staticSpec->setAngle(std::atan2(diff.y, diff.x));

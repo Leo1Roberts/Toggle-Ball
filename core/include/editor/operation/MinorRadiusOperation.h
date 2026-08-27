@@ -13,9 +13,12 @@ public:
 	}
 
 	void cancel() const override { scene.cancelLevelChange(); }
-	void commit() const override { scene.commitLevelChange(); }
+	void commit() const override {
+		scene.commitLevelChange();
+		minorRadius = scene.obstacles[scene.selectionFocus.index].descriptor->shape->minorRadius;
+	}
 
-	std::optional<Cursor> queryCursor() const override;
+	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 
 protected:
 	OperationResponse doProcessEvent(const Event& event) override;

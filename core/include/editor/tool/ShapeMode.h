@@ -9,7 +9,7 @@ public:
 	explicit ShapeMode(EditorScene& scene, const Camera& camera, const float& uiToWorldScale)
 		: ToolMode(scene, camera), uiToWorldScale(uiToWorldScale) {}
 
-	std::optional<Cursor> queryCursor() const override;
+	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 	
 private:
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;
