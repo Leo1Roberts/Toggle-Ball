@@ -45,9 +45,11 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 			return nullptr;
 		}
 
-		auto selectOperation = std::make_unique<SelectOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition);
-		if (selectOperation->start(pointerDownEvent.modifiers))
-			return selectOperation;
+		if (!pointedAtEntity(pointerDownEvent.position)) {
+			auto selectOperation = std::make_unique<SelectOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition);
+			if (selectOperation->start(pointerDownEvent.modifiers))
+				return selectOperation;
+		}
 	} else if (dragStartEvent.button == PointerButton::Secondary) {
 		auto drawOperation = std::make_unique<DrawOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition, minorRadius);
 		if (drawOperation->start(pointerDownEvent.modifiers))
