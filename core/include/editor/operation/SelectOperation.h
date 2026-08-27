@@ -17,8 +17,8 @@ public:
 
 	void finish() final;
 
-	void cancel() const final { return scene.cancelSelectionChange(); }
-	void commit() const final { return scene.commitSelectionChange(); }
+	void cancel() const final { scene.cancelSelectionChange(); }
+	void commit() const final { scene.commitSelectionChange(); }
 
 	[[nodiscard]] SelectionMode getMode() const { return mode; }
 

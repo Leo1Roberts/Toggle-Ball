@@ -28,8 +28,8 @@ public:
 	void createUI(UINode& container) override;
 	bool updateUI() override;
 
-	void cancel() const final { return scene.cancelLevelChange(); }
-	void commit() const final { return scene.commitLevelChange(); }
+	void cancel() const final { scene.cancelLevelChange(); }
+	void commit() const final { scene.commitLevelChange(); }
 
 protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;

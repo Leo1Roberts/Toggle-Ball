@@ -1,6 +1,7 @@
 #ifndef DRAW_OPERATION_H
 #define DRAW_OPERATION_H
 
+#include "ManipulateCapOperation.h"
 #include "editor/EditorScene.h"
 #include "editor/operation/Operation.h"
 
@@ -9,23 +10,21 @@ class DrawOperation : public Operation {
 public:
 	DrawOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, float minorRadius, glm::vec2 tangent = glm::vec2(0.f));
 
-	void cancel() const final { return scene.cancelLevelChange(); }
-	void commit() const final { return scene.commitLevelChange(); }
+	// Relies on manipulateCapOperation calling cancel/commitLevelChange
+	void cancel() const final { manipulateCapOperation->cancel(); }
+	void commit() const final { manipulateCapOperation->commit(); }
 
 protected:
-	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
+	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override {
+		return manipulateCapOperation->doProcessEvent(event);
+	}
 
-	void applyOperation() override;
+	void applyOperation() override { manipulateCapOperation->applyOperation(); }
 
 private:
-	void applyModifiers(byte mods) final {}
+	void applyModifiers(byte mods) final { manipulateCapOperation->applyModifiers(mods); }
 
-	float minorRadius;
-	glm::vec2 tangent;
-
-	EditorObstacle* obstacle;
-
-	glm::vec2 terminalPlanarPosition;
+	std::unique_ptr<ManipulateCapOperation> manipulateCapOperation;
 };
 
 

@@ -7,9 +7,10 @@
 
 std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStartEvent) {
 	bool hit = pointedAtEntity(pointerDownEvent.position);
+	auto pointerPlanarPosition = camera.screenToPlanarPosition(pointerDownEvent.position);
 
 	if (hit) {
-		auto selectOperation = SelectOperation(scene, camera, TriggerType::Pointer, camera.screenToPlanarPosition(pointerDownEvent.position), true);
+		auto selectOperation = SelectOperation(scene, camera, TriggerType::Pointer, pointerPlanarPosition, true);
 		if (selectOperation.start(pointerDownEvent.modifiers))
 			selectOperation.finish();
 		else return nullptr;
@@ -22,13 +23,13 @@ std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStar
 
 	if (dragStartEvent.button == PointerButton::Primary) {
 		if (hit) {
-			auto translateOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::Pointer, camera.screenToPlanarPosition(pointerDownEvent.position));
+			auto translateOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::Pointer, pointerPlanarPosition);
 			if (translateOperation->start(pointerDownEvent.modifiers))
 				return translateOperation;
 			return nullptr;
 		}
 
-		auto selectOperation = std::make_unique<SelectOperation>(scene, camera, TriggerType::Pointer, camera.screenToPlanarPosition(pointerDownEvent.position));
+		auto selectOperation = std::make_unique<SelectOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition);
 		if (selectOperation->start(pointerDownEvent.modifiers))
 			return selectOperation;
 		return nullptr;
@@ -36,7 +37,7 @@ std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStar
 
 	if (dragStartEvent.button == PointerButton::Secondary) {
 		if (hit) {
-			auto rotateOperation = std::make_unique<RotateOperation>(scene, camera, settings, TriggerType::Pointer, camera.screenToPlanarPosition(pointerDownEvent.position));
+			auto rotateOperation = std::make_unique<RotateOperation>(scene, camera, settings, TriggerType::Pointer, pointerPlanarPosition);
 			if (rotateOperation->start(pointerDownEvent.modifiers))
 				return rotateOperation;
 			return nullptr;
