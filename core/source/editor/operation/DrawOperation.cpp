@@ -12,5 +12,5 @@ DrawOperation::DrawOperation(EditorScene& scene, const Camera& camera, TriggerTy
 		std::make_unique<ObstacleDescriptor>(std::move(shape), std::move(motion))).get();
 	auto& obstacle = scene.obstacles.emplace_back(descriptor);
 	scene.selectionFocus = {EntityType::Obstacle, (int)scene.obstacles.size() - 1};
-	manipulateCapOperation = std::make_unique<ManipulateCapOperation>(scene, camera, trigger, initialPlanarPosition, obstacle, false);
+	manipulateCapOperation = std::make_unique<ManipulateRightCapOperation>(scene, camera, trigger, initialPlanarPosition, obstacle);
 }

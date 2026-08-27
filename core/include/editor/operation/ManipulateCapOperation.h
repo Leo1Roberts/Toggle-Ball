@@ -8,13 +8,13 @@
 class ManipulateCapOperation : public Operation {
 	friend class DrawOperation;
 public:
-	ManipulateCapOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, bool leftCap, glm::vec2 tangent = glm::vec2(0.f));
-
 	// DrawOperation relies on cancel/commitLevelChange being called
 	void cancel() const final { scene.cancelLevelChange(); }
 	void commit() const final { scene.commitLevelChange(); }
 
 protected:
+	ManipulateCapOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, bool leftCap, glm::vec2 tangent = glm::vec2(0.f));
+
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
 
 	void applyOperation() override;
@@ -31,6 +31,17 @@ private:
 	glm::vec2 tangent;
 	glm::vec2 fixedCapPlanarPosition;
 	glm::vec2 initialCapPlanarPosition;
+};
+
+class ManipulateLeftCapOperation : public ManipulateCapOperation {
+public:
+	ManipulateLeftCapOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, glm::vec2 tangent = glm::vec2(0.f))
+		: ManipulateCapOperation(scene, camera, trigger, initialPlanarPosition, obstacle, true, tangent) {}
+};
+class ManipulateRightCapOperation : public ManipulateCapOperation {
+public:
+	ManipulateRightCapOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, glm::vec2 tangent = glm::vec2(0.f))
+		: ManipulateCapOperation(scene, camera, trigger, initialPlanarPosition, obstacle, false, tangent) {}
 };
 
 
