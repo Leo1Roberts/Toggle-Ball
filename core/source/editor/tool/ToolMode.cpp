@@ -304,12 +304,19 @@ bool ToolMode::pointedAtBall(glm::vec2 pointerPosition) const {
 	auto hitTestBox = SelectBox(camera.screenToPlanarPosition(pointerPosition));
 	return scene.ball.isInSelectBox(hitTestBox);
 }
-bool ToolMode::pointedAtObstacle(glm::vec2 pointerPosition) const {
+std::optional<int> ToolMode::pointedAtObstacle(glm::vec2 pointerPosition) const {
 	auto hitTestBox = SelectBox(camera.screenToPlanarPosition(pointerPosition));
-	return std::ranges::any_of(scene.obstacles,
-		[&hitTestBox](const auto& obstacle) {
-			return obstacle.isInSelectBox(hitTestBox);
-		});
+	for (int i = 0; i < scene.obstacles.size(); i++)
+		if (scene.obstacles[i].isInSelectBox(hitTestBox))
+			return i;
+	return std::nullopt;
+}
+EntityReference ToolMode::pointedAtEntity(glm::vec2 pointerPosition) const {
+	if (pointedAtBall(pointerPosition))
+		return {EntityType::Ball};
+	if (auto index = pointedAtObstacle(pointerPosition))
+		return {EntityType::Obstacle, *index};
+	return {};
 }
 
 

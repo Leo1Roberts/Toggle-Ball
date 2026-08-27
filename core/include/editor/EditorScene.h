@@ -12,6 +12,8 @@ struct EntityReference {
 	EntityType type = EntityType::None;
 	int index = 0;
 
+	operator bool() const { return type != EntityType::None; }
+
 	bool operator==(const EntityReference&) const = default;
 };
 

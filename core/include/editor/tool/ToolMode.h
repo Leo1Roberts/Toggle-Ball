@@ -52,10 +52,8 @@ protected:
 	glm::vec2 pointer0Position{};
 
 	[[nodiscard]] bool pointedAtBall(glm::vec2 pointerPosition) const;
-	[[nodiscard]] bool pointedAtObstacle(glm::vec2 pointerPosition) const;
-	[[nodiscard]] bool pointedAtEntity(glm::vec2 pointerPosition) const {
-		return pointedAtBall(pointerPosition) || pointedAtObstacle(pointerPosition);
-	}
+	[[nodiscard]] std::optional<int> pointedAtObstacle(glm::vec2 pointerPosition) const;
+	[[nodiscard]] EntityReference pointedAtEntity(glm::vec2 pointerPosition) const;
 
 	TransformQuickSettings settings;
 
