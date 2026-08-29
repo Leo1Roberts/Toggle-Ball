@@ -24,7 +24,7 @@ public:
 
 	[[nodiscard]] const LevelDescriptor* getLevel() const { return scene.level.get(); }
 
-	std::optional<Cursor> queryCursor() const override;
+	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 
 private:
 	void doResize() override;

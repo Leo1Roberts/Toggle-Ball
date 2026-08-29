@@ -42,7 +42,7 @@ public:
 	[[nodiscard]] glm::vec2 getLogicalScreenSize() const { return logicalScreenSize; }
 	[[nodiscard]] const glm::mat4& getProjectionMatrix() const { return projectionMatrix; }
 
-	std::optional<Cursor> queryCursor() const override;
+	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 
 private:
 	[[nodiscard]] UINode* findNodePointedTo(glm::vec2 pointerPosition);

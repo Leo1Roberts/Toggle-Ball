@@ -11,13 +11,15 @@ ManipulateCapOperation::ManipulateCapOperation(EditorScene& scene, const Camera&
 	initialAngle(obstacle.getKinematicState()->getAngle()),
 	initialPosition(worldToPlanar(obstacle.getKinematicState()->getPosition())), leftCap(leftCap), tangentAngle(tangentAngle),
 	fixedCapPlanarPosition(!leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()),
-	initialCapPlanarPosition(leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()) {}
+	initialCapPlanarPosition(leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()),
+	capPlanarPosition(initialCapPlanarPosition) {}
 
 
 OperationResponse ManipulateCapOperation::doProcessEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
 			pointerPlanarPosition = camera.screenToPlanarPosition(pointer->position);
+			capPlanarPosition = initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition;
 			applyOperation();
 			return {.consumedEvent = false, .status = OperationStatus::Running};
 		}
@@ -27,7 +29,6 @@ OperationResponse ManipulateCapOperation::doProcessEvent(const Event& event) {
 
 
 void ManipulateCapOperation::applyOperation() {
-    auto capPlanarPosition = initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition;
     auto capToCap = capPlanarPosition - fixedCapPlanarPosition;
     auto capToCapDistance = length(capToCap);
 

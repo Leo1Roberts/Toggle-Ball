@@ -26,7 +26,7 @@ public:
 	[[nodiscard]] int getHeight() const { return height; }
 	[[nodiscard]] float getDPIScale() const { return dpiScale; }
 
-	std::optional<Cursor> queryCursor() const override { return uiManager.queryCursor(); }
+	[[nodiscard]] std::optional<Cursor> queryCursor() const override { return uiManager.queryCursor(); }
 
 protected:
 	int width = 0, height = 0;

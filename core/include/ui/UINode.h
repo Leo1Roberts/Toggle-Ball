@@ -103,7 +103,7 @@ public:
 	[[nodiscard]] bool childrenAreHitTestable() const { return hitTestableChildren && active; }
 	[[nodiscard]] virtual bool isFocusable() const { return false; }
 
-	std::optional<Cursor> queryCursor() const override { return std::nullopt; }
+	[[nodiscard]] std::optional<Cursor> queryCursor() const override { return std::nullopt; }
 
 	bool isOverlay = false;
 

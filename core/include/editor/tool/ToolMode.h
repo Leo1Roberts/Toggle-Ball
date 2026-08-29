@@ -37,7 +37,7 @@ public:
 
 	[[nodiscard]] bool hasActiveOperation() const { return activeOperation != nullptr; }
 
-	std::optional<Cursor> queryCursor() const override;
+	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 
 protected:
 	explicit ToolMode(EditorScene& scene, const Camera& camera)

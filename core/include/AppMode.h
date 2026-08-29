@@ -18,7 +18,7 @@ public:
 		if (activeScreen) activeScreen->processEvent(event);
 	}
 
-	std::optional<Cursor> queryCursor() const override {
+	[[nodiscard]] std::optional<Cursor> queryCursor() const override {
 		if (activeScreen)
 			return activeScreen->queryCursor();
 		return std::nullopt;

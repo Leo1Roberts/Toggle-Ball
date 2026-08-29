@@ -33,6 +33,7 @@ private:
 	const float tangentAngle;
 	const glm::vec2 fixedCapPlanarPosition;
 	const glm::vec2 initialCapPlanarPosition;
+	glm::vec2 capPlanarPosition;
 };
 
 class ManipulateLeftCapOperation : public ManipulateCapOperation {
