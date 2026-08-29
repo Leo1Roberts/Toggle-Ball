@@ -130,6 +130,7 @@ public:
 	[[nodiscard]] float getRightCapAngle() const override { return 0; }
 	[[nodiscard]] float getLeftLength() const { return leftLength; }
 	[[nodiscard]] float getRightLength() const { return rightLength; }
+	[[nodiscard]] float getLength() const { return leftLength + rightLength; }
 
 private:
 	float leftLength{};  // SSOT

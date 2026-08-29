@@ -117,6 +117,7 @@ public:
 
 
 	virtual void translateBy(glm::vec2 vector, bool stateless, bool toggled, const IMotionSpec* base) = 0;
+	// Pivot given as a world space offset from centre when individual==true
 	virtual void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool individual, const IMotionSpec* base) = 0;
 	virtual void scaleBy(float factor, glm::vec2 pivot, bool individual, const IMotionSpec* base) = 0;
 

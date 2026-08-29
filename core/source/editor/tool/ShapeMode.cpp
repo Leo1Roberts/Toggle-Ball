@@ -4,6 +4,9 @@
 #include "editor/operation/MinorRadiusOperation.h"
 #include "editor/operation/SelectOperation.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/norm.hpp"
+
 
 std::optional<Cursor> ShapeMode::queryCursor() const {
 	if (activeOperation)
@@ -45,7 +48,20 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 			return nullptr;
 		}
 
-		if (!pointedAtEntity(pointerDownEvent.position)) {
+		if (auto entity = pointedAtEntity(pointerDownEvent.position)) {
+			if (entity.type == EntityType::Obstacle) {
+				auto& obstacle = scene.obstacles[entity.index];
+				float leftCapDistanceSq = length2(pointerPlanarPosition - obstacle.getLeftCapPosition());
+				float rightCapDistanceSq = length2(pointerPlanarPosition - obstacle.getRightCapPosition());
+				if (std::min(leftCapDistanceSq, rightCapDistanceSq) < 0.4f * 0.4f) { // TODO: UI-based distance calculation
+					bool manipulateLeftCap = leftCapDistanceSq < rightCapDistanceSq;
+					auto manipulateCapOperation = std::make_unique<ManipulateCapOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition, obstacle, manipulateLeftCap,
+						obstacle.getKinematicState()->getAngle() + (manipulateLeftCap ? obstacle.descriptor->shape->getRightCapAngle() : obstacle.descriptor->shape->getLeftCapAngle()));
+					if (manipulateCapOperation->start(pointerDownEvent.modifiers))
+						return manipulateCapOperation;
+				}
+			}
+		} else {
 			auto selectOperation = std::make_unique<SelectOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition);
 			if (selectOperation->start(pointerDownEvent.modifiers))
 				return selectOperation;

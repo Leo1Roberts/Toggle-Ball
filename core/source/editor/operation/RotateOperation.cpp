@@ -24,7 +24,7 @@ bool RotateOperation::updateUI() {
 
 
 std::optional<Cursor> RotateOperation::queryCursor() const {
-	auto diff = camera.planarToScreenDirection(pointerPlanarPosition - pivot);
+	auto diff = Camera::planarToScreenDirection(pointerPlanarPosition - pivot);
 	return Cursor{
 		.style = Cursor::Style::DynamicResize,
 		.dynamic = true,
@@ -92,7 +92,7 @@ void RotateOperation::applyOperation() {
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			obstacle.rotateBy(rotation, rotationMatrix, pivot, settings.transformBothStates, scene.isToggled(), settings.transformIndividually,
+			obstacle.rotateBy(rotation, rotationMatrix, settings.transformIndividually ? glm::vec2(0.f) : pivot, settings.transformBothStates, scene.isToggled(), settings.transformIndividually,
 				scene.getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();

@@ -53,6 +53,7 @@ public:
 	void translateBy(glm::vec2 vector, bool stateless, bool toggled, const ObstacleDescriptor* base) const {
 		descriptor->motion->translateBy(vector, stateless, toggled, base->motion.get());
 	}
+	// Pivot given as a world space offset from centre when individual==true
 	void rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool stateless, bool toggled, bool individual, const ObstacleDescriptor* base) const {
 		descriptor->motion->rotateBy(radians, rotationMatrix, pivot, stateless, toggled, individual, base->motion.get());
 	}
@@ -78,6 +79,8 @@ public:
 	void setSelected(bool select) { selected = select; }
 	[[nodiscard]] bool isInSelectBox(SelectBox box) const { return descriptor->shape->isInSelectBox(kinematicState, box); }
 
+	[[nodiscard]] glm::vec2 getLeftCapPosition() const { return getCapPosition(true); }
+	[[nodiscard]] glm::vec2 getRightCapPosition() const { return getCapPosition(false); }
 	[[nodiscard]] RimProximityInfo getRimProximity(glm::vec2 point) const { return descriptor->shape->getRimProximity(kinematicState, point); }
 
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
@@ -91,6 +94,8 @@ public:
 	ObstacleDescriptor* descriptor;
 
 private:
+	[[nodiscard]] glm::vec2 getCapPosition(bool left) const;
+
 	IMotionSpec::IncompletePropertyValues motionPropertyValues{std::nullopt};
 
 	ObstacleKinematicState kinematicState;

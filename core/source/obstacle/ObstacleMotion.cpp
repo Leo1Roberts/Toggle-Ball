@@ -986,9 +986,8 @@ void OscillatingPositionSpec::translateBy(glm::vec2 vector, bool stateless, bool
 void StaticSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 pivot, bool, bool, bool individual, const IMotionSpec* base) {
 	auto baseSpec = (const StaticSpec*)base;
 	setAngle(baseSpec->angle + radians);
-
 	if (individual)
-		position = baseSpec->position;
+		position = baseSpec->position + pivot + rotationMatrix * -pivot;
 	else
 		position = pivot + rotationMatrix * (baseSpec->position - pivot);
 }
@@ -996,8 +995,8 @@ void TogglingPositionSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm
 	auto baseSpec = (const TogglingPositionSpec*)base;
 	setAngle(baseSpec->angle + radians);
 	if (individual) {
-		positionA = baseSpec->positionA;
-		positionB = baseSpec->positionB;
+		positionA = baseSpec->positionA + pivot + rotationMatrix * -pivot;
+		positionB = baseSpec->positionB + pivot + rotationMatrix * -pivot;
 	} else {
 		positionA = pivot + rotationMatrix * (baseSpec->positionA - pivot);
 		positionB = pivot + rotationMatrix * (baseSpec->positionB - pivot);
@@ -1012,7 +1011,7 @@ void TogglingAngleSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::v
 	if (stateless || toggled)
 		angleB += radians;
 	if (individual)
-		position = baseSpec->position;
+		position = baseSpec->position + pivot + rotationMatrix * -pivot;
 	else
 		position = pivot + rotationMatrix * (baseSpec->position - pivot);
 }
@@ -1020,7 +1019,7 @@ void SpinningSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm::vec2 p
 	auto baseSpec = (const SpinningSpec*)base;
 	setInitialAngle(baseSpec->initialAngle + radians);
 	if (individual)
-		position = baseSpec->position;
+		position = baseSpec->position + pivot + rotationMatrix * -pivot;
 	else
 		position = pivot + rotationMatrix * (baseSpec->position - pivot);
 }
@@ -1028,8 +1027,8 @@ void OscillatingPositionSpec::rotateBy(float radians, glm::mat2 rotationMatrix, 
 	auto baseSpec = (const OscillatingPositionSpec*)base;
 	setAngle(baseSpec->angle + radians);
 	if (individual) {
-		position1 = baseSpec->position1;
-		position2 = baseSpec->position2;
+		position1 = baseSpec->position1 + pivot + rotationMatrix * -pivot;
+		position2 = baseSpec->position2 + pivot + rotationMatrix * -pivot;
 	} else {
 		position1 = pivot + rotationMatrix * (baseSpec->position1 - pivot);
 		position2 = pivot + rotationMatrix * (baseSpec->position2 - pivot);
@@ -1044,7 +1043,7 @@ void OscillatingAngleSpec::rotateBy(float radians, glm::mat2 rotationMatrix, glm
 	if (stateless || toggled)
 		angle2 += radians;
 	if (individual)
-		position = baseSpec->position;
+		position = baseSpec->position + pivot + rotationMatrix * -pivot;
 	else
 		position = pivot + rotationMatrix * (baseSpec->position - pivot);
 }

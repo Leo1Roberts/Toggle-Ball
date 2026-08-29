@@ -31,3 +31,11 @@ const Mesh<ObjectVertex>* EditorObstacle::getDomainMesh(float uiToWorldScale) {
 	}
 	return &domainMesh;
 }
+
+
+glm::vec2 EditorObstacle::getCapPosition(bool left) const {
+	auto pos = worldToPlanar(kinematicState.getPosition());
+	auto rotation = angleToRotation2D(kinematicState.getAngle());
+	auto cap = left ? descriptor->shape->getLeftCap() : descriptor->shape->getRightCap();
+	return pos + rotation * cap;
+}
