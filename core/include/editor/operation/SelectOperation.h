@@ -31,7 +31,7 @@ private:
 
 	SelectionMode mode = SelectionMode::Replace;
 	SelectBox box{};
-	bool instant;
+	const bool instant;
 };
 
 

@@ -62,7 +62,7 @@ protected:
 	EditorScene& scene;
 	const Camera& camera;
 
-	glm::vec2 initialPlanarPosition;
+	const glm::vec2 initialPlanarPosition;
 	glm::vec2 pointerPlanarPosition;
 
 private:

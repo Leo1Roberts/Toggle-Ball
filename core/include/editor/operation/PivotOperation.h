@@ -8,7 +8,7 @@ class PivotOperation : public TransformOperation {
 public:
 	PivotOperation(EditorScene& scene, const Camera& camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition)
 		: TransformOperation(scene, camera, settings, trigger, initialPlanarPosition) { init(); }
-	PivotOperation(const TransformOperation& other)
+	explicit PivotOperation(const TransformOperation& other)
 		: TransformOperation(other) { init(); }
 
 	void renderGizmos(GizmoRenderer& gizmoRenderer) override;
