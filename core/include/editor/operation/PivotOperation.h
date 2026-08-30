@@ -11,7 +11,7 @@ public:
 	explicit PivotOperation(const TransformOperation& other)
 		: TransformOperation(other) { init(); }
 
-	void renderGizmos(GizmoRenderer& gizmoRenderer) override;
+	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
 
 protected:
 	glm::vec2 pivot{};

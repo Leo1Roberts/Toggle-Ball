@@ -13,7 +13,7 @@ public:
 		: Operation(scene, camera, trigger, initialPlanarPosition), box(initialPlanarPosition), instant(instant) {}
 
 	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
-	void renderGizmos(GizmoRenderer& gizmoRenderer) final;
+	void addGizmos(GizmoRenderer& gizmoRenderer) const final;
 
 	void finish() final;
 

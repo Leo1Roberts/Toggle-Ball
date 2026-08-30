@@ -19,18 +19,28 @@ public:
 		: ui(ui), camera(camera) {}
 
 	// All coordinates given in world space
-
 	void addBox(const SelectBox& box, const PanelStyle& style);
+	void addCircle(glm::vec2 centre, const PanelStyle& style);
 	void addLine(glm::vec2 p1, glm::vec2 p2, const LineStyle& style);
 	void addLine(InfiniteLine line, const LineStyle& style);
 
 	void render() { panelRenderer.flush(ui.getProjectionMatrix()); }
 
+	[[nodiscard]] float planarToUIDistance(float planarDistance) const;
+
 private:
+	[[nodiscard]] glm::vec2 planarToUIPosition(glm::vec2 planarPosition) const;
+
 	const UIManager& ui;
 	const Camera& camera;
 
 	UIPanelRenderer panelRenderer;
+};
+
+struct IGizmoProvider {
+	virtual ~IGizmoProvider() = default;
+
+	virtual void addGizmos(GizmoRenderer& gizmoRenderer) const {}
 };
 
 

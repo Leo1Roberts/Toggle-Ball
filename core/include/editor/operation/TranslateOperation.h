@@ -16,7 +16,7 @@ public:
 
 	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
 	bool updateUI() override;
-	void renderGizmos(GizmoRenderer& gizmoRenderer) override;
+	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
 
 protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;

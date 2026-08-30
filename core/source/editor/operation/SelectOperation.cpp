@@ -11,15 +11,13 @@ std::vector<BindingHint> SelectOperation::getBindingHints() const {
 	};
 }
 
-void SelectOperation::renderGizmos(GizmoRenderer& gizmoRenderer) {
+void SelectOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
 	gizmoRenderer.addBox(box, {
 		.fillColor = Color::SelectBox,
 		.strokeColor = Color::Selected,
 		.cornerRadius = 0.f,
 		.strokeWidth = Settings::Sizes.outlineWidth,
 	});
-
-	gizmoRenderer.render();
 }
 
 

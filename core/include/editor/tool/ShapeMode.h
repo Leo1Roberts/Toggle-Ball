@@ -9,6 +9,8 @@ public:
 	explicit ShapeMode(EditorScene& scene, const Camera& camera, const float& uiToWorldScale)
 		: ToolMode(scene, camera), uiToWorldScale(uiToWorldScale) {}
 
+	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
+
 	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 	
 private:

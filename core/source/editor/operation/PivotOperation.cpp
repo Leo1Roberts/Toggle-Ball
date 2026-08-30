@@ -12,7 +12,7 @@ void PivotOperation::init() {
 }
 
 
-void PivotOperation::renderGizmos(GizmoRenderer& gizmoRenderer) {
+void PivotOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
 	if (typing) return;
 
 	gizmoRenderer.addLine(pivot, pointerPlanarPosition, {
@@ -21,6 +21,4 @@ void PivotOperation::renderGizmos(GizmoRenderer& gizmoRenderer) {
 		.width = Settings::Sizes.lineWidth,
 		.dashLength = Settings::Sizes.lineWidth * 3.f,
 	});
-
-	gizmoRenderer.render();
 }

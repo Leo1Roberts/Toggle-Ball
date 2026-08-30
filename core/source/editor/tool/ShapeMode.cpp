@@ -8,6 +8,26 @@
 #include "glm/gtx/norm.hpp"
 
 
+void ShapeMode::addGizmos(GizmoRenderer& gizmoRenderer) const {
+	if (activeOperation)
+		activeOperation->addGizmos(gizmoRenderer);
+	else {
+		if (auto index = pointedAtObstacle(pointer0Position)) {
+			const auto& obstacle = scene.obstacles[*index];
+			float radius = std::min(Settings::Sizes.obstacleCapHandleRadius, gizmoRenderer.planarToUIDistance(obstacle.descriptor->shape->minorRadius));
+			PanelStyle style = {
+				.fillColor = {Color::White, 0.3f},
+				.strokeColor = {Color::Black, 0.3f},
+				.cornerRadius = radius,
+				.strokeWidth = 2.f,
+			};
+			gizmoRenderer.addCircle(obstacle.getLeftCapPosition(), style);
+			gizmoRenderer.addCircle(obstacle.getRightCapPosition(), style);
+		}
+	}
+}
+
+
 std::optional<Cursor> ShapeMode::queryCursor() const {
 	if (activeOperation)
 		return activeOperation->queryCursor();
@@ -53,7 +73,8 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 				auto& obstacle = scene.obstacles[entity.index];
 				float leftCapDistanceSq = length2(pointerPlanarPosition - obstacle.getLeftCapPosition());
 				float rightCapDistanceSq = length2(pointerPlanarPosition - obstacle.getRightCapPosition());
-				if (std::min(leftCapDistanceSq, rightCapDistanceSq) < 0.4f * 0.4f) { // TODO: UI-based distance calculation
+				float capHandleRadius = Settings::Sizes.obstacleCapHandleRadius * uiToWorldScale;
+				if (std::min(leftCapDistanceSq, rightCapDistanceSq) < capHandleRadius * capHandleRadius) {
 					bool manipulateLeftCap = leftCapDistanceSq < rightCapDistanceSq;
 					auto manipulateCapOperation = std::make_unique<ManipulateCapOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition, obstacle, manipulateLeftCap,
 						obstacle.getKinematicState()->getAngle() + (manipulateLeftCap ? obstacle.descriptor->shape->getRightCapAngle() : obstacle.descriptor->shape->getLeftCapAngle()));

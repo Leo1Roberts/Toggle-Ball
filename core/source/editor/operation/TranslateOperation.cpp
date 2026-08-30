@@ -58,7 +58,7 @@ bool TranslateOperation::updateUI() {
 	return true;
 }
 
-void TranslateOperation::renderGizmos(GizmoRenderer& gizmoRenderer) {
+void TranslateOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
 	if (constraint == ConstraintType::None) return;
 
 	col color = baseAxis == Axis::X ? Color::AxisX : Color::AxisY;
@@ -73,8 +73,6 @@ void TranslateOperation::renderGizmos(GizmoRenderer& gizmoRenderer) {
 		.primaryColor = color,
 		.width = Settings::Sizes.lineWidth
 	});
-
-	gizmoRenderer.render();
 }
 
 

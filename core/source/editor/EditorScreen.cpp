@@ -435,7 +435,8 @@ void EditorScreen::render() {
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
 
-	currentMode->renderGizmos(gizmoRenderer);
+	currentMode->addGizmos(gizmoRenderer);
+	gizmoRenderer.render();
 
 	uiManager.render();
 

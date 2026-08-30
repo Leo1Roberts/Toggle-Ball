@@ -20,7 +20,7 @@ struct OperationResponse {
 	OperationStatus status = OperationStatus::Running;
 };
 
-class Operation : public ICursorProvider {
+class Operation : public IGizmoProvider, public ICursorProvider {
 public:
 	~Operation() override = default;
 
@@ -29,7 +29,6 @@ public:
 	[[nodiscard]] virtual std::vector<BindingHint> getBindingHints() const { return {}; }
 	virtual void createUI(UINode& container) {}
 	virtual bool updateUI() { return true; }
-	virtual void renderGizmos(GizmoRenderer& gizmoRenderer) {}
 
 	[[nodiscard]] bool start(byte mods) {
 		if (canStart()) {

@@ -17,7 +17,7 @@ struct ToolModeResponse {
 	bool operationChanged = false;
 };
 
-class ToolMode : public ICursorProvider {
+class ToolMode : public IGizmoProvider, public ICursorProvider {
 public:
 	~ToolMode() override = default;
 
@@ -27,9 +27,9 @@ public:
 	[[nodiscard]] virtual std::vector<BindingHint> getBindingHints() const;
 	virtual void populateToolbar(UINode& toolbar);
 	void createOperationUI(UINode& container) const;
-	virtual void renderGizmos(GizmoRenderer& gizmoRenderer) {
+	void addGizmos(GizmoRenderer& gizmoRenderer) const override {
 		if (activeOperation)
-			activeOperation->renderGizmos(gizmoRenderer);
+			activeOperation->addGizmos(gizmoRenderer);
 	}
 
 	void cancelActiveOperation();
