@@ -2,13 +2,12 @@
 #define DRAW_OPERATION_H
 
 #include "ManipulateCapOperation.h"
-#include "editor/EditorScene.h"
 #include "editor/operation/Operation.h"
 
 
 class DrawOperation : public Operation {
 public:
-	DrawOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, float minorRadius, glm::vec2 tangent = glm::vec2(0.f));
+	DrawOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, float minorRadius, std::optional<float> tangentAngle = std::nullopt);
 
 	// Relies on manipulateCapOperation calling cancel/commitLevelChange
 	void cancel() const final { manipulateCapOperation->cancel(); }

@@ -39,7 +39,7 @@ void SelectOperation::finish() {
 			}
 			*focus = {EntityType::Ball};
 		} else {
-			if (auto index = getTopObstacleIndex(scene.obstacles, [this](const EditorObstacle& obstacle) { return obstacle.isInSelectBox(box); })) {
+			if (auto index = getPointedObstacleIndex(scene.obstacles, pointerPlanarPosition)) {
 				if (originalSelection.obstacles[*index] || mode == SelectionMode::Add)
 					revertSelection = true;
 				else {

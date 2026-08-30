@@ -4,7 +4,7 @@
 #include "glm/gtx/norm.hpp"
 
 
-ManipulateCapOperation::ManipulateCapOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, bool leftCap, float tangentAngle) :
+ManipulateCapOperation::ManipulateCapOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, bool leftCap, std::optional<float> tangentAngle) :
 	Operation(scene, camera, trigger, initialPlanarPosition),
 	obstacle(obstacle),
 	initialDescriptor(*obstacle.descriptor),
@@ -83,7 +83,7 @@ void ManipulateCapOperation::applyOperation() {
     };
 
     if (alignWithTangent) {
-        float curveTangent = leftCap ? tangentAngle : wrapAngle(tangentAngle + glm::pi<float>());
+        float curveTangent = leftCap ? *tangentAngle : wrapAngle(*tangentAngle + glm::pi<float>());
         float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
         float absAngleDiff = std::abs(chordTangentAngleDiff);
 

@@ -56,13 +56,12 @@ public:
 	[[nodiscard]] virtual BallCollisionInfo getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) = 0;
 	[[nodiscard]] RimProximityInfo getRimProximity(const ObstacleKinematicState& kinematicState, glm::vec2 point) const;
 
-	[[nodiscard]] float getMinorRadius() const { return minorRadius; }
-	[[nodiscard]] float getBoundingRadius() const { return getMajorRadius() + getMinorRadius(); }
+	[[nodiscard]] float getBoundingRadius() const { return getMajorRadius() + minorRadius; }
 	[[nodiscard]] glm::vec2 getLeftCap() const { return leftCap; }
 	[[nodiscard]] glm::vec2 getRightCap() const { return rightCap; }
 	[[nodiscard]] virtual float getLeftCapAngle() const = 0;
 	[[nodiscard]] virtual float getRightCapAngle() const = 0;
-	[[nodiscard]] float getHalfDepth() const { return getMinorRadius(); }
+	[[nodiscard]] float getHalfDepth() const { return minorRadius; }
 
 	float minorRadius; // SSOT
 
@@ -111,7 +110,7 @@ public:
 	}
 
 	void scale(float factor) override {
-		*this = SegmentSpec(getMinorRadius() * factor, leftLength * factor, rightLength * factor);
+		*this = SegmentSpec(minorRadius * factor, leftLength * factor, rightLength * factor);
 	}
 
 	void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;
@@ -173,7 +172,7 @@ public:
 	}
 
 	void scale(float factor) override {
-		*this = ArcSpec(getMinorRadius() * factor, arcAngle, arcRadius * factor);
+		*this = ArcSpec(minorRadius * factor, arcAngle, arcRadius * factor);
 	}
 
 	void buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is) const override;

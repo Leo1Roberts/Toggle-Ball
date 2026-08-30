@@ -3,7 +3,7 @@
 #include "editor/operation/ManipulateCapOperation.h"
 
 
-DrawOperation::DrawOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, float minorRadius, glm::vec2 tangent)
+DrawOperation::DrawOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, float minorRadius, std::optional<float> tangentAngle)
 	: Operation(scene, camera, trigger, initialPlanarPosition) {
 	scene.deselectAll();
 	auto shape = std::make_unique<SegmentSpec>(minorRadius, 0.f, 0.f);
@@ -12,5 +12,5 @@ DrawOperation::DrawOperation(EditorScene& scene, const Camera& camera, TriggerTy
 		std::make_unique<ObstacleDescriptor>(std::move(shape), std::move(motion))).get();
 	auto& obstacle = scene.obstacles.emplace_back(descriptor);
 	scene.selectionFocus = {EntityType::Obstacle, (int)scene.obstacles.size() - 1};
-	manipulateCapOperation = std::make_unique<ManipulateRightCapOperation>(scene, camera, trigger, initialPlanarPosition, obstacle);
+	manipulateCapOperation = std::make_unique<ManipulateRightCapOperation>(scene, camera, trigger, initialPlanarPosition, obstacle, tangentAngle);
 }

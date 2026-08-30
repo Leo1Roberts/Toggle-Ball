@@ -300,23 +300,19 @@ std::optional<Cursor> ToolMode::queryCursor() const {
 }
 
 
-bool ToolMode::pointedAtBall(glm::vec2 pointerPosition) const {
-	auto hitTestBox = SelectBox(camera.screenToPlanarPosition(pointerPosition));
+bool ToolMode::pointedAtBall(glm::vec2 pointerPlanarPosition) const {
+	auto hitTestBox = SelectBox(pointerPlanarPosition);
 	return scene.ball.isInSelectBox(hitTestBox);
 }
-std::optional<int> ToolMode::pointedAtObstacle(glm::vec2 pointerPosition) const {
-	auto hitTestBox = SelectBox(camera.screenToPlanarPosition(pointerPosition));
-	for (int i = 0; i < scene.obstacles.size(); i++)
-		if (scene.obstacles[i].isInSelectBox(hitTestBox))
-			return i;
-	return std::nullopt;
+bool ToolMode::pointedAtObstacle(glm::vec2 pointerPlanarPosition) const {
+	auto hitTestBox = SelectBox(pointerPlanarPosition);
+	return std::ranges::any_of(scene.obstacles,
+		[&hitTestBox](const auto& obstacle) {
+			return obstacle.isInSelectBox(hitTestBox);
+		});
 }
-EntityReference ToolMode::pointedAtEntity(glm::vec2 pointerPosition) const {
-	if (pointedAtBall(pointerPosition))
-		return {EntityType::Ball};
-	if (auto index = pointedAtObstacle(pointerPosition))
-		return {EntityType::Obstacle, *index};
-	return {};
+bool ToolMode::pointedAtEntity(glm::vec2 pointerPlanarPosition) const {
+	return pointedAtBall(pointerPlanarPosition) || pointedAtObstacle(pointerPlanarPosition);
 }
 
 

@@ -266,7 +266,7 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		glm::vec2 diffPerpUnit = glm::vec2(-diff.y, diff.x) / line1Length;
 
 		if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
-			glm::vec2 diffPerp = diffPerpUnit * segment->getMinorRadius();
+			glm::vec2 diffPerp = diffPerpUnit * segment->minorRadius;
 			if (wrapAngle(angle - diffAngle) > 0.f) {
 				topPointA = positionA + rotation * segment->getRightCap() + diffPerp;
 				bottomPointA = positionA + rotation * segment->getLeftCap() - diffPerp;
@@ -277,32 +277,32 @@ void TogglingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		} else if (auto* arc = dynamic_cast<const ArcSpec*>(shapeSpec)) {
 			float ang = wrapAngle(diffAngle - angle);
 			if (ang > -arc->getHalfArcAngle() && ang < arc->getHalfArcAngle()) {
-				topPointA = positionA + diffPerpUnit * (arc->getArcRadius() + arc->getMinorRadius());
+				topPointA = positionA + diffPerpUnit * (arc->getArcRadius() + arc->minorRadius);
 			} else {
 				float startAng = std::abs(wrapAngle(diffAngle - angle + arc->getHalfArcAngle()));
 				float endAng = std::abs(wrapAngle(diffAngle - angle - arc->getHalfArcAngle()));
 				if (std::abs(startAng - endAng) < 0.001f) { // Equal
-					topPointA = positionA + rotation * arc->getRightCap() + diffPerpUnit * arc->getMinorRadius();
+					topPointA = positionA + rotation * arc->getRightCap() + diffPerpUnit * arc->minorRadius;
 					line1Length += arc->getRightCap().x - arc->getLeftCap().x;
 				} else if (startAng < endAng)
-					topPointA = positionA + rotation * arc->getRightCap() + diffPerpUnit * arc->getMinorRadius();
+					topPointA = positionA + rotation * arc->getRightCap() + diffPerpUnit * arc->minorRadius;
 				else
-					topPointA = positionA + rotation * arc->getLeftCap() + diffPerpUnit * arc->getMinorRadius();
+					topPointA = positionA + rotation * arc->getLeftCap() + diffPerpUnit * arc->minorRadius;
 			}
 
 			ang = wrapAngle(diffAngle - angle + glm::pi<float>());
 			if (ang > -arc->getHalfArcAngle() && ang < arc->getHalfArcAngle()) {
-				bottomPointA = positionA - diffPerpUnit * (arc->getArcRadius() + arc->getMinorRadius());
+				bottomPointA = positionA - diffPerpUnit * (arc->getArcRadius() + arc->minorRadius);
 			} else {
 				float startAng = std::abs(wrapAngle(diffAngle - angle + arc->getHalfArcAngle() + glm::pi<float>()));
 				float endAng = std::abs(wrapAngle(diffAngle - angle - arc->getHalfArcAngle() + glm::pi<float>()));
 				if (std::abs(startAng - endAng) < 0.001f) { // Equal
-					bottomPointA = positionA + rotation * arc->getLeftCap() - diffPerpUnit * arc->getMinorRadius();
+					bottomPointA = positionA + rotation * arc->getLeftCap() - diffPerpUnit * arc->minorRadius;
 					line2Length += arc->getRightCap().x- arc->getLeftCap().x;
 				} else if (startAng < endAng)
-					bottomPointA = positionA + rotation * arc->getRightCap() - diffPerpUnit * arc->getMinorRadius();
+					bottomPointA = positionA + rotation * arc->getRightCap() - diffPerpUnit * arc->minorRadius;
 				else
-					bottomPointA = positionA + rotation * arc->getLeftCap() - diffPerpUnit * arc->getMinorRadius();
+					bottomPointA = positionA + rotation * arc->getLeftCap() - diffPerpUnit * arc->minorRadius;
 			}
 		} else return;
 
@@ -399,8 +399,8 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 
 	if (auto* segment = dynamic_cast<const SegmentSpec*>(shapeSpec)) {
 		dotsArcAngle = std::clamp(angleB - angleA, -glm::two_pi<float>(), glm::two_pi<float>());
-		dotsArc1Radius = length(segment->getRightCap()) + segment->getMinorRadius() - dotDiameter / 2.f;
-		dotsArc2Radius = length(segment->getLeftCap()) + segment->getMinorRadius() - dotDiameter / 2.f;
+		dotsArc1Radius = length(segment->getRightCap()) + segment->minorRadius - dotDiameter / 2.f;
+		dotsArc2Radius = length(segment->getLeftCap()) + segment->minorRadius - dotDiameter / 2.f;
 		start1 = angleA;
 		start2 = angleA + glm::pi<float>();
 	} else if (auto* arc = dynamic_cast<const ArcSpec*>(shapeSpec)) {
@@ -412,8 +412,8 @@ void TogglingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vect
 			dotsArcAngle = std::clamp(angDiff - arc->getArcAngle(), 0.f, glm::two_pi<float>() - arc->getArcAngle());
 			start1 = start2 = angleA + glm::half_pi<float>() + arc->getHalfArcAngle();
 		}
-		dotsArc1Radius = arc->getArcRadius() + arc->getMinorRadius() - dotDiameter / 2.f;
-		dotsArc2Radius = arc->getArcRadius() - arc->getMinorRadius() + dotDiameter / 2.f;
+		dotsArc1Radius = arc->getArcRadius() + arc->minorRadius - dotDiameter / 2.f;
+		dotsArc2Radius = arc->getArcRadius() - arc->minorRadius + dotDiameter / 2.f;
 	} else return;
 
 	float absArcAngle = std::abs(dotsArcAngle);
@@ -509,7 +509,7 @@ void SpinningSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<In
 			float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>();
 			float x = std::sin(ang);
 			float y = std::cos(ang);
-			float radius = std::max(segment->getLeftLength(), segment->getRightLength()) + segment->getMinorRadius();
+			float radius = std::max(segment->getLeftLength(), segment->getRightLength()) + segment->minorRadius;
 			vs.emplace_back(planarToWorld({x * radius, y * radius}), glm::vec2(), glm::vec3());
 			is.push_back(0);
 			is.push_back(1 + (i + 1) % SECTORS_PER_CIRCLE);
@@ -523,8 +523,8 @@ void SpinningSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::vector<In
 			float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>();
 			float x = std::sin(ang);
 			float y = std::cos(ang);
-			float innerRadius = arc->getArcRadius() - arc->getMinorRadius();
-			float outerRadius = arc->getArcRadius() + arc->getMinorRadius();
+			float innerRadius = arc->getArcRadius() - arc->minorRadius;
+			float outerRadius = arc->getArcRadius() + arc->minorRadius;
 			vs.emplace_back(planarToWorld({x * innerRadius, y * innerRadius}), glm::vec2(), glm::vec3());
 			vs.emplace_back(planarToWorld({x * outerRadius, y * outerRadius}), glm::vec2(), glm::vec3());
 			is.push_back(i*2);
@@ -547,8 +547,8 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 			float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>();
 			float x = std::sin(ang);
 			float y = std::cos(ang);
-			float xrh = x * segment->getMinorRadius();
-			float yrh = y * segment->getMinorRadius();
+			float xrh = x * segment->minorRadius;
+			float yrh = y * segment->minorRadius;
 			glm::vec2 rotatedRightCap = rotation * (segment->getRightCap() + glm::vec2(xrh, yrh));
 			glm::vec2 rotatedLeftCap = rotation * (segment->getLeftCap() + glm::vec2(-xrh, yrh));
 			vs.emplace_back(planarToWorld(rotatedRightCap + position1), glm::vec2(), glm::vec3());
@@ -620,8 +620,8 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 			float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>() + arc->getHalfArcAngle();
 			float x = std::sin(ang);
 			float y = std::cos(ang);
-			float xrh = x * arc->getMinorRadius();
-			float yrh = y * arc->getMinorRadius();
+			float xrh = x * arc->minorRadius;
+			float yrh = y * arc->minorRadius;
 			glm::vec2 rotatedRightCap = rotation * (arc->getRightCap() + glm::vec2(xrh, yrh));
 			glm::vec2 rotatedLeftCap = rotation * (arc->getLeftCap() + glm::vec2(-xrh, yrh));
 			vs.emplace_back(planarToWorld(rotatedRightCap + position1), glm::vec2(), glm::vec3());
@@ -666,10 +666,10 @@ void OscillatingPositionSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std
 				float ang = (float)i / (float)NUM_SECTORS * arc->getArcAngle() - arc->getHalfArcAngle();
 				float x = std::sin(ang);
 				float y = std::cos(ang);
-				float xroh = x * (arc->getArcRadius() + arc->getMinorRadius());
-				float yroh = y * (arc->getArcRadius() + arc->getMinorRadius());
-				float xrih = x * (arc->getArcRadius() - arc->getMinorRadius());
-				float yrih = y * (arc->getArcRadius() - arc->getMinorRadius());
+				float xroh = x * (arc->getArcRadius() + arc->minorRadius);
+				float yroh = y * (arc->getArcRadius() + arc->minorRadius);
+				float xrih = x * (arc->getArcRadius() - arc->minorRadius);
+				float yrih = y * (arc->getArcRadius() - arc->minorRadius);
 				glm::vec2 rotatedInner = rotation * glm::vec2(xrih, yrih);
 				glm::vec2 rotatedOuter = rotation * glm::vec2(xroh, yroh);
 				vs.emplace_back(planarToWorld(rotatedInner + position1), glm::vec2(), glm::vec3());
@@ -741,8 +741,8 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 				for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 					float angStartCap = currentAngle - (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>();
 					float angEndCap = currentAngle + (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>();
-					vs.emplace_back(planarToWorld(start + glm::vec2(-std::sin(angStartCap) * segment->getMinorRadius(), std::cos(angStartCap) * segment->getMinorRadius())), glm::vec2(), glm::vec3());
-					vs.emplace_back(planarToWorld(end + glm::vec2(-std::sin(angEndCap) * segment->getMinorRadius(), std::cos(angEndCap) * segment->getMinorRadius())), glm::vec2(), glm::vec3());
+					vs.emplace_back(planarToWorld(start + glm::vec2(-std::sin(angStartCap) * segment->minorRadius, std::cos(angStartCap) * segment->minorRadius)), glm::vec2(), glm::vec3());
+					vs.emplace_back(planarToWorld(end + glm::vec2(-std::sin(angEndCap) * segment->minorRadius, std::cos(angEndCap) * segment->minorRadius)), glm::vec2(), glm::vec3());
 				}
 				for (int i = START_INDEX + 2; i < START_INDEX + 2 + SECTORS_PER_SEMICIRCLE * 2; i += 2) {
 					// Caps
@@ -772,8 +772,8 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 		if (NUM_SECTORS != 0) {
 			vs.emplace_back(glm::vec3(), glm::vec2(), glm::vec3());
 
-			const float startRadius = length(segment->getRightCap()) + segment->getMinorRadius();
-			const float endRadius = length(segment->getLeftCap()) + segment->getMinorRadius();
+			const float startRadius = length(segment->getRightCap()) + segment->minorRadius;
+			const float endRadius = length(segment->getLeftCap()) + segment->minorRadius;
 			for (int i = 0; i <= NUM_SECTORS; i++) {
 				float ang = domainStartAngle + (float)i / (float)NUM_SECTORS * (domainEndAngle - domainStartAngle);
 				glm::vec2 dir = {std::cos(ang), std::sin(ang)};
@@ -822,8 +822,8 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 				float angStartCap = startAngle - (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>();
 				float angEndCap = endAngle + (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>();
-				vs.emplace_back(planarToWorld(start + glm::vec2(-std::sin(angStartCap) * arc->getMinorRadius(), std::cos(angStartCap) * arc->getMinorRadius())), glm::vec2(), glm::vec3());
-				vs.emplace_back(planarToWorld(end + glm::vec2(-std::sin(angEndCap) * arc->getMinorRadius(), std::cos(angEndCap) * arc->getMinorRadius())), glm::vec2(), glm::vec3());
+				vs.emplace_back(planarToWorld(start + glm::vec2(-std::sin(angStartCap) * arc->minorRadius, std::cos(angStartCap) * arc->minorRadius)), glm::vec2(), glm::vec3());
+				vs.emplace_back(planarToWorld(end + glm::vec2(-std::sin(angEndCap) * arc->minorRadius, std::cos(angEndCap) * arc->minorRadius)), glm::vec2(), glm::vec3());
 			}
 			for (int i = 2; i < 2 + SECTORS_PER_SEMICIRCLE * 2; i += 2) {
 				// Caps
@@ -845,8 +845,8 @@ void OscillatingAngleSpec::buildDomainMesh(std::vector<ObjectVertex>& vs, std::v
 			for (int i = 0; i <= NUM_SECTORS; i++) {
 				float ang = startAngle + (float)i / (float)NUM_SECTORS * (endAngle - startAngle);
 				glm::vec2 dir = glm::vec2(-std::sin(ang), std::cos(ang));
-				vs.emplace_back(planarToWorld(dir * (arc->getArcRadius() - arc->getMinorRadius())), glm::vec2(), glm::vec3());
-				vs.emplace_back(planarToWorld(dir * (arc->getArcRadius() + arc->getMinorRadius())), glm::vec2(), glm::vec3());
+				vs.emplace_back(planarToWorld(dir * (arc->getArcRadius() - arc->minorRadius)), glm::vec2(), glm::vec3());
+				vs.emplace_back(planarToWorld(dir * (arc->getArcRadius() + arc->minorRadius)), glm::vec2(), glm::vec3());
 			}
 			for (int i = START_INDEX; i < START_INDEX + NUM_SECTORS * 2; i += 2) {
 				is.push_back(i + 0);

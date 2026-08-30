@@ -17,7 +17,7 @@ std::string AbstractShapeSpec::serialize() const {
 	std::ostringstream ss;
 	ss << std::fixed << std::setprecision(6);
 
-	ss << getMinorRadius() << "," << getTypeString() << ":" << serializeData();
+	ss << minorRadius << "," << getTypeString() << ":" << serializeData();
 
 	return ss.str();
 }
@@ -77,7 +77,7 @@ ArcSpec::ArcSpec(float minorRadius, const std::string& data) :
 }
 
 
-float AbstractShapeSpec::getBevel() const { return BEVEL_AMOUNT * getMinorRadius(); }
+float AbstractShapeSpec::getBevel() const { return BEVEL_AMOUNT * minorRadius; }
 
 
 void SegmentSpec::setLeftLength(float len) {
@@ -131,10 +131,10 @@ void SegmentSpec::buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<I
 		float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>();
 		float x = std::sin(ang);
 		float y = std::cos(ang);
-		float xrv = x * (getMinorRadius() - getBevel());
-		float yrv = y * (getMinorRadius() - getBevel());
-		float xrh = x * getMinorRadius();
-		float yrh = y * getMinorRadius();
+		float xrv = x * (minorRadius - getBevel());
+		float yrv = y * (minorRadius - getBevel());
+		float xrh = x * minorRadius;
+		float yrh = y * minorRadius;
 		vs.emplace_back(glm::vec3(getHalfDepth(), getRightCap() + glm::vec2(xrv, yrv)), glm::vec2(), glm::vec3(1, 0, 0), color);
 		vs.emplace_back(glm::vec3(getHalfDepth() - getBevel(), getRightCap() + glm::vec2(xrh, yrh)), glm::vec2(), glm::vec3(0, x, y), color);
 		vs.emplace_back(glm::vec3(getHalfDepth(), getLeftCap() + glm::vec2(-xrv, yrv)), glm::vec2(), glm::vec3(1, 0, 0), color);
@@ -204,10 +204,10 @@ void ArcSpec::buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index
 		float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>() + getHalfArcAngle();
 		float x = std::sin(ang);
 		float y = std::cos(ang);
-		float xrv = x * (getMinorRadius() - getBevel());
-		float yrv = y * (getMinorRadius() - getBevel());
-		float xrh = x * getMinorRadius();
-		float yrh = y * getMinorRadius();
+		float xrv = x * (minorRadius - getBevel());
+		float yrv = y * (minorRadius - getBevel());
+		float xrh = x * minorRadius;
+		float yrh = y * minorRadius;
 		vs.emplace_back(glm::vec3(getHalfDepth(), getRightCap() + glm::vec2(xrv, yrv)), glm::vec2(), glm::vec3(1, 0, 0), color);
 		vs.emplace_back(glm::vec3(getHalfDepth() - getBevel(), getRightCap() + glm::vec2(xrh, yrh)), glm::vec2(), glm::vec3(0, x, y), color);
 		vs.emplace_back(glm::vec3(getHalfDepth(), getLeftCap() + glm::vec2(-xrv, yrv)), glm::vec2(), glm::vec3(1, 0, 0), color);
@@ -247,14 +247,14 @@ void ArcSpec::buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index
 			float ang = (float)i / (float)NUM_SECTORS * getArcAngle() - getHalfArcAngle();
 			float x = std::sin(ang);
 			float y = std::cos(ang);
-			float xrov = x * (getArcRadius() + getMinorRadius() - getBevel());
-			float yrov = y * (getArcRadius() + getMinorRadius() - getBevel());
-			float xriv = x * (getArcRadius() - getMinorRadius() + getBevel());
-			float yriv = y * (getArcRadius() - getMinorRadius() + getBevel());
-			float xroh = x * (getArcRadius() + getMinorRadius());
-			float yroh = y * (getArcRadius() + getMinorRadius());
-			float xrih = x * (getArcRadius() - getMinorRadius());
-			float yrih = y * (getArcRadius() - getMinorRadius());
+			float xrov = x * (getArcRadius() + minorRadius - getBevel());
+			float yrov = y * (getArcRadius() + minorRadius - getBevel());
+			float xriv = x * (getArcRadius() - minorRadius + getBevel());
+			float yriv = y * (getArcRadius() - minorRadius + getBevel());
+			float xroh = x * (getArcRadius() + minorRadius);
+			float yroh = y * (getArcRadius() + minorRadius);
+			float xrih = x * (getArcRadius() - minorRadius);
+			float yrih = y * (getArcRadius() - minorRadius);
 			vs.emplace_back(glm::vec3(getHalfDepth(), xriv, yriv), glm::vec2(), glm::vec3(1, 0, 0), color);
 			vs.emplace_back(glm::vec3(getHalfDepth() - getBevel(), xrih, yrih), glm::vec2(), glm::vec3(0, -x, -y), color);
 			vs.emplace_back(glm::vec3(getHalfDepth(), xrov, yrov), glm::vec2(), glm::vec3(1, 0, 0), color);
@@ -300,8 +300,8 @@ void SegmentSpec::buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Ind
 		float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>();
 		float x = std::sin(ang);
 		float y = std::cos(ang);
-		float xrh = x * getMinorRadius();
-		float yrh = y * getMinorRadius();
+		float xrh = x * minorRadius;
+		float yrh = y * minorRadius;
 		vs.emplace_back(planarToWorld(getRightCap() + glm::vec2(xrh, yrh)), glm::vec2(), glm::vec3());
 		vs.emplace_back(planarToWorld(getLeftCap() + glm::vec2(-xrh, yrh)), glm::vec2(), glm::vec3());
 	}
@@ -339,8 +339,8 @@ void ArcSpec::buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>&
 		float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>() + getHalfArcAngle();
 		float x = std::sin(ang);
 		float y = std::cos(ang);
-		float xrh = x * getMinorRadius();
-		float yrh = y * getMinorRadius();
+		float xrh = x * minorRadius;
+		float yrh = y * minorRadius;
 		vs.emplace_back(planarToWorld(getRightCap() + glm::vec2(xrh, yrh)), glm::vec2(), glm::vec3());
 		vs.emplace_back(planarToWorld(getLeftCap() + glm::vec2(-xrh, yrh)), glm::vec2(), glm::vec3());
 	}
@@ -362,10 +362,10 @@ void ArcSpec::buildShadowMesh(std::vector<ObjectVertex>& vs, std::vector<Index>&
 			float ang = (float)i / (float)NUM_SECTORS * getArcAngle() - getHalfArcAngle();
 			float x = std::sin(ang);
 			float y = std::cos(ang);
-			float xroh = x * (getArcRadius() + getMinorRadius());
-			float yroh = y * (getArcRadius() + getMinorRadius());
-			float xrih = x * (getArcRadius() - getMinorRadius());
-			float yrih = y * (getArcRadius() - getMinorRadius());
+			float xroh = x * (getArcRadius() + minorRadius);
+			float yroh = y * (getArcRadius() + minorRadius);
+			float xrih = x * (getArcRadius() - minorRadius);
+			float yrih = y * (getArcRadius() - minorRadius);
 			vs.emplace_back(planarToWorld({xrih, yrih}), glm::vec2(), glm::vec3());
 			vs.emplace_back(planarToWorld({xroh, yroh}), glm::vec2(), glm::vec3());
 		}
@@ -393,15 +393,15 @@ void SegmentSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<In
 	vs.reserve(4 * (SECTORS_PER_SEMICIRCLE + 1));
 	is.reserve(12 * SECTORS_PER_SEMICIRCLE + 12);
 
-	const float outlineRadius = getMinorRadius() + uiToWorldScale * Settings::Sizes.outlineWidth;
+	const float outlineRadius = minorRadius + uiToWorldScale * Settings::Sizes.outlineWidth;
 
 	// Caps
 	for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 		float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>();
 		float x = std::sin(ang);
 		float y = std::cos(ang);
-		float xrh = x * getMinorRadius();
-		float yrh = y * getMinorRadius();
+		float xrh = x * minorRadius;
+		float yrh = y * minorRadius;
 		float xrv = x * outlineRadius;
 		float yrv = y * outlineRadius;
 		vs.emplace_back(planarToWorld(getRightCap() + glm::vec2(xrh, yrh)), glm::vec2(), glm::vec3());
@@ -447,15 +447,15 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 	vs.reserve(4 * (SECTORS_PER_SEMICIRCLE + 1) + 4 * (NUM_SECTORS + 1));
 	is.reserve(12 * SECTORS_PER_SEMICIRCLE + 12 * NUM_SECTORS);
 
-	const float outlineRadius = getMinorRadius() + uiToWorldScale * Settings::Sizes.outlineWidth;
+	const float outlineRadius = minorRadius + uiToWorldScale * Settings::Sizes.outlineWidth;
 
 	// Caps
 	for (int i = 0; i <= SECTORS_PER_SEMICIRCLE; i++) {
 		float ang = (float)i / (float)SECTORS_PER_SEMICIRCLE * glm::pi<float>() + getHalfArcAngle();
 		float x = std::sin(ang);
 		float y = std::cos(ang);
-		float xrh = x * getMinorRadius();
-		float yrh = y * getMinorRadius();
+		float xrh = x * minorRadius;
+		float yrh = y * minorRadius;
 		float xrv = x * outlineRadius;
 		float yrv = y * outlineRadius;
 		vs.emplace_back(planarToWorld(getRightCap() + glm::vec2(xrh, yrh)), glm::vec2(), glm::vec3());
@@ -485,10 +485,10 @@ void ArcSpec::buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>
 			float ang = (float)i / (float)NUM_SECTORS * getArcAngle() - getHalfArcAngle();
 			float x = std::sin(ang);
 			float y = std::cos(ang);
-			float xroh = x * (getArcRadius() + getMinorRadius());
-			float yroh = y * (getArcRadius() + getMinorRadius());
-			float xrih = x * (getArcRadius() - getMinorRadius());
-			float yrih = y * (getArcRadius() - getMinorRadius());
+			float xroh = x * (getArcRadius() + minorRadius);
+			float yroh = y * (getArcRadius() + minorRadius);
+			float xrih = x * (getArcRadius() - minorRadius);
+			float yrih = y * (getArcRadius() - minorRadius);
 			float xrov = x * (getArcRadius() + outlineRadius);
 			float yrov = y * (getArcRadius() + outlineRadius);
 			float xriv = x * (getArcRadius() - outlineRadius);
@@ -538,7 +538,7 @@ bool AbstractShapeSpec::isInSelectBox(const ObstacleKinematicState& s, SelectBox
 	// Check if caps are in the box
 	const glm::vec2 leftCapPlanarPosition = worldToPlanar(s.getPosition() + s.getRotation() * planarToWorld(getLeftCap()));
 	const glm::vec2 rightCapPlanarPosition = worldToPlanar(s.getPosition() + s.getRotation() * planarToWorld(getRightCap()));
-	if (box.touchesCircle(leftCapPlanarPosition, getMinorRadius()) || box.touchesCircle(rightCapPlanarPosition, getMinorRadius()))
+	if (box.touchesCircle(leftCapPlanarPosition, minorRadius) || box.touchesCircle(rightCapPlanarPosition, minorRadius))
 		return true;
 
 	// Check if the cap-connecting midsection is in the box
@@ -639,7 +639,7 @@ bool SegmentSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, Selec
 	float lengthSq = length2(leftToRight);
 	if (lengthSq == 0.f) return false;
 
-    glm::vec2 upOffset = worldToPlanar(s.getRotation() * planarToWorld({0.f, getMinorRadius()}));
+    glm::vec2 upOffset = worldToPlanar(s.getRotation() * planarToWorld({0.f, minorRadius}));
 
     if (segmentIntersectsBox(leftCapPos + upOffset, rightCapPos + upOffset, box) ||
         segmentIntersectsBox(leftCapPos - upOffset, rightCapPos - upOffset, box))
@@ -660,8 +660,8 @@ bool ArcSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, SelectBox
     float centreAngle = s.getAngle() + glm::half_pi<float>();
     bool fullCircle = getArcAngle() >= glm::two_pi<float>();
 
-    float rInner = getArcRadius() - getMinorRadius();
-    float rOuter = getArcRadius() + getMinorRadius();
+    float rInner = getArcRadius() - minorRadius;
+    float rOuter = getArcRadius() + minorRadius;
 
     if (arcIntersectsBox(centre, rOuter, centreAngle, getHalfArcAngle(), fullCircle, box) ||
         arcIntersectsBox(centre, rInner, centreAngle, getHalfArcAngle(), fullCircle, box))
@@ -733,17 +733,17 @@ RimProximityInfo ArcSpec::getMidsectionRimProximity(glm::vec2 position, glm::mat
 
 PlaneDescriptor SegmentSpec::getTopPlane(const ObstacleKinematicState& kinematicState) const {
 	glm::vec3 normal = planarToWorld({-std::sin(kinematicState.getAngle()), std::cos(kinematicState.getAngle())});
-	return { normal, kinematicState.getPosition() + kinematicState.getRotation() * planarToWorld({0.f, getMinorRadius()}) };
+	return { normal, kinematicState.getPosition() + kinematicState.getRotation() * planarToWorld({0.f, minorRadius}) };
 }
 
 
 BallCollisionInfo SegmentSpec::getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) {
 	PlaneDescriptor plane = getTopPlane(kinematicState);
 	float separation = dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
-	if (separation < -getMinorRadius()) {
+	if (separation < -minorRadius) {
 		plane.normal.y = -plane.normal.y;
 		plane.normal.z = -plane.normal.z;
-		plane.dotProduct = getMinorRadius() * 2.f - plane.dotProduct;
+		plane.dotProduct = minorRadius * 2.f - plane.dotProduct;
 		separation = dot(plane.normal, ball.getKinematicState()->position) - plane.dotProduct;
 	}
 
@@ -757,19 +757,19 @@ BallCollisionInfo ArcSpec::getMidsectionCollision(const ObstacleKinematicState& 
 	glm::vec3 centreToBall = ball.getKinematicState()->position - kinematicState.getPosition();
 	float
 	distanceToBallSq = length2(centreToBall),
-	innerRadius = getMajorRadius() - getMinorRadius(),
-	outerRadius = getMajorRadius() + getMinorRadius(),
+	innerRadius = getMajorRadius() - minorRadius,
+	outerRadius = getMajorRadius() + minorRadius,
 	innerRadii = innerRadius - ball.getProperties().radius,
 	outerRadii = outerRadius + ball.getProperties().radius;
 
 	if (distanceToBallSq < outerRadii * outerRadii && distanceToBallSq > innerRadii * innerRadii) { // In contact with banana
 		if (distanceToBallSq > outerRadius * outerRadius) { // Beyond banana
 			float distanceToBall = std::sqrt(distanceToBallSq);
-			return { true, centreToBall / distanceToBall, distanceToBall - getMajorRadius() - getMinorRadius() };
+			return { true, centreToBall / distanceToBall, distanceToBall - getMajorRadius() - minorRadius };
 		} if (distanceToBallSq < innerRadius * innerRadius) { // Within banana
 			float distanceToBall = std::sqrt(distanceToBallSq);
 			glm::vec3 normal = distanceToBallSq > 0.000001f ? centreToBall / -distanceToBall : kinematicState.getRotation() * planarToWorld({0.f, -1.f});
-			return { true, normal, getMajorRadius() - distanceToBall - getMinorRadius() };
+			return { true, normal, getMajorRadius() - distanceToBall - minorRadius };
 		}
 	}
 

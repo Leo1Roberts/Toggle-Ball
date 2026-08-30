@@ -16,10 +16,10 @@ bool GameObstacle::collideWithCap(GameBall& ball, glm::vec3 cap) const {
 	glm::vec3 capToBall = ball.getKinematicState()->position - capPosition;
 	float distanceToBallSq = length2(capToBall);
 
-	float radii = ball.getProperties().radius + descriptor->shape->getMinorRadius();
+	float radii = ball.getProperties().radius + descriptor->shape->minorRadius;
 	if (distanceToBallSq < radii * radii && distanceToBallSq > 0.000001f) {
 		float distanceToBall = std::sqrt(distanceToBallSq);
-		ball.collideWithPointOnObstacle(*this, capToBall / distanceToBall, distanceToBall - descriptor->shape->getMinorRadius());
+		ball.collideWithPointOnObstacle(*this, capToBall / distanceToBall, distanceToBall - descriptor->shape->minorRadius);
 		return true;
 	}
 	return false;

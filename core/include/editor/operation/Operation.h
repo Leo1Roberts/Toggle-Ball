@@ -43,7 +43,8 @@ public:
 	virtual void cancel() const = 0;
 	virtual void commit() const = 0;
 
-	[[nodiscard]] static std::optional<int> getTopObstacleIndex(const std::vector<EditorObstacle>& obstacles, const std::function<bool(const EditorObstacle&)>& includePredicate);
+	[[nodiscard]] static std::optional<int> getTopObstacleIndex(const std::vector<EditorObstacle>& obstacles, const std::function<bool(const EditorObstacle&)>& includePredicate, bool prioritiseSelected = false);
+	[[nodiscard]] static std::optional<int> getPointedObstacleIndex(const std::vector<EditorObstacle>& obstacles, glm::vec2 pointerPlanarPosition, bool prioritiseSelected = false);
 
 	void onQuickSettingsChanged() { applyOperation(); }
 

@@ -51,9 +51,9 @@ protected:
 	PointerEvent pointerDownEvent;
 	glm::vec2 pointer0Position{};
 
-	[[nodiscard]] bool pointedAtBall(glm::vec2 pointerPosition) const;
-	[[nodiscard]] std::optional<int> pointedAtObstacle(glm::vec2 pointerPosition) const;
-	[[nodiscard]] EntityReference pointedAtEntity(glm::vec2 pointerPosition) const;
+	[[nodiscard]] bool pointedAtBall(glm::vec2 pointerPlanarPosition) const;
+	[[nodiscard]] bool pointedAtObstacle(glm::vec2 pointerPlanarPosition) const;
+	[[nodiscard]] bool pointedAtEntity(glm::vec2 pointerPlanarPosition) const;
 
 	TransformQuickSettings settings;
 

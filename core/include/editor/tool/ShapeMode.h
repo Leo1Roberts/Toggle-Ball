@@ -14,7 +14,12 @@ public:
 	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 	
 private:
+	void performPrimaryAction(const PointerEvent& upEvent) override;
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;
+
+	struct CapInfo { int obstacleIndex; bool leftCap; };
+	[[nodiscard]] std::optional<CapInfo> getPointedCapInfo(glm::vec2 pointerPlanarPosition) const;
+	[[nodiscard]] std::optional<int> getPointedRimIndex(glm::vec2 pointerPlanarPosition) const;
 
 	const float& uiToWorldScale;
 

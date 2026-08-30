@@ -6,8 +6,8 @@
 
 
 std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStartEvent) {
-	bool hit = pointedAtEntity(pointerDownEvent.position);
 	auto pointerPlanarPosition = camera.screenToPlanarPosition(pointerDownEvent.position);
+	bool hit = pointedAtEntity(pointerPlanarPosition);
 
 	if (hit) {
 		auto selectOperation = SelectOperation(scene, camera, TriggerType::Pointer, pointerPlanarPosition, true);
