@@ -10,6 +10,8 @@ public:
 	explicit TransformMode(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings)
 		: ToolMode(scene, camera, quickSettings) {}
 
+	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
+
 private:
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;
 };

@@ -26,10 +26,6 @@ public:
 
 	[[nodiscard]] virtual std::vector<BindingHint> getBindingHints() const;
 	void createOperationUI(UINode& container) const;
-	void addGizmos(GizmoRenderer& gizmoRenderer) const override {
-		if (activeOperation)
-			activeOperation->addGizmos(gizmoRenderer);
-	}
 
 	void cancelActiveOperation();
 	void commitActiveOperation();

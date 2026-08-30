@@ -503,23 +503,23 @@ void EditorScreen::render() {
 }
 
 
-float EditorScreen::getObstacleOpacity(const EditorObstacle& obstacle) const {
+float EditorScreen::getObstacleOpacity(const EditorObstacle& obstacle) const { // Duplicated in TransformMode::addGizmos
 	float opacity = 1.f;
 
 	auto motionSpec = obstacle.descriptor->motion.get();
 	if (dynamic_cast<OscillatingPositionSpec*>(motionSpec) ||
 	    dynamic_cast<OscillatingAngleSpec*>(motionSpec))
 		// Includes a small period where the obstacle is completely invisible
-		opacity = 2.5f * std::abs(0.5f - scene.getTogglePosition()) - 0.2f;
+		opacity = std::clamp(2.5f * std::abs(0.5f - scene.getTogglePosition()) - 0.2f, 0.f, 1.f);
 
 	return opacity;
 }
 
 void EditorScreen::drawObject(const Mesh<ObjectVertex>* model, const Texture* texture, glm::vec3 position, const glm::mat3& rotation, glm::vec3 scale) const {
-	glm::mat4 worldMatrix = buildScaledWorldMatrix(rotation, position, scale);
+	auto worldMatrix = buildScaledWorldMatrix(rotation, position, scale);
 
-	glm::mat4 bodyToView = camera.getViewMatrix() * worldMatrix;
-	glm::mat3 bodyToViewRotation = camera.getWorldToViewRotationMatrix() * rotation;
+	auto bodyToView = camera.getViewMatrix() * worldMatrix;
+	auto bodyToViewRotation = camera.getWorldToViewRotationMatrix() * rotation;
 
 	Shaders::object->setMat3("uBodyToViewRot", bodyToViewRotation, false);
 	Shaders::object->setMat4("uBodyToView", bodyToView);
@@ -529,15 +529,9 @@ void EditorScreen::drawObject(const Mesh<ObjectVertex>* model, const Texture* te
 }
 
 void EditorScreen::drawObstacleOutline(EditorObstacle& obstacle) const {
-	glm::mat4 worldMatrix = buildScaledWorldMatrix(obstacle.getKinematicState()->getRotation(), obstacle.getKinematicState()->getPosition());
+	auto worldMatrix = buildScaledWorldMatrix(obstacle.getKinematicState()->getRotation(), obstacle.getKinematicState()->getPosition());
 	Shaders::outline->setMat4("uProjectionFull", camera.getProjectionMatrix() * camera.getViewMatrix() * worldMatrix);
 	obstacle.getOutlineMesh(uiToWorldScale)->draw();
-
-	glDisable(GL_DEPTH_TEST);
-	worldMatrix = buildScaledWorldMatrix(glm::mat3(1.f), obstacle.getKinematicState()->getPosition(), glm::vec3(uiToWorldScale * Settings::Sizes.centreDotRadius));
-	Shaders::outline->setMat4("uProjectionFull", camera.getProjectionMatrix() * camera.getViewMatrix() * worldMatrix);
-	Meshes::ball->draw();
-	glEnable(GL_DEPTH_TEST);
 }
 
 

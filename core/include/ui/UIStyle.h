@@ -7,7 +7,7 @@
 
 struct PanelStyle {
 	col fillColor = Color::White;
-	col strokeColor = Color::Black;
+	col strokeColor = Color::Transparent;
 	float cornerRadius = 0.f;
 	float strokeWidth = 0.f;
 
