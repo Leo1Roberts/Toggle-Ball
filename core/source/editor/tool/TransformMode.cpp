@@ -8,32 +8,31 @@
 void TransformMode::addGizmos(GizmoRenderer& gizmoRenderer) const {
 	if (activeOperation)
 		activeOperation->addGizmos(gizmoRenderer);
-	else {
-		auto addCentreDot = [&gizmoRenderer, this](const EditorObstacle& obstacle, bool focus = false) {
-			float opacity = 1.f; // Duplicated in EditorScreen::getObstacleOpacity
-			auto motionSpec = obstacle.descriptor->motion.get();
-			if (dynamic_cast<OscillatingPositionSpec*>(motionSpec) ||
-				dynamic_cast<OscillatingAngleSpec*>(motionSpec))
-				// Includes a small period where the obstacle is completely invisible
-				opacity = std::clamp(2.5f * std::abs(0.5f - scene.getTogglePosition()) - 0.2f, 0.f, 1.f);
 
-			col color = focus ? Color::Focused : Color::Selected;
-			color.a *= opacity;
-			PanelStyle style = {
-				.fillColor = color,
-				.cornerRadius = Settings::Sizes.centreDotRadius,
-			};
-			gizmoRenderer.addCircle(worldToPlanar(obstacle.getKinematicState()->getPosition()), style);
+	auto addCentreDot = [&gizmoRenderer, this](const EditorObstacle& obstacle, bool focus = false) {
+		float opacity = 1.f; // Duplicated in EditorScreen::getObstacleOpacity
+		auto motionSpec = obstacle.descriptor->motion.get();
+		if (dynamic_cast<OscillatingPositionSpec*>(motionSpec) ||
+			dynamic_cast<OscillatingAngleSpec*>(motionSpec))
+			// Includes a small period where the obstacle is completely invisible
+			opacity = std::clamp(2.5f * std::abs(0.5f - scene.getTogglePosition()) - 0.2f, 0.f, 1.f);
+
+		col color = focus ? Color::Focused : Color::Selected;
+		color.a *= opacity;
+		PanelStyle style = {
+			.fillColor = color,
+			.cornerRadius = Settings::Sizes.centreDotRadius,
 		};
-		for (int i = 0; i < scene.obstacles.size(); i++) {
-			const auto& obstacle = scene.obstacles[i];
-			if (obstacle.isSelected() &&
-				!(scene.selectionFocus.type == EntityType::Obstacle && scene.selectionFocus.index == i))
-				addCentreDot(obstacle);
-		}
-		if (scene.selectionFocus.type == EntityType::Obstacle)
-			addCentreDot(scene.obstacles[scene.selectionFocus.index], true);
+		gizmoRenderer.addCircle(worldToPlanar(obstacle.getKinematicState()->getPosition()), style);
+	};
+	for (int i = 0; i < scene.obstacles.size(); i++) {
+		const auto& obstacle = scene.obstacles[i];
+		if (obstacle.isSelected() &&
+			!(scene.selectionFocus.type == EntityType::Obstacle && scene.selectionFocus.index == i))
+			addCentreDot(obstacle);
 	}
+	if (scene.selectionFocus.type == EntityType::Obstacle)
+		addCentreDot(scene.obstacles[scene.selectionFocus.index], true);
 }
 
 
