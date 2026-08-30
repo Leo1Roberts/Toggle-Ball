@@ -10,7 +10,7 @@ std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStar
 	bool hit = pointedAtEntity(pointerPlanarPosition);
 
 	if (hit) {
-		auto selectOperation = SelectOperation(scene, camera, TriggerType::Pointer, pointerPlanarPosition, true);
+		auto selectOperation = SelectOperation(scene, camera, quickSettings, TriggerType::Pointer, pointerPlanarPosition, true);
 		if (selectOperation.start(pointerDownEvent.modifiers))
 			selectOperation.finish();
 		else return nullptr;
@@ -23,13 +23,13 @@ std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStar
 
 	if (dragStartEvent.button == PointerButton::Primary) {
 		if (hit) {
-			auto translateOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::Pointer, pointerPlanarPosition);
+			auto translateOperation = std::make_unique<TranslateOperation>(scene, camera, quickSettings, TriggerType::Pointer, pointerPlanarPosition);
 			if (translateOperation->start(pointerDownEvent.modifiers))
 				return translateOperation;
 			return nullptr;
 		}
 
-		auto selectOperation = std::make_unique<SelectOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition);
+		auto selectOperation = std::make_unique<SelectOperation>(scene, camera, quickSettings, TriggerType::Pointer, pointerPlanarPosition);
 		if (selectOperation->start(pointerDownEvent.modifiers))
 			return selectOperation;
 		return nullptr;
@@ -37,7 +37,7 @@ std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStar
 
 	if (dragStartEvent.button == PointerButton::Secondary) {
 		if (hit) {
-			auto rotateOperation = std::make_unique<RotateOperation>(scene, camera, settings, TriggerType::Pointer, pointerPlanarPosition);
+			auto rotateOperation = std::make_unique<RotateOperation>(scene, camera, quickSettings, TriggerType::Pointer, pointerPlanarPosition);
 			if (rotateOperation->start(pointerDownEvent.modifiers))
 				return rotateOperation;
 			return nullptr;

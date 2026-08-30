@@ -6,9 +6,7 @@
 #include "editor/operation/ScaleOperation.h"
 #include "editor/operation/SelectOperation.h"
 #include "editor/operation/TranslateOperation.h"
-#include "ui/Theme.h"
 #include "ui/UIList.h"
-#include "ui/UISegmentedControl.h"
 
 
 ToolModeResponse ToolMode::processEvent(const Event& event) {
@@ -102,22 +100,16 @@ ToolModeResponse ToolMode::processEvent(const Event& event) {
 						} else
 							return {.consumedEvent = true, .operationChanged = false};
 					}
-					activeOperation = TransformOperation::make(*actionCode, scene, camera, settings, TriggerType::TriggerKey, camera.screenToPlanarPosition(pointer0Position));
+					activeOperation = TransformOperation::make(*actionCode, scene, camera, quickSettings, TriggerType::TriggerKey, camera.screenToPlanarPosition(pointer0Position));
 					if (!activeOperation->start(key->chord.modifiers))
 						activeOperation.reset();
 					return {.consumedEvent = true, .operationChanged = true};
-				case ActionCode::ToggleTransformBothStates:
-					settings.transformBothStates = !settings.transformBothStates;
-					return {.consumedEvent = true, .operationChanged = false};
-				case ActionCode::ToggleTransformIndividually:
-					settings.transformIndividually = !settings.transformIndividually;
-					return {.consumedEvent = true, .operationChanged = false};
 				default:;
 				}
 			}
 
 			if (TranslateOperation::keyToTranslationVector(key->chord.code)) {
-				activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::ActionKey);
+				activeOperation = std::make_unique<TranslateOperation>(scene, camera, quickSettings, TriggerType::ActionKey);
 				bool success =
 					activeOperation->start(key->chord.modifiers) &&
 					activeOperation->processEvent(event).status == OperationStatus::Running;
@@ -174,7 +166,7 @@ ToolModeResponse ToolMode::processObstacleExistenceAction(ActionCode actionCode,
 				}
 			meanCentre /= selectedCount;
 
-			activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::TriggerKey, meanCentre);
+			activeOperation = std::make_unique<TranslateOperation>(scene, camera, quickSettings, TriggerType::TriggerKey, meanCentre);
 			if (!activeOperation->start(modifiers) ||
 				activeOperation->processEvent(PointerEvent(0, pointer0Position, PointerAction::Move)).status != OperationStatus::Running)
 				activeOperation.reset();
@@ -183,7 +175,7 @@ ToolModeResponse ToolMode::processObstacleExistenceAction(ActionCode actionCode,
 		break;
 	case ActionCode::Duplicate:
 		if (!activeOperation && scene.duplicateSelection()) {
-			activeOperation = std::make_unique<TranslateOperation>(scene, camera, settings, TriggerType::TriggerKey, camera.screenToPlanarPosition(pointer0Position));
+			activeOperation = std::make_unique<TranslateOperation>(scene, camera, quickSettings, TriggerType::TriggerKey, camera.screenToPlanarPosition(pointer0Position));
 			if (!activeOperation->start(modifiers))
 				activeOperation.reset();
 			return {.consumedEvent = true, .operationChanged = true};
@@ -220,56 +212,6 @@ std::vector<BindingHint> ToolMode::getBindingHints() const {
 
 	return hints;
 }
-
-void ToolMode::populateToolbar(UINode& toolbar) {
-	auto settingsList = toolbar.addChild<UIHorizontalList>(20.f, 0.f);
-	settingsList->setLayout({
-		.anchor = Anchor::Centre,
-		.widthMode = SizingMode::Wrap,
-		.heightMode = SizingMode::Wrap,
-		.padding = glm::vec2(4.f)
-	});
-
-	auto addEditorQuickSetting = [&settingsList](const std::string& settingName, const std::vector<std::string>& options, bool* target) {
-		auto setting = settingsList->addChild<UIHorizontalList>(8.f, 0.f);
-		setting->setLayout({
-			.anchor = Anchor::Centre,
-			.widthMode = SizingMode::Wrap,
-			.heightMode = SizingMode::Wrap,
-		});
-
-		auto label = setting->addChild<UIText>(settingName, TextStyle{
-			.fontSize = 16.f,
-			.color = Color::LightGrey,
-			.alignVertical = TextAlignVertical::Middle,
-		});
-		label->setLayout({
-			.widthMode = SizingMode::Wrap,
-		});
-
-		auto segmentedControl = setting->addChild<UISegmentedControl>(options, false, Theme::PrimarySegmentedControl, 0.f);
-		segmentedControl->setLayout({
-			.anchor = Anchor::Centre,
-			.widthMode = SizingMode::Wrap,
-			.heightMode = SizingMode::Wrap,
-		});
-		segmentedControl->setOptionLayout({
-			.widthMode = SizingMode::Absolute, .width = 60.f,
-			.heightMode = SizingMode::Wrap,
-			.padding = glm::vec2(4.f)
-		});
-		segmentedControl->setOptionTextLayout({
-			.anchor = Anchor::Centre,
-			.heightMode = SizingMode::Wrap,
-		});
-		segmentedControl->setOnSelectedOptionChange([target](int selected) { *target = selected; });
-		segmentedControl->setValueProvider([target] { return *target; });
-	};
-
-	addEditorQuickSetting("Transform state", {"Single", "Dual"}, &settings.transformBothStates);
-	addEditorQuickSetting("Transform mode", {"Group", "Individual"}, &settings.transformIndividually);
-}
-
 
 void ToolMode::createOperationUI(UINode& container) const {
 	if (activeOperation) {
@@ -318,7 +260,7 @@ bool ToolMode::pointedAtEntity(glm::vec2 pointerPlanarPosition) const {
 
 void ToolMode::performPrimaryAction(const PointerEvent& upEvent) {
 	auto selectOperation = SelectOperation(
-		scene, camera, TriggerType::Pointer,
+		scene, camera, quickSettings, TriggerType::Pointer,
 		camera.screenToPlanarPosition(pointerDownEvent.position), true);
 	if (selectOperation.start(pointerDownEvent.modifiers)) {
 		selectOperation.finish();

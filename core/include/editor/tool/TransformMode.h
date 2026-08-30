@@ -7,8 +7,8 @@
 
 class TransformMode : public ToolMode {
 public:
-	explicit TransformMode(EditorScene& scene, const Camera& camera)
-		: ToolMode(scene, camera) {}
+	explicit TransformMode(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings)
+		: ToolMode(scene, camera, quickSettings) {}
 
 private:
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;

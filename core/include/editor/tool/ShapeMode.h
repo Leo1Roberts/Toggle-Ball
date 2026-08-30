@@ -6,8 +6,8 @@
 
 class ShapeMode : public ToolMode {
 public:
-	explicit ShapeMode(EditorScene& scene, const Camera& camera, const float& uiToWorldScale)
-		: ToolMode(scene, camera), uiToWorldScale(uiToWorldScale) {}
+	explicit ShapeMode(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, const float& uiToWorldScale)
+		: ToolMode(scene, camera, quickSettings), uiToWorldScale(uiToWorldScale) {}
 
 	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
 

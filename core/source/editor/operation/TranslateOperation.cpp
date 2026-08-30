@@ -39,7 +39,7 @@ bool TranslateOperation::updateUI() {
 		text += "X: " + floatToString(translation.x, 3, true) + "  Y: " + floatToString(translation.y, 3, true);
 	else {
 		if (constraint == ConstraintType::LocalAxis ||
-		   (constraint == ConstraintType::GlobalAxis && settings.transformIndividually))
+		   (constraint == ConstraintType::GlobalAxis && quickSettings.transform.individually))
 			text += "along local ";
 		else if (constraint == ConstraintType::GlobalAxis)
 			text += "along global ";
@@ -138,7 +138,7 @@ void TranslateOperation::applyOperation() {
 				direction = glm::vec2(0.f);
 			else
 				direction = normalize(rawTranslation);
-		} else if (!settings.transformIndividually && constraint == ConstraintType::GlobalAxis)
+		} else if (!quickSettings.transform.individually && constraint == ConstraintType::GlobalAxis)
 			direction = baseAxis;
 		else
 			direction = angleToRotation2D(focusAngle) * baseAxis;
@@ -154,17 +154,17 @@ void TranslateOperation::applyOperation() {
 		} else
 			magnitude = dot(rawTranslation, direction);
 
-		if (!settings.transformIndividually)
+		if (!quickSettings.transform.individually)
 			translation = direction * magnitude;
 	}
 
 	if (ball->isSelected()) {
-		if (settings.transformIndividually && trigger != TriggerType::ActionKey)
+		if (quickSettings.transform.individually && trigger != TriggerType::ActionKey)
 			translation = (angleToRotation2D(-focusAngle) * direction) * magnitude;
 
 		ball->translateBy(translation, scene.getCurrentNode()->level.ballDescriptor.get());
 
-		if (settings.transformIndividually && constraint != ConstraintType::None && focus->type != EntityType::Ball)
+		if (quickSettings.transform.individually && constraint != ConstraintType::None && focus->type != EntityType::Ball)
 			otherAxisLines.push_back({
 				.point = ball->descriptor->initialPosition,
 				.direction = baseAxis,
@@ -175,18 +175,18 @@ void TranslateOperation::applyOperation() {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
 			glm::vec2 individualDirection = direction;
-			if (settings.transformIndividually && trigger != TriggerType::ActionKey) {
+			if (quickSettings.transform.individually && trigger != TriggerType::ActionKey) {
 				individualDirection = angleToRotation2D(obstacle.getKinematicState()->getAngle() - focusAngle) * direction;
 				translation = individualDirection * magnitude;
 			}
 
-			obstacle.translateBy(translation, settings.transformBothStates, scene.isToggled(),
+			obstacle.translateBy(translation, quickSettings.transform.bothStates, scene.isToggled(),
 				scene.getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
 			obstacle.invalidateDomainMesh();
 
-			if (settings.transformIndividually && constraint != ConstraintType::None &&
+			if (quickSettings.transform.individually && constraint != ConstraintType::None &&
 				!(focus->type == EntityType::Obstacle && i == focus->index))
 				otherAxisLines.push_back({
 					.point = worldToPlanar(obstacle.getKinematicState()->getPosition()),
@@ -195,7 +195,7 @@ void TranslateOperation::applyOperation() {
 		}
 	}
 
-	if (trigger != TriggerType::ActionKey && settings.transformIndividually)
+	if (trigger != TriggerType::ActionKey && quickSettings.transform.individually)
 		translation = angleToRotation2D(-focusAngle) * direction * magnitude;
 
 	glm::vec2 focusPos{};
@@ -220,7 +220,7 @@ void TranslateOperation::setConstraint(glm::vec2 requestedAxis) {
 		baseAxis = requestedAxis;
 		canStartTyping = true;
 	} else if (scene.selectionFocus.type == EntityType::Obstacle &&
-		((!settings.transformIndividually && constraint == ConstraintType::GlobalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::LocalAxis && baseAxis != requestedAxis))) {
+		((!quickSettings.transform.individually && constraint == ConstraintType::GlobalAxis && baseAxis == requestedAxis) || (constraint == ConstraintType::LocalAxis && baseAxis != requestedAxis))) {
 		constraint = ConstraintType::LocalAxis;
 		baseAxis = requestedAxis;
 		canStartTyping = true;

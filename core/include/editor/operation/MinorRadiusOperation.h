@@ -7,8 +7,8 @@
 
 class MinorRadiusOperation : public Operation {
 public:
-	MinorRadiusOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, float& minorRadius) :
-		Operation(scene, camera, trigger, initialPlanarPosition), minorRadius(minorRadius),
+	MinorRadiusOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition, float& minorRadius) :
+		Operation(scene, camera, quickSettings, trigger, initialPlanarPosition), minorRadius(minorRadius),
 		initialDistance(scene.obstacles[scene.selectionFocus.index].getRimProximity(initialPlanarPosition).distance) {}
 
 	void cancel() const override { scene.cancelLevelChange(); }

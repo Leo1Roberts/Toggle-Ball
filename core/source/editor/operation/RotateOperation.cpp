@@ -87,12 +87,12 @@ void RotateOperation::applyOperation() {
 	auto& obstacles = scene.obstacles;
 
 	if (ball->isSelected())
-		ball->rotateBy(rotationMatrix, pivot, settings.transformIndividually, scene.getCurrentNode()->level.ballDescriptor.get());
+		ball->rotateBy(rotationMatrix, pivot, quickSettings.transform.individually, scene.getCurrentNode()->level.ballDescriptor.get());
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			obstacle.rotateBy(rotation, rotationMatrix, settings.transformIndividually ? glm::vec2(0.f) : pivot, settings.transformBothStates, scene.isToggled(), settings.transformIndividually,
+			obstacle.rotateBy(rotation, rotationMatrix, quickSettings.transform.individually ? glm::vec2(0.f) : pivot, quickSettings.transform.bothStates, scene.isToggled(), quickSettings.transform.individually,
 				scene.getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();

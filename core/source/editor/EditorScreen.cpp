@@ -29,8 +29,8 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	scene(
 		std::move(levelToEdit),
 		[this] { updateEphemeralMeshes(); }),
-	transformMode(scene, camera),
-	shapeMode(scene, camera, uiToWorldScale) {
+	transformMode(scene, camera, quickSettings),
+	shapeMode(scene, camera, quickSettings, uiToWorldScale) {
 	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
@@ -51,13 +51,62 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		.padding = glm::vec2(4.f)
 	});
 
-	toolbar = statusBar->addChild<UIContainer>();
+
+	auto toolbar = statusBar->addChild<UIContainer>();
 	toolbar->setLayout({
 		.anchor = Anchor::Centre,
 		.widthMode  = SizingMode::Wrap,
 		.heightMode = SizingMode::Wrap,
 		.padding = glm::vec2(4.f)
 	});
+
+	auto settingsList = toolbar->addChild<UIHorizontalList>(20.f, 0.f);
+	settingsList->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(4.f)
+	});
+
+	auto addEditorQuickSetting = [&settingsList](const std::string& settingName, const std::vector<std::string>& options, bool* target) {
+		auto setting = settingsList->addChild<UIHorizontalList>(8.f, 0.f);
+		setting->setLayout({
+			.anchor = Anchor::Centre,
+			.widthMode = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+		});
+
+		auto label = setting->addChild<UIText>(settingName, TextStyle{
+			.fontSize = 16.f,
+			.color = Color::LightGrey,
+			.alignVertical = TextAlignVertical::Middle,
+		});
+		label->setLayout({
+			.widthMode = SizingMode::Wrap,
+		});
+
+		auto segmentedControl = setting->addChild<UISegmentedControl>(options, false, Theme::PrimarySegmentedControl, 0.f);
+		segmentedControl->setLayout({
+			.anchor = Anchor::Centre,
+			.widthMode = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+		});
+		segmentedControl->setOptionLayout({
+			.widthMode = SizingMode::Absolute, .width = 60.f,
+			.heightMode = SizingMode::Wrap,
+			.padding = glm::vec2(4.f)
+		});
+		segmentedControl->setOptionTextLayout({
+			.anchor = Anchor::Centre,
+			.heightMode = SizingMode::Wrap,
+		});
+		segmentedControl->setOnSelectedOptionChange([target](int selected) { *target = selected; });
+		segmentedControl->setValueProvider([target] { return *target; });
+	};
+
+	addEditorQuickSetting("Transform state", {"Single", "Dual"}, &quickSettings.transform.bothStates);
+	addEditorQuickSetting("Transform mode", {"Group", "Individual"}, &quickSettings.transform.individually);
+
 
 	viewportUI = mainArea->addChild<UIContainer>();
 	operationUI = viewportUI->addChild<UIContainer>();
@@ -247,15 +296,25 @@ void EditorScreen::processEvent(const Event& event) {
 					currentMode->commitActiveOperation();
 					scene.undo();
 					updateDynamicUI();
-					return;
-				} break;
+				} return;
 			case ActionCode::Redo:
 				if (key->action == KeyAction::Down || key->action == KeyAction::Repeat) {
 					currentMode->cancelActiveOperation();
 					scene.redo();
 					updateDynamicUI();
-					return;
-				} break;
+				} return;
+			case ActionCode::ToggleTransformBothStates:
+				if (key->action == KeyAction::Down) {
+					quickSettings.transform.bothStates = !quickSettings.transform.bothStates;
+					currentMode->onQuickSettingsChanged();
+				}
+				return;
+			case ActionCode::ToggleTransformIndividually:
+				if (key->action == KeyAction::Down) {
+					quickSettings.transform.individually = !quickSettings.transform.individually;
+					currentMode->onQuickSettingsChanged();
+				}
+				return;
 			default:;
 			}
 
@@ -708,7 +767,6 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 void EditorScreen::selectMode(ToolMode* mode) {
 	if (mode == currentMode) return;
 	currentMode = mode;
-	updateToolbar();
 	updateDynamicUI();
 }
 
@@ -791,9 +849,4 @@ void EditorScreen::updateDynamicUI() {
 			.margin = {3.f, 0.f}
 		});
 	}
-}
-
-void EditorScreen::updateToolbar() {
-	uiManager.removeAllChildrenOfNode(toolbar);
-	currentMode->populateToolbar(*toolbar);
 }

@@ -41,6 +41,7 @@ private:
 	EditorScene scene;
 	Camera camera;
 	GizmoRenderer gizmoRenderer{uiManager, camera};
+	EditorQuickSettings quickSettings;
 
 	SelectionState cachedSelectionState{};
 
@@ -54,8 +55,6 @@ private:
 	void updateDynamicUI();
 	UIContainer* operationUI;
 	UIHorizontalList* bindingHints;
-	void updateToolbar();
-	UIContainer* toolbar;
 
 	bool obstacleMotionPropertiesListValid = false;
 	UIVerticalList* obstacleMotionPropertiesList;

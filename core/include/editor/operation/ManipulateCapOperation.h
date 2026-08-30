@@ -8,7 +8,7 @@
 class ManipulateCapOperation : public Operation {
 	friend class DrawOperation;
 public:
-	ManipulateCapOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, bool leftCap, std::optional<float> tangentAngle = std::nullopt);
+	ManipulateCapOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, bool leftCap, std::optional<float> tangentAngle = std::nullopt);
 
 	// DrawOperation relies on cancel/commitLevelChange being called
 	void cancel() const final { scene.cancelLevelChange(); }
@@ -38,13 +38,13 @@ private:
 
 class ManipulateLeftCapOperation : public ManipulateCapOperation {
 public:
-	ManipulateLeftCapOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, std::optional<float> tangentAngle = std::nullopt)
-		: ManipulateCapOperation(scene, camera, trigger, initialPlanarPosition, obstacle, true, tangentAngle) {}
+	ManipulateLeftCapOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, std::optional<float> tangentAngle = std::nullopt)
+		: ManipulateCapOperation(scene, camera, quickSettings, trigger, initialPlanarPosition, obstacle, true, tangentAngle) {}
 };
 class ManipulateRightCapOperation : public ManipulateCapOperation {
 public:
-	ManipulateRightCapOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, std::optional<float> tangentAngle = std::nullopt)
-		: ManipulateCapOperation(scene, camera, trigger, initialPlanarPosition, obstacle, false, tangentAngle) {}
+	ManipulateRightCapOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, std::optional<float> tangentAngle = std::nullopt)
+		: ManipulateCapOperation(scene, camera, quickSettings, trigger, initialPlanarPosition, obstacle, false, tangentAngle) {}
 };
 
 

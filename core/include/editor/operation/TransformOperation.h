@@ -8,20 +8,14 @@
 class UIText;
 
 
-struct TransformQuickSettings {
-	bool transformBothStates = false;
-	bool transformIndividually = false;
-};
-
-
 class TransformOperation : public Operation {
 public:
-	TransformOperation(EditorScene& scene, const Camera& camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition)
-		: Operation(scene, camera, trigger, initialPlanarPosition), settings(settings) {}
+	TransformOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition)
+		: Operation(scene, camera, quickSettings, trigger, initialPlanarPosition) {}
 	TransformOperation(const TransformOperation& other) // Reset typing
-		: Operation(other), settings(other.settings) {}
+		: Operation(other) {}
 
-	[[nodiscard]] static std::unique_ptr<TransformOperation> make(ActionCode actionCode, EditorScene& scene, const Camera& camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition);
+	[[nodiscard]] static std::unique_ptr<TransformOperation> make(ActionCode actionCode, EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition);
 	[[nodiscard]] static std::unique_ptr<TransformOperation> makeFromExisting(ActionCode actionCode, const TransformOperation* existingOperation);
 
 	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
@@ -33,8 +27,6 @@ public:
 
 protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
-
-	const TransformQuickSettings& settings;
 
 	float precisionMultiplier = 1.f;
 

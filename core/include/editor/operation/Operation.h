@@ -6,10 +6,23 @@
 #include "io/Event.h"
 #include "system/Cursor.h"
 
-
 class EditorObstacle;
 class EditorScene;
 
+
+
+struct TransformQuickSettings {
+	bool bothStates = false;
+	bool individually = false;
+};
+
+struct EditorQuickSettings {
+	bool snap = true;
+	struct {
+		bool bothStates = false;
+		bool individually = false;
+	} transform;
+};
 
 enum class TriggerType { Pointer, TriggerKey, ActionKey };
 
@@ -51,8 +64,8 @@ public:
 	const TriggerType trigger;
 
 protected:
-	Operation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition)
-		: trigger(trigger), scene(scene), camera(camera), initialPlanarPosition(initialPlanarPosition), pointerPlanarPosition(initialPlanarPosition) {}
+	Operation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition)
+		: trigger(trigger), scene(scene), camera(camera), quickSettings(quickSettings), initialPlanarPosition(initialPlanarPosition), pointerPlanarPosition(initialPlanarPosition) {}
 	Operation(const Operation&) = default;
 
 	[[nodiscard]] virtual OperationResponse doProcessEvent(const Event& event) = 0;
@@ -61,6 +74,7 @@ protected:
 
 	EditorScene& scene;
 	const Camera& camera;
+	const EditorQuickSettings& quickSettings;
 
 	const glm::vec2 initialPlanarPosition;
 	glm::vec2 pointerPlanarPosition;

@@ -93,13 +93,13 @@ void ScaleOperation::applyOperation() {
 	}
 
 	if (ball->isSelected())
-		ball->scaleBy(scale, pivot, settings.transformIndividually,
+		ball->scaleBy(scale, pivot, quickSettings.transform.individually,
 			scene.getCurrentNode()->level.ballDescriptor.get());
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			obstacle.scaleBy(scale, pivot, settings.transformIndividually,
+			obstacle.scaleBy(scale, pivot, quickSettings.transform.individually,
 				affectMinorRadius, affectMajorRadius,
 				scene.getCurrentNode()->level.obstacleDescriptors[i].get());
 

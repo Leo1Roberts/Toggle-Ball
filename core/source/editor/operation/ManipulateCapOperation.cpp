@@ -4,8 +4,8 @@
 #include "glm/gtx/norm.hpp"
 
 
-ManipulateCapOperation::ManipulateCapOperation(EditorScene& scene, const Camera& camera, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, bool leftCap, std::optional<float> tangentAngle) :
-	Operation(scene, camera, trigger, initialPlanarPosition),
+ManipulateCapOperation::ManipulateCapOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, bool leftCap, std::optional<float> tangentAngle) :
+	Operation(scene, camera, quickSettings, trigger, initialPlanarPosition),
 	obstacle(obstacle),
 	initialDescriptor(*obstacle.descriptor),
 	initialAngle(obstacle.getKinematicState()->getAngle()),

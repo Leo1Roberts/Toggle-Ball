@@ -25,7 +25,6 @@ public:
 	[[nodiscard]] ToolModeResponse processObstacleExistenceAction(ActionCode actionCode, byte modifiers);
 
 	[[nodiscard]] virtual std::vector<BindingHint> getBindingHints() const;
-	virtual void populateToolbar(UINode& toolbar);
 	void createOperationUI(UINode& container) const;
 	void addGizmos(GizmoRenderer& gizmoRenderer) const override {
 		if (activeOperation)
@@ -37,14 +36,17 @@ public:
 
 	[[nodiscard]] bool hasActiveOperation() const { return activeOperation != nullptr; }
 
+	void onQuickSettingsChanged() const { if (activeOperation) activeOperation->onQuickSettingsChanged(); }
+
 	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 
 protected:
-	explicit ToolMode(EditorScene& scene, const Camera& camera)
-		: scene(scene), camera(camera) {}
+	explicit ToolMode(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings)
+		: scene(scene), camera(camera), quickSettings(quickSettings) {}
 
 	EditorScene& scene;
 	const Camera& camera;
+	const EditorQuickSettings& quickSettings;
 
 	std::unique_ptr<Operation> activeOperation;
 
@@ -54,8 +56,6 @@ protected:
 	[[nodiscard]] bool pointedAtBall(glm::vec2 pointerPlanarPosition) const;
 	[[nodiscard]] bool pointedAtObstacle(glm::vec2 pointerPlanarPosition) const;
 	[[nodiscard]] bool pointedAtEntity(glm::vec2 pointerPlanarPosition) const;
-
-	TransformQuickSettings settings;
 
 private:
 	[[nodiscard]] virtual ToolModeResponse doProcessEvent(const Event& event) { return {}; }

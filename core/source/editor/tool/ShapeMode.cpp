@@ -79,7 +79,7 @@ std::optional<Cursor> ShapeMode::queryCursor() const {
 void ShapeMode::performPrimaryAction(const PointerEvent& upEvent) {
 	if (!getPointedCapInfo(camera.screenToPlanarPosition(pointerDownEvent.position))) {
 		auto selectOperation = SelectOperation(
-			scene, camera, TriggerType::Pointer,
+			scene, camera, quickSettings, TriggerType::Pointer,
 			camera.screenToPlanarPosition(pointerDownEvent.position), true);
 		if (selectOperation.start(pointerDownEvent.modifiers)) {
 			selectOperation.finish();
@@ -95,7 +95,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 	if (dragStartEvent.button == PointerButton::Primary) {
 		if (auto capInfo = getPointedCapInfo(pointerPlanarPosition)) {
 			auto& obstacle = scene.obstacles[capInfo->obstacleIndex];
-			auto manipulateCapOperation = std::make_unique<ManipulateCapOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition, obstacle, capInfo->leftCap,
+			auto manipulateCapOperation = std::make_unique<ManipulateCapOperation>(scene, camera, quickSettings, TriggerType::Pointer, pointerPlanarPosition, obstacle, capInfo->leftCap,
 				obstacle.getKinematicState()->getAngle() + (capInfo->leftCap ? obstacle.descriptor->shape->getRightCapAngle() : obstacle.descriptor->shape->getLeftCapAngle()));
 			if (manipulateCapOperation->start(pointerDownEvent.modifiers))
 				return manipulateCapOperation;
@@ -106,7 +106,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 			}
 			scene.selectionFocus = {EntityType::Obstacle, *index};
 
-			auto minorRadiusOperation = std::make_unique<MinorRadiusOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition, minorRadius);
+			auto minorRadiusOperation = std::make_unique<MinorRadiusOperation>(scene, camera, quickSettings, TriggerType::Pointer, pointerPlanarPosition, minorRadius);
 			if (minorRadiusOperation->start(pointerDownEvent.modifiers))
 				return minorRadiusOperation;
 
@@ -115,7 +115,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 		}
 
 		if (!pointedAtEntity(pointerPlanarPosition)) {
-			auto selectOperation = std::make_unique<SelectOperation>(scene, camera, TriggerType::Pointer, pointerPlanarPosition);
+			auto selectOperation = std::make_unique<SelectOperation>(scene, camera, quickSettings, TriggerType::Pointer, pointerPlanarPosition);
 			if (selectOperation->start(pointerDownEvent.modifiers))
 				return selectOperation;
 		}
@@ -129,7 +129,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 				(capInfo->leftCap ? obstacle.descriptor->shape->getLeftCapAngle() : obstacle.descriptor->shape->getRightCapAngle()));
 			sproutingPoint = capInfo->leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition();
 		}
-		auto drawOperation = std::make_unique<DrawOperation>(scene, camera, TriggerType::Pointer, sproutingPoint, minorRadius, tangentAngle);
+		auto drawOperation = std::make_unique<DrawOperation>(scene, camera, quickSettings, TriggerType::Pointer, sproutingPoint, minorRadius, tangentAngle);
 		if (drawOperation->start(pointerDownEvent.modifiers))
 			return drawOperation;
 	}

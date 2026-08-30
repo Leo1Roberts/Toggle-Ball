@@ -9,8 +9,8 @@
 
 class ScaleOperation : public PivotOperation {
 public:
-	ScaleOperation(EditorScene& scene, const Camera& camera, const TransformQuickSettings& settings, TriggerType trigger, glm::vec2 initialPlanarPosition = {})
-		: PivotOperation(scene, camera, settings, trigger, initialPlanarPosition) {}
+	ScaleOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition = {})
+		: PivotOperation(scene, camera, quickSettings, trigger, initialPlanarPosition) {}
 	explicit ScaleOperation(const TransformOperation& other)
 		: PivotOperation(other) {}
 
