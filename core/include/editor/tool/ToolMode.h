@@ -37,12 +37,9 @@ public:
 	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 
 protected:
-	explicit ToolMode(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings)
-		: scene(scene), camera(camera), quickSettings(quickSettings) {}
+	explicit ToolMode(const EditorContext& ctx) : ctx(ctx) {}
 
-	EditorScene& scene;
-	const Camera& camera;
-	const EditorQuickSettings& quickSettings;
+	const EditorContext& ctx;
 
 	std::unique_ptr<Operation> activeOperation;
 

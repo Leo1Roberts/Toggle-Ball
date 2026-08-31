@@ -33,7 +33,7 @@ bool ScaleOperation::updateUI() {
 
 
 std::optional<Cursor> ScaleOperation::queryCursor() const {
-	auto diff = camera.planarToScreenDirection(pointerPlanarPosition - pivot);
+	auto diff = Camera::planarToScreenDirection(pointerPlanarPosition - pivot);
 	return Cursor{
 		.style = Cursor::Style::DynamicResize,
 		.dynamic = true,
@@ -68,13 +68,13 @@ void ScaleOperation::applyOperation() {
 			scale = *value;
 		else {
 			updateUI();
-			scene.cancelLevelChange();
+			ctx.scene.cancelLevelChange();
 			return;
 		}
 	}
 
-	auto ball = &scene.ball;
-	auto& obstacles = scene.obstacles;
+	auto ball = &ctx.scene.ball;
+	auto& obstacles = ctx.scene.obstacles;
 
 	bool affectMinorRadius = false;
 	bool affectMajorRadius = false;
@@ -93,15 +93,15 @@ void ScaleOperation::applyOperation() {
 	}
 
 	if (ball->isSelected())
-		ball->scaleBy(scale, pivot, quickSettings.transform.individually,
-			scene.getCurrentNode()->level.ballDescriptor.get());
+		ball->scaleBy(scale, pivot, ctx.quickSettings.transform.individually,
+			ctx.scene.getCurrentNode()->level.ballDescriptor.get());
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			obstacle.scaleBy(scale, pivot, quickSettings.transform.individually,
+			obstacle.scaleBy(scale, pivot, ctx.quickSettings.transform.individually,
 				affectMinorRadius, affectMajorRadius,
-				scene.getCurrentNode()->level.obstacleDescriptors[i].get());
+				ctx.scene.getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
 			if (affectMinorRadius || affectMajorRadius)

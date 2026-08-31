@@ -26,11 +26,7 @@ static glm::vec3 viewSunDirection;
 
 
 EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& testLevelCallback) :
-	scene(
-		std::move(levelToEdit),
-		[this] { updateEphemeralMeshes(); }),
-	transformMode(scene, camera, quickSettings),
-	shapeMode(scene, camera, quickSettings, uiToWorldScale) {
+	scene(std::move(levelToEdit), [this] { updateEphemeralMeshes(); }) {
 	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;

@@ -1,8 +1,15 @@
 #include "editor/operation/MinorRadiusOperation.h"
 
+#include "editor/EditorContext.h"
+
+
+MinorRadiusOperation::MinorRadiusOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, float& minorRadius) :
+	Operation(ctx, trigger, initialPlanarPosition), minorRadius(minorRadius),
+	initialDistance(ctx.scene.obstacles[ctx.scene.selectionFocus.index].getRimProximity(initialPlanarPosition).distance) {}
+
 
 std::optional<Cursor> MinorRadiusOperation::queryCursor() const {
-	auto dir = Camera::planarToScreenDirection(scene.obstacles[scene.selectionFocus.index].getRimProximity(pointerPlanarPosition).direction);
+	auto dir = Camera::planarToScreenDirection(ctx.scene.obstacles[ctx.scene.selectionFocus.index].getRimProximity(pointerPlanarPosition).direction);
 	return Cursor{
 		.style = Cursor::Style::DynamicResize,
 		.dynamic = true,
@@ -14,8 +21,8 @@ std::optional<Cursor> MinorRadiusOperation::queryCursor() const {
 OperationResponse MinorRadiusOperation::doProcessEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
-			pointerPlanarPosition = camera.screenToPlanarPosition(pointer->position);
-			adjustment = scene.getCurrentNode()->level.obstacleDescriptors[scene.selectionFocus.index]->shape->getRimProximity(*scene.obstacles[scene.selectionFocus.index].getKinematicState(), pointerPlanarPosition).distance - initialDistance;
+			pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer->position);
+			adjustment = ctx.scene.getCurrentNode()->level.obstacleDescriptors[ctx.scene.selectionFocus.index]->shape->getRimProximity(*ctx.scene.obstacles[ctx.scene.selectionFocus.index].getKinematicState(), pointerPlanarPosition).distance - initialDistance;
 			applyOperation();
 			return {.consumedEvent = false, .status = OperationStatus::Running};
 		}
@@ -25,11 +32,11 @@ OperationResponse MinorRadiusOperation::doProcessEvent(const Event& event) {
 
 
 void MinorRadiusOperation::applyOperation() {
-	for (int i = 0; i < scene.obstacles.size(); i++) {
-		auto& obstacle = scene.obstacles[i];
+	for (int i = 0; i < ctx.scene.obstacles.size(); i++) {
+		auto& obstacle = ctx.scene.obstacles[i];
 		if (obstacle.isSelected()) {
 			obstacle.descriptor->shape->minorRadius =
-				scene.getCurrentNode()->level.obstacleDescriptors[i]->shape->minorRadius + adjustment;
+				ctx.scene.getCurrentNode()->level.obstacleDescriptors[i]->shape->minorRadius + adjustment;
 			obstacle.invalidateAllMeshes();
 		}
 	}

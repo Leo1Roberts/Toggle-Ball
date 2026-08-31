@@ -3,22 +3,23 @@
 
 #include "editor/EditorScene.h"
 #include "Operation.h"
+#include "editor/EditorContext.h"
 
 
 enum class SelectionMode { Replace, Add, Subtract };
 
 class SelectOperation : public Operation {
 public:
-	SelectOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition, bool instant = false)
-		: Operation(scene, camera, quickSettings, trigger, initialPlanarPosition), box(initialPlanarPosition), instant(instant) {}
+	SelectOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, bool instant = false)
+		: Operation(ctx, trigger, initialPlanarPosition), box(initialPlanarPosition), instant(instant) {}
 
 	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
 	void addGizmos(GizmoRenderer& gizmoRenderer) const final;
 
 	void finish() final;
 
-	void cancel() const final { scene.cancelSelectionChange(); }
-	void commit() const final { scene.commitSelectionChange(); }
+	void cancel() const final { ctx.scene.cancelSelectionChange(); }
+	void commit() const final { ctx.scene.commitSelectionChange(); }
 
 	[[nodiscard]] SelectionMode getMode() const { return mode; }
 

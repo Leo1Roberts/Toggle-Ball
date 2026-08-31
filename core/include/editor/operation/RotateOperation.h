@@ -8,8 +8,8 @@ class UIText;
 
 class RotateOperation : public PivotOperation {
 public:
-	RotateOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition = {})
-		: PivotOperation(scene, camera, quickSettings, trigger, initialPlanarPosition) {}
+	RotateOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition = {})
+		: PivotOperation(ctx, trigger, initialPlanarPosition) {}
 	explicit RotateOperation(const TransformOperation& other)
 		: PivotOperation(other) {}
 

@@ -1,25 +1,21 @@
 #include "editor/operation/ManipulateCapOperation.h"
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/norm.hpp"
 
-
-ManipulateCapOperation::ManipulateCapOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, bool leftCap, std::optional<float> tangentAngle) :
-	Operation(scene, camera, quickSettings, trigger, initialPlanarPosition),
-	obstacle(obstacle),
+ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> tangentAngle) :
+	Operation(ctx, trigger, initialPlanarPosition),
+	obstacleIndex(obstacleIndex),
+	obstacle(ctx.scene.obstacles[obstacleIndex]),
 	initialDescriptor(*obstacle.descriptor),
 	initialAngle(obstacle.getKinematicState()->getAngle()),
 	initialPosition(worldToPlanar(obstacle.getKinematicState()->getPosition())), leftCap(leftCap), tangentAngle(tangentAngle),
 	fixedCapPlanarPosition(!leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()),
-	initialCapPlanarPosition(leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()),
-	capPlanarPosition(initialCapPlanarPosition) {}
+	initialCapPlanarPosition(leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()) {}
 
 
 OperationResponse ManipulateCapOperation::doProcessEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
-			pointerPlanarPosition = camera.screenToPlanarPosition(pointer->position);
-			capPlanarPosition = initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition;
+			pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer->position);
 			applyOperation();
 			return {.consumedEvent = false, .status = OperationStatus::Running};
 		}
@@ -29,6 +25,8 @@ OperationResponse ManipulateCapOperation::doProcessEvent(const Event& event) {
 
 
 void ManipulateCapOperation::applyOperation() {
+	auto capPlanarPosition = ctx.snapPoint(initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition, {EntityType::Obstacle, obstacleIndex});
+
     auto capToCap = capPlanarPosition - fixedCapPlanarPosition;
     auto capToCapDistance = length(capToCap);
 

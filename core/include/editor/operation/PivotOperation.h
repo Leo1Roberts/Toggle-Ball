@@ -6,8 +6,8 @@
 
 class PivotOperation : public TransformOperation {
 public:
-	PivotOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition)
-		: TransformOperation(scene, camera, quickSettings, trigger, initialPlanarPosition) { init(); }
+	PivotOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition)
+		: TransformOperation(ctx, trigger, initialPlanarPosition) { init(); }
 	explicit PivotOperation(const TransformOperation& other)
 		: TransformOperation(other) { init(); }
 

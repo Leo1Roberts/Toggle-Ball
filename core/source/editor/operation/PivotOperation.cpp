@@ -4,11 +4,11 @@
 
 
 void PivotOperation::init() {
-	auto focus = scene.selectionFocus;
+	auto focus = ctx.scene.selectionFocus;
 	if (focus.type == EntityType::Ball)
-		pivot = scene.ball.descriptor->initialPosition;
+		pivot = ctx.scene.ball.descriptor->initialPosition;
 	else if (focus.type == EntityType::Obstacle)
-		pivot = worldToPlanar(scene.obstacles[focus.index].getKinematicState()->getPosition());
+		pivot = worldToPlanar(ctx.scene.obstacles[focus.index].getKinematicState()->getPosition());
 }
 
 

@@ -22,28 +22,28 @@ void SelectOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
 
 
 void SelectOperation::finish() {
-	auto ball = &scene.ball;
-	auto& obstacles = scene.obstacles;
-	auto focus = &scene.selectionFocus;
+	auto ball = &ctx.scene.ball;
+	auto& obstacles = ctx.scene.obstacles;
+	auto focus = &ctx.scene.selectionFocus;
 
 	if (instant && (mode == SelectionMode::Replace || mode == SelectionMode::Add)) {
-		const auto& originalSelection = scene.getCurrentNode()->selectionNode->selectionState;
+		const auto& originalSelection = ctx.scene.getCurrentNode()->selectionNode->selectionState;
 		bool revertSelection = false;
 
 		if (ball->isInSelectBox(box)) {
 			if (originalSelection.ball || mode == SelectionMode::Add)
 				revertSelection = true;
 			else {
-				scene.deselectAll();
+				ctx.scene.deselectAll();
 				ball->select();
 			}
 			*focus = {EntityType::Ball};
 		} else {
-			if (auto index = getPointedObstacleIndex(scene.obstacles, pointerPlanarPosition)) {
+			if (auto index = ctx.getPointedObstacleIndex(pointerPlanarPosition)) {
 				if (originalSelection.obstacles[*index] || mode == SelectionMode::Add)
 					revertSelection = true;
 				else {
-					scene.deselectAll();
+					ctx.scene.deselectAll();
 					obstacles[*index].select();
 				}
 				*focus = {EntityType::Obstacle, *index};
@@ -85,7 +85,7 @@ void SelectOperation::applyModifiers(byte mods) {
 OperationResponse SelectOperation::doProcessEvent(const Event& event) {
 	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
-			pointerPlanarPosition = camera.screenToPlanarPosition(pointer->position);
+			pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer->position);
 			box = {
 				initialPlanarPosition.x, pointerPlanarPosition.x,
 				initialPlanarPosition.y, pointerPlanarPosition.y,
@@ -98,9 +98,9 @@ OperationResponse SelectOperation::doProcessEvent(const Event& event) {
 }
 
 void SelectOperation::applyOperation() {
-	auto ball = &scene.ball;
-	auto& obstacles = scene.obstacles;
-	const auto& originalSelection = scene.getCurrentNode()->selectionNode->selectionState;
+	auto ball = &ctx.scene.ball;
+	auto& obstacles = ctx.scene.obstacles;
+	const auto& originalSelection = ctx.scene.getCurrentNode()->selectionNode->selectionState;
 
 	switch (mode) {
 	case SelectionMode::Replace:

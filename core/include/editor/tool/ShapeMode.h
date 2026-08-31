@@ -6,8 +6,7 @@
 
 class ShapeMode : public ToolMode {
 public:
-	explicit ShapeMode(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, const float& uiToWorldScale)
-		: ToolMode(scene, camera, quickSettings), uiToWorldScale(uiToWorldScale) {}
+	explicit ShapeMode(const EditorContext& ctx) : ToolMode(ctx) {}
 
 	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
 
@@ -20,8 +19,6 @@ private:
 	struct CapInfo { int obstacleIndex; bool leftCap; };
 	[[nodiscard]] std::optional<CapInfo> getPointedCapInfo(glm::vec2 pointerPlanarPosition) const;
 	[[nodiscard]] std::optional<int> getPointedRimIndex(glm::vec2 pointerPlanarPosition) const;
-
-	const float& uiToWorldScale;
 
 	float minorRadius = 0.7f;
 };

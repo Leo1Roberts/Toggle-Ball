@@ -3,6 +3,7 @@
 
 #include "editor/EditorScene.h"
 #include "Operation.h"
+#include "editor/EditorContext.h"
 #include "io/TextInputBuffer.h"
 
 class UIText;
@@ -10,20 +11,20 @@ class UIText;
 
 class TransformOperation : public Operation {
 public:
-	TransformOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition)
-		: Operation(scene, camera, quickSettings, trigger, initialPlanarPosition) {}
+	TransformOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition)
+		: Operation(ctx, trigger, initialPlanarPosition) {}
 	TransformOperation(const TransformOperation& other) // Reset typing
 		: Operation(other) {}
 
-	[[nodiscard]] static std::unique_ptr<TransformOperation> make(ActionCode actionCode, EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition);
+	[[nodiscard]] static std::unique_ptr<TransformOperation> make(ActionCode actionCode, const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition);
 	[[nodiscard]] static std::unique_ptr<TransformOperation> makeFromExisting(ActionCode actionCode, const TransformOperation* existingOperation);
 
 	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
 	void createUI(UINode& container) override;
 	bool updateUI() override;
 
-	void cancel() const final { scene.cancelLevelChange(); }
-	void commit() const final { scene.commitLevelChange(); }
+	void cancel() const final { ctx.scene.cancelLevelChange(); }
+	void commit() const final { ctx.scene.commitLevelChange(); }
 
 protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
@@ -43,7 +44,7 @@ private:
 		precisionMultiplier = mods & MOD_SHIFT ? 0.1f : 1.f;
 	}
 
-	[[nodiscard]] bool canStart() const final { return scene.anythingIsSelected(); }
+	[[nodiscard]] bool canStart() const final { return ctx.scene.anythingIsSelected(); }
 };
 
 

@@ -1,5 +1,6 @@
 #include "editor/tool/ShapeMode.h"
 
+#include "editor/EditorContext.h"
 #include "editor/operation/DrawOperation.h"
 #include "editor/operation/MinorRadiusOperation.h"
 #include "editor/operation/SelectOperation.h"
@@ -37,17 +38,17 @@ void ShapeMode::addGizmos(GizmoRenderer& gizmoRenderer) const {
 			}
 		};
 
-		auto pointerPlanarPosition = camera.screenToPlanarPosition(pointer0Position);
+		auto pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer0Position);
 
 		auto pointedCapInfo = getPointedCapInfo(pointerPlanarPosition);
-		auto pointedObstacleIndex = Operation::getPointedObstacleIndex(scene.obstacles, pointerPlanarPosition, true);
+		auto pointedObstacleIndex = ctx.getPointedObstacleIndex(pointerPlanarPosition, true);
 		if (pointedCapInfo)
-			addHandles(scene.obstacles[pointedCapInfo->obstacleIndex], pointedCapInfo->leftCap);
+			addHandles(ctx.scene.obstacles[pointedCapInfo->obstacleIndex], pointedCapInfo->leftCap);
 		else if (pointedObstacleIndex)
-			addHandles(scene.obstacles[*pointedObstacleIndex], std::nullopt);
+			addHandles(ctx.scene.obstacles[*pointedObstacleIndex], std::nullopt);
 
-		for (int i = 0; i < scene.obstacles.size(); i++) {
-			const auto& obstacle = scene.obstacles[i];
+		for (int i = 0; i < ctx.scene.obstacles.size(); i++) {
+			const auto& obstacle = ctx.scene.obstacles[i];
 			if (obstacle.isSelected() &&
 				!(pointedCapInfo && i == pointedCapInfo->obstacleIndex) &&
 				!(pointedObstacleIndex && i == *pointedObstacleIndex))
@@ -61,10 +62,10 @@ std::optional<Cursor> ShapeMode::queryCursor() const {
 	if (activeOperation)
 		return activeOperation->queryCursor();
 
-	auto pointerPlanarPosition = camera.screenToPlanarPosition(pointer0Position);
+	auto pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer0Position);
 	if (!getPointedCapInfo(pointerPlanarPosition)) {
 		if (auto index = getPointedRimIndex(pointerPlanarPosition)) {
-			auto dir = Camera::planarToScreenDirection(scene.obstacles[*index].getRimProximity(pointerPlanarPosition).direction);
+			auto dir = Camera::planarToScreenDirection(ctx.scene.obstacles[*index].getRimProximity(pointerPlanarPosition).direction);
 			return Cursor{
 				.style = Cursor::Style::DynamicResize,
 				.dynamic = true,
@@ -77,10 +78,10 @@ std::optional<Cursor> ShapeMode::queryCursor() const {
 
 
 void ShapeMode::performPrimaryAction(const PointerEvent& upEvent) {
-	if (!getPointedCapInfo(camera.screenToPlanarPosition(pointerDownEvent.position))) {
+	if (!getPointedCapInfo(ctx.camera.screenToPlanarPosition(pointerDownEvent.position))) {
 		auto selectOperation = SelectOperation(
-			scene, camera, quickSettings, TriggerType::Pointer,
-			camera.screenToPlanarPosition(pointerDownEvent.position), true);
+			ctx, TriggerType::Pointer,
+			ctx.camera.screenToPlanarPosition(pointerDownEvent.position), true);
 		if (selectOperation.start(pointerDownEvent.modifiers)) {
 			selectOperation.finish();
 			selectOperation.commit();
@@ -90,32 +91,32 @@ void ShapeMode::performPrimaryAction(const PointerEvent& upEvent) {
 
 
 std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEvent) {
-	auto pointerPlanarPosition = camera.screenToPlanarPosition(pointerDownEvent.position);
+	auto pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointerDownEvent.position);
 
 	if (dragStartEvent.button == PointerButton::Primary) {
 		if (auto capInfo = getPointedCapInfo(pointerPlanarPosition)) {
-			auto& obstacle = scene.obstacles[capInfo->obstacleIndex];
-			auto manipulateCapOperation = std::make_unique<ManipulateCapOperation>(scene, camera, quickSettings, TriggerType::Pointer, pointerPlanarPosition, obstacle, capInfo->leftCap,
+			auto& obstacle = ctx.scene.obstacles[capInfo->obstacleIndex];
+			auto manipulateCapOperation = std::make_unique<ManipulateCapOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, capInfo->obstacleIndex, capInfo->leftCap,
 				obstacle.getKinematicState()->getAngle() + (capInfo->leftCap ? obstacle.descriptor->shape->getRightCapAngle() : obstacle.descriptor->shape->getLeftCapAngle()));
 			if (manipulateCapOperation->start(pointerDownEvent.modifiers))
 				return manipulateCapOperation;
 		} else if (auto index = getPointedRimIndex(pointerPlanarPosition)) {
-			if (!scene.obstacles[*index].isSelected()) {
-				scene.deselectAll();
-				scene.obstacles[*index].select();
+			if (!ctx.scene.obstacles[*index].isSelected()) {
+				ctx.scene.deselectAll();
+				ctx.scene.obstacles[*index].select();
 			}
-			scene.selectionFocus = {EntityType::Obstacle, *index};
+			ctx.scene.selectionFocus = {EntityType::Obstacle, *index};
 
-			auto minorRadiusOperation = std::make_unique<MinorRadiusOperation>(scene, camera, quickSettings, TriggerType::Pointer, pointerPlanarPosition, minorRadius);
+			auto minorRadiusOperation = std::make_unique<MinorRadiusOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, minorRadius);
 			if (minorRadiusOperation->start(pointerDownEvent.modifiers))
 				return minorRadiusOperation;
 
-			scene.cancelSelectionChange(); // Clean up if minor radius operation fails to start
+			ctx.scene.cancelSelectionChange(); // Clean up if minor radius operation fails to start
 			return nullptr;
 		}
 
 		if (!pointedAtEntity(pointerPlanarPosition)) {
-			auto selectOperation = std::make_unique<SelectOperation>(scene, camera, quickSettings, TriggerType::Pointer, pointerPlanarPosition);
+			auto selectOperation = std::make_unique<SelectOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition);
 			if (selectOperation->start(pointerDownEvent.modifiers))
 				return selectOperation;
 		}
@@ -123,13 +124,13 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 		std::optional<float> tangentAngle = std::nullopt;
 		auto sproutingPoint = pointerPlanarPosition;
 		if (auto capInfo = getPointedCapInfo(pointerPlanarPosition)) {
-			const auto& obstacle = scene.obstacles[capInfo->obstacleIndex];
+			const auto& obstacle = ctx.scene.obstacles[capInfo->obstacleIndex];
 			minorRadius = obstacle.descriptor->shape->minorRadius;
 			tangentAngle = wrapAngle(obstacle.getKinematicState()->getAngle() + glm::pi<float>() +
 				(capInfo->leftCap ? obstacle.descriptor->shape->getLeftCapAngle() : obstacle.descriptor->shape->getRightCapAngle()));
 			sproutingPoint = capInfo->leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition();
 		}
-		auto drawOperation = std::make_unique<DrawOperation>(scene, camera, quickSettings, TriggerType::Pointer, sproutingPoint, minorRadius, tangentAngle);
+		auto drawOperation = std::make_unique<DrawOperation>(ctx, TriggerType::Pointer, sproutingPoint, minorRadius, tangentAngle);
 		if (drawOperation->start(pointerDownEvent.modifiers))
 			return drawOperation;
 	}
@@ -139,23 +140,23 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 
 
 std::optional<ShapeMode::CapInfo> ShapeMode::getPointedCapInfo(glm::vec2 pointerPlanarPosition) const {
-	if (auto index = Operation::getTopObstacleIndex(scene.obstacles, [this, pointerPlanarPosition](const auto& obstacle) {
+	if (auto index = ctx.getTopObstacleIndex([this, pointerPlanarPosition](const auto& obstacle) {
 		float leftCapDistanceSq = length2(pointerPlanarPosition - obstacle.getLeftCapPosition());
 		float rightCapDistanceSq = length2(pointerPlanarPosition - obstacle.getRightCapPosition());
-		float capHandleRadius = std::min(Settings::Sizes.obstacleCapHandleRadius * uiToWorldScale, obstacle.descriptor->shape->minorRadius);
+		float capHandleRadius = std::min(Settings::Sizes.obstacleCapHandleRadius * ctx.uiToWorldScale, obstacle.descriptor->shape->minorRadius);
 		return std::min(leftCapDistanceSq, rightCapDistanceSq) < capHandleRadius * capHandleRadius;
 	}, true)) {
 		return CapInfo(*index,
-			length2(pointerPlanarPosition - scene.obstacles[*index].getLeftCapPosition())
-			< length2(pointerPlanarPosition - scene.obstacles[*index].getRightCapPosition()));
+			length2(pointerPlanarPosition - ctx.scene.obstacles[*index].getLeftCapPosition())
+			< length2(pointerPlanarPosition - ctx.scene.obstacles[*index].getRightCapPosition()));
 	}
 	return std::nullopt;
 }
 std::optional<int> ShapeMode::getPointedRimIndex(glm::vec2 pointerPlanarPosition) const {
-	if (auto index = Operation::getTopObstacleIndex(scene.obstacles, [this, pointerPlanarPosition](const EditorObstacle& obstacle) {
-		return std::abs(obstacle.getRimProximity(pointerPlanarPosition).distance) < Settings::Sizes.obstaclePerimeterHitRadius * uiToWorldScale;
+	if (auto index = ctx.getTopObstacleIndex([this, pointerPlanarPosition](const EditorObstacle& obstacle) {
+		return std::abs(obstacle.getRimProximity(pointerPlanarPosition).distance) < Settings::Sizes.obstaclePerimeterHitRadius * ctx.uiToWorldScale;
 	})) {
-		auto pointedObstacleIndex = Operation::getPointedObstacleIndex(scene.obstacles, pointerPlanarPosition);
+		auto pointedObstacleIndex = ctx.getPointedObstacleIndex(pointerPlanarPosition);
 		if (!pointedObstacleIndex || *pointedObstacleIndex == *index)
 			return index;
 	}

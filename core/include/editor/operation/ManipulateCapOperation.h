@@ -2,17 +2,18 @@
 #define MANIPULATE_CAP_OPERATION_H
 
 #include "Operation.h"
+#include "editor/EditorContext.h"
 #include "editor/EditorScene.h"
 
 
 class ManipulateCapOperation : public Operation {
 	friend class DrawOperation;
 public:
-	ManipulateCapOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, bool leftCap, std::optional<float> tangentAngle = std::nullopt);
+	ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> tangentAngle = std::nullopt);
 
 	// DrawOperation relies on cancel/commitLevelChange being called
-	void cancel() const final { scene.cancelLevelChange(); }
-	void commit() const final { scene.commitLevelChange(); }
+	void cancel() const final { ctx.scene.cancelLevelChange(); }
+	void commit() const final { ctx.scene.commitLevelChange(); }
 
 protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
@@ -25,6 +26,7 @@ private:
 	}
 	bool alignWithTangent = false;
 
+	int obstacleIndex;
 	EditorObstacle& obstacle;
 	const ObstacleDescriptor initialDescriptor;
 	const float initialAngle;
@@ -33,18 +35,17 @@ private:
 	std::optional<float> tangentAngle;
 	const glm::vec2 fixedCapPlanarPosition;
 	const glm::vec2 initialCapPlanarPosition;
-	glm::vec2 capPlanarPosition;
 };
 
 class ManipulateLeftCapOperation : public ManipulateCapOperation {
 public:
-	ManipulateLeftCapOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, std::optional<float> tangentAngle = std::nullopt)
-		: ManipulateCapOperation(scene, camera, quickSettings, trigger, initialPlanarPosition, obstacle, true, tangentAngle) {}
+	ManipulateLeftCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, std::optional<float> tangentAngle = std::nullopt)
+		: ManipulateCapOperation(ctx, trigger, initialPlanarPosition, obstacleIndex, true, tangentAngle) {}
 };
 class ManipulateRightCapOperation : public ManipulateCapOperation {
 public:
-	ManipulateRightCapOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition, EditorObstacle& obstacle, std::optional<float> tangentAngle = std::nullopt)
-		: ManipulateCapOperation(scene, camera, quickSettings, trigger, initialPlanarPosition, obstacle, false, tangentAngle) {}
+	ManipulateRightCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, std::optional<float> tangentAngle = std::nullopt)
+		: ManipulateCapOperation(ctx, trigger, initialPlanarPosition, obstacleIndex, false, tangentAngle) {}
 };
 
 

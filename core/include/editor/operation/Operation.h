@@ -6,23 +6,9 @@
 #include "io/Event.h"
 #include "system/Cursor.h"
 
-class EditorObstacle;
-class EditorScene;
 
+struct EditorContext;
 
-
-struct TransformQuickSettings {
-	bool bothStates = false;
-	bool individually = false;
-};
-
-struct EditorQuickSettings {
-	bool snap = true;
-	struct {
-		bool bothStates = false;
-		bool individually = false;
-	} transform;
-};
 
 enum class TriggerType { Pointer, TriggerKey, ActionKey };
 
@@ -56,25 +42,20 @@ public:
 	virtual void cancel() const = 0;
 	virtual void commit() const = 0;
 
-	[[nodiscard]] static std::optional<int> getTopObstacleIndex(const std::vector<EditorObstacle>& obstacles, const std::function<bool(const EditorObstacle&)>& includePredicate, bool prioritiseSelected = false);
-	[[nodiscard]] static std::optional<int> getPointedObstacleIndex(const std::vector<EditorObstacle>& obstacles, glm::vec2 pointerPlanarPosition, bool prioritiseSelected = false);
-
 	void onQuickSettingsChanged() { applyOperation(); }
 
 	const TriggerType trigger;
 
 protected:
-	Operation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition)
-		: trigger(trigger), scene(scene), camera(camera), quickSettings(quickSettings), initialPlanarPosition(initialPlanarPosition), pointerPlanarPosition(initialPlanarPosition) {}
+	Operation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition)
+		: trigger(trigger), ctx(ctx), initialPlanarPosition(initialPlanarPosition), pointerPlanarPosition(initialPlanarPosition) {}
 	Operation(const Operation&) = default;
 
 	[[nodiscard]] virtual OperationResponse doProcessEvent(const Event& event) = 0;
 
 	virtual void applyOperation() = 0;
 
-	EditorScene& scene;
-	const Camera& camera;
-	const EditorQuickSettings& quickSettings;
+	const EditorContext& ctx;
 
 	const glm::vec2 initialPlanarPosition;
 	glm::vec2 pointerPlanarPosition;

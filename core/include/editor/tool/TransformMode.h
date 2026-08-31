@@ -7,8 +7,7 @@
 
 class TransformMode : public ToolMode {
 public:
-	explicit TransformMode(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings)
-		: ToolMode(scene, camera, quickSettings) {}
+	explicit TransformMode(const EditorContext& ctx) : ToolMode(ctx) {}
 
 	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
 

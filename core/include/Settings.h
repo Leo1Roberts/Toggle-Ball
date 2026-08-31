@@ -15,6 +15,7 @@ struct SizePreferences {
 	float lineWidth = 1.f;
 	float obstaclePerimeterHitRadius = 3.f;
 	float obstacleCapHandleRadius = 7.f;
+	float snappingDistance = 7.f;
 };
 
 

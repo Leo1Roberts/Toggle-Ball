@@ -8,14 +8,14 @@
 #include "ui/UIText.h"
 
 
-std::unique_ptr<TransformOperation> TransformOperation::make(ActionCode actionCode, EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition) {
+std::unique_ptr<TransformOperation> TransformOperation::make(ActionCode actionCode, const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition) {
 	switch (actionCode) {
 	case ActionCode::Translate:
-		return std::make_unique<TranslateOperation>(scene, camera, quickSettings, trigger, initialPlanarPosition);
+		return std::make_unique<TranslateOperation>(ctx, trigger, initialPlanarPosition);
 	case ActionCode::Rotate:
-		return std::make_unique<RotateOperation>(scene, camera, quickSettings, trigger, initialPlanarPosition);
+		return std::make_unique<RotateOperation>(ctx, trigger, initialPlanarPosition);
 	case ActionCode::Scale:
-		return std::make_unique<ScaleOperation>(scene, camera, quickSettings, trigger, initialPlanarPosition);
+		return std::make_unique<ScaleOperation>(ctx, trigger, initialPlanarPosition);
 	default:;
 		return nullptr;
 	}
@@ -92,7 +92,7 @@ OperationResponse TransformOperation::doProcessEvent(const Event& event) {
 		}
 	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (!typing && trigger != TriggerType::ActionKey && pointer->id == 0 && (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)) {
-			glm::vec2 newPointerPlanarPosition = camera.screenToPlanarPosition(pointer->position);
+			glm::vec2 newPointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer->position);
 			updateTransformation(newPointerPlanarPosition);
 			pointerPlanarPosition = newPointerPlanarPosition;
 			applyOperation();

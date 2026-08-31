@@ -1,6 +1,7 @@
 #ifndef EDITOR_H
 #define EDITOR_H
 
+#include "EditorContext.h"
 #include "utilities/Camera.h"
 #include "editor/EditorScene.h"
 #include "editor/GizmoRenderer.h"
@@ -42,13 +43,14 @@ private:
 	Camera camera;
 	GizmoRenderer gizmoRenderer{uiManager, camera};
 	EditorQuickSettings quickSettings;
+	EditorContext ctx{scene, camera, quickSettings, uiToWorldScale};
 
 	SelectionState cachedSelectionState{};
 
 	UIContainer* viewportUI;
 
-	TransformMode transformMode;
-	ShapeMode shapeMode;
+	TransformMode transformMode{ctx};
+	ShapeMode shapeMode{ctx};
 	ToolMode* currentMode = nullptr;
 	void selectMode(ToolMode* mode);
 

@@ -2,19 +2,18 @@
 #define MINOR_RADIUS_OPERATION_H
 
 #include "Operation.h"
+#include "editor/EditorContext.h"
 #include "editor/EditorScene.h"
 
 
 class MinorRadiusOperation : public Operation {
 public:
-	MinorRadiusOperation(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, TriggerType trigger, glm::vec2 initialPlanarPosition, float& minorRadius) :
-		Operation(scene, camera, quickSettings, trigger, initialPlanarPosition), minorRadius(minorRadius),
-		initialDistance(scene.obstacles[scene.selectionFocus.index].getRimProximity(initialPlanarPosition).distance) {}
+	MinorRadiusOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, float& minorRadius);
 
-	void cancel() const override { scene.cancelLevelChange(); }
+	void cancel() const override { ctx.scene.cancelLevelChange(); }
 	void commit() const override {
-		scene.commitLevelChange();
-		minorRadius = scene.obstacles[scene.selectionFocus.index].descriptor->shape->minorRadius;
+		ctx.scene.commitLevelChange();
+		minorRadius = ctx.scene.obstacles[ctx.scene.selectionFocus.index].descriptor->shape->minorRadius;
 	}
 
 	[[nodiscard]] std::optional<Cursor> queryCursor() const override;

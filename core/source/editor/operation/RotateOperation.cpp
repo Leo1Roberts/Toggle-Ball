@@ -78,22 +78,22 @@ void RotateOperation::applyOperation() {
 			setRotation(to_rad(*value));
 		else {
 			updateUI();
-			scene.cancelLevelChange();
+			ctx.scene.cancelLevelChange();
 			return;
 		}
 	}
 
-	auto ball = &scene.ball;
-	auto& obstacles = scene.obstacles;
+	auto ball = &ctx.scene.ball;
+	auto& obstacles = ctx.scene.obstacles;
 
 	if (ball->isSelected())
-		ball->rotateBy(rotationMatrix, pivot, quickSettings.transform.individually, scene.getCurrentNode()->level.ballDescriptor.get());
+		ball->rotateBy(rotationMatrix, pivot, ctx.quickSettings.transform.individually, ctx.scene.getCurrentNode()->level.ballDescriptor.get());
 
 	for (int i = 0; i < obstacles.size(); i++) {
 		auto& obstacle = obstacles[i];
 		if (obstacle.isSelected()) {
-			obstacle.rotateBy(rotation, rotationMatrix, quickSettings.transform.individually ? glm::vec2(0.f) : pivot, quickSettings.transform.bothStates, scene.isToggled(), quickSettings.transform.individually,
-				scene.getCurrentNode()->level.obstacleDescriptors[i].get());
+			obstacle.rotateBy(rotation, rotationMatrix, ctx.quickSettings.transform.individually ? glm::vec2(0.f) : pivot, ctx.quickSettings.transform.bothStates, ctx.scene.isToggled(), ctx.quickSettings.transform.individually,
+				ctx.scene.getCurrentNode()->level.obstacleDescriptors[i].get());
 
 			obstacle.initKinematicState();
 			obstacle.invalidateDomainMesh();
