@@ -17,7 +17,7 @@ private:
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;
 
 	struct CapInfo { int obstacleIndex; bool leftCap; };
-	[[nodiscard]] std::optional<CapInfo> getPointedCapInfo(glm::vec2 pointerPlanarPosition) const;
+	[[nodiscard]] std::optional<CapInfo> getPointedCapHandleInfo(glm::vec2 pointerPlanarPosition) const;
 	[[nodiscard]] std::optional<int> getPointedRimIndex(glm::vec2 pointerPlanarPosition) const;
 
 	float minorRadius = 0.7f;

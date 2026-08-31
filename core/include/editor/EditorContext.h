@@ -21,6 +21,11 @@ struct EditorQuickSettings {
 	} transform;
 };
 
+struct SnapResult {
+	glm::vec2 value;
+	bool snapped = false;
+};
+
 struct EditorContext {
 	EditorContext(EditorScene& scene, const Camera& camera, const EditorQuickSettings& quickSettings, const float& uiToWorldScale)
 		: scene(scene), camera(camera), quickSettings(quickSettings), uiToWorldScale(uiToWorldScale) {}
@@ -28,7 +33,9 @@ struct EditorContext {
 	[[nodiscard]] std::optional<int> getTopObstacleIndex(const std::function<bool(const EditorObstacle&)>& includePredicate, bool prioritiseSelected = false) const;
 	[[nodiscard]] std::optional<int> getPointedObstacleIndex(glm::vec2 pointerPlanarPosition, bool prioritiseSelected = false) const;
 
-	[[nodiscard]] glm::vec2 snapPoint(glm::vec2 point, const EntityReference& excludedEntity) const;
+	[[nodiscard]] std::vector<int> getPointedObstacleIndices(glm::vec2 pointerPlanarPosition, int excludedObstacleIndex) const;
+
+	[[nodiscard]] SnapResult snapPoint(glm::vec2 point, const EntityReference& excludedEntity) const;
 
 	EditorScene& scene;
 	const Camera& camera;

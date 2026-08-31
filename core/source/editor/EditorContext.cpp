@@ -47,8 +47,18 @@ std::optional<int> EditorContext::getPointedObstacleIndex(glm::vec2 pointerPlana
 	}, prioritiseSelected);
 }
 
+std::vector<int> EditorContext::getPointedObstacleIndices(glm::vec2 pointerPlanarPosition, int excludedObstacleIndex) const {
+	std::vector<int> indices;
+	auto hitTestBox = SelectBox(pointerPlanarPosition);
+	for (int i = 0; i < scene.obstacles.size(); i++)
+		if (i != excludedObstacleIndex && scene.obstacles[i].isInSelectBox(hitTestBox))
+			indices.push_back(i);
 
-glm::vec2 EditorContext::snapPoint(glm::vec2 point, const EntityReference& excludedEntity) const {
+	return indices;
+}
+
+
+SnapResult EditorContext::snapPoint(glm::vec2 point, const EntityReference& excludedEntity) const {
 	if (quickSettings.snap) {
 		float shortestCapDistanceSq = std::numeric_limits<float>::max();
 		glm::vec2 closestCap;
@@ -65,7 +75,7 @@ glm::vec2 EditorContext::snapPoint(glm::vec2 point, const EntityReference& exclu
 			}
 		float planarSnappingDistance = Settings::Sizes.snappingDistance * uiToWorldScale;
 		if (shortestCapDistanceSq < planarSnappingDistance * planarSnappingDistance)
-			point = closestCap;
+			return {.value = closestCap, .snapped = true};
 	}
-	return point;
+	return {.value = point, .snapped = false};
 }

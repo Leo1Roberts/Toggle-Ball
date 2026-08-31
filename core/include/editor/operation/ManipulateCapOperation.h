@@ -15,6 +15,8 @@ public:
 	void cancel() const final { ctx.scene.cancelLevelChange(); }
 	void commit() const final { ctx.scene.commitLevelChange(); }
 
+	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
+
 protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
 
@@ -32,9 +34,12 @@ private:
 	const float initialAngle;
 	const glm::vec2 initialPosition;
 	const bool leftCap;
-	std::optional<float> tangentAngle;
+	const std::optional<float> tangentAngle;
 	const glm::vec2 fixedCapPlanarPosition;
 	const glm::vec2 initialCapPlanarPosition;
+
+	bool currentlyLeftCap = leftCap;
+	SnapResult snapResult;
 };
 
 class ManipulateLeftCapOperation : public ManipulateCapOperation {

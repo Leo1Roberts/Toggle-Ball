@@ -1,5 +1,8 @@
 #include "editor/operation/ManipulateCapOperation.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/norm.hpp"
+
 
 ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> tangentAngle) :
 	Operation(ctx, trigger, initialPlanarPosition),
@@ -10,6 +13,36 @@ ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, Trigger
 	initialPosition(worldToPlanar(obstacle.getKinematicState()->getPosition())), leftCap(leftCap), tangentAngle(tangentAngle),
 	fixedCapPlanarPosition(!leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()),
 	initialCapPlanarPosition(leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()) {}
+
+
+void ManipulateCapOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
+	auto position = currentlyLeftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition();
+
+	for (auto i : ctx.getPointedObstacleIndices(pointerPlanarPosition, obstacleIndex)) {
+		const auto& otherObstacle = ctx.scene.obstacles[i];
+		auto addInactiveHandle = [&](glm::vec2 capPos) {
+			if (glm::length2(capPos - position) > 0.00000001f) {
+				PanelStyle inactiveStyle = {
+					.fillColor = {Color::White, 0.3f},
+					.strokeColor = {Color::Black, 0.3f},
+					.cornerRadius = std::min(Settings::Sizes.obstacleCapHandleRadius, gizmoRenderer.planarToUIDistance(otherObstacle.descriptor->shape->minorRadius)),
+					.strokeWidth = 2.f,
+				};
+				gizmoRenderer.addCircle(capPos, inactiveStyle);
+			}
+		};
+		addInactiveHandle(otherObstacle.getLeftCapPosition());
+		addInactiveHandle(otherObstacle.getRightCapPosition());
+	}
+
+	PanelStyle activeStyle = {
+		.fillColor = {(snapResult.snapped && length2(snapResult.value - position) < 0.00000001f ? Color::SoftGreen : Color::White), 0.8f},
+		.strokeColor = {Color::Black, 0.8f},
+		.cornerRadius = std::min(Settings::Sizes.obstacleCapHandleRadius, gizmoRenderer.planarToUIDistance(obstacle.descriptor->shape->minorRadius)),
+		.strokeWidth = 2.f,
+	};
+	gizmoRenderer.addCircle(position, activeStyle);
+}
 
 
 OperationResponse ManipulateCapOperation::doProcessEvent(const Event& event) {
@@ -25,7 +58,8 @@ OperationResponse ManipulateCapOperation::doProcessEvent(const Event& event) {
 
 
 void ManipulateCapOperation::applyOperation() {
-	auto capPlanarPosition = ctx.snapPoint(initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition, {EntityType::Obstacle, obstacleIndex});
+	snapResult = ctx.snapPoint(initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition, {EntityType::Obstacle, obstacleIndex});
+	auto capPlanarPosition = snapResult.value;
 
     auto capToCap = capPlanarPosition - fixedCapPlanarPosition;
     auto capToCapDistance = length(capToCap);
@@ -40,6 +74,8 @@ void ManipulateCapOperation::applyOperation() {
     glm::vec2 targetPosition;
     float targetAngle = chordAngle; // Default value
     bool applyTransformation = true;
+
+	currentlyLeftCap = leftCap;
 
     auto applySegmentShape = [&](float length, float dirAngle) {
         if (segmentSpec) {
@@ -94,7 +130,12 @@ void ManipulateCapOperation::applyOperation() {
             float positionOffset = (capToCapDistance * 0.5f) / std::tan(chordTangentAngleDiff);
 
             applyArcShape(arcAngle, arcRadius, positionOffset);
-            targetAngle = chordTangentAngleDiff > 0.f ? chordAngle : chordAngle + glm::pi<float>();
+        	if (chordTangentAngleDiff > 0.f)
+        		targetAngle = chordAngle;
+        	else {
+        		targetAngle = chordAngle + glm::pi<float>();
+        		currentlyLeftCap = !leftCap;
+        	}
         }
     } else {
         if (segmentSpec)

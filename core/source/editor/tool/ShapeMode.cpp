@@ -40,7 +40,7 @@ void ShapeMode::addGizmos(GizmoRenderer& gizmoRenderer) const {
 
 		auto pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer0Position);
 
-		auto pointedCapInfo = getPointedCapInfo(pointerPlanarPosition);
+		auto pointedCapInfo = getPointedCapHandleInfo(pointerPlanarPosition);
 		auto pointedObstacleIndex = ctx.getPointedObstacleIndex(pointerPlanarPosition, true);
 		if (pointedCapInfo)
 			addHandles(ctx.scene.obstacles[pointedCapInfo->obstacleIndex], pointedCapInfo->leftCap);
@@ -63,7 +63,7 @@ std::optional<Cursor> ShapeMode::queryCursor() const {
 		return activeOperation->queryCursor();
 
 	auto pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer0Position);
-	if (!getPointedCapInfo(pointerPlanarPosition)) {
+	if (!getPointedCapHandleInfo(pointerPlanarPosition)) {
 		if (auto index = getPointedRimIndex(pointerPlanarPosition)) {
 			auto dir = Camera::planarToScreenDirection(ctx.scene.obstacles[*index].getRimProximity(pointerPlanarPosition).direction);
 			return Cursor{
@@ -78,7 +78,7 @@ std::optional<Cursor> ShapeMode::queryCursor() const {
 
 
 void ShapeMode::performPrimaryAction(const PointerEvent& upEvent) {
-	if (!getPointedCapInfo(ctx.camera.screenToPlanarPosition(pointerDownEvent.position))) {
+	if (!getPointedCapHandleInfo(ctx.camera.screenToPlanarPosition(pointerDownEvent.position))) {
 		auto selectOperation = SelectOperation(
 			ctx, TriggerType::Pointer,
 			ctx.camera.screenToPlanarPosition(pointerDownEvent.position), true);
@@ -94,7 +94,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 	auto pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointerDownEvent.position);
 
 	if (dragStartEvent.button == PointerButton::Primary) {
-		if (auto capInfo = getPointedCapInfo(pointerPlanarPosition)) {
+		if (auto capInfo = getPointedCapHandleInfo(pointerPlanarPosition)) {
 			auto& obstacle = ctx.scene.obstacles[capInfo->obstacleIndex];
 			auto manipulateCapOperation = std::make_unique<ManipulateCapOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, capInfo->obstacleIndex, capInfo->leftCap,
 				obstacle.getKinematicState()->getAngle() + (capInfo->leftCap ? obstacle.descriptor->shape->getRightCapAngle() : obstacle.descriptor->shape->getLeftCapAngle()));
@@ -123,7 +123,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 	} else if (dragStartEvent.button == PointerButton::Secondary) {
 		std::optional<float> tangentAngle = std::nullopt;
 		auto sproutingPoint = pointerPlanarPosition;
-		if (auto capInfo = getPointedCapInfo(pointerPlanarPosition)) {
+		if (auto capInfo = getPointedCapHandleInfo(pointerPlanarPosition)) {
 			const auto& obstacle = ctx.scene.obstacles[capInfo->obstacleIndex];
 			minorRadius = obstacle.descriptor->shape->minorRadius;
 			tangentAngle = wrapAngle(obstacle.getKinematicState()->getAngle() + glm::pi<float>() +
@@ -139,7 +139,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 }
 
 
-std::optional<ShapeMode::CapInfo> ShapeMode::getPointedCapInfo(glm::vec2 pointerPlanarPosition) const {
+std::optional<ShapeMode::CapInfo> ShapeMode::getPointedCapHandleInfo(glm::vec2 pointerPlanarPosition) const {
 	if (auto index = ctx.getTopObstacleIndex([this, pointerPlanarPosition](const auto& obstacle) {
 		float leftCapDistanceSq = length2(pointerPlanarPosition - obstacle.getLeftCapPosition());
 		float rightCapDistanceSq = length2(pointerPlanarPosition - obstacle.getRightCapPosition());
