@@ -13,6 +13,8 @@ public:
 	void cancel() const final { manipulateCapOperation->cancel(); }
 	void commit() const final { manipulateCapOperation->commit(); }
 
+	void addGizmos(GizmoRenderer& gizmoRenderer) const override { manipulateCapOperation->addGizmos(gizmoRenderer); }
+
 protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override {
 		return manipulateCapOperation->doProcessEvent(event);
