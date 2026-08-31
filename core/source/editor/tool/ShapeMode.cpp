@@ -96,14 +96,24 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 	if (dragStartEvent.button == PointerButton::Primary) {
 		if (auto capInfo = getPointedCapHandleInfo(pointerPlanarPosition)) {
 			auto& obstacle = ctx.scene.obstacles[capInfo->obstacleIndex];
+			ctx.scene.deselectAll();
+			obstacle.select();
+			ctx.scene.selectionFocus = {EntityType::Obstacle, capInfo->obstacleIndex};
+
 			auto manipulateCapOperation = std::make_unique<ManipulateCapOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, capInfo->obstacleIndex, capInfo->leftCap,
 				obstacle.getKinematicState()->getAngle() + (capInfo->leftCap ? obstacle.descriptor->shape->getRightCapAngle() : obstacle.descriptor->shape->getLeftCapAngle()));
 			if (manipulateCapOperation->start(pointerDownEvent.modifiers))
 				return manipulateCapOperation;
-		} else if (auto index = getPointedRimIndex(pointerPlanarPosition)) {
-			if (!ctx.scene.obstacles[*index].isSelected()) {
+
+			ctx.scene.cancelSelectionChange();
+			return nullptr;
+		}
+
+		if (auto index = getPointedRimIndex(pointerPlanarPosition)) {
+			auto& obstacle = ctx.scene.obstacles[*index];
+			if (!obstacle.isSelected()) {
 				ctx.scene.deselectAll();
-				ctx.scene.obstacles[*index].select();
+				obstacle.select();
 			}
 			ctx.scene.selectionFocus = {EntityType::Obstacle, *index};
 
@@ -111,7 +121,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 			if (minorRadiusOperation->start(pointerDownEvent.modifiers))
 				return minorRadiusOperation;
 
-			ctx.scene.cancelSelectionChange(); // Clean up if minor radius operation fails to start
+			ctx.scene.cancelSelectionChange();
 			return nullptr;
 		}
 
