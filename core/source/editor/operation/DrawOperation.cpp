@@ -9,6 +9,9 @@ DrawOperation::DrawOperation(const EditorContext& ctx, TriggerType trigger, glm:
 	ctx.scene.deselectAll();
 	auto shape = std::make_unique<SegmentSpec>(minorRadius, 0.f, 0.f);
 	auto motion = std::make_unique<StaticSpec>(initialPlanarPosition, 0.f);
+	auto descriptor = ctx.scene.level->obstacleDescriptors.emplace_back(
+		std::make_unique<ObstacleDescriptor>(std::move(shape), std::move(motion))).get();
+	ctx.scene.obstacles.emplace_back(descriptor);
 	ctx.scene.selectionFocus = {EntityType::Obstacle, (int)ctx.scene.obstacles.size() - 1};
 	manipulateCapOperation = std::make_unique<ManipulateRightCapOperation>(ctx, trigger, initialPlanarPosition, ctx.scene.obstacles.size() - 1, tangentAngle);
 }
