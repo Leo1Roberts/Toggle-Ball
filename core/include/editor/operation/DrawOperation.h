@@ -7,7 +7,7 @@
 
 class DrawOperation : public Operation {
 public:
-	DrawOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, float minorRadius, std::optional<float> tangentAngle = std::nullopt);
+	DrawOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, float minorRadius, std::optional<float> fixedTangentAngle = std::nullopt);
 
 	// Relies on manipulateCapOperation calling cancel/commitLevelChange
 	void cancel() const final { manipulateCapOperation->cancel(); }

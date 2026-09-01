@@ -9,7 +9,7 @@
 class ManipulateCapOperation : public Operation {
 	friend class DrawOperation;
 public:
-	ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> tangentAngle = std::nullopt);
+	ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> fixedTangentAngle = std::nullopt);
 
 	// DrawOperation relies on cancel/commitLevelChange being called
 	void cancel() const final { ctx.scene.cancelLevelChange(); }
@@ -24,9 +24,9 @@ protected:
 
 private:
 	void applyModifiers(byte mods) final {
-		alignWithTangent = mods & MOD_CTRL && tangentAngle;
+		useSnappedTangent = mods & MOD_CTRL;
 	}
-	bool alignWithTangent = false;
+	bool useSnappedTangent = false;
 
 	int obstacleIndex;
 	EditorObstacle& obstacle;
@@ -34,7 +34,7 @@ private:
 	const float initialAngle;
 	const glm::vec2 initialPosition;
 	const bool leftCap;
-	const std::optional<float> tangentAngle;
+	const std::optional<float> fixedTangentAngle;
 	const glm::vec2 fixedCapPlanarPosition;
 	const glm::vec2 initialCapPlanarPosition;
 
@@ -44,13 +44,13 @@ private:
 
 class ManipulateLeftCapOperation : public ManipulateCapOperation {
 public:
-	ManipulateLeftCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, std::optional<float> tangentAngle = std::nullopt)
-		: ManipulateCapOperation(ctx, trigger, initialPlanarPosition, obstacleIndex, true, tangentAngle) {}
+	ManipulateLeftCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, std::optional<float> fixedTangentAngle = std::nullopt)
+		: ManipulateCapOperation(ctx, trigger, initialPlanarPosition, obstacleIndex, true, fixedTangentAngle) {}
 };
 class ManipulateRightCapOperation : public ManipulateCapOperation {
 public:
-	ManipulateRightCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, std::optional<float> tangentAngle = std::nullopt)
-		: ManipulateCapOperation(ctx, trigger, initialPlanarPosition, obstacleIndex, false, tangentAngle) {}
+	ManipulateRightCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, std::optional<float> fixedTangentAngle = std::nullopt)
+		: ManipulateCapOperation(ctx, trigger, initialPlanarPosition, obstacleIndex, false, fixedTangentAngle) {}
 };
 
 

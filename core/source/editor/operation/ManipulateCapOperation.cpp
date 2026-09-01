@@ -4,13 +4,13 @@
 #include "glm/gtx/norm.hpp"
 
 
-ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> tangentAngle) :
+ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> fixedTangentAngle) :
 	Operation(ctx, trigger, initialPlanarPosition),
 	obstacleIndex(obstacleIndex),
 	obstacle(ctx.scene.obstacles[obstacleIndex]),
 	initialDescriptor(*obstacle.descriptor),
 	initialAngle(obstacle.getKinematicState()->getAngle()),
-	initialPosition(worldToPlanar(obstacle.getKinematicState()->getPosition())), leftCap(leftCap), tangentAngle(tangentAngle),
+	initialPosition(worldToPlanar(obstacle.getKinematicState()->getPosition())), leftCap(leftCap), fixedTangentAngle(fixedTangentAngle),
 	fixedCapPlanarPosition(!leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()),
 	initialCapPlanarPosition(leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()) {}
 
@@ -116,27 +116,44 @@ void ManipulateCapOperation::applyOperation() {
         targetPosition = capsMidpoint + glm::vec2(std::sin(chordAngle), -std::cos(chordAngle)) * positionOffset;
     };
 
-    if (alignWithTangent) {
-        float curveTangent = leftCap ? *tangentAngle : wrapAngle(*tangentAngle + glm::pi<float>());
-        float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
-        float absAngleDiff = std::abs(chordTangentAngleDiff);
+	bool alignWithTangent = false;
+	float curveTangent = 0.f;
 
-        if (capToCapDistance * absAngleDiff < 0.5f) { // Arbitrary threshold for snapping to being straight
-            targetAngle = curveTangent;
-            applySegmentShape(capToCapDistance * std::cos(chordTangentAngleDiff), curveTangent);
-        } else {
-            float arcAngle = 2.f * absAngleDiff;
-            float arcRadius = (capToCapDistance * 0.5f) / std::sin(absAngleDiff);
-            float positionOffset = (capToCapDistance * 0.5f) / std::tan(chordTangentAngleDiff);
+	if (ctx.quickSettings.shape.alignWithTangent) {
+		if (useSnappedTangent) {
+			if (snapResult.snapped && snapResult.tangentAngle) {
+				alignWithTangent = true;
+				float manipulatedTangent = leftCap ? *snapResult.tangentAngle : wrapAngle(*snapResult.tangentAngle + glm::pi<float>());
+				curveTangent = wrapAngle(2.f * chordAngle - manipulatedTangent);
+			}
+		} else {
+			if (fixedTangentAngle) {
+				alignWithTangent = true;
+				curveTangent = leftCap ? *fixedTangentAngle : wrapAngle(*fixedTangentAngle + glm::pi<float>());
+			}
+		}
+	}
 
-            applyArcShape(arcAngle, arcRadius, positionOffset);
-        	if (chordTangentAngleDiff > 0.f)
-        		targetAngle = chordAngle;
-        	else {
-        		targetAngle = chordAngle + glm::pi<float>();
-        		currentlyLeftCap = !leftCap;
-        	}
-        }
+	if (alignWithTangent) {
+		float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
+		float absAngleDiff = std::abs(chordTangentAngleDiff);
+
+		if (capToCapDistance * absAngleDiff < 0.5f) { // Arbitrary threshold for snapping to being straight
+			targetAngle = curveTangent;
+			applySegmentShape(capToCapDistance * std::cos(chordTangentAngleDiff), curveTangent);
+		} else {
+			float arcAngle = 2.f * absAngleDiff;
+			float arcRadius = (capToCapDistance * 0.5f) / std::sin(absAngleDiff);
+			float positionOffset = (capToCapDistance * 0.5f) / std::tan(chordTangentAngleDiff);
+
+			applyArcShape(arcAngle, arcRadius, positionOffset);
+			if (chordTangentAngleDiff > 0.f)
+				targetAngle = chordAngle;
+			else {
+				targetAngle = chordAngle + glm::pi<float>();
+				currentlyLeftCap = !leftCap;
+			}
+		}
     } else {
         if (segmentSpec)
             applySegmentShape(capToCapDistance, chordAngle);

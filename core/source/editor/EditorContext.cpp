@@ -62,6 +62,7 @@ SnapResult EditorContext::snapPoint(glm::vec2 point, const EntityReference& excl
 	if (quickSettings.snap) {
 		float shortestCapDistanceSq = std::numeric_limits<float>::max();
 		glm::vec2 closestCap;
+		float closestCapTangentAngle;
 		for (int i = 0; i < scene.obstacles.size(); i++)
 			if (!(excludedEntity.type == EntityType::Obstacle && i == excludedEntity.index)) {
 				const auto& otherObstacle = scene.obstacles[i];
@@ -71,11 +72,15 @@ SnapResult EditorContext::snapPoint(glm::vec2 point, const EntityReference& excl
 				if (minCapDistance < shortestCapDistanceSq) {
 					shortestCapDistanceSq = minCapDistance;
 					closestCap = leftCapDistanceSq < rightCapDistanceSq ? otherObstacle.getLeftCapPosition() : otherObstacle.getRightCapPosition();
+					closestCapTangentAngle = otherObstacle.getKinematicState()->getAngle() +
+						(leftCapDistanceSq < rightCapDistanceSq
+						? otherObstacle.descriptor->shape->getLeftCapAngle()
+						: otherObstacle.descriptor->shape->getRightCapAngle());
 				}
 			}
 		float planarSnappingDistance = Settings::Sizes.snappingDistance * uiToWorldScale;
 		if (shortestCapDistanceSq < planarSnappingDistance * planarSnappingDistance)
-			return {.value = closestCap, .snapped = true};
+			return {.value = closestCap, .snapped = true, .tangentAngle = closestCapTangentAngle};
 	}
 	return {.value = point, .snapped = false};
 }

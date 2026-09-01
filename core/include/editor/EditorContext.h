@@ -19,11 +19,15 @@ struct EditorQuickSettings {
 		bool bothStates = false;
 		bool individually = false;
 	} transform;
+	struct {
+		bool alignWithTangent = true;
+	} shape;
 };
 
 struct SnapResult {
 	glm::vec2 value;
 	bool snapped = false;
+	std::optional<float> tangentAngle = std::nullopt;
 };
 
 struct EditorContext {

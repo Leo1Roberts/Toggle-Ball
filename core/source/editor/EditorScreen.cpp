@@ -102,6 +102,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 
 	addEditorQuickSetting("Transform state", {"Single", "Dual"}, &quickSettings.transform.bothStates);
 	addEditorQuickSetting("Transform mode", {"Group", "Individual"}, &quickSettings.transform.individually);
+	addEditorQuickSetting("Align with tangent", {"Off", "On"}, &quickSettings.shape.alignWithTangent);
 
 
 	viewportUI = mainArea->addChild<UIContainer>();
@@ -308,6 +309,12 @@ void EditorScreen::processEvent(const Event& event) {
 			case ActionCode::ToggleTransformIndividually:
 				if (key->action == KeyAction::Down) {
 					quickSettings.transform.individually = !quickSettings.transform.individually;
+					currentMode->onQuickSettingsChanged();
+				}
+				return;
+			case ActionCode::ToggleAlignWithTangent:
+				if (key->action == KeyAction::Down) {
+					quickSettings.shape.alignWithTangent = !quickSettings.shape.alignWithTangent;
 					currentMode->onQuickSettingsChanged();
 				}
 				return;
@@ -773,6 +780,13 @@ void EditorScreen::updateDynamicUI() {
 		hints.emplace_back(*binding, "Test level");
 	if (auto binding = Settings::Bindings->findBinding(ActionCode::CycleToolMode))
 		hints.emplace_back(*binding, "Cycle tool mode");
+
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformBothStates))
+		hints.emplace_back(*binding, "Toggle transform state");
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformIndividually))
+		hints.emplace_back(*binding, "Toggle transform mode");
+	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleAlignWithTangent))
+		hints.emplace_back(*binding, "Toggle tangent align");
 
 	hints.append_range(currentMode->getBindingHints());
 

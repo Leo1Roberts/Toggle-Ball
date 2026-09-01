@@ -80,6 +80,7 @@ enum class ActionCode {
 	LockToXAxis, LockToYAxis,
 
 	ToggleTransformBothStates, ToggleTransformIndividually,
+	ToggleAlignWithTangent,
 };
 
 
@@ -127,6 +128,7 @@ private:
 		{ ActionCode::LockToYAxis,                 "Constrain to Y axis"           },
 		{ ActionCode::ToggleTransformBothStates,   "Toggle transform both states"  },
 		{ ActionCode::ToggleTransformIndividually, "Toggle transform individually" },
+		{ ActionCode::ToggleAlignWithTangent,      "Toggle align with tangent"     },
 	};
 };
 

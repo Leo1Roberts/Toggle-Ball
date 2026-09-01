@@ -190,10 +190,6 @@ ToolModeResponse ToolMode::processObstacleExistenceAction(ActionCode actionCode,
 
 std::vector<BindingHint> ToolMode::getBindingHints() const {
 	std::vector<BindingHint> hints;
-	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformBothStates))
-		hints.emplace_back(*binding, "Toggle transform state");
-	if (auto binding = Settings::Bindings->findBinding(ActionCode::ToggleTransformIndividually))
-		hints.emplace_back(*binding, "Toggle transform mode");
 
 	if (activeOperation)
 		hints.append_range(activeOperation->getBindingHints());
