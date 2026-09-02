@@ -187,10 +187,9 @@ void ManipulateCapOperation::applyOperation() {
 		float rawCapToCapDistance = length(rawCapToCap);
 		float rawChordAngle = std::atan2(sign * rawCapToCap.y, sign * rawCapToCap.x);
 		float rawChordTangentAngleDiff = wrapAngle(sign * (curveTangent - rawChordAngle));
-		float rawAbsAngleDiff = std::abs(rawChordTangentAngleDiff);
 
-		if (rawCapToCapDistance * std::tan(rawAbsAngleDiff) < 0.5f) { // Arbitrary threshold for snapping to being straight
-			float projectedLength = rawCapToCapDistance * std::cos(rawChordTangentAngleDiff);
+		float projectedLength = rawCapToCapDistance * std::cos(rawChordTangentAngleDiff);
+		if (projectedLength >= 0.f && std::abs(rawCapToCapDistance * std::tan(rawChordTangentAngleDiff)) < 0.5f) { // Arbitrary threshold for snapping to being straight
 			glm::vec2 straightnessSnappedPosition = fixedCapPlanarPosition + sign * glm::vec2(std::cos(curveTangent), std::sin(curveTangent)) * projectedLength;
 
 			snapResult = ctx.snapPointRestrictedToLine(straightnessSnappedPosition, {EntityType::Obstacle, obstacleIndex}, fixedCapPlanarPosition, curveTangent);
