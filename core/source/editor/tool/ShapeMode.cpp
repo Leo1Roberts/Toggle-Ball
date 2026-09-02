@@ -6,6 +6,7 @@
 #include "editor/operation/SelectOperation.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
+#include "editor/operation/CurvatureOperation.h"
 #include "glm/gtx/norm.hpp"
 
 
@@ -135,6 +136,24 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 
 			ctx.scene.cancelSelectionChange();
 			return nullptr;
+		}
+
+		if (auto index = ctx.getPointedObstacleIndex(pointerPlanarPosition)) {
+			auto& obstacle = ctx.scene.obstacles[*index];
+			if (auto info = getMidsectionHandleInfo(obstacle, pointerPlanarPosition)) {
+				if (info->pointed) {
+					ctx.scene.deselectAll();
+					obstacle.select();
+					ctx.scene.selectionFocus = {EntityType::Obstacle, *index};
+
+					auto curvatureOperation = std::make_unique<CurvatureOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, *index, info->position);
+					if (curvatureOperation->start(pointerDownEvent.modifiers))
+						return curvatureOperation;
+
+					ctx.scene.cancelSelectionChange();
+					return nullptr;
+				}
+			}
 		}
 
 		if (!pointedAtEntity(pointerPlanarPosition)) {

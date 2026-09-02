@@ -173,23 +173,35 @@ void ManipulateCapOperation::applyOperation() {
 				alignWithTangent = true;
 				float manipulatedTangent = leftCap ? *snapResult.angle : wrapAngle(*snapResult.angle + glm::pi<float>());
 				curveTangent = wrapAngle(2.f * chordAngle - manipulatedTangent);
+
+				float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
+				if (std::abs(chordTangentAngleDiff) < glm::half_pi<float>() && std::abs(capToCapDistance * std::tan(chordTangentAngleDiff)) < 0.5f) {
+					snapResult.angle = std::nullopt;
+					alignWithTangent = false;
+				}
 			}
 		} else {
 			if (fixedTangentAngle) {
 				alignWithTangent = true;
 				curveTangent = leftCap ? *fixedTangentAngle : wrapAngle(*fixedTangentAngle + glm::pi<float>());
+
+				float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
+				if (std::abs(chordTangentAngleDiff) < glm::half_pi<float>() && std::abs(capToCapDistance * std::tan(chordTangentAngleDiff)) < 0.5f) {
+					snapResult.angle = std::nullopt;
+					capPlanarPosition = rawCapPlanarPosition;
+					capToCap = capPlanarPosition - fixedCapPlanarPosition;
+					capToCapDistance = length(capToCap);
+					chord = sign * capToCap;
+					chordAngle = std::atan2(chord.y, chord.x);
+				}
 			}
 		}
 	}
 
 	if (alignWithTangent) {
-		auto rawCapToCap = rawCapPlanarPosition - fixedCapPlanarPosition;
-		float rawCapToCapDistance = length(rawCapToCap);
-		float rawChordAngle = std::atan2(sign * rawCapToCap.y, sign * rawCapToCap.x);
-		float rawChordTangentAngleDiff = wrapAngle(sign * (curveTangent - rawChordAngle));
-
-		float projectedLength = rawCapToCapDistance * std::cos(rawChordTangentAngleDiff);
-		if (projectedLength >= 0.f && std::abs(rawCapToCapDistance * std::tan(rawChordTangentAngleDiff)) < 0.5f) { // Arbitrary threshold for snapping to being straight
+		float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
+		if (std::abs(chordTangentAngleDiff) < glm::half_pi<float>() && std::abs(capToCapDistance * std::tan(chordTangentAngleDiff)) < 0.5f) {
+			float projectedLength = capToCapDistance * std::cos(chordTangentAngleDiff);
 			glm::vec2 straightnessSnappedPosition = fixedCapPlanarPosition + sign * glm::vec2(std::cos(curveTangent), std::sin(curveTangent)) * projectedLength;
 
 			snapResult = ctx.snapPointRestrictedToLine(straightnessSnappedPosition, {EntityType::Obstacle, obstacleIndex}, fixedCapPlanarPosition, curveTangent);
@@ -200,12 +212,11 @@ void ManipulateCapOperation::applyOperation() {
 			chord = sign * capToCap;
 			chordAngle = std::atan2(chord.y, chord.x);
 
-			float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
+			chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
 
 			targetAngle = curveTangent;
 			applySegmentShape(capToCapDistance * std::cos(chordTangentAngleDiff), curveTangent);
 		} else {
-			float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
 			float absAngleDiff = std::abs(chordTangentAngleDiff);
 
 			float arcAngle = 2.f * absAngleDiff;
