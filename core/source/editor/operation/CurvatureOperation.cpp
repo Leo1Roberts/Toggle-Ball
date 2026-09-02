@@ -16,8 +16,21 @@ CurvatureOperation::CurvatureOperation(const EditorContext& ctx, TriggerType tri
 	cap2(obstacle.getRightCapPosition()) {}
 
 
-void CurvatureOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
+std::optional<Cursor> CurvatureOperation::queryCursor() const {
+	float angle = 0.f;
+	if (dynamic_cast<SegmentSpec*>(obstacle.descriptor->shape.get()))
+		angle = -obstacle.getKinematicState()->getAngle();
+	else if (dynamic_cast<ArcSpec*>(obstacle.descriptor->shape.get())) {
+		auto diff = Camera::planarToScreenDirection(
+			pointerPlanarPosition - worldToPlanar(obstacle.getKinematicState()->getPosition()));
+		angle = std::atan2(diff.y, diff.x) + glm::half_pi<float>();
+	}
 
+	return Cursor{
+		.style = Cursor::Style::DynamicResize,
+		.dynamic = true,
+		.angle = angle,
+	};
 }
 
 
@@ -55,7 +68,7 @@ void CurvatureOperation::applyOperation() {
     glm::vec2 targetPosition;
     float targetAngle;
 
-    if (isBetween && std::abs(chordOffset) < 0.5f) {
+    if (isBetween && std::abs(chordOffset) < 0.5f) { // TODO: use same threshold calculation as in ManipulateCapOperation
 		if (auto segmentSpec = dynamic_cast<SegmentSpec*>(initialDescriptor.shape.get())) {
             obstacle.descriptor->shape = std::make_unique<SegmentSpec>(
                 initialDescriptor.shape->minorRadius,

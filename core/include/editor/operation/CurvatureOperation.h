@@ -15,7 +15,7 @@ public:
 	void cancel() const final { ctx.scene.cancelLevelChange(); }
 	void commit() const final { ctx.scene.commitLevelChange(); }
 
-	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
+	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 
 protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
