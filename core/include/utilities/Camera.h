@@ -18,6 +18,7 @@ public:
 
 	[[nodiscard]] glm::vec2 screenToPlanarPosition(glm::vec2 screenPosition) const;
 	[[nodiscard]] glm::vec2 planarToScreenPosition(glm::vec2 planarPosition) const;
+	[[nodiscard]] float screenToPlanarDistance(float screenDistance) const;
 	[[nodiscard]] float planarToScreenDistance(float planarDistance) const;
 	static glm::vec2 planarToScreenDirection(glm::vec2 planarDirection); // Magnitude is not considered
 

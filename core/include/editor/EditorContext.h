@@ -5,7 +5,6 @@
 #include <optional>
 #include <glm/glm.hpp>
 
-
 struct EntityReference;
 class EditorObstacle;
 class Camera;
@@ -24,10 +23,11 @@ struct EditorQuickSettings {
 	} shape;
 };
 
+enum class SnapType { None, Cap, Spine };
 struct SnapResult {
 	glm::vec2 value;
-	bool snapped = false;
-	std::optional<float> tangentAngle = std::nullopt;
+	SnapType type = SnapType::None;
+	std::optional<float> angle = std::nullopt;
 };
 
 struct EditorContext {
@@ -40,6 +40,7 @@ struct EditorContext {
 	[[nodiscard]] std::vector<int> getPointedObstacleIndices(glm::vec2 pointerPlanarPosition, int excludedObstacleIndex) const;
 
 	[[nodiscard]] SnapResult snapPoint(glm::vec2 point, const EntityReference& excludedEntity) const;
+	[[nodiscard]] SnapResult snapPointRestrictedToLine(glm::vec2 point, const EntityReference& excludedEntity, glm::vec2 pointOnLine, float lineAngle) const;
 
 	EditorScene& scene;
 	const Camera& camera;

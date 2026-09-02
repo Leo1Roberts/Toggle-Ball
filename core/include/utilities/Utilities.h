@@ -21,6 +21,10 @@ inline glm::mat2 angleToRotation2D(float radians) {
 			-s,  c };
 }
 
+inline float cross2D(glm::vec2 a, glm::vec2 b) {
+	return a.x * b.y - a.y * b.x;
+}
+
 [[nodiscard]] float wrapAngle(float radians); // Wraps angle to range (-PI, PI]
 
 [[nodiscard]] std::string floatToString(float f, int maxPrecision, bool forceMax = false);

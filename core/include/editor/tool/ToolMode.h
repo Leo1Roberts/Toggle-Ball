@@ -39,6 +39,11 @@ public:
 protected:
 	explicit ToolMode(const EditorContext& ctx) : ctx(ctx) {}
 
+	// Pointer down and up on the same spot
+	virtual void performPrimaryAction(const PointerEvent& upEvent);
+	virtual void performSecondaryAction(const PointerEvent& upEvent) {}
+	[[nodiscard]] virtual std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) { return nullptr; }
+
 	const EditorContext& ctx;
 
 	std::unique_ptr<Operation> activeOperation;
@@ -52,11 +57,6 @@ protected:
 
 private:
 	[[nodiscard]] virtual ToolModeResponse doProcessEvent(const Event& event) { return {}; }
-
-	// Pointer down and up on the same spot
-	virtual void performPrimaryAction(const PointerEvent& upEvent);
-	virtual void performSecondaryAction(const PointerEvent& upEvent) {}
-	[[nodiscard]] virtual std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) { return nullptr; }
 
 	bool dragging = false;
 	bool pointerPrimaryDown = false;

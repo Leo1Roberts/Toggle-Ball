@@ -13,9 +13,11 @@ void ShapeMode::addGizmos(GizmoRenderer& gizmoRenderer) const {
 	if (activeOperation)
 		activeOperation->addGizmos(gizmoRenderer);
 	else {
+		auto pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer0Position);
+
 		auto addHandles = [&](const EditorObstacle& obstacle, std::optional<bool> pointedCap) {
 			auto addHandle = [&](glm::vec2 position, col fillColor, col strokeColor) {
-				float radius = std::min(Settings::Sizes.obstacleCapHandleRadius, gizmoRenderer.planarToUIDistance(obstacle.descriptor->shape->minorRadius));
+				float radius = std::min(Settings::Sizes.obstacleHandleRadius, gizmoRenderer.planarToUIDistance(obstacle.descriptor->shape->minorRadius));
 				PanelStyle style = {
 					.fillColor = fillColor,
 					.strokeColor = strokeColor,
@@ -38,14 +40,31 @@ void ShapeMode::addGizmos(GizmoRenderer& gizmoRenderer) const {
 			}
 		};
 
-		auto pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer0Position);
-
 		auto pointedCapInfo = getPointedCapHandleInfo(pointerPlanarPosition);
 		auto pointedObstacleIndex = ctx.getPointedObstacleIndex(pointerPlanarPosition, true);
 		if (pointedCapInfo)
 			addHandles(ctx.scene.obstacles[pointedCapInfo->obstacleIndex], pointedCapInfo->leftCap);
-		else if (pointedObstacleIndex)
-			addHandles(ctx.scene.obstacles[*pointedObstacleIndex], std::nullopt);
+		else if (pointedObstacleIndex) {
+			const auto& obstacle = ctx.scene.obstacles[*pointedObstacleIndex];
+
+			addHandles(obstacle, std::nullopt);
+
+			if (auto info = getMidsectionHandleInfo(obstacle, pointerPlanarPosition)) {
+				float radius = std::min(Settings::Sizes.obstacleHandleRadius, gizmoRenderer.planarToUIDistance(obstacle.descriptor->shape->minorRadius));
+				float opacity = info->pointed ? 0.8f : 0.3f;
+				gizmoRenderer.addSplitCircle(info->position, radius, info->angle, {
+					.fillColor = {Color::White, opacity},
+					.strokeColor = {Color::Black, opacity},
+					.cornerRadius = 0.f,
+					.strokeWidth = 2.f,
+				}, {
+					.fillColor = {Color::White, opacity},
+					.strokeColor = {Color::Black, opacity},
+					.cornerRadius = radius,
+					.strokeWidth = 2.f,
+				});
+			}
+		}
 
 		for (int i = 0; i < ctx.scene.obstacles.size(); i++) {
 			const auto& obstacle = ctx.scene.obstacles[i];
@@ -78,15 +97,8 @@ std::optional<Cursor> ShapeMode::queryCursor() const {
 
 
 void ShapeMode::performPrimaryAction(const PointerEvent& upEvent) {
-	if (!getPointedCapHandleInfo(ctx.camera.screenToPlanarPosition(pointerDownEvent.position))) {
-		auto selectOperation = SelectOperation(
-			ctx, TriggerType::Pointer,
-			ctx.camera.screenToPlanarPosition(pointerDownEvent.position), true);
-		if (selectOperation.start(pointerDownEvent.modifiers)) {
-			selectOperation.finish();
-			selectOperation.commit();
-		}
-	}
+	if (!getPointedCapHandleInfo(ctx.camera.screenToPlanarPosition(pointerDownEvent.position)))
+		ToolMode::performPrimaryAction(upEvent);
 }
 
 
@@ -139,6 +151,15 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 			tangentAngle = wrapAngle(obstacle.getKinematicState()->getAngle() + glm::pi<float>() +
 				(capInfo->leftCap ? obstacle.descriptor->shape->getLeftCapAngle() : obstacle.descriptor->shape->getRightCapAngle()));
 			sproutingPoint = capInfo->leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition();
+		} else if (auto index = ctx.getPointedObstacleIndex(pointerPlanarPosition, true)) {
+			const auto& obstacle = ctx.scene.obstacles[*index];
+			if (auto info = getMidsectionHandleInfo(obstacle, pointerPlanarPosition)) {
+				if (info->pointed) {
+					minorRadius = obstacle.descriptor->shape->minorRadius;
+					tangentAngle = wrapAngle(info->angle + glm::pi<float>());
+					sproutingPoint = info->position;
+				}
+			}
 		}
 		auto drawOperation = std::make_unique<DrawOperation>(ctx, TriggerType::Pointer, sproutingPoint, minorRadius, tangentAngle);
 		if (drawOperation->start(pointerDownEvent.modifiers))
@@ -153,7 +174,7 @@ std::optional<ShapeMode::CapInfo> ShapeMode::getPointedCapHandleInfo(glm::vec2 p
 	if (auto index = ctx.getTopObstacleIndex([this, pointerPlanarPosition](const auto& obstacle) {
 		float leftCapDistanceSq = length2(pointerPlanarPosition - obstacle.getLeftCapPosition());
 		float rightCapDistanceSq = length2(pointerPlanarPosition - obstacle.getRightCapPosition());
-		float capHandleRadius = std::min(Settings::Sizes.obstacleCapHandleRadius * ctx.uiToWorldScale, obstacle.descriptor->shape->minorRadius);
+		float capHandleRadius = std::min(Settings::Sizes.obstacleHandleRadius * ctx.uiToWorldScale, obstacle.descriptor->shape->minorRadius);
 		return std::min(leftCapDistanceSq, rightCapDistanceSq) < capHandleRadius * capHandleRadius;
 	}, true)) {
 		return CapInfo(*index,
@@ -162,6 +183,23 @@ std::optional<ShapeMode::CapInfo> ShapeMode::getPointedCapHandleInfo(glm::vec2 p
 	}
 	return std::nullopt;
 }
+
+std::optional<ShapeMode::MidsectionHandleInfo> ShapeMode::getMidsectionHandleInfo(const EditorObstacle& obstacle, glm::vec2 pointerPlanarPosition) const {
+	auto proximityInfo = obstacle.getSpineProximity(pointerPlanarPosition);
+	auto offset = length2(proximityInfo.direction) < 0.00000001f
+		? glm::vec2(0.f)
+		: normalize(proximityInfo.direction) * proximityInfo.distance;
+	auto handlePosition = pointerPlanarPosition - offset;
+
+	if (length2(obstacle.getLeftCapPosition() - handlePosition) > 0.00000001f &&
+		length2(obstacle.getRightCapPosition() - handlePosition) > 0.00000001f) {
+		float radius = std::min(Settings::Sizes.obstacleHandleRadius * ctx.uiToWorldScale, obstacle.descriptor->shape->minorRadius);
+		return MidsectionHandleInfo(length2(pointerPlanarPosition - handlePosition) <= radius * radius,
+			handlePosition, std::atan2(offset.y, offset.x));
+	}
+	return std::nullopt;
+}
+
 std::optional<int> ShapeMode::getPointedRimIndex(glm::vec2 pointerPlanarPosition) const {
 	if (auto index = ctx.getTopObstacleIndex([this, pointerPlanarPosition](const EditorObstacle& obstacle) {
 		return std::abs(obstacle.getRimProximity(pointerPlanarPosition).distance) < Settings::Sizes.obstaclePerimeterHitRadius * ctx.uiToWorldScale;

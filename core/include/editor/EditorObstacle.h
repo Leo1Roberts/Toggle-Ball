@@ -81,7 +81,14 @@ public:
 
 	[[nodiscard]] glm::vec2 getLeftCapPosition() const { return getCapPosition(true); }
 	[[nodiscard]] glm::vec2 getRightCapPosition() const { return getCapPosition(false); }
-	[[nodiscard]] RimProximityInfo getRimProximity(glm::vec2 point) const { return descriptor->shape->getRimProximity(kinematicState, point); }
+	[[nodiscard]] ProximityInfo getRimProximity(glm::vec2 point) const
+		{ return descriptor->shape->getRimProximity(kinematicState, point); }
+	[[nodiscard]] ProximityInfo getSpineProximity(glm::vec2 point) const
+		{ return descriptor->shape->getSpineProximity(kinematicState, point); }
+	[[nodiscard]] std::vector<glm::vec2> getPointsOnLine(glm::vec2 pointOnLine, float lineAngle) const
+		{ return descriptor->shape->getPointsOnLine(kinematicState, pointOnLine, lineAngle); }
+	[[nodiscard]] std::vector<glm::vec2> getPointsOnCircle(glm::vec2 circleCentre, float circleRadius) const
+		{ return descriptor->shape->getPointsOnCircle(kinematicState, circleCentre, circleRadius); }
 
 	[[nodiscard]] const ObstacleKinematicState* getKinematicState() const { return &kinematicState; }
 

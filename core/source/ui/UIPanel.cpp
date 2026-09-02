@@ -166,6 +166,107 @@ void UIPanelRenderer::addCircle(glm::vec2 centre, const PanelStyle& style) {
 	indices.push_back(base + 2);
 	indices.push_back(base + 3);
 }
+void UIPanelRenderer::addSplitCircle(glm::vec2 centre, float radius, float style1CentreAngle, const PanelStyle& style1, const PanelStyle& style2) {
+    float c = std::cos(style1CentreAngle);
+    float s = std::sin(style1CentreAngle);
+
+    auto rotate = [c, s](glm::vec2 v) {
+        return glm::vec2(v.x * c - v.y * s, v.x * s + v.y * c);
+    };
+
+    auto addHalf = [&](bool half1, const PanelStyle& style) {
+        float maxFeatureSize = radius;
+        float strokeWidth = std::max(0.f, std::min(style.strokeWidth, maxFeatureSize));
+        float rad = std::max(0.f, std::min(style.cornerRadius, maxFeatureSize));
+
+        float strokeRad, inset;
+        if (rad > strokeWidth) {
+            strokeRad = (rad - strokeWidth) / rad;
+            inset = 0.f;
+        } else {
+            strokeRad = 0.f;
+            inset = strokeWidth - rad;
+        }
+
+        float x[4], u[4];
+        if (half1) { // Style 1
+            x[0] = 0.f;          u[0] = 0.f;
+            x[1] = 0.f;          u[1] = 0.f;
+            x[2] = radius - rad; u[2] = 0.f;
+            x[3] = radius;       u[3] = 1.f;
+        } else { // Style 2
+            x[0] = -radius;       u[0] = 1.f;
+            x[1] = -radius + rad; u[1] = 0.f;
+            x[2] = 0.f;           u[2] = 0.f;
+            x[3] = 0.f;           u[3] = 0.f;
+        }
+
+        float y[4] = { radius, radius - rad, -radius + rad, -radius };
+
+		Index base = vertices.size();
+
+        // 1. Generate the 16 base vertices for the 4x4 grid
+        for (int row = 0; row < 4; ++row) {
+            for (int col = 0; col < 4; ++col) {
+				float v[4] = {1.f, 0.f, 0.f, 1.f};
+				vertices.emplace_back(centre + rotate({x[col], y[row]}), glm::vec2(u[col], v[row]), style.fillColor, style.strokeColor, strokeRad);
+            }
+        }
+
+        // Calculate inset bounds, avoiding insetting the split line to prevent a gap
+        float x_in_1, x_in_2;
+        if (half1) {
+            x_in_1 = 0.f;
+            x_in_2 = x[2] - inset;
+        } else {
+            x_in_1 = x[1] + inset;
+            x_in_2 = 0.f;
+        }
+        float y_in_1 = y[1] - inset;
+        float y_in_2 = y[2] + inset;
+
+        // 2. Inset centre quad
+        vertices.emplace_back(centre + rotate({x_in_1, y_in_1}), glm::vec2(0.f, 0.f), style.fillColor, style.strokeColor, strokeRad);
+        vertices.emplace_back(centre + rotate({x_in_1, y_in_2}), glm::vec2(0.f, 0.f), style.fillColor, style.strokeColor, strokeRad);
+        vertices.emplace_back(centre + rotate({x_in_2, y_in_2}), glm::vec2(0.f, 0.f), style.fillColor, style.strokeColor, strokeRad);
+        vertices.emplace_back(centre + rotate({x_in_2, y_in_1}), glm::vec2(0.f, 0.f), style.fillColor, style.strokeColor, strokeRad);
+
+        // 3. Inset centre quad (for joining to bordering quads)
+        vertices.emplace_back(centre + rotate({x_in_1, y_in_1}), glm::vec2(0.005f, 0.f), style.fillColor, style.strokeColor, strokeRad);
+        vertices.emplace_back(centre + rotate({x_in_1, y_in_2}), glm::vec2(0.005f, 0.f), style.fillColor, style.strokeColor, strokeRad);
+        vertices.emplace_back(centre + rotate({x_in_2, y_in_2}), glm::vec2(0.005f, 0.f), style.fillColor, style.strokeColor, strokeRad);
+        vertices.emplace_back(centre + rotate({x_in_2, y_in_1}), glm::vec2(0.005f, 0.f), style.fillColor, style.strokeColor, strokeRad);
+
+        // 4. Base quads
+        for (int i = 0; i < 9; i++) {
+            if (i == 4) {
+                indices.push_back(base + 16 + 0); indices.push_back(base + 16 + 1); indices.push_back(base + 16 + 2);
+                indices.push_back(base + 16 + 0); indices.push_back(base + 16 + 2); indices.push_back(base + 16 + 3);
+            } else {
+                Index quadBase = base + (i / 3 * 4) + (i % 3);
+                indices.push_back(quadBase);      indices.push_back(quadBase + 4);  indices.push_back(quadBase + 5);
+                indices.push_back(quadBase);      indices.push_back(quadBase + 5);  indices.push_back(quadBase + 1);
+            }
+        }
+
+        // 5. Trapezium insetting quads
+        // Top
+        indices.push_back(base +  5); indices.push_back(base + 20); indices.push_back(base + 23);
+        indices.push_back(base +  5); indices.push_back(base + 23); indices.push_back(base +  6);
+        // Left
+        indices.push_back(base +  5); indices.push_back(base +  9); indices.push_back(base + 21);
+        indices.push_back(base +  5); indices.push_back(base + 21); indices.push_back(base + 20);
+        // Bottom
+        indices.push_back(base + 21); indices.push_back(base +  9); indices.push_back(base + 10);
+        indices.push_back(base + 21); indices.push_back(base + 10); indices.push_back(base + 22);
+        // Right
+        indices.push_back(base + 23); indices.push_back(base + 22); indices.push_back(base + 10);
+        indices.push_back(base + 23); indices.push_back(base + 10); indices.push_back(base +  6);
+    };
+
+    addHalf(true, style1);
+    addHalf(false, style2);
+}
 
 void UIPanelRenderer::addLine(glm::vec2 p1, glm::vec2 p2, const LineStyle& style) {
 	glm::vec2 diff = p2 - p1;

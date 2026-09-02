@@ -40,6 +40,7 @@ class UIPanelRenderer : public IUIRenderer {
 public:
 	void addPanel(const UIPanel* panel);
 	void addCircle(glm::vec2 centre, const PanelStyle& style);
+	void addSplitCircle(glm::vec2 centre, float radius, float style1CentreAngle, const PanelStyle& style1, const PanelStyle& style2);
 	void addLine(glm::vec2 p1, glm::vec2 p2, const LineStyle& style);
 
 	void flush(const glm::mat4& projectionMatrix) override;

@@ -2,7 +2,6 @@
 #define TRANSFORM_MODE_H
 
 #include "ToolMode.h"
-#include "editor/operation/TransformOperation.h"
 
 
 class TransformMode : public ToolMode {
@@ -11,7 +10,7 @@ public:
 
 	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
 
-private:
+protected:
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;
 };
 

@@ -24,6 +24,9 @@ void GizmoRenderer::addBox(const SelectBox& box, const PanelStyle& style) {
 void GizmoRenderer::addCircle(glm::vec2 centre, const PanelStyle& style) {
 	panelRenderer.addCircle(planarToUIPosition(centre), style);
 }
+void GizmoRenderer::addSplitCircle(glm::vec2 centre, float radius, float style1CentreAngle, const PanelStyle& style1, const PanelStyle& style2) {
+	panelRenderer.addSplitCircle(planarToUIPosition(centre), radius, -style1CentreAngle, style1, style2); // Negate angle to account for negated Y-axis
+}
 
 
 void GizmoRenderer::addLine(glm::vec2 p1, glm::vec2 p2, const LineStyle& style) {
@@ -63,4 +66,7 @@ glm::vec2 GizmoRenderer::planarToUIPosition(glm::vec2 planarPosition) const {
 }
 float GizmoRenderer::planarToUIDistance(float planarDistance) const {
 	return camera.planarToScreenDistance(planarDistance) / ui.getScale();
+}
+float GizmoRenderer::uiToPlanarDistance(float uiDistance) const {
+	return camera.screenToPlanarDistance(uiDistance) * ui.getScale();
 }

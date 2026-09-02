@@ -91,7 +91,7 @@ void GlfwWindow::setCursor(const Cursor& cursor) {
 		}
 	}
 
-	if (cursor.dynamic) {
+	if (cursor.dynamic && cursor.style != Cursor::Style::Invisible) {
 		double x, y;
 		glfwGetCursorPos(windowHandle, &x, &y);
 		cursor.drawDynamic((float)size, translateMousePosition(x, y), {config.width, config.height});

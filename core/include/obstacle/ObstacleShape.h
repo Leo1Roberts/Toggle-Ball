@@ -17,9 +17,9 @@ struct BallCollisionInfo {
 	float separation{};
 };
 
-struct RimProximityInfo {
+struct ProximityInfo {
 	float distance; // Positive distance means point is outside the shape, negative for inside
-	glm::vec2 direction; // Direction from rim to point, not normalised
+	glm::vec2 direction; // Direction from target to point, not normalised
 };
 
 
@@ -52,9 +52,12 @@ public:
 	[[nodiscard]] bool isInSelectBox(const ObstacleKinematicState& s, SelectBox box) const;
 
 	[[nodiscard]] virtual bool pointIsBetweenCaps(float leftPlaneDistance, float rightPlaneDistance) const = 0;
-	// Only sets all members if .collision == true
+	// Only sets all members if .collision == true. TODO: use std::optional instead
 	[[nodiscard]] virtual BallCollisionInfo getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) = 0;
-	[[nodiscard]] RimProximityInfo getRimProximity(const ObstacleKinematicState& kinematicState, glm::vec2 point) const;
+	[[nodiscard]] ProximityInfo getRimProximity(const ObstacleKinematicState& kinematicState, glm::vec2 point) const;
+	[[nodiscard]] ProximityInfo getSpineProximity(const ObstacleKinematicState& kinematicState, glm::vec2 point) const;
+	[[nodiscard]] virtual std::vector<glm::vec2> getPointsOnLine(const ObstacleKinematicState& kinematicState, glm::vec2 pointOnLine, float lineAngle) const = 0;
+	[[nodiscard]] virtual std::vector<glm::vec2> getPointsOnCircle(const ObstacleKinematicState& kinematicState, glm::vec2 circleCentre, float circleRadius) const = 0;
 
 	[[nodiscard]] float getBoundingRadius() const { return getMajorRadius() + minorRadius; }
 	[[nodiscard]] glm::vec2 getLeftCap() const { return leftCap; }
@@ -89,7 +92,8 @@ private:
 
 	[[nodiscard]] virtual bool midsectionIsInSelectBox(const ObstacleKinematicState& s, SelectBox box) const = 0;
 
-	[[nodiscard]] virtual RimProximityInfo getMidsectionRimProximity(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const = 0;
+	[[nodiscard]] glm::vec2 getClosestSpineVector(const ObstacleKinematicState& kinematicState, glm::vec2 point) const;
+	[[nodiscard]] virtual glm::vec2 getMidsectionSpineVector(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const = 0;
 
 	[[nodiscard]] virtual float getMajorRadius() const = 0;
 };
@@ -122,6 +126,9 @@ public:
 	}
 	[[nodiscard]] BallCollisionInfo getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) override;
 
+	[[nodiscard]] std::vector<glm::vec2> getPointsOnLine(const ObstacleKinematicState& kinematicState, glm::vec2 pointOnLine, float lineAngle) const override;
+	[[nodiscard]] std::vector<glm::vec2> getPointsOnCircle(const ObstacleKinematicState& kinematicState, glm::vec2 circleCentre, float circleRadius) const override;
+
 	void setLeftLength(float len);
 	void setRightLength(float len);
 
@@ -149,7 +156,7 @@ private:
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const override;
 
 	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, SelectBox box) const override;
-	[[nodiscard]] RimProximityInfo getMidsectionRimProximity(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const override;
+	[[nodiscard]] glm::vec2 getMidsectionSpineVector(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const override;
 	[[nodiscard]] float getMajorRadius() const override { return std::max(leftLength, rightLength); }
 
 	[[nodiscard]] PlaneDescriptor getTopPlane(const ObstacleKinematicState& kinematicState) const;
@@ -185,6 +192,9 @@ public:
 	}
 	[[nodiscard]] BallCollisionInfo getMidsectionCollision(const ObstacleKinematicState& kinematicState, const GameBall& ball) override;
 
+	[[nodiscard]] std::vector<glm::vec2> getPointsOnLine(const ObstacleKinematicState& kinematicState, glm::vec2 pointOnLine, float lineAngle) const override;
+	[[nodiscard]] std::vector<glm::vec2> getPointsOnCircle(const ObstacleKinematicState& kinematicState, glm::vec2 circleCentre, float circleRadius) const override;
+
 	void setArcAngle(float radians);
 	void setArcRadius(float r);
 
@@ -212,7 +222,7 @@ private:
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const override;
 
 	[[nodiscard]] bool midsectionIsInSelectBox(const ObstacleKinematicState& s, SelectBox box) const override;
-	[[nodiscard]] RimProximityInfo getMidsectionRimProximity(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const override;
+	[[nodiscard]] glm::vec2 getMidsectionSpineVector(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const override;
 
 	void setCaps();
 

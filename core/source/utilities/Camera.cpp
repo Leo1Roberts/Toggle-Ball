@@ -76,6 +76,11 @@ glm::vec2 Camera::planarToScreenPosition(glm::vec2 planarPosition) const {
 	glm::vec3 projectedPosition = glm::project(planarToWorld(planarPosition), viewMatrix, projectionMatrix, viewport);
 	return { projectedPosition.x, cache.screenHeight - projectedPosition.y };
 }
+float Camera::screenToPlanarDistance(float screenDistance) const {
+	float orthoWorldWidth = 2.f / projectionMatrix[0][0];
+	float pixelsPerUnit = cache.screenWidth / orthoWorldWidth;
+	return std::abs(screenDistance / pixelsPerUnit);
+}
 float Camera::planarToScreenDistance(float planarDistance) const {
 	float orthoWorldWidth = 2.f / projectionMatrix[0][0];
 	float pixelsPerUnit = cache.screenWidth / orthoWorldWidth;

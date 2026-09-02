@@ -25,7 +25,7 @@ void ManipulateCapOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
 				PanelStyle inactiveStyle = {
 					.fillColor = {Color::White, 0.3f},
 					.strokeColor = {Color::Black, 0.3f},
-					.cornerRadius = std::min(Settings::Sizes.obstacleCapHandleRadius, gizmoRenderer.planarToUIDistance(otherObstacle.descriptor->shape->minorRadius)),
+					.cornerRadius = std::min(Settings::Sizes.obstacleHandleRadius, gizmoRenderer.planarToUIDistance(otherObstacle.descriptor->shape->minorRadius)),
 					.strokeWidth = 2.f,
 				};
 				gizmoRenderer.addCircle(capPos, inactiveStyle);
@@ -35,13 +35,59 @@ void ManipulateCapOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
 		addInactiveHandle(otherObstacle.getRightCapPosition());
 	}
 
-	PanelStyle activeStyle = {
-		.fillColor = {(snapResult.snapped && length2(snapResult.value - position) < 0.00000001f ? Color::SoftGreen : Color::White), 0.8f},
-		.strokeColor = {Color::Black, 0.8f},
-		.cornerRadius = std::min(Settings::Sizes.obstacleCapHandleRadius, gizmoRenderer.planarToUIDistance(obstacle.descriptor->shape->minorRadius)),
-		.strokeWidth = 2.f,
-	};
-	gizmoRenderer.addCircle(position, activeStyle);
+	float radius = std::min(Settings::Sizes.obstacleHandleRadius, gizmoRenderer.planarToUIDistance(obstacle.descriptor->shape->minorRadius));
+
+	switch (snapResult.type) {
+	case SnapType::None:
+		gizmoRenderer.addCircle(position, {
+			.fillColor = {Color::White, 0.8f},
+			.strokeColor = {Color::Black, 0.8f},
+			.cornerRadius = radius,
+			.strokeWidth = 2.f,
+		});
+		break;
+	case SnapType::Spine:
+		if (ctx.quickSettings.shape.alignWithTangent && useSnappedTangent && snapResult.angle)
+			gizmoRenderer.addSplitCircle(position, radius, *snapResult.angle, {
+				.fillColor = {Color::SoftCyan, 0.8f},
+				.strokeColor = {Color::Black, 0.8f},
+				.cornerRadius = 0.f,
+				.strokeWidth = 2.f,
+			}, {
+				.fillColor = {Color::SoftCyan, 0.8f},
+				.strokeColor = {Color::Black, 0.8f},
+				.cornerRadius = radius,
+				.strokeWidth = 2.f,
+			});
+		else
+			gizmoRenderer.addCircle(position, {
+				.fillColor = {Color::SoftCyan, 0.8f},
+				.strokeColor = {Color::Black, 0.8f},
+				.cornerRadius = radius,
+				.strokeWidth = 2.f,
+			});
+		break;
+	default:
+		if (ctx.quickSettings.shape.alignWithTangent && useSnappedTangent && snapResult.angle)
+			gizmoRenderer.addSplitCircle(position, radius, *snapResult.angle, {
+				.fillColor = {Color::SoftGreen, 0.8f},
+				.strokeColor = {Color::Black, 0.8f},
+				.cornerRadius = 0.f,
+				.strokeWidth = 2.f,
+			}, {
+				.fillColor = {Color::SoftGreen, 0.8f},
+				.strokeColor = {Color::Black, 0.8f},
+				.cornerRadius = radius,
+				.strokeWidth = 2.f,
+			});
+		else
+			gizmoRenderer.addCircle(position, {
+				.fillColor = {Color::SoftGreen, 0.8f},
+				.strokeColor = {Color::Black, 0.8f},
+				.cornerRadius = radius,
+				.strokeWidth = 2.f,
+			});
+	}
 }
 
 
@@ -58,7 +104,9 @@ OperationResponse ManipulateCapOperation::doProcessEvent(const Event& event) {
 
 
 void ManipulateCapOperation::applyOperation() {
-	snapResult = ctx.snapPoint(initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition, {EntityType::Obstacle, obstacleIndex});
+	auto rawCapPlanarPosition = initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition;
+
+	snapResult = ctx.snapPoint(rawCapPlanarPosition, {EntityType::Obstacle, obstacleIndex});
 	auto capPlanarPosition = snapResult.value;
 
     auto capToCap = capPlanarPosition - fixedCapPlanarPosition;
@@ -121,9 +169,9 @@ void ManipulateCapOperation::applyOperation() {
 
 	if (ctx.quickSettings.shape.alignWithTangent) {
 		if (useSnappedTangent) {
-			if (snapResult.snapped && snapResult.tangentAngle) {
+			if (snapResult.type != SnapType::None && snapResult.angle) {
 				alignWithTangent = true;
-				float manipulatedTangent = leftCap ? *snapResult.tangentAngle : wrapAngle(*snapResult.tangentAngle + glm::pi<float>());
+				float manipulatedTangent = leftCap ? *snapResult.angle : wrapAngle(*snapResult.angle + glm::pi<float>());
 				curveTangent = wrapAngle(2.f * chordAngle - manipulatedTangent);
 			}
 		} else {
@@ -135,13 +183,32 @@ void ManipulateCapOperation::applyOperation() {
 	}
 
 	if (alignWithTangent) {
-		float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
-		float absAngleDiff = std::abs(chordTangentAngleDiff);
+		auto rawCapToCap = rawCapPlanarPosition - fixedCapPlanarPosition;
+		float rawCapToCapDistance = length(rawCapToCap);
+		float rawChordAngle = std::atan2(sign * rawCapToCap.y, sign * rawCapToCap.x);
+		float rawChordTangentAngleDiff = wrapAngle(sign * (curveTangent - rawChordAngle));
+		float rawAbsAngleDiff = std::abs(rawChordTangentAngleDiff);
 
-		if (capToCapDistance * absAngleDiff < 0.5f) { // Arbitrary threshold for snapping to being straight
+		if (rawCapToCapDistance * std::tan(rawAbsAngleDiff) < 0.5f) { // Arbitrary threshold for snapping to being straight
+			float projectedLength = rawCapToCapDistance * std::cos(rawChordTangentAngleDiff);
+			glm::vec2 straightnessSnappedPosition = fixedCapPlanarPosition + sign * glm::vec2(std::cos(curveTangent), std::sin(curveTangent)) * projectedLength;
+
+			snapResult = ctx.snapPointRestrictedToLine(straightnessSnappedPosition, {EntityType::Obstacle, obstacleIndex}, fixedCapPlanarPosition, curveTangent);
+
+			capPlanarPosition = snapResult.value;
+			capToCap = capPlanarPosition - fixedCapPlanarPosition;
+			capToCapDistance = length(capToCap);
+			chord = sign * capToCap;
+			chordAngle = std::atan2(chord.y, chord.x);
+
+			float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
+
 			targetAngle = curveTangent;
 			applySegmentShape(capToCapDistance * std::cos(chordTangentAngleDiff), curveTangent);
 		} else {
+			float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
+			float absAngleDiff = std::abs(chordTangentAngleDiff);
+
 			float arcAngle = 2.f * absAngleDiff;
 			float arcRadius = (capToCapDistance * 0.5f) / std::sin(absAngleDiff);
 			float positionOffset = (capToCapDistance * 0.5f) / std::tan(chordTangentAngleDiff);

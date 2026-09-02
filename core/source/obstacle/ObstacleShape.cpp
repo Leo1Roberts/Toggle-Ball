@@ -677,7 +677,7 @@ bool ArcSpec::midsectionIsInSelectBox(const ObstacleKinematicState& s, SelectBox
 }
 
 
-RimProximityInfo AbstractShapeSpec::getRimProximity(const ObstacleKinematicState& kinematicState, glm::vec2 point) const {
+glm::vec2 AbstractShapeSpec::getClosestSpineVector(const ObstacleKinematicState& kinematicState, glm::vec2 point) const {
 	auto position = worldToPlanar(kinematicState.getPosition());
 	auto rotation = angleToRotation2D(kinematicState.getAngle());
 
@@ -689,20 +689,28 @@ RimProximityInfo AbstractShapeSpec::getRimProximity(const ObstacleKinematicState
 	};
 
 	if (pointIsBetweenCaps(capDividerDistance(leftCap, getLeftCapAngle()), capDividerDistance(rightCap, getRightCapAngle())))
-		return getMidsectionRimProximity(position, rotation, point);
+		return getMidsectionSpineVector(position, rotation, point);
 
-	auto  leftCapToPoint = point - (position + rotation *  leftCap);
+	auto leftCapToPoint = point - (position + rotation * leftCap);
 	auto rightCapToPoint = point - (position + rotation * rightCap);
-	float  leftCapDistance = length( leftCapToPoint) - minorRadius;
-	float rightCapDistance = length(rightCapToPoint) - minorRadius;
 
-	if (std::abs(leftCapDistance) < std::abs(rightCapDistance))
-		return {  leftCapDistance,  leftCapDistance >= 0 ?  leftCapToPoint : - leftCapToPoint };
-		return { rightCapDistance, rightCapDistance >= 0 ? rightCapToPoint : -rightCapToPoint };
+	if (dot(leftCapToPoint, leftCapToPoint) < dot(rightCapToPoint, rightCapToPoint))
+		return leftCapToPoint;
+
+	return rightCapToPoint;
+}
+ProximityInfo AbstractShapeSpec::getRimProximity(const ObstacleKinematicState& kinematicState, glm::vec2 point) const {
+	glm::vec2 spineToPoint = getClosestSpineVector(kinematicState, point);
+	float distance = length(spineToPoint) - minorRadius;
+	return { distance, distance >= 0.f ? spineToPoint : -spineToPoint };
+}
+ProximityInfo AbstractShapeSpec::getSpineProximity(const ObstacleKinematicState& kinematicState, glm::vec2 point) const {
+	glm::vec2 spineToPoint = getClosestSpineVector(kinematicState, point);
+	return { length(spineToPoint), spineToPoint };
 }
 
-RimProximityInfo SegmentSpec::getMidsectionRimProximity(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const {
-	auto  leftCapPos = position + rotation *  leftCap;
+glm::vec2 SegmentSpec::getMidsectionSpineVector(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const {
+	auto leftCapPos = position + rotation * leftCap;
 	auto rightCapPos = position + rotation * rightCap;
 
 	glm::vec2 seg = rightCapPos - leftCapPos;
@@ -710,13 +718,10 @@ RimProximityInfo SegmentSpec::getMidsectionRimProximity(glm::vec2 position, glm:
 	float t = dot(v, seg) / dot(seg, seg);
 	glm::vec2 closestPointOnSegment = leftCapPos + t * seg;
 
-	glm::vec2 segmentToPoint = point - closestPointOnSegment;
-	float distance = length(segmentToPoint) - minorRadius;
-
-	return { distance, distance >= 0.f ? segmentToPoint : -segmentToPoint };
+	return point - closestPointOnSegment;
 }
 
-RimProximityInfo ArcSpec::getMidsectionRimProximity(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const {
+glm::vec2 ArcSpec::getMidsectionSpineVector(glm::vec2 position, glm::mat2 rotation, glm::vec2 point) const {
 	glm::vec2 centreToPoint = point - position;
 	float distToCentre = length(centreToPoint);
 
@@ -724,10 +729,169 @@ RimProximityInfo ArcSpec::getMidsectionRimProximity(glm::vec2 position, glm::mat
 		? centreToPoint / distToCentre
 		: rotation * glm::vec2(0.f, -1.f);
 
-	glm::vec2 arcToPoint = centreToPoint - getMajorRadius() * unitDir;
-	float distance = length(arcToPoint) - minorRadius;
+	return centreToPoint - getMajorRadius() * unitDir;
+}
 
-	return { distance, distance >= 0.f ? arcToPoint : -arcToPoint };
+
+glm::vec2 transformPoint(glm::vec2 localPoint, float angle, glm::vec2 position) {
+	float c = std::cos(angle);
+	float s = std::sin(angle);
+	return glm::vec2(
+		localPoint.x * c - localPoint.y * s,
+		localPoint.x * s + localPoint.y * c
+	) + position;
+}
+
+std::vector<glm::vec2> SegmentSpec::getPointsOnLine(const ObstacleKinematicState& kinematicState, glm::vec2 pointOnLine, float lineAngle) const {
+	auto pos = worldToPlanar(kinematicState.getPosition());
+	float angle = kinematicState.getAngle();
+
+	auto A = transformPoint(leftCap, angle, pos);
+	auto B = transformPoint(rightCap, angle, pos);
+
+	auto segmentDir = B - A;
+	auto lineDir = glm::vec2(std::cos(lineAngle), std::sin(lineAngle));
+
+	float denominator = cross2D(segmentDir, lineDir);
+
+	if (std::abs(denominator) < 0.000001f) // Parallel
+		return {};
+
+	// Solve for u in: A + u * segmentDir = pointOnLine + t * lineDir
+	auto diff = pointOnLine - A;
+	float u = cross2D(diff, lineDir) / denominator;
+
+	// Check if intersection lies within the segment bounds
+	if (u >= 0.f && u <= 1.f)
+		return { A + u * segmentDir };
+
+	return {};
+}
+
+std::vector<glm::vec2> SegmentSpec::getPointsOnCircle(const ObstacleKinematicState& kinematicState, glm::vec2 circleCentre, float circleRadius) const {
+	auto pos = worldToPlanar(kinematicState.getPosition());
+	float angle = kinematicState.getAngle();
+
+	auto A = transformPoint(leftCap, angle, pos);
+	auto B = transformPoint(rightCap, angle, pos);
+
+	auto d = B - A;
+	auto f = A - circleCentre;
+
+	float a = glm::dot(d, d);
+	float b = 2.f * glm::dot(f, d);
+	float c = glm::dot(f, f) - circleRadius * circleRadius;
+
+	float discriminant = b * b - 4.f * a * c;
+	if (discriminant < 0.f)
+		return {};
+
+	std::vector<glm::vec2> points;
+	discriminant = std::sqrt(discriminant);
+
+	float t1 = (-b - discriminant) / (2.f * a);
+	if (t1 >= 0.f && t1 <= 1.f)
+		points.push_back(A + t1 * d);
+
+	if (discriminant > 0.000001f) {
+		float t2 = (-b + discriminant) / (2.f * a);
+		if (t2 >= 0.f && t2 <= 1.f)
+			points.push_back(A + t2 * d);
+	}
+
+	return points;
+}
+
+std::vector<glm::vec2> ArcSpec::getPointsOnLine(const ObstacleKinematicState& kinematicState, glm::vec2 pointOnLine, float lineAngle) const {
+	auto pos = worldToPlanar(kinematicState.getPosition());
+	float angle = kinematicState.getAngle();
+
+	// Line direction vector
+	auto lineDir = glm::vec2(std::cos(lineAngle), std::sin(lineAngle));
+	auto f = pointOnLine - pos; // pos is the center of the arc's circle
+
+	// Direct quadratic coefficients (since lineDir is unit length)
+	float b = 2.f * glm::dot(f, lineDir);
+	float c = glm::dot(f, f) - (arcRadius * arcRadius);
+
+	float discriminant = b * b - 4.f * c;
+	if (discriminant < 0.f)
+		return {};
+
+	std::vector<glm::vec2> points;
+	discriminant = std::sqrt(discriminant);
+
+	// Calculate center angle in world space (apex is local +Y, so +pi/2)
+	float worldCentreAngle = angle + glm::half_pi<float>();
+	float halfArcAngle = arcAngle * 0.5f;
+	bool fullCircle = (arcAngle >= glm::two_pi<float>());
+
+	// Test intersection point 1
+	float t1 = (-b - discriminant) * 0.5f;
+	auto pt1 = pointOnLine + t1 * lineDir;
+	if (angleIsInArc(pt1 - pos, worldCentreAngle, halfArcAngle, fullCircle)) {
+		points.push_back(pt1);
+	}
+
+	// Test intersection point 2 (if distinct)
+	if (discriminant > 0.000001f) {
+		float t2 = (-b + discriminant) * 0.5f;
+		auto pt2 = pointOnLine + t2 * lineDir;
+		if (angleIsInArc(pt2 - pos, worldCentreAngle, halfArcAngle, fullCircle)) {
+			points.push_back(pt2);
+		}
+	}
+
+	return points;
+}
+
+std::vector<glm::vec2> ArcSpec::getPointsOnCircle(const ObstacleKinematicState& kinematicState, glm::vec2 circleCentre, float circleRadius) const {
+	auto pos = worldToPlanar(kinematicState.getPosition());
+	float angle = kinematicState.getAngle();
+
+	float d = glm::distance(pos, circleCentre);
+
+	// Check for no intersection, containment, or coincident centers
+	if (d > arcRadius + circleRadius || d < std::abs(arcRadius - circleRadius) || d < 1e-6f) {
+		return {};
+	}
+
+	// Distance from arc center to the chord connecting intersection points
+	float a = (arcRadius * arcRadius - circleRadius * circleRadius + d * d) / (2.f * d);
+	// Height from the chord to the intersection points
+	float h = std::sqrt(std::max(0.f, arcRadius * arcRadius - a * a));
+
+	// Midpoint of the chord joining intersection points
+	auto P2 = pos + a * (circleCentre - pos) / d;
+
+	// Angle parameters for arc filtering
+	float worldCentreAngle = angle + glm::half_pi<float>();
+	float halfArcAngle = arcAngle * 0.5f;
+	bool fullCircle = (arcAngle >= glm::two_pi<float>());
+
+	std::vector<glm::vec2> points;
+
+	// First candidate intersection point
+	auto pt1 = glm::vec2(
+		P2.x + h * (circleCentre.y - pos.y) / d,
+		P2.y - h * (circleCentre.x - pos.x) / d
+	);
+	if (angleIsInArc(pt1 - pos, worldCentreAngle, halfArcAngle, fullCircle)) {
+		points.push_back(pt1);
+	}
+
+	// Second candidate intersection point
+	if (h > 0.000001f) {
+		auto pt2 = glm::vec2(
+			P2.x - h * (circleCentre.y - pos.y) / d,
+			P2.y + h * (circleCentre.x - pos.x) / d
+		);
+		if (angleIsInArc(pt2 - pos, worldCentreAngle, halfArcAngle, fullCircle)) {
+			points.push_back(pt2);
+		}
+	}
+
+	return points;
 }
 
 
