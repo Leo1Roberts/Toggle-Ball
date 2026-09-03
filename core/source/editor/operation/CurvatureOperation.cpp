@@ -3,6 +3,9 @@
 #include "editor/EditorContext.h"
 #include "editor/EditorScene.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/norm.hpp"
+
 
 CurvatureOperation::CurvatureOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, glm::vec2 initialHandlePosition) :
 	Operation(ctx, trigger, initialPlanarPosition),
@@ -50,8 +53,6 @@ void CurvatureOperation::applyOperation() {
     auto handle = initialHandlePosition + pointerPlanarPosition - initialPlanarPosition;
     auto capToCap = cap2 - cap1;
     float capToCapDistance = glm::length(capToCap);
-
-    if (capToCapDistance < 0.0001f) return;
 
     float chordAngle = std::atan2(capToCap.y, capToCap.x);
     auto capsMidpoint = (cap1 + cap2) * 0.5f;
@@ -144,4 +145,9 @@ void CurvatureOperation::applyOperation() {
 
     obstacle.initKinematicState();
     obstacle.invalidateAllMeshes();
+}
+
+
+bool CurvatureOperation::canStart() const {
+	return length2(cap2 - cap1) > 0.00000001f;
 }
