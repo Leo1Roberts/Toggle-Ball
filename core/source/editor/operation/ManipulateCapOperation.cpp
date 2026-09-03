@@ -110,7 +110,6 @@ void ManipulateCapOperation::applyOperation() {
     glm::vec2 capPlanarPosition, capToCap, chord;
     float capToCapDistance, chordAngle;
     float sign = leftCap ? -1.f : 1.f;
-    currentlyLeftCap = leftCap;
 
     auto updateGeometry = [&](glm::vec2 capPos) {
         capPlanarPosition = capPos;
@@ -131,10 +130,17 @@ void ManipulateCapOperation::applyOperation() {
     bool alignWithTangent = false;
     float curveTangent = 0.f;
 
-	auto isAlmostStraight = [&] {
-		glm::vec2 tangent = {std::cos(curveTangent), std::sin(curveTangent)};
-		return dot(normalize(chord), tangent) > std::cos(0.05f);  // Same 0.05rad threshold as in CurvatureOperation
-	};
+    auto isAlmostStraight = [&] {
+        if (capToCapDistance < 0.0001f) return true;
+        glm::vec2 tangent = {std::cos(curveTangent), std::sin(curveTangent)};
+        return dot(normalize(chord), tangent) > std::cos(0.05f);
+    };
+
+    auto isArcTooLarge = [&] {
+        if (capToCapDistance < 0.0001f) return false;
+        glm::vec2 tangent = {std::cos(curveTangent), std::sin(curveTangent)};
+        return dot(normalize(chord), tangent) < std::cos((glm::two_pi<float>() - 0.2f) / 2.f);
+    };
 
     auto applySegmentShape = [&](float length, float dirAngle) {
         float minorRadius = initialDescriptor.shape->minorRadius;
@@ -171,7 +177,7 @@ void ManipulateCapOperation::applyOperation() {
             float manipulatedTangent = leftCap ? *snapResult.angle : wrapAngle(*snapResult.angle + glm::pi<float>());
             curveTangent = wrapAngle(2.f * chordAngle - manipulatedTangent);
 
-            if (isAlmostStraight())
+            if (isAlmostStraight() || isArcTooLarge())
                 snapResult.angle = std::nullopt;
             else
                 alignWithTangent = true;
@@ -179,12 +185,17 @@ void ManipulateCapOperation::applyOperation() {
             alignWithTangent = true;
             curveTangent = leftCap ? *fixedTangentAngle : wrapAngle(*fixedTangentAngle + glm::pi<float>());
 
-            if (isAlmostStraight()) {
+            if (isAlmostStraight() || isArcTooLarge()) {
                 snapResult = {};
                 updateGeometry(rawCapPlanarPosition);
             }
         }
     }
+
+	if (alignWithTangent && isArcTooLarge())
+		return;
+
+	currentlyLeftCap = leftCap;
 
     if (alignWithTangent) {
         if (isAlmostStraight()) {
@@ -225,6 +236,9 @@ void ManipulateCapOperation::applyOperation() {
                 float arcRadius = (capToCapDistance * capToCapDistance + 4.f * sagitta * sagitta) / (8.f * sagitta);
                 float positionOffset = arcRadius - sagitta;
                 float arcAngle = 2.f * std::atan2(capToCapDistance * 0.5f, positionOffset);
+
+                if (arcAngle > glm::two_pi<float>() - 0.2f)
+                    return;
 
                 applyArcShape(arcAngle, arcRadius, positionOffset);
             } else
