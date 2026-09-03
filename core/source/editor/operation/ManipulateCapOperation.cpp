@@ -104,56 +104,58 @@ OperationResponse ManipulateCapOperation::doProcessEvent(const Event& event) {
 
 
 void ManipulateCapOperation::applyOperation() {
-	auto rawCapPlanarPosition = initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition;
+    auto rawCapPlanarPosition = initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition;
+    snapResult = ctx.snapPoint(rawCapPlanarPosition, {EntityType::Obstacle, obstacleIndex});
 
-	snapResult = ctx.snapPoint(rawCapPlanarPosition, {EntityType::Obstacle, obstacleIndex});
-	auto capPlanarPosition = snapResult.value;
+    glm::vec2 capPlanarPosition, capToCap, chord;
+    float capToCapDistance, chordAngle;
+    float sign = leftCap ? -1.f : 1.f;
+    currentlyLeftCap = leftCap;
 
-    auto capToCap = capPlanarPosition - fixedCapPlanarPosition;
-    auto capToCapDistance = length(capToCap);
+    auto updateGeometry = [&](glm::vec2 capPos) {
+        capPlanarPosition = capPos;
+        capToCap = capPlanarPosition - fixedCapPlanarPosition;
+        capToCapDistance = length(capToCap);
+        chord = sign * capToCap;
+        chordAngle = std::atan2(chord.y, chord.x);
+    };
+
+    updateGeometry(snapResult.value);
 
     auto segmentSpec = dynamic_cast<SegmentSpec*>(initialDescriptor.shape.get());
     auto arcSpec = dynamic_cast<ArcSpec*>(initialDescriptor.shape.get());
 
-    float sign = leftCap ? -1.f : 1.f;
-    auto chord = sign * capToCap;
-    float chordAngle = std::atan2(chord.y, chord.x);
-
     glm::vec2 targetPosition;
     float targetAngle = chordAngle; // Default value
     bool applyTransformation = true;
+    bool alignWithTangent = false;
+    float curveTangent = 0.f;
 
-	currentlyLeftCap = leftCap;
+    auto isAlmostStraight = [&] {
+        float diff = wrapAngle(sign * (curveTangent - chordAngle));
+        return std::abs(diff) < glm::half_pi<float>() && std::abs(capToCapDistance * std::tan(diff)) < 0.5f;
+    };
 
     auto applySegmentShape = [&](float length, float dirAngle) {
+        float minorRadius = initialDescriptor.shape->minorRadius;
         if (segmentSpec) {
             float leftLength = segmentSpec->getLeftLength();
             float rightLength = segmentSpec->getRightLength();
-            float positionOffset;
+            float diff = length - segmentSpec->getLength();
 
             if (leftCap) {
-                leftLength += length - segmentSpec->getLength();
-                if (leftLength < 0.f) {
-	                rightLength += leftLength;
-                	leftLength = 0.f;
-                }
-                positionOffset = -rightLength;
+                leftLength += diff;
+                if (leftLength < 0.f) { rightLength += leftLength; leftLength = 0.f; }
             } else {
-                rightLength += length - segmentSpec->getLength();
-                if (rightLength < 0.f) {
-	                leftLength += rightLength;
-                	rightLength = 0.f;
-                }
-                positionOffset = leftLength;
+                rightLength += diff;
+                if (rightLength < 0.f) { leftLength += rightLength; rightLength = 0.f; }
             }
 
-            obstacle.descriptor->shape = std::make_unique<SegmentSpec>(initialDescriptor.shape->minorRadius, leftLength, rightLength);
+            float positionOffset = leftCap ? -rightLength : leftLength;
+            obstacle.descriptor->shape = std::make_unique<SegmentSpec>(minorRadius, leftLength, rightLength);
             targetPosition = fixedCapPlanarPosition + glm::vec2(std::cos(dirAngle), std::sin(dirAngle)) * positionOffset;
         } else {
-            obstacle.descriptor->shape = std::make_unique<SegmentSpec>(
-            	initialDescriptor.shape->minorRadius,
-            	leftCap ? length : 0.f,
-            	leftCap ? 0.f : length);
+            obstacle.descriptor->shape = std::make_unique<SegmentSpec>(minorRadius, leftCap ? length : 0.f, leftCap ? 0.f : length);
             targetPosition = fixedCapPlanarPosition;
         }
     };
@@ -164,73 +166,55 @@ void ManipulateCapOperation::applyOperation() {
         targetPosition = capsMidpoint + glm::vec2(std::sin(chordAngle), -std::cos(chordAngle)) * positionOffset;
     };
 
-	bool alignWithTangent = false;
-	float curveTangent = 0.f;
+    if (ctx.quickSettings.shape.alignWithTangent) {
+        if (useSnappedTangent && snapResult.type != SnapType::None && snapResult.angle) {
+            float manipulatedTangent = leftCap ? *snapResult.angle : wrapAngle(*snapResult.angle + glm::pi<float>());
+            curveTangent = wrapAngle(2.f * chordAngle - manipulatedTangent);
 
-	if (ctx.quickSettings.shape.alignWithTangent) {
-		if (useSnappedTangent) {
-			if (snapResult.type != SnapType::None && snapResult.angle) {
-				alignWithTangent = true;
-				float manipulatedTangent = leftCap ? *snapResult.angle : wrapAngle(*snapResult.angle + glm::pi<float>());
-				curveTangent = wrapAngle(2.f * chordAngle - manipulatedTangent);
+            if (isAlmostStraight())
+                snapResult.angle = std::nullopt;
+            else
+                alignWithTangent = true;
+        } else if (!useSnappedTangent && fixedTangentAngle) {
+            alignWithTangent = true;
+            curveTangent = leftCap ? *fixedTangentAngle : wrapAngle(*fixedTangentAngle + glm::pi<float>());
 
-				float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
-				if (std::abs(chordTangentAngleDiff) < glm::half_pi<float>() && std::abs(capToCapDistance * std::tan(chordTangentAngleDiff)) < 0.5f) {
-					snapResult.angle = std::nullopt;
-					alignWithTangent = false;
-				}
-			}
-		} else {
-			if (fixedTangentAngle) {
-				alignWithTangent = true;
-				curveTangent = leftCap ? *fixedTangentAngle : wrapAngle(*fixedTangentAngle + glm::pi<float>());
+            if (isAlmostStraight()) {
+                snapResult = {};
+                updateGeometry(rawCapPlanarPosition);
+            }
+        }
+    }
 
-				float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
-				if (std::abs(chordTangentAngleDiff) < glm::half_pi<float>() && std::abs(capToCapDistance * std::tan(chordTangentAngleDiff)) < 0.5f) {
-					snapResult.angle = std::nullopt;
-					capPlanarPosition = rawCapPlanarPosition;
-					capToCap = capPlanarPosition - fixedCapPlanarPosition;
-					capToCapDistance = length(capToCap);
-					chord = sign * capToCap;
-					chordAngle = std::atan2(chord.y, chord.x);
-				}
-			}
-		}
-	}
+    if (alignWithTangent) {
+        if (isAlmostStraight()) {
+            float diff = wrapAngle(sign * (curveTangent - chordAngle));
+            float projectedLength = capToCapDistance * std::cos(diff);
+            glm::vec2 straightnessSnappedPosition = fixedCapPlanarPosition + sign * glm::vec2(std::cos(curveTangent), std::sin(curveTangent)) * projectedLength;
 
-	if (alignWithTangent) {
-		float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
-		if (std::abs(chordTangentAngleDiff) < glm::half_pi<float>() && std::abs(capToCapDistance * std::tan(chordTangentAngleDiff)) < 0.5f) {
-			float projectedLength = capToCapDistance * std::cos(chordTangentAngleDiff);
-			glm::vec2 straightnessSnappedPosition = fixedCapPlanarPosition + sign * glm::vec2(std::cos(curveTangent), std::sin(curveTangent)) * projectedLength;
+            snapResult = ctx.snapPointRestrictedToLine(straightnessSnappedPosition, {EntityType::Obstacle, obstacleIndex}, fixedCapPlanarPosition, curveTangent);
 
-			snapResult = ctx.snapPointRestrictedToLine(straightnessSnappedPosition, {EntityType::Obstacle, obstacleIndex}, fixedCapPlanarPosition, curveTangent);
+            updateGeometry(snapResult.value);
 
-			capPlanarPosition = snapResult.value;
-			capToCap = capPlanarPosition - fixedCapPlanarPosition;
-			capToCapDistance = length(capToCap);
-			chord = sign * capToCap;
-			chordAngle = std::atan2(chord.y, chord.x);
+            targetAngle = curveTangent;
+            applySegmentShape(capToCapDistance * std::cos(wrapAngle(sign * (curveTangent - chordAngle))), curveTangent);
+        } else {
+            float chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
+            float absAngleDiff = std::abs(chordTangentAngleDiff);
 
-			chordTangentAngleDiff = wrapAngle(sign * (curveTangent - chordAngle));
+            float arcAngle = 2.f * absAngleDiff;
+            float arcRadius = (capToCapDistance * 0.5f) / std::sin(absAngleDiff);
+            float positionOffset = (capToCapDistance * 0.5f) / std::tan(chordTangentAngleDiff);
 
-			targetAngle = curveTangent;
-			applySegmentShape(capToCapDistance * std::cos(chordTangentAngleDiff), curveTangent);
-		} else {
-			float absAngleDiff = std::abs(chordTangentAngleDiff);
+            applyArcShape(arcAngle, arcRadius, positionOffset);
 
-			float arcAngle = 2.f * absAngleDiff;
-			float arcRadius = (capToCapDistance * 0.5f) / std::sin(absAngleDiff);
-			float positionOffset = (capToCapDistance * 0.5f) / std::tan(chordTangentAngleDiff);
-
-			applyArcShape(arcAngle, arcRadius, positionOffset);
-			if (chordTangentAngleDiff > 0.f)
-				targetAngle = chordAngle;
-			else {
-				targetAngle = chordAngle + glm::pi<float>();
-				currentlyLeftCap = !leftCap;
-			}
-		}
+            if (chordTangentAngleDiff > 0.f)
+                targetAngle = chordAngle;
+            else {
+                targetAngle = chordAngle + glm::pi<float>();
+                currentlyLeftCap = !leftCap;
+            }
+        }
     } else {
         if (segmentSpec)
             applySegmentShape(capToCapDistance, chordAngle);
