@@ -131,10 +131,10 @@ void ManipulateCapOperation::applyOperation() {
     bool alignWithTangent = false;
     float curveTangent = 0.f;
 
-    auto isAlmostStraight = [&] {
-        float diff = wrapAngle(sign * (curveTangent - chordAngle));
-        return std::abs(diff) < glm::half_pi<float>() && std::abs(capToCapDistance * std::tan(diff)) < 0.5f;
-    };
+	auto isAlmostStraight = [&] {
+		glm::vec2 tangent = {std::cos(curveTangent), std::sin(curveTangent)};
+		return dot(normalize(chord), tangent) > std::cos(0.05f);  // Same 0.05rad threshold as in CurvatureOperation
+	};
 
     auto applySegmentShape = [&](float length, float dirAngle) {
         float minorRadius = initialDescriptor.shape->minorRadius;

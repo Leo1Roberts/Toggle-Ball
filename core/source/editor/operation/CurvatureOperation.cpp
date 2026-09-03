@@ -48,77 +48,74 @@ OperationResponse CurvatureOperation::doProcessEvent(const Event& event) {
 
 void CurvatureOperation::applyOperation() {
     auto handle = initialHandlePosition + pointerPlanarPosition - initialPlanarPosition;
-
     auto capToCap = cap2 - cap1;
     float capToCapDistance = glm::length(capToCap);
 
-    if (capToCapDistance < 0.0001f)
-        return;
+    if (capToCapDistance < 0.0001f) return;
 
     float chordAngle = std::atan2(capToCap.y, capToCap.x);
     auto capsMidpoint = (cap1 + cap2) * 0.5f;
-
     glm::vec2 normal = {std::sin(chordAngle), -std::cos(chordAngle)};
-    float chordOffset = glm::dot(handle - capsMidpoint, normal);
 
-    float vSq = capToCapDistance * capToCapDistance;
-    float t = glm::dot(handle - cap1, capToCap) / vSq;
-    bool isBetween = (t >= 0.f && t <= 1.f);
+    float chordOffset = dot(handle - capsMidpoint, normal);
+    float t = dot(handle - cap1, capToCap) / (capToCapDistance * capToCapDistance);
+    bool isBetween = t >= 0.f && t <= 1.f;
+
+	auto isAlmostStraight = [&] {
+		if (!isBetween) return false;
+
+		float h = std::abs(chordOffset);
+		float L = capToCapDistance;
+		float denom = L * L * t * (1.f - t) - h * h;
+
+		return denom > 0.f && (L * h < denom * std::tan(0.05f)); // Same 0.05rad threshold as in ManipulateCapOperation
+	};
 
     glm::vec2 targetPosition;
     float targetAngle;
+    float minorRadius = initialDescriptor.shape->minorRadius;
 
-    if (isBetween && std::abs(chordOffset) < 0.5f) { // TODO: use same threshold calculation as in ManipulateCapOperation
-		if (auto segmentSpec = dynamic_cast<SegmentSpec*>(initialDescriptor.shape.get())) {
+    if (isAlmostStraight()) {
+        if (auto segmentSpec = dynamic_cast<SegmentSpec*>(initialDescriptor.shape.get())) {
             obstacle.descriptor->shape = std::make_unique<SegmentSpec>(
-                initialDescriptor.shape->minorRadius,
-                segmentSpec->getLeftLength(),
-                segmentSpec->getRightLength()
+                minorRadius, segmentSpec->getLeftLength(), segmentSpec->getRightLength()
             );
             targetPosition = initialPosition;
             targetAngle = initialAngle;
         } else {
             obstacle.descriptor->shape = std::make_unique<SegmentSpec>(
-                initialDescriptor.shape->minorRadius,
-                capToCapDistance * 0.5f,
-                capToCapDistance * 0.5f
+                minorRadius, capToCapDistance * 0.5f, capToCapDistance * 0.5f
             );
             targetPosition = capsMidpoint;
             targetAngle = chordAngle;
         }
     } else {
-        auto effectiveM = handle;
         if (!isBetween && std::abs(chordOffset) < 0.01f)
-        	return;
+            return;
 
-        auto m = effectiveM - cap1;
-        auto c2 = cap2 - cap1;
-
-        float D = 2.f * (m.x * c2.y - m.y * c2.x);
+        auto m = handle - cap1;
+        float D = 2.f * (m.x * capToCap.y - m.y * capToCap.x);
 
         if (std::abs(D) < 0.0001f) {
             obstacle.descriptor->shape = std::make_unique<SegmentSpec>(
-                initialDescriptor.shape->minorRadius,
-                capToCapDistance * 0.5f,
-                capToCapDistance * 0.5f
+                minorRadius, capToCapDistance * 0.5f, capToCapDistance * 0.5f
             );
             targetPosition = capsMidpoint;
             targetAngle = chordAngle;
         } else {
-            float mSq = glm::dot(m, m);
-            float c2Sq = glm::dot(c2, c2);
-
+            float mSq = dot(m, m);
+            float c2Sq = dot(capToCap, capToCap);
             glm::vec2 centreRelative1 = {
-	            (c2.y * mSq - m.y * c2Sq) / D,
-				(m.x * c2Sq - c2.x * mSq) / D
+                (capToCap.y * mSq - m.y * c2Sq) / D,
+                (m.x * c2Sq - capToCap.x * mSq) / D
             };
 
             auto arcCentre = cap1 + centreRelative1;
             float arcRadius = glm::length(centreRelative1);
 
-            auto v1 = glm::normalize(cap1 - arcCentre);
-            auto v2 = glm::normalize(cap2 - arcCentre);
-            auto vM = glm::normalize(effectiveM - arcCentre);
+            auto v1 = normalize(cap1 - arcCentre);
+            auto v2 = normalize(cap2 - arcCentre);
+            auto vM = normalize(handle - arcCentre);
 
             float a1 = std::atan2(v1.y, v1.x);
             float a2 = std::atan2(v2.y, v2.x);
@@ -130,26 +127,12 @@ void CurvatureOperation::applyOperation() {
             float sweepM = wrapAngle(aM - a1);
             if (sweepM < 0.f) sweepM += glm::two_pi<float>();
 
-            float arcAngle;
-            if (sweepM <= sweep2)
-                arcAngle = sweep2;
-            else
-                arcAngle = glm::two_pi<float>() - sweep2;
+            float arcAngle = (sweepM <= sweep2) ? sweep2 : glm::two_pi<float>() - sweep2;
+            float positionOffset = dot(arcCentre - capsMidpoint, normal);
 
-            float positionOffset = glm::dot(arcCentre - capsMidpoint, normal);
-
-            obstacle.descriptor->shape = std::make_unique<ArcSpec>(
-                initialDescriptor.shape->minorRadius,
-                arcAngle,
-                arcRadius
-            );
-
+            obstacle.descriptor->shape = std::make_unique<ArcSpec>(minorRadius, arcAngle, arcRadius);
             targetPosition = capsMidpoint + normal * positionOffset;
-
-            if (chordOffset < 0.f)
-                targetAngle = chordAngle;
-            else
-                targetAngle = chordAngle + glm::pi<float>();
+            targetAngle = chordAngle + (chordOffset < 0.f ? 0.f : glm::pi<float>());
         }
     }
 
