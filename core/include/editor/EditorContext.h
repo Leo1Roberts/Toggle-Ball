@@ -41,11 +41,16 @@ struct EditorContext {
 
 	[[nodiscard]] SnapResult snapPoint(glm::vec2 point, const EntityReference& excludedEntity) const;
 	[[nodiscard]] SnapResult snapPointRestrictedToLine(glm::vec2 point, const EntityReference& excludedEntity, glm::vec2 pointOnLine, float lineAngle) const;
+	[[nodiscard]] SnapResult snapPointRestrictedToCircle(glm::vec2 point, const EntityReference& excludedEntity, glm::vec2 circleCentre, float circleRadius) const;
 
 	EditorScene& scene;
 	const Camera& camera;
 	const EditorQuickSettings& quickSettings;
 	const float& uiToWorldScale;
+
+private:
+	[[nodiscard]] SnapResult snapPointRestrictedToShape(glm::vec2 point, const EntityReference& excludedEntity,
+		const std::function<std::vector<glm::vec2>(const EditorObstacle&)>& getPointsOnShape) const;
 };
 
 
