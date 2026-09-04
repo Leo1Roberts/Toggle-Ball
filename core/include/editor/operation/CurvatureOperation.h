@@ -25,8 +25,6 @@ protected:
 private:
 	void applyModifiers(byte mods) final {}
 
-	[[nodiscard]] bool canStart() const final;
-
 	int obstacleIndex;
 	EditorObstacle& obstacle;
 	const ObstacleDescriptor initialDescriptor;
