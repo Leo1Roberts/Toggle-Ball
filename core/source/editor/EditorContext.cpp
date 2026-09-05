@@ -133,8 +133,8 @@ SnapResult EditorContext::snapPointRestrictedToShape(glm::vec2 point, const Enti
 			float planarSnappingDistanceSq = planarSnappingDistance * planarSnappingDistance;
 			if (shortestSpineDistanceSq < planarSnappingDistanceSq) {
 				const auto& target = scene.obstacles[closestSpineIndex];
-				float leftCapDistanceSq = length2(point - target.getLeftCapPosition());
-				float rightCapDistanceSq = length2(point - target.getRightCapPosition());
+				float leftCapDistanceSq = length2(closestSpinePoint - target.getLeftCapPosition());
+				float rightCapDistanceSq = length2(closestSpinePoint - target.getRightCapPosition());
 				if (std::min(leftCapDistanceSq, rightCapDistanceSq) < 0.00000001f)
 					return {.value = leftCapDistanceSq < rightCapDistanceSq
 						? target.getLeftCapPosition()

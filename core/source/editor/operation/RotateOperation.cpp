@@ -33,15 +33,6 @@ std::optional<Cursor> RotateOperation::queryCursor() const {
 }
 
 
-float RotateOperation::angleDifference(glm::vec2 newPos, glm::vec2 oldPos, glm::vec2 pivot) {
-	glm::vec2 v1 = oldPos - pivot;
-	glm::vec2 v2 = newPos - pivot;
-
-	if (v1 == glm::vec2(0.f) || v2 == glm::vec2(0.f)) return 0.f;
-
-	return std::atan2(v1.x * v2.y - v1.y * v2.x, dot(v1, v2));
-}
-
 OperationResponse RotateOperation::doProcessEvent(const Event& event) {
 	auto response = PivotOperation::doProcessEvent(event);
 	if (response.consumedEvent)

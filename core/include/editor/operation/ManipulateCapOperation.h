@@ -24,8 +24,12 @@ protected:
 
 private:
 	void applyModifiers(byte mods) final {
-		useSnappedTangent = mods & MOD_CTRL;
+		extendOnly = mods & MOD_SHIFT;
+		bothCaps = extendOnly && mods & MOD_CTRL; // TODO: support manipulating both caps in all cases
+		useSnappedTangent = mods & MOD_ALT;
 	}
+	bool bothCaps = false;
+	bool extendOnly = false;
 	bool useSnappedTangent = false;
 
 	int obstacleIndex;
@@ -40,6 +44,7 @@ private:
 
 	bool currentlyLeftCap = leftCap;
 	SnapResult snapResult;
+	float rotationAngle = 0.f;
 };
 
 class ManipulateLeftCapOperation : public ManipulateCapOperation {

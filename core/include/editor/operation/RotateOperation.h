@@ -25,7 +25,6 @@ protected:
 
 private:
 	void setRotation(float radians);
-	static float angleDifference(glm::vec2 newPos, glm::vec2 oldPos, glm::vec2 pivot);
 	void updateTransformation(glm::vec2 newPointerPlanarPosition) override {
 		setRotation(rotation + angleDifference(newPointerPlanarPosition, pointerPlanarPosition, pivot) * precisionMultiplier);
 	}

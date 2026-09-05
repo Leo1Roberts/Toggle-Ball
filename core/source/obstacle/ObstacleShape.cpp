@@ -762,7 +762,7 @@ std::vector<glm::vec2> SegmentSpec::getPointsOnLine(const ObstacleKinematicState
 	float u = cross2D(diff, lineDir) / denominator;
 
 	// Check if intersection lies within the segment bounds
-	if (u >= 0.f && u <= 1.f)
+	if (u >= -0.00001f && u <= 1.00001f)
 		return { A + u * segmentDir };
 
 	return {};
