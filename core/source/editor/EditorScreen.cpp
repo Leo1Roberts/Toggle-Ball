@@ -128,6 +128,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	levelAndBallPropertiesTitle->setLayout({
 		.widthMode = SizingMode::Stretch,
 		.heightMode = SizingMode::Wrap,
+		.margin = {5.f, 0.f}
 	});
 	auto levelAndBallPropertiesList = levelAndBallProperties->addChild<UIVerticalList>(5.f, 0.f);
 	levelAndBallPropertiesList->setLayout({ .heightMode = SizingMode::Wrap });
@@ -189,6 +190,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	obstacleMotionPropertiesTitle->setLayout({
 		.widthMode = SizingMode::Stretch,
 		.heightMode = SizingMode::Wrap,
+		.margin = {5.f, 0.f}
 	});
 	obstacleMotionPropertiesList = obstacleMotionProperties->addChild<UIVerticalList>(5.f, 0.f);
 	obstacleMotionPropertiesList->setLayout({ .heightMode = SizingMode::Wrap });
@@ -205,6 +207,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	obstacleShapePropertiesTitle->setLayout({
 		.widthMode = SizingMode::Stretch,
 		.heightMode = SizingMode::Wrap,
+		.margin = {5.f, 0.f}
 	});
 	obstacleShapePropertiesList = obstacleShapeProperties->addChild<UIVerticalList>(5.f, 0.f);
 	obstacleShapePropertiesList->setLayout({ .heightMode = SizingMode::Wrap });

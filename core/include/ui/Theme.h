@@ -591,7 +591,7 @@ namespace Theme {
 	inline constexpr TextStyle SubtleTitle {
 		.fontSize = 20.f,
 		.color = Color::DarkGrey,
-		.alignHorizontal = TextAlignHorizontal::Centre,
+		.alignHorizontal = TextAlignHorizontal::Left,
 	};
 }
 
