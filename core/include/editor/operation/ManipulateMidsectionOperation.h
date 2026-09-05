@@ -8,9 +8,9 @@
 class EditorObstacle;
 
 
-class CurvatureOperation : public Operation {
+class ManipulateMidsectionOperation : public Operation {
 public:
-	CurvatureOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, glm::vec2 initialHandlePosition);
+	ManipulateMidsectionOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, glm::vec2 initialHandlePosition);
 
 	void cancel() const final { ctx.scene.cancelLevelChange(); }
 	void commit() const final { ctx.scene.commitLevelChange(); }
@@ -23,7 +23,10 @@ protected:
 	void applyOperation() override;
 
 private:
-	void applyModifiers(byte mods) final {}
+	void applyModifiers(byte mods) final {
+		changeArcRadius = mods & MOD_SHIFT;
+	}
+	bool changeArcRadius = false;
 
 	int obstacleIndex;
 	EditorObstacle& obstacle;
@@ -32,6 +35,7 @@ private:
 	const glm::vec2 initialPosition;
 	const glm::vec2 initialHandlePosition;
 	const glm::vec2 cap1, cap2;
+	std::optional<float> initialHandleMinusArcRadius = std::nullopt;;
 };
 
 
