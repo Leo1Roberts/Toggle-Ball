@@ -22,6 +22,13 @@ ManipulateMidsectionOperation::ManipulateMidsectionOperation(const EditorContext
 }
 
 
+std::vector<BindingHint> ManipulateMidsectionOperation::getBindingHints() const {
+	if (initialHandleMinusArcRadius)
+		return {{KeyChord(KeyCode::Unknown, MOD_SHIFT), "Adjust arc radius"}};
+	return {};
+}
+
+
 std::optional<Cursor> ManipulateMidsectionOperation::queryCursor() const {
 	float angle = 0.f;
 	if (dynamic_cast<SegmentSpec*>(obstacle.descriptor->shape.get()))
@@ -55,15 +62,17 @@ OperationResponse ManipulateMidsectionOperation::doProcessEvent(const Event& eve
 void ManipulateMidsectionOperation::applyOperation() {
     auto handle = initialHandlePosition + pointerPlanarPosition - initialPlanarPosition;
 
+	glm::vec2 targetPosition = initialPosition;
+	float targetAngle = initialAngle;
+
 	if (changeArcRadius && initialHandleMinusArcRadius) {
-		auto arcSpec = dynamic_cast<ArcSpec*>(obstacle.descriptor->shape.get());
-		arcSpec->setArcRadius(*initialHandleMinusArcRadius + length(handle - initialPosition));
+		auto arcSpec = dynamic_cast<ArcSpec*>(initialDescriptor.shape.get());
+		obstacle.descriptor->shape = std::make_unique<ArcSpec>(arcSpec->minorRadius, arcSpec->getArcAngle(),
+			*initialHandleMinusArcRadius + length(handle - initialPosition));
 	} else {
 		auto capToCap = cap2 - cap1;
 		float capToCapDistance = glm::length(capToCap);
 
-		glm::vec2 targetPosition;
-		float targetAngle;
 		float minorRadius = initialDescriptor.shape->minorRadius;
 
 		if (capToCapDistance < 0.0001f) { // Shape is a full circle
@@ -181,15 +190,14 @@ void ManipulateMidsectionOperation::applyOperation() {
 				}
 			}
 		}
-
-		auto translatedInitialDescriptor = initialDescriptor;
-		translatedInitialDescriptor.motion->translateBy(targetPosition - initialPosition, true, false, initialDescriptor.motion.get());
-
-		float angleDiff = wrapAngle(targetAngle - initialAngle);
-		obstacle.rotateBy(angleDiff, angleToRotation2D(angleDiff), glm::vec2(0.f), true, false, true, &translatedInitialDescriptor);
-
-		obstacle.initKinematicState();
 	}
 
+	auto translatedInitialDescriptor = initialDescriptor;
+	translatedInitialDescriptor.motion->translateBy(targetPosition - initialPosition, true, false, initialDescriptor.motion.get());
+
+	float angleDiff = wrapAngle(targetAngle - initialAngle);
+	obstacle.rotateBy(angleDiff, angleToRotation2D(angleDiff), glm::vec2(0.f), true, false, true, &translatedInitialDescriptor);
+
+	obstacle.initKinematicState();
     obstacle.invalidateAllMeshes();
 }

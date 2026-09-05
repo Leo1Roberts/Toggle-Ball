@@ -587,6 +587,12 @@ namespace Theme {
 			.strokeWidth = 0.0f
 		}
 	};
+
+	inline constexpr TextStyle SubtleTitle {
+		.fontSize = 20.f,
+		.color = Color::DarkGrey,
+		.alignHorizontal = TextAlignHorizontal::Centre,
+	};
 }
 
 

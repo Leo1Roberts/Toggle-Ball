@@ -15,6 +15,19 @@ ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, Trigger
 	initialCapPlanarPosition(leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()) {}
 
 
+std::vector<BindingHint> ManipulateCapOperation::getBindingHints() const {
+	std::vector<BindingHint> hints =
+		{{KeyChord(KeyCode::Unknown, MOD_SHIFT), "Preserve shape"}};
+
+	if (preserveShape)
+		hints.emplace_back(KeyChord(KeyCode::Unknown, MOD_CTRL),  "Symmetrical");
+	else if (ctx.quickSettings.shape.alignWithTangent)
+		hints.emplace_back(KeyChord(KeyCode::Unknown, MOD_ALT), "Use snapped tangent");
+
+	return hints;
+}
+
+
 void ManipulateCapOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
 	auto leftCapPos = obstacle.getLeftCapPosition();
 	auto rightCapPos = obstacle.getRightCapPosition();
@@ -93,7 +106,7 @@ void ManipulateCapOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
 		}
 	};
 
-	if (bothCaps) {
+	if (symmetrical) {
 		if (snapResult.type == SnapType::None) {
 			addActiveHandle(leftCapPos);
 			addActiveHandle(rightCapPos);
@@ -141,7 +154,7 @@ void ManipulateCapOperation::applyOperation() {
 			float rightLength = segmentSpec->getRightLength();
 			float diff = length - segmentSpec->getLength();
 
-			if (bothCaps) {
+			if (symmetrical) {
 				float halfDiff = diff / 2.f;
 				leftLength += halfDiff;
 				rightLength += halfDiff;
@@ -165,12 +178,12 @@ void ManipulateCapOperation::applyOperation() {
 			obstacle.descriptor->shape = std::make_unique<SegmentSpec>(minorRadius, leftLength, rightLength);
 
 			auto dirVec = glm::vec2(std::cos(dirAngle), std::sin(dirAngle));
-			if (bothCaps) {
+			if (symmetrical) {
 				targetPosition = initialPosition + dirVec * positionOffset;
 			} else
 				targetPosition = fixedCapPlanarPosition + dirVec * (leftCap ? -rightLength : leftLength);
 		} else {
-			if (bothCaps) {
+			if (symmetrical) {
 				float halfLength = length / 2.f;
 				obstacle.descriptor->shape = std::make_unique<SegmentSpec>(minorRadius, halfLength, halfLength);
 				targetPosition = (fixedCapPlanarPosition + capPlanarPosition) / 2.f;
@@ -181,7 +194,7 @@ void ManipulateCapOperation::applyOperation() {
 		}
 	};
 
-	if (extendOnly) {
+	if (preserveShape) {
 		currentlyLeftCap = leftCap;
 
 		if (segmentSpec) {
@@ -191,7 +204,7 @@ void ManipulateCapOperation::applyOperation() {
 			auto manipulatedCap = initialCapPlanarPosition + lineDir * lengthDiff;
 			auto manipulatedSnapResult = ctx.snapPointRestrictedToLine(manipulatedCap, {EntityType::Obstacle, obstacleIndex}, initialPosition, initialAngle);
 
-			if (bothCaps) {
+			if (symmetrical) {
 				float manipulatedDiffSq = manipulatedSnapResult.type != SnapType::None ? length2(manipulatedSnapResult.value - manipulatedCap) : std::numeric_limits<float>::max();
 
 				auto fixedCap = fixedCapPlanarPosition - lineDir * lengthDiff;
@@ -225,7 +238,7 @@ void ManipulateCapOperation::applyOperation() {
 				leftLength -= lengthDiff;
 			else
 				rightLength += lengthDiff;
-			if (bothCaps) {
+			if (symmetrical) {
 				if (leftCap)
 					rightLength -= lengthDiff;
 				else
@@ -240,12 +253,12 @@ void ManipulateCapOperation::applyOperation() {
 
 			applySegmentShape(length, initialAngle);
 		} else if (arcSpec) {
-			float rawArcAngleDiff = (leftCap ? rotationAngle : -rotationAngle) * (bothCaps ? 2.f : 1.f);
+			float rawArcAngleDiff = (leftCap ? rotationAngle : -rotationAngle) * (symmetrical ? 2.f : 1.f);
 			float rawArcAngle = arcSpec->getArcAngle() + rawArcAngleDiff;
 			float limitedArcAngle = std::clamp(rawArcAngle, 0.f, glm::two_pi<float>());
 
 			float arcAngle;
-			if (bothCaps) {
+			if (symmetrical) {
                 float halfRawDiff = rawArcAngleDiff / 2.f;
                 float rawLeftCapAngle = initialAngle + arcSpec->getLeftCapAngle() - glm::half_pi<float>() + halfRawDiff;
                 float rawRightCapAngle = initialAngle + arcSpec->getRightCapAngle() + glm::half_pi<float>() - halfRawDiff;

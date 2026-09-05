@@ -4,6 +4,7 @@
 #include "Color.h"
 
 #include <glm/glm.hpp>
+#include "glm/gtc/constants.hpp"
 #include <string>
 
 [[nodiscard]] glm::vec3 colorToLinear(col srgb);
@@ -13,6 +14,8 @@
 [[nodiscard]] long now_ms();
 [[nodiscard]] microseconds now();
 [[nodiscard]] inline float toSeconds(microseconds t) { return (float)t / 1000000.f; }
+[[nodiscard]] inline float to_deg(float rad) { return -rad * glm::one_over_pi<float>() * 180.f; }
+[[nodiscard]] inline float to_rad(float deg) { return -deg / 180.f * glm::pi<float>(); }
 
 inline glm::mat2 angleToRotation2D(float radians) {
 	float c = std::cos(radians);

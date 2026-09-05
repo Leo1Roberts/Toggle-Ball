@@ -113,6 +113,24 @@ bool AbstractShapeSpec::operator==(const AbstractShapeSpec& other) const {
 }
 
 
+std::vector<AbstractShapeSpec::Property> AbstractShapeSpec::getProperties() const {
+	auto properties = getSpecificProperties();
+	properties.insert(properties.begin(), Property::MinorRadius);
+	return properties;
+}
+std::optional<float> AbstractShapeSpec::getProperty(bool convertUnits, Property property) const {
+	if (property == Property::MinorRadius)
+		return minorRadius;
+	return getSpecificProperty(convertUnits, property);
+}
+void AbstractShapeSpec::setProperty(float value, Property property) {
+	if (property == Property::MinorRadius)
+		minorRadius = std::abs(value);
+	else
+		setSpecificProperty(value, property);
+}
+
+
 void AbstractShapeSpec::generateObstacleMesh(Mesh<ObjectVertex>& obstacleMesh, col color) const {
 	std::vector<ObjectVertex> vs;
 	std::vector<Index> is;

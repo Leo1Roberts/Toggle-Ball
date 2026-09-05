@@ -12,6 +12,8 @@ public:
 
 	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 
+	float minorRadius = 0.7f;
+
 protected:
 	void performPrimaryAction(const PointerEvent& upEvent) override;
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;
@@ -24,8 +26,6 @@ private:
 	[[nodiscard]] std::optional<MidsectionHandleInfo> getMidsectionHandleInfo(const EditorObstacle& obstacle, glm::vec2 pointerPlanarPosition) const;
 
 	[[nodiscard]] std::optional<int> getPointedRimIndex(glm::vec2 pointerPlanarPosition) const;
-
-	float minorRadius = 0.7f;
 };
 
 

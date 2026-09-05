@@ -38,6 +38,7 @@ private:
 	float uiToWorldScale{};
 	void updateEphemeralMeshes();
 	void updateObstacleMotionPropertiesList();
+	void updateObstacleShapePropertiesList();
 
 	EditorScene scene;
 	Camera camera;
@@ -54,12 +55,15 @@ private:
 	ToolMode* currentMode = nullptr;
 	void selectMode(ToolMode* mode);
 
+	void updateBindingHints();
 	void updateDynamicUI();
 	UIContainer* operationUI;
 	UIHorizontalList* bindingHints;
 
 	bool obstacleMotionPropertiesListValid = false;
 	UIVerticalList* obstacleMotionPropertiesList;
+	bool obstacleShapePropertiesListValid = false;
+	UIVerticalList* obstacleShapePropertiesList;
 };
 
 #endif // EDITOR_H

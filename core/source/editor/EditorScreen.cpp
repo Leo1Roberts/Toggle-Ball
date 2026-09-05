@@ -113,11 +113,24 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		.widthMode  = SizingMode::Absolute, .width = 300.f,
 		.heightMode = SizingMode::Stretch
 	});
-	auto propertiesList = propertiesPanel->addChild<UIVerticalList>(0.f, 0.f);
+	auto propertiesList = propertiesPanel->addChild<UIVerticalList>(10.f);
+	propertiesList->setLayout({ .padding = glm::vec2(10.f) });
 
 
-	auto levelAndBallPropertiesList = propertiesList->addChild<UIVerticalList>(10.f);
-	levelAndBallPropertiesList->setLayout({ .padding = glm::vec2(20.f) });
+	auto levelAndBallPropertiesPanel = propertiesList->addChild<UIPanel>(Theme::DarkCard);
+	levelAndBallPropertiesPanel->setLayout({
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(10.f)
+	});
+	auto levelAndBallProperties = levelAndBallPropertiesPanel->addChild<UIVerticalList>(5.f, 0.f);
+	levelAndBallProperties->setLayout({ .heightMode = SizingMode::Wrap });
+	auto levelAndBallPropertiesTitle = levelAndBallProperties->addChild<UIText>("LEVEL", Theme::SubtleTitle);
+	levelAndBallPropertiesTitle->setLayout({
+		.widthMode = SizingMode::Stretch,
+		.heightMode = SizingMode::Wrap,
+	});
+	auto levelAndBallPropertiesList = levelAndBallProperties->addChild<UIVerticalList>(5.f, 0.f);
+	levelAndBallPropertiesList->setLayout({ .heightMode = SizingMode::Wrap });
 
 	auto makeListItem = [this](const std::string& labelText, float* property) {
 		auto item =  std::make_unique<UIHorizontalList>(10.f, 0.f);
@@ -164,8 +177,37 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	levelAndBallPropertiesList->addChild(makeListItem("Ball position X", &scene.ball.descriptor->initialPosition.x));
 	levelAndBallPropertiesList->addChild(makeListItem("Ball position Y", &scene.ball.descriptor->initialPosition.y));
 
-	obstacleMotionPropertiesList = propertiesList->addChild<UIVerticalList>(10.f);
-	obstacleMotionPropertiesList->setLayout({ .padding = glm::vec2(20.f) });
+
+	auto obstacleMotionPropertiesPanel = propertiesList->addChild<UIPanel>(Theme::DarkCard);
+	obstacleMotionPropertiesPanel->setLayout({
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(10.f)
+	});
+	auto obstacleMotionProperties = obstacleMotionPropertiesPanel->addChild<UIVerticalList>(5.f, 0.f);
+	obstacleMotionProperties->setLayout({ .heightMode = SizingMode::Wrap });
+	auto obstacleMotionPropertiesTitle = obstacleMotionProperties->addChild<UIText>("MOTION", Theme::SubtleTitle);
+	obstacleMotionPropertiesTitle->setLayout({
+		.widthMode = SizingMode::Stretch,
+		.heightMode = SizingMode::Wrap,
+	});
+	obstacleMotionPropertiesList = obstacleMotionProperties->addChild<UIVerticalList>(5.f, 0.f);
+	obstacleMotionPropertiesList->setLayout({ .heightMode = SizingMode::Wrap });
+
+
+	auto obstacleShapePropertiesPanel = propertiesList->addChild<UIPanel>(Theme::DarkCard);
+	obstacleShapePropertiesPanel->setLayout({
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(10.f)
+	});
+	auto obstacleShapeProperties = obstacleShapePropertiesPanel->addChild<UIVerticalList>(5.f, 0.f);
+	obstacleShapeProperties->setLayout({ .heightMode = SizingMode::Wrap });
+	auto obstacleShapePropertiesTitle = obstacleShapeProperties->addChild<UIText>("SHAPE", Theme::SubtleTitle);
+	obstacleShapePropertiesTitle->setLayout({
+		.widthMode = SizingMode::Stretch,
+		.heightMode = SizingMode::Wrap,
+	});
+	obstacleShapePropertiesList = obstacleShapeProperties->addChild<UIVerticalList>(5.f, 0.f);
+	obstacleShapePropertiesList->setLayout({ .heightMode = SizingMode::Wrap });
 
 	auto helpBar = mainArea->addChild(std::make_unique<UIPanel>(
 		PanelStyle{
@@ -269,6 +311,8 @@ void EditorScreen::processEvent(const Event& event) {
 		auto response = currentMode->processEvent(event);
 		if (response.operationChanged)
 			updateDynamicUI();
+		else
+			updateBindingHints();
 		if (response.consumedEvent)
 			return;
 
@@ -388,9 +432,15 @@ void EditorScreen::update(microseconds dt) {
 	scene.update(dt);
 
 	auto selectionState = scene.getSelectionState();
-	if (!obstacleMotionPropertiesListValid || cachedSelectionState.obstacles != selectionState.obstacles) {
+	if (cachedSelectionState.obstacles != selectionState.obstacles) {
 		updateObstacleMotionPropertiesList();
+		updateObstacleShapePropertiesList();
 		cachedSelectionState = selectionState;
+	} else {
+		if (!obstacleMotionPropertiesListValid)
+			updateObstacleMotionPropertiesList();
+		if (!obstacleShapePropertiesListValid)
+			updateObstacleShapePropertiesList();
 	}
 
 	uiManager.update(dt);
@@ -760,6 +810,130 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 	obstacleMotionPropertiesListValid = true;
 }
 
+void EditorScreen::updateObstacleShapePropertiesList() {
+	uiManager.removeAllChildrenOfNode(obstacleShapePropertiesList);
+
+	auto addItem = [this](AbstractShapeSpec::Property property,
+		const std::function<void(const UITextBox&)>& onTextChange,
+		const std::function<std::string()>& valueProvider) {
+		auto item = obstacleShapePropertiesList->addChild<UIHorizontalList>(10.f, 0.f);
+		item->setLayout({
+			.widthMode  = SizingMode::Stretch,
+			.heightMode = SizingMode::Wrap,
+		});
+
+		auto label = item->addChild<UIText>(AbstractShapeSpec::getPropertyName(property),
+			TextStyle{
+				.color = Color::LightGrey,
+				.alignVertical = TextAlignVertical::Middle
+			});
+		label->setLayout({ .margin = {5.f, 0.f} });
+
+		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
+		textField->setLayout({
+			.widthMode  = SizingMode::Stretch,
+			.heightMode = SizingMode::Wrap,
+			.padding = {0.f, 10.f}
+		});
+		textField->setOnTextChange(onTextChange);
+		textField->setOnConfirm([this](const UITextBox& tb) {
+			if (tb.isEmpty())
+				scene.cancelLevelChange();
+			else
+				scene.commitLevelChange();
+			scene.demonstrateMotion = false;
+		});
+		textField->setOnCancel([this](const UITextBox&) {
+			scene.cancelLevelChange();
+			scene.demonstrateMotion = false;
+		});
+		textField->setValueProvider(valueProvider);
+	};
+
+	std::vector<AbstractShapeSpec::Property> commonProperties;
+	for (const auto& obstacle : scene.obstacles)
+		if (obstacle.isSelected()) {
+			auto properties = obstacle.descriptor->shape->getProperties();
+
+			if (commonProperties.empty())
+				commonProperties = properties;
+			else {
+				std::erase_if(commonProperties, [&](const auto& property) {
+					return std::ranges::find(properties, property) == properties.end(); });
+
+				if (commonProperties.size() == 1) break;
+			}
+		}
+	if (commonProperties.empty())
+		commonProperties.push_back(AbstractShapeSpec::Property::MinorRadius);
+
+	for (const auto property : commonProperties) {
+		std::function<void(const UITextBox&)> onTextChange;
+		std::function<std::string()> valueProvider;
+
+		if (property == AbstractShapeSpec::Property::MinorRadius) {
+			onTextChange = [this, property](const UITextBox& tb) {
+				if (auto value = tb.getValue<std::optional<float>>()) {
+					for (auto& obstacle : scene.obstacles)
+						if (obstacle.isSelected())
+							obstacle.setShapeProperty(*value, property);
+
+					shapeMode.minorRadius = *value;
+				} else
+					scene.cancelLevelChange();
+			};
+
+			valueProvider = [this, property] {
+				bool anySelectedObstacles = false;
+				std::optional value = shapeMode.minorRadius;
+				for (const auto& obstacle : scene.obstacles)
+					if (obstacle.isSelected()) {
+						auto v = obstacle.getShapeProperty(property);
+						if (!anySelectedObstacles)
+							value = v;
+						else if (v != value) {
+							value = std::nullopt;
+							break;
+						}
+
+						anySelectedObstacles = true;
+					}
+
+				return value ? floatToString(*value, 3) : "";
+			};
+		} else {
+			onTextChange = [this, property](const UITextBox& tb) {
+				if (auto value = tb.getValue<std::optional<float>>()) {
+					for (auto& obstacle : scene.obstacles)
+						if (obstacle.isSelected())
+							obstacle.setShapeProperty(*value, property);
+				} else
+					scene.cancelLevelChange();
+			};
+
+			valueProvider = [this, property] {
+				std::optional<float> value = std::nullopt;
+				for (const auto& obstacle : scene.obstacles)
+					if (obstacle.isSelected()) {
+						auto v = obstacle.getShapeProperty(property);
+						if (!value)
+							value = v;
+						else if (v != value) {
+							value = std::nullopt;
+							break;
+						}
+					}
+
+				return value ? floatToString(*value, 3) : "";
+			};
+		}
+
+		addItem(property, onTextChange, valueProvider);
+	}
+
+	obstacleShapePropertiesListValid = true;
+}
+
 
 void EditorScreen::selectMode(ToolMode* mode) {
 	if (mode == currentMode) return;
@@ -768,10 +942,7 @@ void EditorScreen::selectMode(ToolMode* mode) {
 }
 
 
-void EditorScreen::updateDynamicUI() {
-	uiManager.removeAllChildrenOfNode(operationUI);
-	currentMode->createOperationUI(*operationUI);
-
+void EditorScreen::updateBindingHints() {
 	uiManager.removeAllChildrenOfNode(bindingHints);
 
 	std::vector<BindingHint> hints;
@@ -853,4 +1024,11 @@ void EditorScreen::updateDynamicUI() {
 			.margin = {3.f, 0.f}
 		});
 	}
+}
+
+void EditorScreen::updateDynamicUI() {
+	uiManager.removeAllChildrenOfNode(operationUI);
+	currentMode->createOperationUI(*operationUI);
+
+	updateBindingHints();
 }

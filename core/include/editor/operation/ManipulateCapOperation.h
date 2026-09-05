@@ -15,6 +15,7 @@ public:
 	void cancel() const final { ctx.scene.cancelLevelChange(); }
 	void commit() const final { ctx.scene.commitLevelChange(); }
 
+	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
 	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
 
 protected:
@@ -24,12 +25,12 @@ protected:
 
 private:
 	void applyModifiers(byte mods) final {
-		extendOnly = mods & MOD_SHIFT;
-		bothCaps = extendOnly && mods & MOD_CTRL; // TODO: support manipulating both caps in all cases
+		preserveShape = mods & MOD_SHIFT;
+		symmetrical = preserveShape && mods & MOD_CTRL; // TODO: support manipulating both caps in all cases
 		useSnappedTangent = mods & MOD_ALT;
 	}
-	bool bothCaps = false;
-	bool extendOnly = false;
+	bool symmetrical = false;
+	bool preserveShape = false;
 	bool useSnappedTangent = false;
 
 	int obstacleIndex;

@@ -4,6 +4,10 @@
 #include "opengl/Mesh.h"
 
 #include "glm/gtc/constants.hpp"
+#include "utilities/Utilities.h"
+
+#include <algorithm>
+#include <optional>
 
 class GameBall;
 class ObstacleKinematicState;
@@ -39,6 +43,29 @@ public:
 	static std::unique_ptr<AbstractShapeSpec> deserialize(const std::string& data);
 
 	bool operator==(const AbstractShapeSpec& other) const;
+
+	enum class Property : int {
+		MinorRadius,
+
+		LeftLength, RightLength,
+
+		ArcAngle, ArcRadius,
+	};
+
+	static std::string getPropertyName(Property property) {
+		switch (property) {
+		case Property::MinorRadius: return "Minor radius";
+		case Property::LeftLength:  return "Left length";
+		case Property::RightLength: return "Right length";
+		case Property::ArcAngle:    return "Arc angle";
+		case Property::ArcRadius:   return "Arc radius";
+		default: return "Unknown";
+		}
+	}
+
+	[[nodiscard]] std::vector<Property> getProperties() const;
+	[[nodiscard]] std::optional<float> getProperty(bool convertUnits, Property property) const;
+	void setProperty(float value, Property property);
 
 	virtual void scale(float factor) = 0;
 
@@ -86,6 +113,10 @@ private:
 	[[nodiscard]] virtual std::string getTypeString() const = 0;
 
 	[[nodiscard]] virtual bool equals(const AbstractShapeSpec& other) const = 0;
+
+	[[nodiscard]] constexpr virtual std::vector<Property> getSpecificProperties() const = 0;
+	[[nodiscard]] virtual std::optional<float> getSpecificProperty(bool convertUnits, Property property) const = 0;
+	virtual void setSpecificProperty(float value, Property property) = 0;
 
 	virtual void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const = 0;
 	virtual void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const = 0;
@@ -152,6 +183,24 @@ private:
 		return leftLength == otherSegment.leftLength && rightLength == otherSegment.rightLength;
 	}
 
+	[[nodiscard]] constexpr std::vector<Property> getSpecificProperties() const override {
+		return { Property::LeftLength, Property::RightLength };
+	}
+	[[nodiscard]] std::optional<float> getSpecificProperty(bool convertUnits, Property property) const override {
+		switch (property) {
+		case Property::LeftLength:  return leftLength;
+		case Property::RightLength: return rightLength;
+		default: return std::nullopt;
+		}
+	}
+	void setSpecificProperty(float value, Property property) override {
+		switch (property) {
+		case Property::LeftLength:  setLeftLength(std::abs(value)); break;
+		case Property::RightLength: setRightLength(std::abs(value)); break;
+		default:;
+		}
+	}
+
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;
 	void buildOutlineMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, float uiToWorldScale) const override;
 
@@ -216,6 +265,24 @@ private:
 	[[nodiscard]] bool equals(const AbstractShapeSpec& other) const override {
 		auto otherArc = (const ArcSpec&)other;
 		return arcAngle == otherArc.arcAngle && arcRadius == otherArc.arcRadius;
+	}
+
+	[[nodiscard]] constexpr std::vector<Property> getSpecificProperties() const override {
+		return { Property::ArcAngle, Property::ArcRadius };
+	}
+	[[nodiscard]] std::optional<float> getSpecificProperty(bool convertUnits, Property property) const override {
+		switch (property) {
+		case Property::ArcAngle:  return convertUnits ? std::abs(to_deg(arcAngle)) : arcAngle;
+		case Property::ArcRadius: return arcRadius;
+		default: return std::nullopt;
+		}
+	}
+	void setSpecificProperty(float value, Property property) override {
+		switch (property) {
+		case Property::ArcAngle:  setArcAngle(std::clamp(std::abs(to_rad(value)), 0.f, glm::two_pi<float>())); break;
+		case Property::ArcRadius: setArcRadius(std::abs(value)); break;
+		default:;
+		}
 	}
 
 	void buildObstacleMesh(std::vector<ObjectVertex>& vs, std::vector<Index>& is, col color) const override;

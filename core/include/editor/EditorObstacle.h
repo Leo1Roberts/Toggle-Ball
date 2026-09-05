@@ -67,10 +67,18 @@ public:
 	void setMotionProperty(float value, IMotionSpec::PropertyDescriptor property) {
 		descriptor->motion->setProperty(value, property);
 		initKinematicState(true);
-		invalidateAllMeshes();
+		invalidateEphemeralMeshes();
 	}
 	[[nodiscard]] std::optional<float> getMotionProperty(IMotionSpec::PropertyDescriptor property) const {
 		return descriptor->motion->getProperty(true, property);
+	}
+
+	void setShapeProperty(float value, AbstractShapeSpec::Property property) {
+		descriptor->shape->setProperty(value, property);
+		invalidateAllMeshes();
+	}
+	[[nodiscard]] std::optional<float> getShapeProperty(AbstractShapeSpec::Property property) const {
+		return descriptor->shape->getProperty(true, property);
 	}
 
 	[[nodiscard]] bool isSelected() const { return selected; }

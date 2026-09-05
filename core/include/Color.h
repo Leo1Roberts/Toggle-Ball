@@ -29,6 +29,7 @@ namespace Color {
 	constexpr col Black = col(0, 0, 0);
 	constexpr col White = col(255, 255, 255);
 	constexpr col LightGrey = col(200, 200, 200);
+	constexpr col DarkGrey = col(100, 100, 100);
 
 	constexpr col SoftRed = col(240, 10, 10);
 	constexpr col SoftGreen = col(10, 240, 10);

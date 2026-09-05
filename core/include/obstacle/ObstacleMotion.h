@@ -3,6 +3,7 @@
 
 #include "glm/gtc/constants.hpp"
 #include "opengl/Mesh.h"
+#include "utilities/Utilities.h"
 
 #include <optional>
 
@@ -10,9 +11,6 @@ class AbstractShapeSpec;
 class ObstacleKinematicState;
 class Smoother;
 
-
-inline float to_deg(float rad) { return -rad * glm::one_over_pi<float>() * 180.f; }
-inline float to_rad(float deg) { return -deg / 180.f * glm::pi<float>(); }
 
 inline float to_rpm(float radPerSec) { return -radPerSec * glm::one_over_pi<float>() * 30.f; }
 inline float to_opm(float radPerSec) { return to_rpm(radPerSec); }
@@ -68,7 +66,7 @@ public:
 		bool operator==(const PropertyDescriptor&) const = default;
 	};
 
-	using PropertyValues = std::array<std::array<float, (int)State::COUNT> , (int)Property::COUNT>;
+	using PropertyValues = std::array<std::array<float, (int)State::COUNT>, (int)Property::COUNT>;
 	using IncompletePropertyValues = std::array<std::array<std::optional<float>, (int)State::COUNT> , (int)Property::COUNT>;
 
 	static std::string getPropertyName(Property property) {
