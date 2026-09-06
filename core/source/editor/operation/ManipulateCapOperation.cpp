@@ -4,7 +4,7 @@
 #include "glm/gtx/norm.hpp"
 
 
-ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> fixedTangentAngle) :
+ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> fixedTangentAngle, const std::vector<EntityReference>& snappingExcludedEntities) :
 	Operation(ctx, trigger, initialPlanarPosition),
 	obstacleIndex(obstacleIndex),
 	obstacle(ctx.scene.obstacles[obstacleIndex]),
@@ -12,7 +12,8 @@ ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, Trigger
 	initialAngle(obstacle.getKinematicState()->getAngle()),
 	initialPosition(worldToPlanar(obstacle.getKinematicState()->getPosition())), leftCap(leftCap), fixedTangentAngle(fixedTangentAngle),
 	fixedCapPlanarPosition(!leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()),
-	initialCapPlanarPosition(leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()) {}
+	initialCapPlanarPosition(leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()),
+	snappingExcludedEntities(snappingExcludedEntities) {}
 
 
 std::vector<BindingHint> ManipulateCapOperation::getBindingHints() const {
@@ -202,13 +203,13 @@ void ManipulateCapOperation::applyOperation() {
 			float lengthDiff = dot(pointerPlanarPosition - initialPlanarPosition, lineDir);
 
 			auto manipulatedCap = initialCapPlanarPosition + lineDir * lengthDiff;
-			auto manipulatedSnapResult = ctx.snapPointRestrictedToLine(manipulatedCap, {EntityType::Obstacle, obstacleIndex}, initialPosition, initialAngle);
+			auto manipulatedSnapResult = ctx.snapPointRestrictedToLine(manipulatedCap, snappingExcludedEntities, initialPosition, initialAngle);
 
 			if (symmetrical) {
 				float manipulatedDiffSq = manipulatedSnapResult.type != SnapType::None ? length2(manipulatedSnapResult.value - manipulatedCap) : std::numeric_limits<float>::max();
 
 				auto fixedCap = fixedCapPlanarPosition - lineDir * lengthDiff;
-				auto fixedSnapResult = ctx.snapPointRestrictedToLine(fixedCap, {EntityType::Obstacle, obstacleIndex}, initialPosition, initialAngle);
+				auto fixedSnapResult = ctx.snapPointRestrictedToLine(fixedCap, snappingExcludedEntities, initialPosition, initialAngle);
 				float fixedDiffSq = fixedSnapResult.type != SnapType::None ? length2(fixedSnapResult.value - fixedCap) : std::numeric_limits<float>::max();
 
 				if (manipulatedDiffSq < fixedDiffSq) {
@@ -266,10 +267,10 @@ void ManipulateCapOperation::applyOperation() {
                 auto rawLeftCapPos = initialPosition + glm::vec2(std::cos(rawLeftCapAngle), std::sin(rawLeftCapAngle)) * arcSpec->getArcRadius();
                 auto rawRightCapPos = initialPosition + glm::vec2(std::cos(rawRightCapAngle), std::sin(rawRightCapAngle)) * arcSpec->getArcRadius();
 
-                auto leftSnapResult = ctx.snapPointRestrictedToCircle(rawLeftCapPos, {EntityType::Obstacle, obstacleIndex}, initialPosition, arcSpec->getArcRadius());
+                auto leftSnapResult = ctx.snapPointRestrictedToCircle(rawLeftCapPos, snappingExcludedEntities, initialPosition, arcSpec->getArcRadius());
                 float leftDiffSq = leftSnapResult.type != SnapType::None ? length2(leftSnapResult.value - rawLeftCapPos) : std::numeric_limits<float>::max();
 
-                auto rightSnapResult = ctx.snapPointRestrictedToCircle(rawRightCapPos, {EntityType::Obstacle, obstacleIndex}, initialPosition, arcSpec->getArcRadius());
+                auto rightSnapResult = ctx.snapPointRestrictedToCircle(rawRightCapPos, snappingExcludedEntities, initialPosition, arcSpec->getArcRadius());
                 float rightDiffSq = rightSnapResult.type != SnapType::None ? length2(rightSnapResult.value - rawRightCapPos) : std::numeric_limits<float>::max();
 
                 float capAngleDiff = 0.f;
@@ -301,7 +302,7 @@ void ManipulateCapOperation::applyOperation() {
 
 				auto rawCapPos = initialPosition + glm::vec2(std::cos(rawCapAngle), std::sin(rawCapAngle)) * arcSpec->getArcRadius();
 
-				snapResult = ctx.snapPointRestrictedToCircle(rawCapPos, {EntityType::Obstacle, obstacleIndex}, initialPosition, arcSpec->getArcRadius());
+				snapResult = ctx.snapPointRestrictedToCircle(rawCapPos, snappingExcludedEntities, initialPosition, arcSpec->getArcRadius());
 
 				float capAngleDiff = angleDifference(snapResult.value, rawCapPos, initialPosition);
 				float sign = leftCap ? 1.f : -1.f;
@@ -322,7 +323,7 @@ void ManipulateCapOperation::applyOperation() {
 				initialDescriptor.shape->minorRadius, arcAngle, arcSpec->getArcRadius());
 		}
 	} else {
-	    snapResult = ctx.snapPoint(rawCapPlanarPosition, {EntityType::Obstacle, obstacleIndex});
+	    snapResult = ctx.snapPoint(rawCapPlanarPosition, snappingExcludedEntities);
 
 	    glm::vec2 capToCap, chord;
 	    float capToCapDistance, chordAngle;
@@ -391,7 +392,7 @@ void ManipulateCapOperation::applyOperation() {
 				float projectedLength = capToCapDistance * std::cos(diff);
 				glm::vec2 straightnessSnappedPosition = fixedCapPlanarPosition + sign * glm::vec2(std::cos(curveTangent), std::sin(curveTangent)) * projectedLength;
 
-				snapResult = ctx.snapPointRestrictedToLine(straightnessSnappedPosition, {EntityType::Obstacle, obstacleIndex}, fixedCapPlanarPosition, curveTangent);
+				snapResult = ctx.snapPointRestrictedToLine(straightnessSnappedPosition, snappingExcludedEntities, fixedCapPlanarPosition, curveTangent);
 
 				updateGeometry(snapResult.value);
 

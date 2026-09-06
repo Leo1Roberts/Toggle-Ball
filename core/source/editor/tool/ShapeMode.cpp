@@ -6,6 +6,7 @@
 #include "editor/operation/SelectOperation.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
+#include "editor/operation/ManipulateCapsOperation.h"
 #include "editor/operation/ManipulateMidsectionOperation.h"
 #include "glm/gtx/norm.hpp"
 
@@ -107,16 +108,36 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 	auto pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointerDownEvent.position);
 
 	if (dragStartEvent.button == PointerButton::Primary) {
-		if (auto capInfo = getPointedCapHandleInfo(pointerPlanarPosition)) {
-			auto& obstacle = ctx.scene.obstacles[capInfo->obstacleIndex];
-			ctx.scene.deselectAll();
-			obstacle.select();
-			ctx.scene.selectionFocus = {EntityType::Obstacle, capInfo->obstacleIndex};
+		auto allCapsInfo = getAllPointedCapHandlesInfo(pointerPlanarPosition);
+		if (!allCapsInfo.empty()) {
+			if (allCapsInfo.size() == 1) {
+				auto capInfo = allCapsInfo[0];
+				auto& obstacle = ctx.scene.obstacles[capInfo.obstacleIndex];
+				ctx.scene.deselectAll();
+				obstacle.select();
+				ctx.scene.selectionFocus = {EntityType::Obstacle, capInfo.obstacleIndex};
 
-			auto manipulateCapOperation = std::make_unique<ManipulateCapOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, capInfo->obstacleIndex, capInfo->leftCap,
-				obstacle.getKinematicState()->getAngle() + (capInfo->leftCap ? obstacle.descriptor->shape->getRightCapAngle() : obstacle.descriptor->shape->getLeftCapAngle()));
-			if (manipulateCapOperation->start(pointerDownEvent.modifiers))
-				return manipulateCapOperation;
+				auto manipulateCapOperation = std::make_unique<ManipulateCapOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, capInfo.obstacleIndex, capInfo.leftCap,
+					obstacle.getKinematicState()->getAngle() + obstacle.descriptor->shape->getCapAngle(!capInfo.leftCap), std::vector{EntityReference{EntityType::Obstacle, capInfo.obstacleIndex}});
+				if (manipulateCapOperation->start(pointerDownEvent.modifiers))
+					return manipulateCapOperation;
+			} else {
+				auto oldFocus = ctx.scene.selectionFocus;
+				ctx.scene.deselectAll();
+
+				bool needNewFocus = true;
+				for (auto info : allCapsInfo) {
+					ctx.scene.obstacles[info.obstacleIndex].select();
+
+					if (needNewFocus && oldFocus.type == EntityType::Obstacle && info.obstacleIndex == oldFocus.index)
+						needNewFocus = false;
+				}
+				ctx.scene.selectionFocus = needNewFocus ? EntityReference{EntityType::Obstacle, allCapsInfo[0].obstacleIndex} : oldFocus;
+
+				auto manipulateCapsOperation = std::make_unique<ManipulateCapsOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, allCapsInfo);
+				if (manipulateCapsOperation->start(pointerDownEvent.modifiers))
+					return manipulateCapsOperation;
+			}
 
 			ctx.scene.cancelSelectionChange();
 			return nullptr;
@@ -146,9 +167,9 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 					obstacle.select();
 					ctx.scene.selectionFocus = {EntityType::Obstacle, *index};
 
-					auto curvatureOperation = std::make_unique<ManipulateMidsectionOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, *index, info->position);
-					if (curvatureOperation->start(pointerDownEvent.modifiers))
-						return curvatureOperation;
+					auto manipulateMidsectionOperation = std::make_unique<ManipulateMidsectionOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, *index, info->position);
+					if (manipulateMidsectionOperation->start(pointerDownEvent.modifiers))
+						return manipulateMidsectionOperation;
 
 					ctx.scene.cancelSelectionChange();
 					return nullptr;
@@ -189,7 +210,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 }
 
 
-std::optional<ShapeMode::CapInfo> ShapeMode::getPointedCapHandleInfo(glm::vec2 pointerPlanarPosition) const {
+std::optional<CapInfo> ShapeMode::getPointedCapHandleInfo(glm::vec2 pointerPlanarPosition) const {
 	if (auto index = ctx.getTopObstacleIndex([this, pointerPlanarPosition](const auto& obstacle) {
 		float leftCapDistanceSq = length2(pointerPlanarPosition - obstacle.getLeftCapPosition());
 		float rightCapDistanceSq = length2(pointerPlanarPosition - obstacle.getRightCapPosition());
@@ -201,6 +222,28 @@ std::optional<ShapeMode::CapInfo> ShapeMode::getPointedCapHandleInfo(glm::vec2 p
 			< length2(pointerPlanarPosition - ctx.scene.obstacles[*index].getRightCapPosition()));
 	}
 	return std::nullopt;
+}
+
+std::vector<CapInfo> ShapeMode::getAllPointedCapHandlesInfo(glm::vec2 pointerPlanarPosition) const {
+	if (auto topInfo = getPointedCapHandleInfo(pointerPlanarPosition)) {
+		bool mustBeSelected = ctx.scene.obstacles[topInfo->obstacleIndex].isSelected();
+		std::vector allInfo = {*topInfo};
+		auto targetCapPos = ctx.scene.obstacles[topInfo->obstacleIndex].getCapPosition(topInfo->leftCap);
+
+		for (int i = 0; i < ctx.scene.obstacles.size(); i++)
+			if (i != topInfo->obstacleIndex) {
+				const auto& obstacle = ctx.scene.obstacles[i];
+				if (!mustBeSelected || obstacle.isSelected()) {
+					float leftCapDistanceSq = length2(obstacle.getLeftCapPosition() - targetCapPos);
+					float rightCapDistanceSq = length2(obstacle.getRightCapPosition() - targetCapPos);
+					if (std::min(leftCapDistanceSq, rightCapDistanceSq) < 0.00000001f)
+						allInfo.emplace_back(i, leftCapDistanceSq < rightCapDistanceSq);
+				}
+			}
+
+		return allInfo;
+	}
+	return {};
 }
 
 std::optional<ShapeMode::MidsectionHandleInfo> ShapeMode::getMidsectionHandleInfo(const EditorObstacle& obstacle, glm::vec2 pointerPlanarPosition) const {

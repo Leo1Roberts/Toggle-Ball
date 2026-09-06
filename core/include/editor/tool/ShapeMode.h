@@ -3,6 +3,8 @@
 
 #include "ToolMode.h"
 
+struct CapInfo;
+
 
 class ShapeMode : public ToolMode {
 public:
@@ -19,8 +21,8 @@ protected:
 	std::unique_ptr<Operation> startDrag(const PointerEvent& dragStartEvent) override;
 
 private:
-	struct CapInfo { int obstacleIndex; bool leftCap; };
 	[[nodiscard]] std::optional<CapInfo> getPointedCapHandleInfo(glm::vec2 pointerPlanarPosition) const;
+	[[nodiscard]] std::vector<CapInfo> getAllPointedCapHandlesInfo(glm::vec2 pointerPlanarPosition) const;
 
 	struct MidsectionHandleInfo { bool pointed; glm::vec2 position; float angle; };
 	[[nodiscard]] std::optional<MidsectionHandleInfo> getMidsectionHandleInfo(const EditorObstacle& obstacle, glm::vec2 pointerPlanarPosition) const;

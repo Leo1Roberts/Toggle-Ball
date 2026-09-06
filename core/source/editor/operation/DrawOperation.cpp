@@ -13,5 +13,5 @@ DrawOperation::DrawOperation(const EditorContext& ctx, TriggerType trigger, glm:
 		std::make_unique<ObstacleDescriptor>(std::move(shape), std::move(motion))).get();
 	ctx.scene.obstacles.emplace_back(descriptor);
 	ctx.scene.selectionFocus = {EntityType::Obstacle, (int)ctx.scene.obstacles.size() - 1};
-	manipulateCapOperation = std::make_unique<ManipulateRightCapOperation>(ctx, trigger, initialPlanarPosition, ctx.scene.obstacles.size() - 1, fixedTangentAngle);
+	manipulateCapOperation = std::make_unique<ManipulateRightCapOperation>(ctx, trigger, initialPlanarPosition, ctx.scene.obstacles.size() - 1, fixedTangentAngle, std::vector{ctx.scene.selectionFocus});
 }

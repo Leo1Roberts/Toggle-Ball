@@ -87,8 +87,10 @@ public:
 	void setSelected(bool select) { selected = select; }
 	[[nodiscard]] bool isInSelectBox(SelectBox box) const { return descriptor->shape->isInSelectBox(kinematicState, box); }
 
+	[[nodiscard]] glm::vec2 getCapPosition(bool left) const;
 	[[nodiscard]] glm::vec2 getLeftCapPosition() const { return getCapPosition(true); }
 	[[nodiscard]] glm::vec2 getRightCapPosition() const { return getCapPosition(false); }
+
 	[[nodiscard]] ProximityInfo getRimProximity(glm::vec2 point) const
 		{ return descriptor->shape->getRimProximity(kinematicState, point); }
 	[[nodiscard]] ProximityInfo getSpineProximity(glm::vec2 point) const
@@ -109,8 +111,6 @@ public:
 	ObstacleDescriptor* descriptor;
 
 private:
-	[[nodiscard]] glm::vec2 getCapPosition(bool left) const;
-
 	IMotionSpec::IncompletePropertyValues motionPropertyValues{std::nullopt};
 
 	ObstacleKinematicState kinematicState;

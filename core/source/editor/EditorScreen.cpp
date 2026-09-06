@@ -314,8 +314,11 @@ void EditorScreen::processEvent(const Event& event) {
 		auto response = currentMode->processEvent(event);
 		if (response.operationChanged)
 			updateDynamicUI();
-		else
+		else {
 			updateBindingHints();
+			if (currentMode->shapeTypeMayHaveChanged())
+				obstacleShapePropertiesListValid = false;
+		}
 		if (response.consumedEvent)
 			return;
 

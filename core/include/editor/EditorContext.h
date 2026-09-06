@@ -39,9 +39,9 @@ struct EditorContext {
 
 	[[nodiscard]] std::vector<int> getPointedObstacleIndices(glm::vec2 pointerPlanarPosition, int excludedObstacleIndex) const;
 
-	[[nodiscard]] SnapResult snapPoint(glm::vec2 point, const EntityReference& excludedEntity) const;
-	[[nodiscard]] SnapResult snapPointRestrictedToLine(glm::vec2 point, const EntityReference& excludedEntity, glm::vec2 pointOnLine, float lineAngle) const;
-	[[nodiscard]] SnapResult snapPointRestrictedToCircle(glm::vec2 point, const EntityReference& excludedEntity, glm::vec2 circleCentre, float circleRadius) const;
+	[[nodiscard]] SnapResult snapPoint(glm::vec2 point, const std::vector<EntityReference>& excludedEntities) const;
+	[[nodiscard]] SnapResult snapPointRestrictedToLine(glm::vec2 point, const std::vector<EntityReference>& excludedEntities, glm::vec2 pointOnLine, float lineAngle) const;
+	[[nodiscard]] SnapResult snapPointRestrictedToCircle(glm::vec2 point, const std::vector<EntityReference>& excludedEntities, glm::vec2 circleCentre, float circleRadius) const;
 
 	EditorScene& scene;
 	const Camera& camera;
@@ -49,7 +49,7 @@ struct EditorContext {
 	const float& uiToWorldScale;
 
 private:
-	[[nodiscard]] SnapResult snapPointRestrictedToShape(glm::vec2 point, const EntityReference& excludedEntity,
+	[[nodiscard]] SnapResult snapPointRestrictedToShape(glm::vec2 point, const std::vector<EntityReference>& excludedEntities,
 		const std::function<std::vector<glm::vec2>(const EditorObstacle&)>& getPointsOnShape) const;
 };
 

@@ -62,7 +62,7 @@ std::vector<int> EditorContext::getPointedObstacleIndices(glm::vec2 pointerPlana
 }
 
 
-SnapResult EditorContext::snapPoint(const glm::vec2 point, const EntityReference& excludedEntity) const {
+SnapResult EditorContext::snapPoint(const glm::vec2 point, const std::vector<EntityReference>& excludedEntities) const {
 	if (quickSettings.snap) {
 		float shortestCapDistanceSq = std::numeric_limits<float>::max();
 		glm::vec2 closestCap;
@@ -71,8 +71,10 @@ SnapResult EditorContext::snapPoint(const glm::vec2 point, const EntityReference
 		glm::vec2 closestSpinePoint;
 		glm::vec2 closestSpineNormal;
 
-		for (int i = 0; i < scene.obstacles.size(); i++)
-			if (!(excludedEntity.type == EntityType::Obstacle && i == excludedEntity.index)) {
+		for (int i = 0; i < scene.obstacles.size(); i++) {
+			if (!std::ranges::any_of(excludedEntities, [i](auto entity) {
+				return entity.type == EntityType::Obstacle && i == entity.index;
+			})) {
 				const auto& otherObstacle = scene.obstacles[i];
 				float leftCapDistanceSq = length2(point - otherObstacle.getLeftCapPosition());
 				float rightCapDistanceSq = length2(point - otherObstacle.getRightCapPosition());
@@ -95,6 +97,7 @@ SnapResult EditorContext::snapPoint(const glm::vec2 point, const EntityReference
 					closestSpineNormal = offset;
 				}
 			}
+		}
 
 		float planarSnappingDistance = Settings::Sizes.snappingDistance * uiToWorldScale;
 		float planarSnappingDistanceSq = planarSnappingDistance * planarSnappingDistance;
@@ -109,14 +112,16 @@ SnapResult EditorContext::snapPoint(const glm::vec2 point, const EntityReference
 	return {.value = point};
 }
 
-SnapResult EditorContext::snapPointRestrictedToShape(glm::vec2 point, const EntityReference& excludedEntity, const std::function<std::vector<glm::vec2>(const EditorObstacle&)>& getPointsOnShape) const {
+SnapResult EditorContext::snapPointRestrictedToShape(glm::vec2 point, const std::vector<EntityReference>& excludedEntities, const std::function<std::vector<glm::vec2>(const EditorObstacle&)>& getPointsOnShape) const {
 	if (quickSettings.snap) {
 		float shortestSpineDistanceSq = std::numeric_limits<float>::max();
 		glm::vec2 closestSpinePoint;
 		int closestSpineIndex = -1;
 
 		for (int i = 0; i < scene.obstacles.size(); i++)
-			if (!(excludedEntity.type == EntityType::Obstacle && i == excludedEntity.index)) {
+			if (!std::ranges::any_of(excludedEntities, [i](auto entity) {
+				return entity.type == EntityType::Obstacle && i == entity.index;
+			})) {
 				const auto& otherObstacle = scene.obstacles[i];
 				for (auto intersection : getPointsOnShape(otherObstacle)) {
 					float distanceSq = length2(intersection - point);
@@ -147,11 +152,11 @@ SnapResult EditorContext::snapPointRestrictedToShape(glm::vec2 point, const Enti
 	}
 	return {.value = point};
 }
-SnapResult EditorContext::snapPointRestrictedToLine(glm::vec2 point, const EntityReference& excludedEntity, glm::vec2 pointOnLine, float lineAngle) const {
-	return snapPointRestrictedToShape(point, excludedEntity,
+SnapResult EditorContext::snapPointRestrictedToLine(glm::vec2 point, const std::vector<EntityReference>& excludedEntities, glm::vec2 pointOnLine, float lineAngle) const {
+	return snapPointRestrictedToShape(point, excludedEntities,
 		[=](const EditorObstacle& obstacle) { return obstacle.getPointsOnLine(pointOnLine, lineAngle); });
 }
-SnapResult EditorContext::snapPointRestrictedToCircle(glm::vec2 point, const EntityReference& excludedEntity, glm::vec2 circleCentre, float circleRadius) const {
-	return snapPointRestrictedToShape(point, excludedEntity,
+SnapResult EditorContext::snapPointRestrictedToCircle(glm::vec2 point, const std::vector<EntityReference>& excludedEntities, glm::vec2 circleCentre, float circleRadius) const {
+	return snapPointRestrictedToShape(point, excludedEntities,
 		[=](const EditorObstacle& obstacle) { return obstacle.getPointsOnCircle(circleCentre, circleRadius); });
 }

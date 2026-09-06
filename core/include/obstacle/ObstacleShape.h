@@ -89,6 +89,7 @@ public:
 	[[nodiscard]] float getBoundingRadius() const { return getMajorRadius() + minorRadius; }
 	[[nodiscard]] glm::vec2 getLeftCap() const { return leftCap; }
 	[[nodiscard]] glm::vec2 getRightCap() const { return rightCap; }
+	[[nodiscard]] float getCapAngle(bool left) const { return left ? getLeftCapAngle() : getRightCapAngle(); }
 	[[nodiscard]] virtual float getLeftCapAngle() const = 0;
 	[[nodiscard]] virtual float getRightCapAngle() const = 0;
 	[[nodiscard]] float getHalfDepth() const { return minorRadius; }
