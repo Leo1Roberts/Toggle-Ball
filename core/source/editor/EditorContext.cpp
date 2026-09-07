@@ -67,9 +67,11 @@ SnapResult EditorContext::snapPoint(const glm::vec2 point, const std::vector<Ent
 		float shortestCapDistanceSq = std::numeric_limits<float>::max();
 		glm::vec2 closestCap;
 		float closestCapTangentAngle;
+		EntityReference closestCapEntity;
 		float shortestSpineDistance = std::numeric_limits<float>::max();
 		glm::vec2 closestSpinePoint;
 		glm::vec2 closestSpineNormal;
+		EntityReference closestSpineEntity;
 
 		for (int i = 0; i < scene.obstacles.size(); i++) {
 			if (!std::ranges::any_of(excludedEntities, [i](auto entity) {
@@ -86,6 +88,7 @@ SnapResult EditorContext::snapPoint(const glm::vec2 point, const std::vector<Ent
 						(leftCapDistanceSq < rightCapDistanceSq
 						? otherObstacle.descriptor->shape->getLeftCapAngle()
 						: otherObstacle.descriptor->shape->getRightCapAngle());
+					closestCapEntity = {EntityType::Obstacle, i};
 				}
 				auto proximityInfo = otherObstacle.getSpineProximity(point);
 				if (proximityInfo.distance < shortestSpineDistance) {
@@ -95,6 +98,7 @@ SnapResult EditorContext::snapPoint(const glm::vec2 point, const std::vector<Ent
 						: normalize(proximityInfo.direction) * proximityInfo.distance;
 					closestSpinePoint = point - offset;
 					closestSpineNormal = offset;
+					closestSpineEntity = {EntityType::Obstacle, i};
 				}
 			}
 		}
@@ -102,11 +106,12 @@ SnapResult EditorContext::snapPoint(const glm::vec2 point, const std::vector<Ent
 		float planarSnappingDistance = Settings::Sizes.snappingDistance * uiToWorldScale;
 		float planarSnappingDistanceSq = planarSnappingDistance * planarSnappingDistance;
 		if (shortestCapDistanceSq < planarSnappingDistanceSq)
-			return {.value = closestCap, .type = SnapType::Cap, .angle = closestCapTangentAngle};
+			return {.value = closestCap, .type = SnapType::Cap, .angle = closestCapTangentAngle, .entity = closestCapEntity};
 		if (shortestSpineDistance < planarSnappingDistance)
 			return {
 				.value = closestSpinePoint, .type = SnapType::Spine,
-				.angle = std::atan2(closestSpineNormal.y, closestSpineNormal.x)
+				.angle = std::atan2(closestSpineNormal.y, closestSpineNormal.x),
+				.entity = closestSpineEntity
 			};
 	}
 	return {.value = point};
@@ -144,9 +149,10 @@ SnapResult EditorContext::snapPointRestrictedToShape(glm::vec2 point, const std:
 					return {.value = leftCapDistanceSq < rightCapDistanceSq
 						? target.getLeftCapPosition()
 						: target.getRightCapPosition(),
-						.type = SnapType::Cap};
+						.type = SnapType::Cap,
+						.entity = {EntityType::Obstacle, closestSpineIndex}};
 
-				return { .value = closestSpinePoint, .type = SnapType::Spine };
+				return { .value = closestSpinePoint, .type = SnapType::Spine, .entity = {EntityType::Obstacle, closestSpineIndex} };
 			}
 		}
 	}

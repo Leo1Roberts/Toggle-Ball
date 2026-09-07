@@ -4,7 +4,7 @@
 #include "glm/gtx/norm.hpp"
 
 
-ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> fixedTangentAngle, const std::vector<EntityReference>& snappingExcludedEntities) :
+ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> fixedTangentAngle, const std::vector<EntityReference>& snappingExcludedEntities, bool owned) :
 	Operation(ctx, trigger, initialPlanarPosition),
 	obstacleIndex(obstacleIndex),
 	obstacle(ctx.scene.obstacles[obstacleIndex]),
@@ -13,7 +13,8 @@ ManipulateCapOperation::ManipulateCapOperation(const EditorContext& ctx, Trigger
 	initialPosition(worldToPlanar(obstacle.getKinematicState()->getPosition())), leftCap(leftCap), fixedTangentAngle(fixedTangentAngle),
 	fixedCapPlanarPosition(!leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()),
 	initialCapPlanarPosition(leftCap ? obstacle.getLeftCapPosition() : obstacle.getRightCapPosition()),
-	snappingExcludedEntities(snappingExcludedEntities) {}
+	snappingExcludedEntities(snappingExcludedEntities),
+	owned(owned) {}
 
 
 std::vector<BindingHint> ManipulateCapOperation::getBindingHints() const {
@@ -124,21 +125,28 @@ void ManipulateCapOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
 
 
 OperationResponse ManipulateCapOperation::doProcessEvent(const Event& event) {
-	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
-			auto newPointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer->position);
-			rotationAngle += angleDifference(newPointerPlanarPosition, pointerPlanarPosition, initialPosition);
-			pointerPlanarPosition = newPointerPlanarPosition;
-			applyOperation();
-			return {.consumedEvent = false, .status = OperationStatus::Running};
+	if (!owned)
+		if (auto* pointer = std::get_if<PointerEvent>(&event)) {
+			if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag) {
+				auto newPointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointer->position);
+				rotationAngle += angleDifference(newPointerPlanarPosition, pointerPlanarPosition, initialPosition);
+				pointerPlanarPosition = newPointerPlanarPosition;
+				applyOperation();
+				return {.consumedEvent = false, .status = OperationStatus::Running};
+			}
 		}
-	}
 	return {.consumedEvent = false, .status = OperationStatus::Running};
 }
 
 
 void ManipulateCapOperation::applyOperation() {
-    auto rawCapPlanarPosition = initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition;
+	applyOperationWithSnapResult(ctx.snapPoint(initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition, snappingExcludedEntities));
+}
+
+void ManipulateCapOperation::applyOperationWithSnapResult(const SnapResult& providedSnapResult, bool overrideRawPosition) {
+	auto rawCapPlanarPosition = overrideRawPosition
+		? providedSnapResult.value
+		: initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition;
 	glm::vec2 capPlanarPosition;
 
 	auto segmentSpec = dynamic_cast<SegmentSpec*>(initialDescriptor.shape.get());
@@ -146,7 +154,6 @@ void ManipulateCapOperation::applyOperation() {
 
 	glm::vec2 targetPosition = initialPosition;
 	float targetAngle = initialAngle;
-	bool applyTransformation = true;
 
 	auto applySegmentShape = [&](float length, float dirAngle) {
 		float minorRadius = initialDescriptor.shape->minorRadius;
@@ -323,7 +330,7 @@ void ManipulateCapOperation::applyOperation() {
 				initialDescriptor.shape->minorRadius, arcAngle, arcSpec->getArcRadius());
 		}
 	} else {
-	    snapResult = ctx.snapPoint(rawCapPlanarPosition, snappingExcludedEntities);
+	    snapResult = providedSnapResult;
 
 	    glm::vec2 capToCap, chord;
 	    float capToCapDistance, chordAngle;
@@ -366,23 +373,35 @@ void ManipulateCapOperation::applyOperation() {
 				float manipulatedTangent = leftCap ? *snapResult.angle : wrapAngle(*snapResult.angle + glm::pi<float>());
 				curveTangent = wrapAngle(2.f * chordAngle - manipulatedTangent);
 
-				if (isAlmostStraight() || isArcTooLarge())
+				if (isArcTooLarge())
 					snapResult.angle = std::nullopt;
-				else
+				else {
 					alignWithTangent = true;
+					if (isAlmostStraight()) {
+						if (snapResult.entity.type == EntityType::Obstacle) {
+							const auto& snappedObstacle = ctx.scene.obstacles[snapResult.entity.index];
+							if (dynamic_cast<ArcSpec*>(snappedObstacle.descriptor->shape.get())) {
+								auto dir = worldToPlanar(snappedObstacle.getKinematicState()->getPosition()) - fixedCapPlanarPosition;
+								curveTangent = std::atan2(dir.y, dir.x);
+							} else
+								curveTangent = manipulatedTangent; // SegmentSpec case
+						}
+					}
+				}
 			} else if (!useSnappedTangent && fixedTangentAngle) {
 				alignWithTangent = true;
 				curveTangent = leftCap ? *fixedTangentAngle : wrapAngle(*fixedTangentAngle + glm::pi<float>());
 
-				if (isAlmostStraight() || isArcTooLarge()) {
+				if (isArcTooLarge()) {
+					snapResult = {};
+					return;
+				}
+				if (isAlmostStraight()) {
 					snapResult = {};
 					updateGeometry(rawCapPlanarPosition);
 				}
 			}
 		}
-
-		if (alignWithTangent && isArcTooLarge())
-			return;
 
 		currentlyLeftCap = leftCap;
 
@@ -390,7 +409,7 @@ void ManipulateCapOperation::applyOperation() {
 			if (isAlmostStraight()) {
 				float diff = wrapAngle(sign * (curveTangent - chordAngle));
 				float projectedLength = capToCapDistance * std::cos(diff);
-				glm::vec2 straightnessSnappedPosition = fixedCapPlanarPosition + sign * glm::vec2(std::cos(curveTangent), std::sin(curveTangent)) * projectedLength;
+				auto straightnessSnappedPosition = fixedCapPlanarPosition + sign * glm::vec2(std::cos(curveTangent), std::sin(curveTangent)) * projectedLength;
 
 				snapResult = ctx.snapPointRestrictedToLine(straightnessSnappedPosition, snappingExcludedEntities, fixedCapPlanarPosition, curveTangent);
 
@@ -430,20 +449,78 @@ void ManipulateCapOperation::applyOperation() {
 						return;
 
 					applyArcShape(arcAngle, arcRadius, positionOffset);
-				} else
-					applyTransformation = false;
+				} else return;
 			}
 		}
 	}
 
-	if (applyTransformation) {
-		auto translatedInitialDescriptor = initialDescriptor;
-		translatedInitialDescriptor.motion->translateBy(targetPosition - initialPosition, true, false, initialDescriptor.motion.get());
+	auto translatedInitialDescriptor = initialDescriptor;
+	translatedInitialDescriptor.motion->translateBy(targetPosition - initialPosition, true, false, initialDescriptor.motion.get());
 
-		float angleDiff = wrapAngle(targetAngle - initialAngle);
-		obstacle.rotateBy(angleDiff, angleToRotation2D(angleDiff), glm::vec2(0.f), true, false, true, &translatedInitialDescriptor);
-	}
+	float angleDiff = wrapAngle(targetAngle - initialAngle);
+	obstacle.rotateBy(angleDiff, angleToRotation2D(angleDiff), glm::vec2(0.f), true, false, true, &translatedInitialDescriptor);
 
     obstacle.initKinematicState();
     obstacle.invalidateAllMeshes();
+}
+
+ManipulateCapOperation::Restriction ManipulateCapOperation::getRestriction(const SnapResult& targetPoint) const {
+    glm::vec2 capPlanarPosition = targetPoint.value;
+    glm::vec2 capToCap = capPlanarPosition - fixedCapPlanarPosition;
+    float capToCapDistance = length(capToCap);
+
+	float sign = leftCap ? -1.f : 1.f;
+    glm::vec2 chord = sign * capToCap;
+    float chordAngle = std::atan2(chord.y, chord.x);
+    float curveTangent = 0.f;
+
+    auto isAlmostStraight = [&] {
+        if (capToCapDistance < 0.0001f) return true;
+        glm::vec2 tangent = {std::cos(curveTangent), std::sin(curveTangent)};
+        return dot(normalize(chord), tangent) > std::cos(0.05f);
+    };
+
+    auto isArcTooLarge = [&] {
+        if (capToCapDistance < 0.0001f) return false;
+        glm::vec2 tangent = {std::cos(curveTangent), std::sin(curveTangent)};
+        return dot(normalize(chord), tangent) < std::cos((glm::two_pi<float>() - 0.2f) / 2.f);
+    };
+
+	if (ctx.quickSettings.shape.alignWithTangent) {
+		if (useSnappedTangent && targetPoint.type != SnapType::None && targetPoint.angle) {
+			float manipulatedTangent = leftCap ? *targetPoint.angle : wrapAngle(*targetPoint.angle + glm::pi<float>());
+			curveTangent = wrapAngle(2.f * chordAngle - manipulatedTangent);
+
+			if (isArcTooLarge())
+				return {.impossible = true};
+			if (isAlmostStraight())
+				return {.line = Restriction::Line(fixedCapPlanarPosition, manipulatedTangent)};
+			return {};
+		}
+		if (!useSnappedTangent && fixedTangentAngle) {
+			curveTangent = leftCap ? *fixedTangentAngle : wrapAngle(*fixedTangentAngle + glm::pi<float>());
+
+			if (isArcTooLarge())
+				return {.impossible = true};
+			if (isAlmostStraight())
+				return {.line = Restriction::Line(fixedCapPlanarPosition, curveTangent)};
+			return {};
+		}
+	}
+
+	if (auto arcSpec = dynamic_cast<ArcSpec*>(initialDescriptor.shape.get())) {
+		float sagitta = arcSpec->getArcRadius() * (1.f - std::cos(arcSpec->getHalfArcAngle()));
+
+		if (sagitta > 0.0001f && capToCapDistance > 0.0001f) {
+			float arcRadius = (capToCapDistance * capToCapDistance + 4.f * sagitta * sagitta) / (8.f * sagitta);
+			float positionOffset = arcRadius - sagitta;
+			float arcAngle = 2.f * std::atan2(capToCapDistance * 0.5f, positionOffset);
+
+			if (arcAngle <= glm::two_pi<float>() - 0.2f)
+				return {};
+		}
+		return {.impossible = true};
+	}
+
+	return {};
 }

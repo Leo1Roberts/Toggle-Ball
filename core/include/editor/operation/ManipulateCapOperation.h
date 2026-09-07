@@ -13,7 +13,7 @@ class ManipulateCapOperation : public Operation {
 	friend class DrawOperation;
 	friend class ManipulateCapsOperation;
 public:
-	ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> fixedTangentAngle, const std::vector<EntityReference>& snappingExcludedEntities);
+	ManipulateCapOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, int obstacleIndex, bool leftCap, std::optional<float> fixedTangentAngle, const std::vector<EntityReference>& snappingExcludedEntities, bool owned = false);
 
 	void cancel() const final { ctx.scene.cancelLevelChange(); }
 	void commit() const final { ctx.scene.commitLevelChange(); }
@@ -27,6 +27,17 @@ protected:
 	void applyOperation() override;
 
 private:
+	struct Restriction {
+		struct Line { glm::vec2 point; float angle; };
+
+		bool impossible = false;
+		std::optional<Line> line = std::nullopt;
+	};
+
+	[[nodiscard]] Restriction getRestriction(const SnapResult& targetPoint) const;
+
+	void applyOperationWithSnapResult(const SnapResult& providedSnapResult, bool overrideRawPosition = false);
+
 	void applyModifiers(byte mods) final {
 		preserveShape = mods & MOD_SHIFT;
 		symmetrical = preserveShape && mods & MOD_CTRL; // TODO: support manipulating both caps in all cases
@@ -46,6 +57,7 @@ private:
 	const glm::vec2 fixedCapPlanarPosition;
 	const glm::vec2 initialCapPlanarPosition;
 	const std::vector<EntityReference> snappingExcludedEntities;
+	const bool owned;
 
 	bool currentlyLeftCap = leftCap;
 	SnapResult snapResult;

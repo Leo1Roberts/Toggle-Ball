@@ -1,6 +1,9 @@
 #ifndef EDITOR_CONTEXT_H
 #define EDITOR_CONTEXT_H
 
+#include "EditorScene.h"
+
+
 #include <functional>
 #include <optional>
 #include <glm/glm.hpp>
@@ -28,6 +31,7 @@ struct SnapResult {
 	glm::vec2 value;
 	SnapType type = SnapType::None;
 	std::optional<float> angle = std::nullopt;
+	EntityReference entity = {};
 };
 
 struct EditorContext {
