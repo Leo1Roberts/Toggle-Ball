@@ -1,5 +1,8 @@
 #include "editor/operation/ManipulateCapsOperation.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/norm.hpp"
+
 
 ManipulateCapsOperation::ManipulateCapsOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, const std::vector<CapInfo>& allCapsInfo) :
 	Operation(ctx, trigger, initialPlanarPosition) {
@@ -44,6 +47,24 @@ void ManipulateCapsOperation::applyOperation() {
 	std::vector<ManipulateCapOperation::Restriction::Line> lineRestrictions;
 	auto idealHandlePosition = manipulateCapOperations[0].initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition;
 
+	auto linesAreIdentical = [](ManipulateCapOperation::Restriction::Line l1, ManipulateCapOperation::Restriction::Line l2) {
+		glm::vec2 d1(std::cos(l1.angle), std::sin(l1.angle));
+		glm::vec2 d2(std::cos(l2.angle), std::sin(l2.angle));
+
+		if (std::abs(dot(d1, d2)) < 0.9999f)
+			return false; // Different angle
+
+		auto pointDiff = l1.point - l2.point;
+
+		if (length2(pointDiff) < 0.00000001f)
+			return true; // Same point
+
+		if (std::abs(dot(normalize(pointDiff), d1)) > 0.9999f)
+			return true; // Both points align at the correct angle
+
+		return false;
+	};
+
 	for (auto& capOperation : manipulateCapOperations) {
 		SnapResult idealHandle = {
 			.value = idealHandlePosition,
@@ -54,9 +75,15 @@ void ManipulateCapsOperation::applyOperation() {
 		if (restriction.impossible)
 			return;
 		if (restriction.line) {
-			if (lineRestrictions.size() == 2)
-				return;
-			lineRestrictions.push_back(*restriction.line);
+			bool addLine = true;
+			for (auto existingRestriction : lineRestrictions)
+				if (linesAreIdentical(existingRestriction, *restriction.line))
+					addLine = false; // Don't add duplicate lines
+			if (addLine) {
+				if (lineRestrictions.size() == 2)
+					return;
+				lineRestrictions.push_back(*restriction.line);
+			}
 		}
 	}
 
@@ -90,7 +117,7 @@ void ManipulateCapsOperation::applyOperation() {
 			handlePosition = lineRestrictions[0].point + t * d1;
 		}
 
-		int lineRestrictionCount = 0;
+		std::vector<ManipulateCapOperation::Restriction::Line> newLineRestrictions;
 		for (auto& capOperation : manipulateCapOperations) {
 			SnapResult handle = {
 				.value = handlePosition,
@@ -101,9 +128,15 @@ void ManipulateCapsOperation::applyOperation() {
 			if (restriction.impossible)
 				return;
 			if (restriction.line) {
-				lineRestrictionCount++;
-				if (lineRestrictionCount > lineRestrictions.size())
-					return;
+				bool addLine = true;
+				for (auto existingRestriction : newLineRestrictions)
+					if (linesAreIdentical(existingRestriction, *restriction.line))
+						addLine = false; // Don't add duplicate lines
+				if (addLine) {
+					if (newLineRestrictions.size() >= lineRestrictions.size())
+						return;
+					newLineRestrictions.push_back(*restriction.line);
+				}
 			}
 		}
 		for (auto& capOperation : manipulateCapOperations) {
