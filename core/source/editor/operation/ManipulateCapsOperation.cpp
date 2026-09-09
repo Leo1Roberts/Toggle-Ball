@@ -6,7 +6,6 @@
 
 ManipulateCapsOperation::ManipulateCapsOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, const std::vector<CapInfo>& allCapsInfo) :
 	Operation(ctx, trigger, initialPlanarPosition) {
-	std::vector<EntityReference> manipulatedEntities;
 	manipulatedEntities.reserve(allCapsInfo.size());
 	for (auto info : allCapsInfo)
 		manipulatedEntities.emplace_back(EntityType::Obstacle, info.obstacleIndex);
@@ -261,46 +260,84 @@ void ManipulateCapsOperation::applyOperation() {
 	    for (auto& capOperation : manipulateCapOperations)
 	        capOperation.applyOperationWithSnapResult({.value = handlePosition, .type = SnapType::Cap}, true);
     } else {
-        std::vector<Line> lineRestrictions;
-        auto idealHandlePosition = manipulateCapOperations[0].initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition;
+        auto rawHandlePosition = manipulateCapOperations[0].initialCapPlanarPosition + pointerPlanarPosition - initialPlanarPosition;
 
-        for (auto& capOperation : manipulateCapOperations) {
-            SnapResult idealHandle = {
-                .value = idealHandlePosition,
-                .type = SnapType::Cap,
-                .angle = wrapAngle(capOperation.initialAngle + capOperation.initialDescriptor.shape->getCapAngle(capOperation.leftCap) + glm::pi<float>()),
-            };
-            auto restriction = capOperation.getRestriction(idealHandle);
-            if (restriction.impossible)
-                return;
-            if (restriction.line) {
-                bool addLine = true;
-                for (auto existingRestriction : lineRestrictions)
-                    if (linesAreIdentical(existingRestriction, *restriction.line))
-                        addLine = false; // Don't add duplicate lines
-                if (addLine) {
-                    if (lineRestrictions.size() == 2)
-                        return;
-                    lineRestrictions.push_back(*restriction.line);
-                }
-            }
-        }
+    	snapResult = ctx.snapPoint(rawHandlePosition, manipulatedEntities);
+    	glm::vec2 handlePosition = snapResult.value;
+
+    	if (snapResult.type != SnapType::None) {
+    		for (auto& capOperation : manipulateCapOperations) {
+    			SnapResult handle = {
+    				.value = snapResult.value, .type = snapResult.type,
+					.angle = wrapAngle(capOperation.initialAngle + capOperation.initialDescriptor.shape->getCapAngle(capOperation.leftCap) + glm::pi<float>()),
+				};
+    			auto restriction = capOperation.getRestriction(handle);
+    			if (restriction.impossible || restriction.line) {
+    				snapResult = {};
+    				handlePosition = rawHandlePosition;
+    				break;
+    			}
+    		}
+    	}
+
+        std::vector<Line> lineRestrictions;
+
+    	if (snapResult.type == SnapType::None) {
+    		for (auto& capOperation : manipulateCapOperations) {
+    			SnapResult handle = {
+    				.value = handlePosition, .type = SnapType::Cap,
+					.angle = wrapAngle(capOperation.initialAngle + capOperation.initialDescriptor.shape->getCapAngle(capOperation.leftCap) + glm::pi<float>()),
+				};
+    			auto restriction = capOperation.getRestriction(handle);
+    			if (restriction.impossible)
+    				return;
+    			if (restriction.line) {
+    				bool addLine = true;
+    				for (auto existingRestriction : lineRestrictions)
+    					if (linesAreIdentical(existingRestriction, *restriction.line))
+    						addLine = false; // Don't add duplicate lines
+    				if (addLine) {
+    					if (lineRestrictions.size() == 2)
+    						return;
+    					lineRestrictions.push_back(*restriction.line);
+    				}
+    			}
+    		}
+    	}
 
         if (lineRestrictions.empty())
             for (auto& capOperation : manipulateCapOperations) {
                 SnapResult handle = {
-                    .value = idealHandlePosition,
-                    .type = SnapType::Cap,
+                    .value = handlePosition, .type = SnapType::Cap,
                     .angle = wrapAngle(capOperation.initialAngle + capOperation.initialDescriptor.shape->getCapAngle(capOperation.leftCap) + glm::pi<float>()),
                 };
                 capOperation.applyOperationWithSnapResult(handle, true);
             }
         else {
-            glm::vec2 handlePosition;
+            glm::vec2 finalHandlePosition;
 
             if (lineRestrictions.size() == 1) {
                 glm::vec2 dir = {std::cos(lineRestrictions[0].angle), std::sin(lineRestrictions[0].angle)};
-                handlePosition = lineRestrictions[0].point + dir * dot(dir, idealHandlePosition - lineRestrictions[0].point);
+                auto straightnessSnappedPosition = lineRestrictions[0].point + dir * dot(dir, rawHandlePosition - lineRestrictions[0].point);
+            	
+            	snapResult = ctx.snapPointRestrictedToLine(straightnessSnappedPosition, manipulatedEntities, lineRestrictions[0].point, lineRestrictions[0].angle);
+            	finalHandlePosition = snapResult.value;
+
+            	if (snapResult.type != SnapType::None) {
+            		for (auto& capOperation : manipulateCapOperations) {
+            			SnapResult handle = {
+            				.value = finalHandlePosition, .type = SnapType::Cap,
+							.angle = wrapAngle(capOperation.initialAngle + capOperation.initialDescriptor.shape->getCapAngle(capOperation.leftCap) + glm::pi<float>()),
+						};
+            			auto restriction = capOperation.getRestriction(handle);
+            			if (restriction.impossible ||
+            				restriction.line && !linesAreIdentical(lineRestrictions[0], *restriction.line)) {
+            				snapResult = {};
+            				finalHandlePosition = straightnessSnappedPosition;
+            				break;
+            			}
+            		}
+            	}
             } else {
                 glm::vec2 d1(std::cos(lineRestrictions[0].angle), std::sin(lineRestrictions[0].angle));
                 glm::vec2 d2(std::cos(lineRestrictions[1].angle), std::sin(lineRestrictions[1].angle));
@@ -313,13 +350,13 @@ void ManipulateCapsOperation::applyOperation() {
                 glm::vec2 dp = lineRestrictions[1].point - lineRestrictions[0].point;
                 float t = (dp.x * d2.y - dp.y * d2.x) / det;
 
-                handlePosition = lineRestrictions[0].point + t * d1;
+                finalHandlePosition = lineRestrictions[0].point + t * d1;
             }
 
             std::vector<Line> newLineRestrictions;
             for (auto& capOperation : manipulateCapOperations) {
                 SnapResult handle = {
-                    .value = handlePosition,
+                    .value = finalHandlePosition,
                     .type = SnapType::Cap,
                     .angle = wrapAngle(capOperation.initialAngle + capOperation.initialDescriptor.shape->getCapAngle(capOperation.leftCap) + glm::pi<float>()),
                 };
@@ -340,7 +377,7 @@ void ManipulateCapsOperation::applyOperation() {
             }
             for (auto& capOperation : manipulateCapOperations) {
                 SnapResult handle = {
-                    .value = handlePosition,
+                    .value = finalHandlePosition,
                     .type = SnapType::Cap,
                     .angle = wrapAngle(capOperation.initialAngle + capOperation.initialDescriptor.shape->getCapAngle(capOperation.leftCap) + glm::pi<float>()),
                 };

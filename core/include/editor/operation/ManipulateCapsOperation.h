@@ -24,6 +24,9 @@ private:
 	bool preserveLinkedAngles = false;
 	bool smoothJoin = false;
 
+	std::vector<EntityReference> manipulatedEntities;
+	SnapResult snapResult;
+
 	std::vector<ManipulateCapOperation> manipulateCapOperations;
 };
 
