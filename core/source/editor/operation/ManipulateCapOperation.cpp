@@ -411,9 +411,12 @@ void ManipulateCapOperation::applyOperationWithSnapResult(const SnapResult& prov
 				float projectedLength = capToCapDistance * std::cos(diff);
 				auto straightnessSnappedPosition = fixedCapPlanarPosition + sign * glm::vec2(std::cos(curveTangent), std::sin(curveTangent)) * projectedLength;
 
-				snapResult = ctx.snapPointRestrictedToLine(straightnessSnappedPosition, snappingExcludedEntities, fixedCapPlanarPosition, curveTangent);
-
-				updateGeometry(snapResult.value);
+				if (owned)
+					updateGeometry(straightnessSnappedPosition);
+				else {
+					snapResult = ctx.snapPointRestrictedToLine(straightnessSnappedPosition, snappingExcludedEntities, fixedCapPlanarPosition, curveTangent);
+					updateGeometry(snapResult.value);
+				}
 
 				targetAngle = curveTangent;
 				applySegmentShape(capToCapDistance * std::cos(wrapAngle(sign * (curveTangent - chordAngle))), curveTangent);

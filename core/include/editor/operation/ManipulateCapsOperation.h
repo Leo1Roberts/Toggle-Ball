@@ -21,6 +21,8 @@ protected:
 
 private:
 	void applyModifiers(byte mods) final;
+	bool preserveLinkedAngles = false;
+	bool smoothJoin = false;
 
 	std::vector<ManipulateCapOperation> manipulateCapOperations;
 };
