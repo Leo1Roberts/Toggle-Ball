@@ -60,6 +60,8 @@ protected:
 	const glm::vec2 initialPlanarPosition;
 	glm::vec2 pointerPlanarPosition;
 
+	static constexpr float STRAIGHTNESS_THRESHOLD = 0.05f;
+
 private:
 	virtual void applyModifiers(byte mods) = 0;
 

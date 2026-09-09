@@ -353,7 +353,7 @@ void ManipulateCapOperation::applyOperationWithSnapResult(const SnapResult& prov
 	    auto isAlmostStraight = [&] {
 	        if (capToCapDistance < 0.0001f) return true;
 	        glm::vec2 tangent = {std::cos(curveTangent), std::sin(curveTangent)};
-	        return dot(normalize(chord), tangent) > std::cos(0.05f);
+	        return dot(normalize(chord), tangent) > std::cos(STRAIGHTNESS_THRESHOLD);
 	    };
 
 	    auto isArcTooLarge = [&] {
@@ -480,7 +480,7 @@ ManipulateCapOperation::Restriction ManipulateCapOperation::getRestriction(const
     auto isAlmostStraight = [&] {
         if (capToCapDistance < 0.0001f) return true;
         glm::vec2 tangent = {std::cos(curveTangent), std::sin(curveTangent)};
-        return dot(normalize(chord), tangent) > std::cos(0.05f);
+        return dot(normalize(chord), tangent) > std::cos(STRAIGHTNESS_THRESHOLD);
     };
 
     auto isArcTooLarge = [&] {

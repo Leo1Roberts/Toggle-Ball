@@ -126,7 +126,7 @@ void ManipulateMidsectionOperation::applyOperation() {
 				float L = capToCapDistance;
 				float denom = L * L * t * (1.f - t) - h * h;
 
-				return denom > 0.f && (L * h < denom * std::tan(0.05f)); // Same 0.05rad threshold as in ManipulateCapOperation
+				return denom > 0.f && (L * h < denom * std::tan(STRAIGHTNESS_THRESHOLD));
 			};
 
 			if (isAlmostStraight()) {

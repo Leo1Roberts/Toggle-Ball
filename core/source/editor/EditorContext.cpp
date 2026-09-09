@@ -55,7 +55,7 @@ std::vector<int> EditorContext::getPointedObstacleIndices(glm::vec2 pointerPlana
 	std::vector<int> indices;
 	auto hitTestBox = SelectBox(pointerPlanarPosition);
 	for (int i = 0; i < scene.obstacles.size(); i++)
-		if (std::find(excludedObstacleIndices.begin(), excludedObstacleIndices.end(), i) != excludedObstacleIndices.end() &&
+		if (std::ranges::find(excludedObstacleIndices, i) == excludedObstacleIndices.end() &&
 			scene.obstacles[i].isInSelectBox(hitTestBox))
 			indices.push_back(i);
 
