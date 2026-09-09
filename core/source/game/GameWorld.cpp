@@ -36,6 +36,7 @@ GameWorld::GameWorld(const LevelDescriptor& levelDescriptor) : ball(level.ballDe
 
 
 void GameWorld::start() {
+	toggled = false;
 	togglePosition.setPosition(0);
 	levelComplete = false;
 
