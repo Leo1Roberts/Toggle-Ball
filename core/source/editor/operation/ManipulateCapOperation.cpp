@@ -34,7 +34,7 @@ void ManipulateCapOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
 	auto leftCapPos = obstacle.getLeftCapPosition();
 	auto rightCapPos = obstacle.getRightCapPosition();
 
-	for (auto i : ctx.getPointedObstacleIndices(pointerPlanarPosition, obstacleIndex)) {
+	for (auto i : ctx.getPointedObstacleIndices(pointerPlanarPosition, {obstacleIndex})) {
 		const auto& otherObstacle = ctx.scene.obstacles[i];
 		auto addInactiveHandle = [&](glm::vec2 capPos) {
 			if (length2(capPos - leftCapPos) > 0.00000001f &&

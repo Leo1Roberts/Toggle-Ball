@@ -3,6 +3,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/norm.hpp"
 
+#include <ranges>
+
 
 ManipulateCapsOperation::ManipulateCapsOperation(const EditorContext& ctx, TriggerType trigger, glm::vec2 initialPlanarPosition, const std::vector<CapInfo>& allCapsInfo) :
 	Operation(ctx, trigger, initialPlanarPosition) {
@@ -22,8 +24,76 @@ ManipulateCapsOperation::ManipulateCapsOperation(const EditorContext& ctx, Trigg
 
 
 void ManipulateCapsOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
-	for (const auto& capOperation : manipulateCapOperations)
-		capOperation.addGizmos(gizmoRenderer);
+	auto manipulatedCapPos = manipulateCapOperations[0].obstacle.getCapPosition(manipulateCapOperations[0].currentlyLeftCap);
+
+	float maxMinorRadius = 0.f;
+	for (const auto& op : manipulateCapOperations)
+		maxMinorRadius = std::max(maxMinorRadius, op.initialDescriptor.shape->minorRadius);
+	float radius = std::min(Settings::Sizes.obstacleHandleRadius, gizmoRenderer.planarToUIDistance(maxMinorRadius));
+
+	if (smoothJoin) {
+		float angle = manipulateCapOperations[0].obstacle.getKinematicState()->getAngle() +
+			manipulateCapOperations[0].obstacle.descriptor->shape->getCapAngle(manipulateCapOperations[0].currentlyLeftCap);
+
+		gizmoRenderer.addSplitCircle(manipulatedCapPos, radius, angle, {
+			.fillColor = {Color::White, 0.8f},
+			.strokeColor = {Color::Black, 0.8f},
+			.cornerRadius = 0.f,
+			.strokeWidth = 2.f,
+		}, {
+			.fillColor = {Color::White, 0.8f},
+			.strokeColor = {Color::Black, 0.8f},
+			.cornerRadius = 0.f,
+			.strokeWidth = 2.f,
+		});
+	} else {
+		for (auto i : ctx.getPointedObstacleIndices(pointerPlanarPosition,
+			manipulatedEntities | std::views::transform(&EntityReference::index) | std::ranges::to<std::vector>())) {
+			const auto& otherObstacle = ctx.scene.obstacles[i];
+			auto addInactiveHandle = [&](glm::vec2 capPos) {
+				if (length2(capPos - manipulatedCapPos) > 0.00000001f &&
+					std::ranges::all_of(manipulateCapOperations, [&](const auto& op) {
+						return length2(capPos - op.fixedCapPlanarPosition) > 0.00000001f;
+				})) {
+					PanelStyle inactiveStyle = {
+						.fillColor = {Color::White, 0.3f},
+						.strokeColor = {Color::Black, 0.3f},
+						.cornerRadius = std::min(Settings::Sizes.obstacleHandleRadius, gizmoRenderer.planarToUIDistance(otherObstacle.descriptor->shape->minorRadius)),
+						.strokeWidth = 2.f,
+					};
+					gizmoRenderer.addCircle(capPos, inactiveStyle);
+				}
+			};
+			addInactiveHandle(otherObstacle.getLeftCapPosition());
+			addInactiveHandle(otherObstacle.getRightCapPosition());
+		}
+
+		switch (snapResult.type) {
+		case SnapType::None:
+			gizmoRenderer.addCircle(manipulatedCapPos, {
+				.fillColor = {Color::White, 0.8f},
+				.strokeColor = {Color::Black, 0.8f},
+				.cornerRadius = radius,
+				.strokeWidth = 2.f,
+			});
+			break;
+		case SnapType::Spine:
+			gizmoRenderer.addCircle(manipulatedCapPos, {
+				.fillColor = {Color::SoftCyan, 0.8f},
+				.strokeColor = {Color::Black, 0.8f},
+				.cornerRadius = radius,
+				.strokeWidth = 2.f,
+			});
+			break;
+		default:
+			gizmoRenderer.addCircle(manipulatedCapPos, {
+				.fillColor = {Color::SoftGreen, 0.8f},
+				.strokeColor = {Color::Black, 0.8f},
+				.cornerRadius = radius,
+				.strokeWidth = 2.f,
+			});
+		}
+	}
 }
 
 

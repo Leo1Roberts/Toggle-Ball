@@ -51,11 +51,12 @@ std::optional<int> EditorContext::getPointedObstacleIndex(glm::vec2 pointerPlana
 	}, prioritiseSelected);
 }
 
-std::vector<int> EditorContext::getPointedObstacleIndices(glm::vec2 pointerPlanarPosition, int excludedObstacleIndex) const {
+std::vector<int> EditorContext::getPointedObstacleIndices(glm::vec2 pointerPlanarPosition, const std::vector<int>& excludedObstacleIndices) const {
 	std::vector<int> indices;
 	auto hitTestBox = SelectBox(pointerPlanarPosition);
 	for (int i = 0; i < scene.obstacles.size(); i++)
-		if (i != excludedObstacleIndex && scene.obstacles[i].isInSelectBox(hitTestBox))
+		if (std::find(excludedObstacleIndices.begin(), excludedObstacleIndices.end(), i) != excludedObstacleIndices.end() &&
+			scene.obstacles[i].isInSelectBox(hitTestBox))
 			indices.push_back(i);
 
 	return indices;

@@ -41,7 +41,7 @@ struct EditorContext {
 	[[nodiscard]] std::optional<int> getTopObstacleIndex(const std::function<bool(const EditorObstacle&)>& includePredicate, bool prioritiseSelected = false) const;
 	[[nodiscard]] std::optional<int> getPointedObstacleIndex(glm::vec2 pointerPlanarPosition, bool prioritiseSelected = false) const;
 
-	[[nodiscard]] std::vector<int> getPointedObstacleIndices(glm::vec2 pointerPlanarPosition, int excludedObstacleIndex) const;
+	[[nodiscard]] std::vector<int> getPointedObstacleIndices(glm::vec2 pointerPlanarPosition, const std::vector<int>& excludedObstacleIndices) const;
 
 	[[nodiscard]] SnapResult snapPoint(glm::vec2 point, const std::vector<EntityReference>& excludedEntities) const;
 	[[nodiscard]] SnapResult snapPointRestrictedToLine(glm::vec2 point, const std::vector<EntityReference>& excludedEntities, glm::vec2 pointOnLine, float lineAngle) const;
