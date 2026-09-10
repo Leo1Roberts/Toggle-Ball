@@ -375,15 +375,10 @@ void ManipulateCapsOperation::applyOperation() {
     			if (restriction.impossible)
     				return;
     			if (restriction.line) {
-    				bool addLine = true;
-    				for (auto existingRestriction : lineRestrictions)
-    					if (linesAreIdentical(existingRestriction, *restriction.line))
-    						addLine = false; // Don't add duplicate lines
-    				if (addLine) {
-    					if (lineRestrictions.size() == 2)
-    						return;
+    				if (!std::ranges::any_of(lineRestrictions, [&](const auto& r) {
+    					return linesAreIdentical(r, *restriction.line); // Don't add duplicate lines
+    				}))
     					lineRestrictions.push_back(*restriction.line);
-    				}
     			}
     		}
     	}
@@ -422,18 +417,29 @@ void ManipulateCapsOperation::applyOperation() {
             		}
             	}
             } else {
-                glm::vec2 d1(std::cos(lineRestrictions[0].angle), std::sin(lineRestrictions[0].angle));
-                glm::vec2 d2(std::cos(lineRestrictions[1].angle), std::sin(lineRestrictions[1].angle));
+	            glm::vec2 dir_0 = {std::cos(lineRestrictions[0].angle), std::sin(lineRestrictions[0].angle)};
+            	bool finalHandlePositionSet = false;
 
-                float det = d1.x * d2.y - d1.y * d2.x;
+            	for (int i = 1; i < lineRestrictions.size(); i++) {
+            		glm::vec2 dir_i = {std::cos(lineRestrictions[i].angle), std::sin(lineRestrictions[i].angle)};
 
-                if (std::abs(det) < 0.0001f)
-                    return; // (nearly) parallel
+            		float det = dir_0.x * dir_i.y - dir_0.y * dir_i.x;
 
-                glm::vec2 dp = lineRestrictions[1].point - lineRestrictions[0].point;
-                float t = (dp.x * d2.y - dp.y * d2.x) / det;
+            		if (std::abs(det) < 0.0001f)
+            			return; // (nearly) parallel
 
-                finalHandlePosition = lineRestrictions[0].point + t * d1;
+            		glm::vec2 dp = lineRestrictions[i].point - lineRestrictions[0].point;
+            		float t = (dp.x * dir_i.y - dp.y * dir_i.x) / det;
+
+            		auto intersection = lineRestrictions[0].point + t * dir_0;
+            		if (finalHandlePositionSet) {
+            			if (length2(finalHandlePosition - intersection) > 0.00000001f)
+            				return;
+            		} else {
+            			finalHandlePosition = intersection;
+            			finalHandlePositionSet = true;
+            		}
+            	}
             }
 
             std::vector<Line> newLineRestrictions;
@@ -447,15 +453,13 @@ void ManipulateCapsOperation::applyOperation() {
                 if (restriction.impossible)
                     return;
                 if (restriction.line) {
-                    bool addLine = true;
-                    for (auto existingRestriction : newLineRestrictions)
-                        if (linesAreIdentical(existingRestriction, *restriction.line))
-                            addLine = false; // Don't add duplicate lines
-                    if (addLine) {
-                        if (newLineRestrictions.size() >= lineRestrictions.size())
-                            return;
-                        newLineRestrictions.push_back(*restriction.line);
-                    }
+                	if (!std::ranges::any_of(newLineRestrictions, [&](const auto& r) {
+						return linesAreIdentical(r, *restriction.line); // Don't add duplicate lines
+					})) {
+                		if (newLineRestrictions.size() >= lineRestrictions.size())
+                			return;
+                		newLineRestrictions.push_back(*restriction.line);
+                	}
                 }
             }
             for (auto& capOperation : manipulateCapOperations) {
