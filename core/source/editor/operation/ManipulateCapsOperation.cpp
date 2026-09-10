@@ -23,6 +23,19 @@ ManipulateCapsOperation::ManipulateCapsOperation(const EditorContext& ctx, Trigg
 }
 
 
+std::vector<BindingHint> ManipulateCapsOperation::getBindingHints() const {
+	std::vector<BindingHint> hints;
+
+	if (ctx.quickSettings.shape.alignWithTangent) {
+		hints.emplace_back(KeyChord(KeyCode::Unknown, MOD_ALT), "Preserve joint angles");
+		if (manipulateCapOperations.size() == 2 && !preserveLinkedAngles)
+			hints.emplace_back(KeyChord(KeyCode::Unknown, MOD_CTRL), "Smooth connect");
+	}
+
+	return hints;
+}
+
+
 void ManipulateCapsOperation::addGizmos(GizmoRenderer& gizmoRenderer) const {
 	auto manipulatedCapPos = manipulateCapOperations[0].obstacle.getCapPosition(manipulateCapOperations[0].currentlyLeftCap);
 

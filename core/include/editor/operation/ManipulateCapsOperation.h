@@ -12,6 +12,7 @@ public:
 	void cancel() const final { ctx.scene.cancelLevelChange(); }
 	void commit() const final { ctx.scene.commitLevelChange(); }
 
+	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
 	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
 
 protected:
