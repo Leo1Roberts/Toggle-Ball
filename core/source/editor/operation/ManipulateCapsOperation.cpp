@@ -160,96 +160,157 @@ void ManipulateCapsOperation::applyOperation() {
 	    if (p1_to_p2_distanceSq < 0.00000001f)
     		return;
 
-	    float f = dot(rawHandlePosition - p1, p1_to_p2) / p1_to_p2_distanceSq;
+		float f_base = dot(rawHandlePosition - p1, p1_to_p2) / p1_to_p2_distanceSq;
 
 	    if (linesAreIdentical({p1, t1}, {p2, t2})) {
 		    if (std::atan2( p1_to_p2.y,  p1_to_p2.x) - t1 < 0.0001f &&
 			    std::atan2(-p1_to_p2.y, -p1_to_p2.x) - t2 < 0.0001f)
-			    handlePosition = p1 + std::clamp(f, 0.f, 1.f) * p1_to_p2;
+			    handlePosition = p1 + std::clamp(f_base, 0.f, 1.f) * p1_to_p2;
 		    else return;
 	    } else {
-	    	f = std::clamp(f, 0.001f, 0.999f);
+	    	// Note: finding 'chosen' was vibe coded
 
-	        float sin_t1 = std::sin(t1);
-	        float cos_t1 = std::cos(t1);
-	        float sin_t2 = std::sin(t2);
-	        float cos_t2 = std::cos(t2);
+	    	float sin_t1 = std::sin(t1), cos_t1 = std::cos(t1);
+			float sin_t2 = std::sin(t2), cos_t2 = std::cos(t2);
 
-	        float A = p1_to_p2.x;
-	        float B = p1_to_p2.y;
+			float A = p1_to_p2.x, B = p1_to_p2.y;
+			float L_sq = A*A + B*B;
+			float L = std::sqrt(L_sq);
 
-	        float L_sq = A*A + B*B;
-	        float L = std::sqrt(L_sq);
+			float cos1 = (-A * sin_t1 + B * cos_t1) / L;
+			float sin1 = ( A * cos_t1 + B * sin_t1) / L;
+			float cos2 = (-A * sin_t2 + B * cos_t2) / L;
+			float sin2 = ( A * cos_t2 + B * sin_t2) / L;
 
-	        float cos1 = (-A * sin_t1 + B * cos_t1) / L;
-	        float sin1 = ( A * cos_t1 + B * sin_t1) / L;
-	        float cos2 = (-A * sin_t2 + B * cos_t2) / L;
-	        float sin2 = ( A * cos_t2 + B * sin_t2) / L;
+			auto p1_to_p2_dir = p1_to_p2 / L;
+			glm::vec2 perpDir = {-p1_to_p2_dir.y, p1_to_p2_dir.x};
 
-	        float a = 2.f * (cos1*cos1 - (1.f - f) + f * cos1 * cos2 - (1.f - f) * sin1 * sin2);
-	        float b = L * ((1.f - 2.f * f) * cos2 - (1.f + 2.f * f) * cos1);
+			constexpr float eps = 0.0001f;
+			constexpr double maxCurvature = 1e5;
 
-	    	constexpr float eps = 0.0001f;
-	    	glm::vec2 p1_to_p2_dir = p1_to_p2 / L;
-	    	glm::vec2 perpDir(-p1_to_p2_dir.y, p1_to_p2_dir.x);
+			auto evalJ = [&](float fIn, float sign) -> std::optional<glm::vec2> {
+				double f = fIn;
+				double dcos1 = cos1, dsin1 = sin1, dcos2 = cos2, dsin2 = sin2;
+				double dL = L, dL_sq = L_sq;
 
-	        auto solveBranch = [&](float sign) -> std::optional<glm::vec2> {
-        		float k1, k2;
+				double a = 2. * (dcos1*dcos1 - (1. - f) + f*dcos1*dcos2 - (1. - f)*dsin1*dsin2);
+				double b = dL * ((1. - 2.*f) * dcos2 - (1. + 2.*f) * dcos1);
 
-        		if (std::abs(1.f - f) < eps) {
-        			if (sign < 0.f)
-        				return std::nullopt;
-        			k1 = 2.f * cos1 / L;
-        			k2 = 0.f;
-        		} else {
-        			float disc = b*b - 4.f * a * f * L_sq;
-        			if (disc < -eps * L_sq)
-        				return std::nullopt;
-        			disc = std::max(disc, 0.f);
-        			float sqrtDisc = std::sqrt(disc);
+				double k1, k2;
+				if (std::abs(1. - f) < eps) {
+					if (sign < 0.f)
+						return std::nullopt;
+					k1 = 2. * dcos1 / dL;
+					k2 = 0.;
+				} else {
+					double C = f * dL_sq;
+					double disc = b*b - 4. * C * a;
+					if (disc < (double)-eps * dL_sq)
+						return std::nullopt;
+					disc = std::max(disc, 0.);
+					double sqrtDisc = std::sqrt(disc);
 
-        			if (std::abs(f) > eps)
-        				k1 = (-b + sign * sqrtDisc) / (2.f * f * L_sq);
-        			else {
-        				if (sign < 0.f || std::abs(b) < eps)
-        					return std::nullopt;
-        				k1 = -a / b;
-        			}
+					if (std::abs(C) > (double)eps * dL_sq) {
+						double sgnB = (b >= 0.) ? 1. : -1.;
+						double q = -0.5 * (b + sgnB * sqrtDisc);
+						if (sign * sgnB > 0.) {
+							if (std::abs(q) < 1e-12)
+								return std::nullopt;
+							k1 = a / q;
+						} else
+							k1 = q / C;
+					} else {
+						if (sign < 0.f || std::abs(b) < eps)
+							return std::nullopt;
+						k1 = -a / b;
+					}
+					k2 = (f * dL * k1 - (dcos1 + dcos2)) / (dL * (1. - f));
+				}
 
-        			k2 = (f * L * k1 - (cos1 + cos2)) / (L * (1.f - f));
-        		}
+				if (std::abs(k1) > maxCurvature / dL || std::abs(k2) > maxCurvature / dL)
+					return std::nullopt;
 
-        		if (std::abs(k1 + k2) < eps / L)
-        			return std::nullopt;
+				if (std::abs(k1 + k2) < (double)eps / dL)
+					return std::nullopt;
 
-        		return p1 + (f * L) * p1_to_p2_dir + ((sin1 + sin2) / (k1 + k2)) * perpDir;
-	        };
+				auto dchordDir = glm::dvec2(p1_to_p2_dir), dperpDir = glm::dvec2(perpDir);
+				auto dp1 = glm::dvec2(p1);
+				auto J = dp1 + (f * dL) * dchordDir + ((dsin1 + dsin2) / (k1 + k2)) * dperpDir;
 
-	        auto solA = solveBranch( 1.f);
-	        auto solB = solveBranch(-1.f);
+				glm::dvec2 N1 = {(double)-sin_t1, (double)cos_t1};
+				glm::dvec2 N2 = {(double)-sin_t2, (double)cos_t2};
 
-	    	auto directionAlignment = [&](glm::vec2 J) {
-	    		glm::vec2 subChord = J - p1;
-	    		glm::vec2 T1(-std::cos(t1), -std::sin(t1));
-	    		glm::vec2 TJ;
-	    		if (length2(subChord) < 0.00000001f)
-	    			TJ = T1;
-	    		else {
-	    			glm::vec2 u1 = normalize(subChord);
-	    			TJ = 2.f * dot(T1, u1) * u1 - T1;
-	    		}
-	    		return dot(TJ, p1_to_p2_dir);
-	    	};
+				auto d1 = J - dp1;
+				auto d2 = J - glm::dvec2(p2);
 
-	    	std::optional<glm::vec2> chosen;
-	    	if (solA && solB)
-	    		chosen = (directionAlignment(*solA) > directionAlignment(*solB)) ? solA : solB;
-	    	else
-	    		chosen = solA ? solA : solB;
+				double residual1 = k1 * dot(d1, d1) - 2. * dot(d1, N1);
+				double residual2 = k2 * dot(d2, d2) - 2. * dot(d2, N2);
 
-	        if (!chosen)
-	        	return;
-	        handlePosition = *chosen;
+				double tol = 1e-3 * dL;
+				if (std::abs(residual1) > tol || std::abs(residual2) > tol)
+					return std::nullopt;
+
+				return glm::vec2(J);
+			};
+
+			auto findBestOnBranch = [&](float sign) -> std::optional<glm::vec2> {
+				constexpr int coarseSamples = 41;
+				constexpr float coarseRange = 6.f;
+
+				float bestF = f_base;
+				std::optional<float> bestCost;
+				std::optional<glm::vec2> bestJ;
+
+				for (int i = 0; i < coarseSamples; i++) {
+					float trialF = f_base + coarseRange * ((float)i / (coarseSamples - 1) - 0.5f) * 2.f;
+					if (auto J = evalJ(trialF, sign)) {
+						float c = length2(*J - rawHandlePosition);
+						if (!bestCost || c < *bestCost) {
+							bestCost = c;
+							bestF = trialF;
+							bestJ = J;
+						}
+					}
+				}
+				if (!bestCost)
+					return std::nullopt;
+
+				float f = bestF;
+				float step = coarseRange / (coarseSamples - 1);
+				for (int iter = 0; iter < 30 && step > 1e-5f; iter++) {
+					bool improved = false;
+					for (float trialF : { f + step, f - step }) {
+						if (auto J = evalJ(trialF, sign)) {
+							float c = length2(*J - rawHandlePosition);
+							if (c < *bestCost) {
+								bestCost = c;
+								f = trialF;
+								bestJ = J;
+								improved = true;
+							}
+						}
+					}
+					if (!improved)
+						step *= 0.5f;
+				}
+
+				return bestJ;
+			};
+
+			auto solA = findBestOnBranch( 1.f);
+			auto solB = findBestOnBranch(-1.f);
+
+			std::optional<glm::vec2> chosen;
+			if (solA && solB) {
+				float distA = length2(*solA - rawHandlePosition);
+				float distB = length2(*solB - rawHandlePosition);
+				chosen = (distA <= distB) ? solA : solB;
+			} else
+				chosen = solA ? solA : solB;
+
+			if (!chosen)
+				return;
+			handlePosition = *chosen;
 
 	    	int segmentIndex;
 	    	std::optional<Line> lineRestriction;
