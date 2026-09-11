@@ -266,6 +266,8 @@ void UIManager::removeAllChildrenOfNode(UINode* node) {
 void UIManager::unregisterNode(UINode* node) {
 	if (focusedNode == node)
 		focusedNode = nullptr;
+	if (nodePointedTo == node)
+		nodePointedTo = nullptr;
 
 	auto isNode = [node](const auto& pair) { return pair.second == node; };
 
