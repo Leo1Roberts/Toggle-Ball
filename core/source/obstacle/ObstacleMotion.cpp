@@ -135,6 +135,8 @@ StaticSpec::StaticSpec(const std::string& data) {
 	char c;
 	if (!(ss >> position.x >> c >> position.y >> c >> angle))
 		throw std::invalid_argument("Invalid static motion data format");
+
+	setAngle(angle);
 }
 
 std::string TogglingPositionSpec::serializeData() const {
@@ -151,6 +153,8 @@ TogglingPositionSpec::TogglingPositionSpec(const std::string& data) {
 	char c;
 	if (!(ss >> angle >> c >> positionA.x >> c >> positionA.y >> c >> positionB.x >> c >> positionB.y))
 		throw std::invalid_argument("Invalid toggling position motion data format");
+
+	setAngle(angle);
 }
 
 std::string TogglingAngleSpec::serializeData() const {
@@ -183,6 +187,8 @@ SpinningSpec::SpinningSpec(const std::string& data) {
 	char c;
 	if (!(ss >> position.x >> c >> position.y >> c >> initialAngle >> c >> angularSpeedA >> c >> angularSpeedB))
 		throw std::invalid_argument("Invalid spinning motion data format");
+
+	setInitialAngle(initialAngle);
 }
 
 std::string OscillatingPositionSpec::serializeData() const {
@@ -199,6 +205,8 @@ OscillatingPositionSpec::OscillatingPositionSpec(const std::string& data) {
 	char c;
 	if (!(ss >> position1.x >> c >> position1.y >> c >> position2.x >> c >> position2.y >> c >> angle >> c >> angularFrequencyA >> c >> angularFrequencyB))
 		throw std::invalid_argument("Invalid oscillating position motion data format");
+
+	setAngle(angle);
 }
 
 std::string OscillatingAngleSpec::serializeData() const {

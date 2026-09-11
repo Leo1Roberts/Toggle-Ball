@@ -74,6 +74,8 @@ ArcSpec::ArcSpec(float minorRadius, const std::string& data) :
 	char c;
 	if (!(ss >> arcAngle >> c >> arcRadius))
 		throw std::invalid_argument("Invalid arc shape data format");
+
+	setCaps();
 }
 
 

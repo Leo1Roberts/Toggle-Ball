@@ -4,7 +4,7 @@
 
 
 ObstacleDescriptor::ObstacleDescriptor(const ObstacleDescriptor& other) :
-	goal(other.goal), color(other.color), material(other.material) {
+	color(other.color), material(other.material), goal(other.goal) {
 	if (other.shape)
 		shape = other.shape->clone();
 	if (other.motion)
@@ -36,6 +36,8 @@ ObstacleDescriptor::ObstacleDescriptor(const std::string& data) {
 	shape = std::move(AbstractShapeSpec::deserialize(shapeString));
 	motion = std::move(IMotionSpec::deserialize(motionString));
 	material = MAT_CONCRETE;
+
+	updateColor();
 }
 
 std::string ObstacleDescriptor::serialize() const {

@@ -22,6 +22,9 @@ struct LevelDescriptor {
 		level->setName(name);
 		return level;
 	}
+	bool save() const {
+		return AssetManager::saveTextFile("levels/" + name + ".lvl", serialize());
+	}
 
 	void scale();
 
