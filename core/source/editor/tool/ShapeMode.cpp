@@ -99,8 +99,20 @@ std::optional<Cursor> ShapeMode::queryCursor() const {
 
 
 void ShapeMode::performPrimaryAction(const PointerEvent& upEvent) {
-	if (!getPointedCapHandleInfo(ctx.camera.screenToPlanarPosition(pointerDownEvent.position)))
+	auto pointerPlanarPosition = ctx.camera.screenToPlanarPosition(pointerDownEvent.position);
+	auto allCapsInfo = getAllPointedCapHandlesInfo(pointerPlanarPosition);
+	if (allCapsInfo.empty())
 		ToolMode::performPrimaryAction(upEvent);
+	else if (allCapsInfo.size() == 2) {
+		auto manipulateCapsOperation = ManipulateCapsOperation(ctx, TriggerType::Pointer, pointerPlanarPosition, allCapsInfo);
+		if (manipulateCapsOperation.start(pointerDownEvent.modifiers)) {
+			manipulateCapsOperation.finish();
+			if (manipulateCapsOperation.isSmoothJoin())
+				manipulateCapsOperation.commit();
+			else
+				manipulateCapsOperation.cancel();
+		}
+	}
 }
 
 

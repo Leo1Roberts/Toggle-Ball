@@ -15,6 +15,8 @@ public:
 	[[nodiscard]] std::vector<BindingHint> getBindingHints() const override;
 	void addGizmos(GizmoRenderer& gizmoRenderer) const override;
 
+	[[nodiscard]] bool isSmoothJoin() const { return smoothJoin; }
+
 protected:
 	[[nodiscard]] OperationResponse doProcessEvent(const Event& event) override;
 
