@@ -131,7 +131,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 
 				auto manipulateCapOperation = std::make_unique<ManipulateCapOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, capInfo.obstacleIndex, capInfo.leftCap,
 					obstacle.getKinematicState()->getAngle() + obstacle.descriptor->shape->getCapAngle(!capInfo.leftCap), std::vector{EntityReference{EntityType::Obstacle, capInfo.obstacleIndex}});
-				if (manipulateCapOperation->start(pointerDownEvent.modifiers))
+				if (manipulateCapOperation->start(dragStartEvent.modifiers))
 					return manipulateCapOperation;
 			} else {
 				auto oldFocus = ctx.scene.selectionFocus;
@@ -147,7 +147,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 				ctx.scene.selectionFocus = needNewFocus ? EntityReference{EntityType::Obstacle, allCapsInfo[0].obstacleIndex} : oldFocus;
 
 				auto manipulateCapsOperation = std::make_unique<ManipulateCapsOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, allCapsInfo);
-				if (manipulateCapsOperation->start(pointerDownEvent.modifiers))
+				if (manipulateCapsOperation->start(dragStartEvent.modifiers))
 					return manipulateCapsOperation;
 			}
 
@@ -164,7 +164,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 			ctx.scene.selectionFocus = {EntityType::Obstacle, *index};
 
 			auto minorRadiusOperation = std::make_unique<MinorRadiusOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, minorRadius);
-			if (minorRadiusOperation->start(pointerDownEvent.modifiers))
+			if (minorRadiusOperation->start(dragStartEvent.modifiers))
 				return minorRadiusOperation;
 
 			ctx.scene.cancelSelectionChange();
@@ -180,7 +180,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 					ctx.scene.selectionFocus = {EntityType::Obstacle, *index};
 
 					auto manipulateMidsectionOperation = std::make_unique<ManipulateMidsectionOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition, *index, info->position);
-					if (manipulateMidsectionOperation->start(pointerDownEvent.modifiers))
+					if (manipulateMidsectionOperation->start(dragStartEvent.modifiers))
 						return manipulateMidsectionOperation;
 
 					ctx.scene.cancelSelectionChange();
@@ -191,7 +191,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 
 		if (!pointedAtEntity(pointerPlanarPosition)) {
 			auto selectOperation = std::make_unique<SelectOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition);
-			if (selectOperation->start(pointerDownEvent.modifiers))
+			if (selectOperation->start(dragStartEvent.modifiers))
 				return selectOperation;
 		}
 	} else if (dragStartEvent.button == PointerButton::Secondary) {
@@ -214,7 +214,7 @@ std::unique_ptr<Operation> ShapeMode::startDrag(const PointerEvent& dragStartEve
 			}
 		}
 		auto drawOperation = std::make_unique<DrawOperation>(ctx, TriggerType::Pointer, sproutingPoint, minorRadius, tangentAngle);
-		if (drawOperation->start(pointerDownEvent.modifiers))
+		if (drawOperation->start(dragStartEvent.modifiers))
 			return drawOperation;
 	}
 

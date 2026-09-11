@@ -43,7 +43,7 @@ std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStar
 
 	if (hit) {
 		auto selectOperation = SelectOperation(ctx, TriggerType::Pointer, pointerPlanarPosition, true);
-		if (selectOperation.start(pointerDownEvent.modifiers))
+		if (selectOperation.start(dragStartEvent.modifiers))
 			selectOperation.finish();
 		else return nullptr;
 
@@ -56,13 +56,13 @@ std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStar
 	if (dragStartEvent.button == PointerButton::Primary) {
 		if (hit) {
 			auto translateOperation = std::make_unique<TranslateOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition);
-			if (translateOperation->start(pointerDownEvent.modifiers))
+			if (translateOperation->start(dragStartEvent.modifiers))
 				return translateOperation;
 			return nullptr;
 		}
 
 		auto selectOperation = std::make_unique<SelectOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition);
-		if (selectOperation->start(pointerDownEvent.modifiers))
+		if (selectOperation->start(dragStartEvent.modifiers))
 			return selectOperation;
 		return nullptr;
 	}
@@ -70,7 +70,7 @@ std::unique_ptr<Operation> TransformMode::startDrag(const PointerEvent& dragStar
 	if (dragStartEvent.button == PointerButton::Secondary) {
 		if (hit) {
 			auto rotateOperation = std::make_unique<RotateOperation>(ctx, TriggerType::Pointer, pointerPlanarPosition);
-			if (rotateOperation->start(pointerDownEvent.modifiers))
+			if (rotateOperation->start(dragStartEvent.modifiers))
 				return rotateOperation;
 			return nullptr;
 		}
