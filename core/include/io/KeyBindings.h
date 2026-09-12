@@ -17,7 +17,7 @@ enum ModifierFlags : byte {
 	MOD_ALT		= 1 << 2
 };
 
-enum class KeyCode {
+enum class KeyCode : int {
 	Ctrl, Shift, Alt,
 	Tab,
 	Enter, Escape,
@@ -47,6 +47,8 @@ struct KeyChord {
 	byte modifiers;
 
 	bool operator==(const KeyChord&) const = default;
+
+	explicit operator std::optional<char>() const;
 };
 
 template<>
@@ -60,6 +62,8 @@ struct std::hash<KeyChord> {
 enum class ActionCode {
 	Quit,
 	Fullscreen,
+
+	Save, SaveAs, Open,
 
 	Copy, Delete, Cut, Paste, Duplicate,
 
@@ -106,6 +110,9 @@ private:
 	static constexpr Entry entries[] = {
 		{ ActionCode::Quit,                        "Quit"                          },
 		{ ActionCode::Fullscreen,                  "Fullscreen"                    },
+		{ ActionCode::Save,                        "Save"                          },
+		{ ActionCode::SaveAs,                      "Save as"                       },
+		{ ActionCode::Open,                        "Open"                          },
 		{ ActionCode::Copy,                        "Copy"                          },
 		{ ActionCode::Delete,                      "Delete"                        },
 		{ ActionCode::Cut,                         "Cut"                           },

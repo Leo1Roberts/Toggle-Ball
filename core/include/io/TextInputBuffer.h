@@ -15,6 +15,7 @@ class TextInputBuffer {
 public:
 	using Validator = std::function<bool(char, int, const std::string&)>;
 	static bool Float(char c, int cursor = 0, const std::string& buffer = "");
+	static bool File(char c, int cursor = 0, const std::string& buffer = "");
 
 	explicit TextInputBuffer(Validator validator, TextInputMode mode = TextInputMode::Rich)
 		: charIsValid(std::move(validator)), mode(mode) {}

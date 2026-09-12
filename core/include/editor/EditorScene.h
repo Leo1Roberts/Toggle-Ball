@@ -67,6 +67,10 @@ public:
 	void commitLevelChange();
 	void commitSelectionChange();
 
+	void saveLevel();
+	[[nodiscard]] bool isSaved() const { return savedNode == currentNode; }
+	bool renameLevel(const std::string& newName);
+
 	void selectAll();
 	void deselectAll();
 	[[nodiscard]] bool anythingIsSelected() const;
@@ -93,6 +97,7 @@ private:
 	Smoother togglePosition{};
 
 	std::shared_ptr<UndoNode> currentNode;
+	std::shared_ptr<UndoNode> savedNode;
 
 	std::vector<ObstacleDescriptor> clipboard;
 };

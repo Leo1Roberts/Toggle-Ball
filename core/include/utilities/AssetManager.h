@@ -21,6 +21,9 @@ namespace AssetManager {
 
 	bool saveTextFile(const std::string& path, const std::string& text);
 
+	bool remove(const std::string& path);
+
+	[[nodiscard]] bool exists(const std::string& path);
 	std::vector<std::string> getFileList(const std::string& directory, const std::string& extension);
 }
 

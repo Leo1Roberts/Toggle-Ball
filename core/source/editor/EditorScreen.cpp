@@ -31,15 +31,73 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
 
+	auto layout = uiManager.addNode<UIVerticalList>(0.f, 0.f);
 
-	auto layout = uiManager.addNode(std::make_unique<UIHorizontalList>(0.f, 0.f));
+	auto menuBar = layout->addChild<UIPanel>(Theme::DarkPanel);
+	menuBar->setLayout({
+		.anchor = Anchor::TopCentre,
+		.widthMode  = SizingMode::Stretch,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(4.f)
+	});
 
-	auto mainArea = layout->addChild<UIVerticalList>(0.f, 0.f);
+	auto menuContent = menuBar->addChild<UIHorizontalList>(0.f, 0.f);
+	menuContent->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
 
-	auto statusBar = mainArea->addChild(std::make_unique<UIPanel>(
+	auto levelNameContainer = menuContent->addChild<UIHorizontalList>(0.f, 0.f);
+	levelNameContainer->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.margin = {10.f, 0.f}
+	});
+
+	unsavedIndicator = levelNameContainer->addChild<UIText>("*", Theme::DiscreetTextBox.normalText);
+	unsavedIndicator->setLayout({
+		.widthMode = SizingMode::Wrap,
+		.heightMode = SizingMode::Stretch
+	});
+
+	auto levelName = levelNameContainer->addChild<UITextBox>(TextInputBuffer::File, Theme::DiscreetTextBox, "[Unnamed]");
+	levelName->setValueProvider([this] { return scene.level->name; });
+	levelName->setOnConfirm([this](const UITextBox& tb) {
+		const auto& newName = tb.getValue<const std::string&>();
+		if (!newName.empty() && newName != scene.level->name)
+			scene.renameLevel(newName);
+	});
+	levelName->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = {4.f, 0.f}
+	});
+
+	auto save = menuContent->addChild<UIButton>("Save", Theme::MenuBarButton);
+	save->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = {6.f, 4.f}
+	});
+	save->setTextLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+	save->setOnTrigger([this] { scene.saveLevel(); });
+
+
+	auto subLayout = layout->addChild<UIHorizontalList>(0.f, 0.f);
+
+	auto mainArea = subLayout->addChild<UIVerticalList>(0.f, 0.f);
+
+	auto statusBar = mainArea->addChild<UIPanel>(
 		PanelStyle{
 			.fillColor = {24, 26, 32, 150},
-		}));
+		});
 	statusBar->setLayout({
 		.anchor = Anchor::TopCentre,
 		.widthMode  = SizingMode::Stretch,
@@ -108,7 +166,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	viewportUI = mainArea->addChild<UIContainer>();
 	operationUI = viewportUI->addChild<UIContainer>();
 
-	auto propertiesPanel = layout->addChild<UIPanel>(Theme::DarkPanel);
+	auto propertiesPanel = subLayout->addChild<UIPanel>(Theme::DarkPanel);
 	propertiesPanel->setLayout({
 		.widthMode  = SizingMode::Absolute, .width = 300.f,
 		.heightMode = SizingMode::Stretch
@@ -147,7 +205,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 			});
 		label->setLayout({ .margin = {5.f, 0.f} });
 
-		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
+		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::TechnicalTextBox, "-");
 		textField->setLayout({
 			.heightMode = SizingMode::Wrap,
 			.padding = {0.f, 10.f}
@@ -373,6 +431,9 @@ void EditorScreen::processEvent(const Event& event) {
 
 			if (!currentMode->hasActiveOperation() && key->action == KeyAction::Down) {
 				switch (*actionCode) {
+				case ActionCode::Save:
+					scene.saveLevel();
+					break;
 				case ActionCode::CycleToolMode:
 					if (currentMode == &transformMode)
 						selectMode(&shapeMode);
@@ -448,6 +509,8 @@ void EditorScreen::update(microseconds dt) {
 		if (!obstacleShapePropertiesListValid)
 			updateObstacleShapePropertiesList();
 	}
+
+	unsavedIndicator->setActive(!scene.isSaved());
 
 	uiManager.update(dt);
 }
@@ -717,7 +780,7 @@ void EditorScreen::updateObstacleMotionPropertiesList() {
 			});
 		label->setLayout({ .margin = {5.f, 0.f} });
 
-		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
+		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::TechnicalTextBox, "-");
 		textField->setLayout({
 			.widthMode  = SizingMode::Stretch,
 			.heightMode = SizingMode::Wrap,
@@ -835,7 +898,7 @@ void EditorScreen::updateObstacleShapePropertiesList() {
 			});
 		label->setLayout({ .margin = {5.f, 0.f} });
 
-		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::PrimaryTextBox, "-");
+		auto textField = item->addChild<UITextBox>(TextInputBuffer::Float, Theme::TechnicalTextBox, "-");
 		textField->setLayout({
 			.widthMode  = SizingMode::Stretch,
 			.heightMode = SizingMode::Wrap,

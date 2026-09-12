@@ -67,6 +67,23 @@ namespace AssetManager {
 	}
 
 
+	bool remove(const std::string& path) {
+#if defined(PLATFORM_DESKTOP)
+		return std::filesystem::remove(std::string(ASSETS_PATH) + path);
+#endif
+		return false;
+	}
+
+
+	bool exists(const std::string& path) {
+#if defined(PLATFORM_ANDROID)
+		return false;
+#else
+		return std::filesystem::exists(std::string(ASSETS_PATH) + path);
+#endif
+	}
+
+
 	std::vector<std::string> getFileList(const std::string& directory, const std::string& extension) {
 		std::vector<std::string> fileList;
 

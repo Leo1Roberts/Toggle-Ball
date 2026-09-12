@@ -10,6 +10,10 @@ bool TextInputBuffer::Float(char c, int cursor, const std::string& buffer) {
 	return false;
 }
 
+bool TextInputBuffer::File(char c, int, const std::string& buffer) {
+	return buffer.length() < 40 && (std::isalnum(c) || c == '_' || c == ' ' || c == '-');
+}
+
 
 TextInputEventEffect TextInputBuffer::processEvent(const Event& event) {
 	if (auto* charEvent = std::get_if<char>(&event)) {
@@ -28,6 +32,10 @@ TextInputEventEffect TextInputBuffer::processEvent(const Event& event) {
 		return TextInputEventEffect::None;
 	}
 	if (auto key = std::get_if<KeyEvent>(&event)) {
+		if (auto c = (std::optional<char>)key->chord)
+			if (charIsValid(*c, 0, ""))
+				return TextInputEventEffect::Buffer;
+
 		if (auto actionCode = Settings::Bindings->translate(key->chord)) {
 			switch (*actionCode) {
 			case ActionCode::Copy:
@@ -94,7 +102,6 @@ TextInputEventEffect TextInputBuffer::processEvent(const Event& event) {
 					}
 					return TextInputEventEffect::None;
 				default:;
-					return TextInputEventEffect::None;
 				}
 			}
 			switch (key->chord.code) {

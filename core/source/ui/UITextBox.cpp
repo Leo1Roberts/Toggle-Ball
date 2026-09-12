@@ -57,6 +57,14 @@ void UITextBox::arrangeChildren(Rectangle innerBounds) {
 }
 
 
+glm::vec2 UITextBox::measure() {
+	cursorNode->deactivate();
+	auto size = UIPanel::measure();
+	cursorNode->activate();
+	cursorNode->measure();
+	return size;
+}
+
 UIResponse UITextBox::processEvent(const Event& event) {
 	if (state == TextBoxState::Disabled)
 		return UIResponse::Ignored;

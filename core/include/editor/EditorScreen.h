@@ -50,6 +50,8 @@ private:
 
 	UIContainer* viewportUI;
 
+	UIText* unsavedIndicator;
+
 	TransformMode transformMode{ctx};
 	ShapeMode shapeMode{ctx};
 	ToolMode* currentMode = nullptr;

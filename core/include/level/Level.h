@@ -19,18 +19,16 @@ struct LevelDescriptor {
 
 	static std::unique_ptr<LevelDescriptor> load(const std::string& name) {
 		auto level = std::make_unique<LevelDescriptor>(AssetManager::loadTextFile("levels/" + name + ".lvl"));
-		level->setName(name);
+		level->name = name;
 		return level;
 	}
-	bool save() const {
+	[[nodiscard]] bool save() const {
 		return AssetManager::saveTextFile("levels/" + name + ".lvl", serialize());
 	}
 
 	void scale();
 
 	[[nodiscard]] std::string serialize() const;
-
-	void setName(const std::string& n) { name = n; }
 
 	std::string name;
 	float arenaWidth = 20.f;

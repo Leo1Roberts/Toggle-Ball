@@ -5,6 +5,29 @@
 #include <sstream>
 
 
+KeyChord::operator std::optional<char>() const {
+	if (modifiers & MOD_CTRL || modifiers & MOD_ALT)
+		return std::nullopt;
+
+	bool shift = modifiers & MOD_SHIFT;
+
+	if (code >= KeyCode::A && code <= KeyCode::Z)
+		return (shift ? 'A' : 'a') + (char)((int)code - (int)KeyCode::A);
+
+	if (!shift && code >= KeyCode::Num0 && code <= KeyCode::Num9)
+		return '0' + (char)((int)code - (int)KeyCode::Num0);
+
+	switch (code) {
+	case KeyCode::Enter:
+		return '\n';
+	case KeyCode::Space:
+		return ' ';
+	default:
+		return std::nullopt;
+	}
+}
+
+
 KeyBindings::KeyBindings(const std::string& data) {
 	std::istringstream ss(data);
 	std::string line;

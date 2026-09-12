@@ -11,6 +11,7 @@ EditorScene::EditorScene(std::unique_ptr<LevelDescriptor> levelToEdit, const std
 	deselectAll();
 
 	currentNode = std::make_shared<UndoNode>(*level, std::make_shared<SelectionUndoNode>(getSelectionState()));
+	savedNode = currentNode;
 }
 
 
@@ -65,8 +66,8 @@ void EditorScene::deleteSelection() {
 }
 bool EditorScene::paste(std::vector<ObstacleDescriptor>* source) {
 	if (!source) source = &clipboard;
-	if (source->size() == 0) return false;
-	int originalObstaclesCount = level->obstacleDescriptors.size();
+	if (source->empty()) return false;
+	int originalObstaclesCount = (int)level->obstacleDescriptors.size();
 
 	level->obstacleDescriptors.append_range(
 		*source | std::views::transform([](const auto& clipboardObstacle) {
@@ -143,6 +144,42 @@ void EditorScene::commitSelectionChange() {
 	} else
 		currentNode->selectionNode = std::make_shared<SelectionUndoNode>(getSelectionState());
 }
+
+
+void EditorScene::saveLevel() {
+	if (level->save())
+		savedNode = currentNode;
+}
+
+bool EditorScene::renameLevel(const std::string& newName) {
+	if (AssetManager::exists("levels/" + newName + ".lvl"))
+		return false;
+
+	savedNode->level.name = newName;
+	if (savedNode->level.save()) {
+		AssetManager::remove("levels/" + level->name + ".lvl");
+
+		level->name = newName;
+
+		UndoNode* node = currentNode.get();
+		do {
+			node->level.name = newName;
+			node = node->previous.get();
+		} while (node);
+
+		node = currentNode->next.get();
+		while (node) {
+			node->level.name = newName;
+			node = node->next.get();
+		}
+
+		return true;
+	}
+
+	savedNode->level.name = level->name;
+	return false;
+}
+
 
 void EditorScene::syncLevel() {
 	*level = currentNode->level;

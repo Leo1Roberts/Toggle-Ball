@@ -202,7 +202,180 @@ namespace Theme {
 		}
 	};
 
+	inline constexpr ButtonStyle MenuBarButton {
+		// --- Panel States ---
+		.normalPanel = {
+			.fillColor = {255, 255, 255, 12},     // 5% White Glass
+			.strokeColor = {255, 255, 255, 45},   // Subtle border
+			.cornerRadius = 6.0f,
+			.strokeWidth = 1.0f
+		},
+		.hoveredPanel = {
+			.fillColor = {255, 255, 255, 25},     // 10% White Glass
+			.strokeColor = {255, 255, 255, 120},  // Glowing border
+			.cornerRadius = 6.0f,
+			.strokeWidth = 1.0f
+		},
+		.pressedPanel = {
+			.fillColor = {255, 255, 255, 40},     // 15% White Glass
+			.strokeColor = {255, 255, 255, 180},
+			.cornerRadius = 6.0f,
+			.strokeWidth = 1.0f
+		},
+		.disabledPanel = {
+			.fillColor = {255, 255, 255, 5},
+			.strokeColor = {255, 255, 255, 20},
+			.cornerRadius = 6.0f,
+			.strokeWidth = 1.0f
+		},
+
+		// --- Text States ---
+		.normalText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 16.f,
+			.color = {220, 225, 235, 255},
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.hoveredText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 16.f,
+			.color = Color::White,
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.pressedText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 16.f,
+			.color = {180, 185, 195, 255},
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.disabledText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 16.f,
+			.color = {100, 100, 100, 255},
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		}
+	};
+
+
 	inline constexpr TextBoxStyle PrimaryTextBox {
+        // --- Panel States ---
+        .normalPanel = {
+            .fillColor = {14, 16, 20, 255},      // Very dark inset background
+            .strokeColor = {48, 52, 64, 255},    // Muted border matches DarkCard
+            .cornerRadius = 8.0f,
+            .strokeWidth = 1.0f
+        },
+        .hoveredPanel = {
+            .fillColor = {18, 20, 26, 255},      // Slightly lighter on hover
+            .strokeColor = {70, 76, 92, 255},    // Brighter border on hover
+            .cornerRadius = 8.0f,
+            .strokeWidth = 1.0f
+        },
+        .focusedPanel = {
+            .fillColor = {14, 16, 20, 255},      // Keep inset background
+            .strokeColor = {88, 101, 242, 255},  // Crisp Indigo focus ring
+            .cornerRadius = 8.0f,
+            .strokeWidth = 1.5f                  // Slightly thicker to pop
+        },
+        .disabledPanel = {
+            .fillColor = {24, 26, 32, 128},      // Dimmed greyed-out
+            .strokeColor = {48, 52, 64, 128},
+            .cornerRadius = 8.0f,
+            .strokeWidth = 1.0f
+        },
+
+        // --- Text States ---
+        // Note: Text inputs usually want Left alignment instead of Centre
+        .normalText = {
+            .font = FontId::Bahnschrift,
+            .fontSize = 20.f,
+            .color = Color::LightGrey,
+            .alignHorizontal = TextAlignHorizontal::Centre,
+            .alignVertical = TextAlignVertical::Middle
+        },
+        .hoveredText = {
+            .font = FontId::Bahnschrift,
+            .fontSize = 20.f,
+            .color = Color::LightGrey,
+            .alignHorizontal = TextAlignHorizontal::Centre,
+            .alignVertical = TextAlignVertical::Middle
+        },
+        .focusedText = {
+            .font = FontId::Bahnschrift,
+            .fontSize = 20.f,
+            .color = Color::LightGrey,
+            .alignHorizontal = TextAlignHorizontal::Centre,
+            .alignVertical = TextAlignVertical::Middle
+        },
+        .disabledText = {
+            .font = FontId::Bahnschrift,
+            .fontSize = 20.f,
+            .color = Color::DarkGrey,       // Muted grey
+            .alignHorizontal = TextAlignHorizontal::Centre,
+            .alignVertical = TextAlignVertical::Middle
+        },
+
+        // --- Selection / Cursor ---
+		.cursor = {},
+        .highlight = { .fillColor = {88, 101, 242, 140} }    // Translucent Indigo for text selection
+    };
+
+	inline constexpr TextBoxStyle DiscreetTextBox {
+        // --- Panel States ---
+        .normalPanel = {
+            .fillColor = Color::Transparent,      // Very dark inset background
+        },
+        .hoveredPanel = {
+            .fillColor = Color::Transparent,      // Slightly lighter on hover
+        },
+        .focusedPanel = {
+            .fillColor = Color::Transparent,      // Keep inset background
+        },
+        .disabledPanel = {
+            .fillColor = Color::Transparent,      // Dimmed greyed-out
+        },
+
+        // --- Text States ---
+        // Note: Text inputs usually want Left alignment instead of Centre
+        .normalText = {
+            .font = FontId::Bahnschrift,
+            .fontSize = 20.f,
+            .color = {160, 160, 160},
+            .alignHorizontal = TextAlignHorizontal::Centre,
+            .alignVertical = TextAlignVertical::Middle
+        },
+        .hoveredText = {
+            .font = FontId::Bahnschrift,
+            .fontSize = 20.f,
+            .color = Color::LightGrey,
+            .alignHorizontal = TextAlignHorizontal::Centre,
+            .alignVertical = TextAlignVertical::Middle
+        },
+        .focusedText = {
+            .font = FontId::Bahnschrift,
+            .fontSize = 20.f,
+            .color = Color::LightGrey,
+            .alignHorizontal = TextAlignHorizontal::Centre,
+            .alignVertical = TextAlignVertical::Middle
+        },
+        .disabledText = {
+            .font = FontId::Bahnschrift,
+            .fontSize = 20.f,
+            .color = Color::DarkGrey,       // Muted grey
+            .alignHorizontal = TextAlignHorizontal::Centre,
+            .alignVertical = TextAlignVertical::Middle
+        },
+
+        // --- Selection / Cursor ---
+		.cursor = {},
+        .highlight = { .fillColor = {88, 101, 242, 140} }    // Translucent Indigo for text selection
+    };
+
+	inline constexpr TextBoxStyle TechnicalTextBox {
         // --- Panel States ---
         .normalPanel = {
             .fillColor = {14, 16, 20, 255},      // Very dark inset background
