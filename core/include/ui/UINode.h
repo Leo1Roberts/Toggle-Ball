@@ -21,6 +21,7 @@ enum class UIResponse {
 class UIManager;
 
 class UINode : public ICursorProvider {
+	friend UIManager;
 public:
 	~UINode() override = default;
 
@@ -120,6 +121,13 @@ protected:
 
 private:
 	virtual void doUpdate(microseconds dt) {}
+
+	void removeChild(UINode* c) {
+		auto it = std::ranges::find(children, c, &std::unique_ptr<UINode>::get);
+		if (it != children.end())
+			children.erase(it);
+		invalidateLayout();
+	}
 
 	UINode* parent = nullptr;
 	std::vector<std::unique_ptr<UINode>> children;

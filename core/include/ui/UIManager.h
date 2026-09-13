@@ -37,6 +37,7 @@ public:
 	T* addNode(Args&&... args) { return rootNode.addChild<T>(std::forward<Args>(args)...); }
 
 	void removeAllChildrenOfNode(UINode* node);
+	void removeNode(UINode* node);
 
 	[[nodiscard]] float getScale() const { return dpiScale * Settings::Sizes.uiScale; }
 	[[nodiscard]] glm::vec2 getLogicalScreenSize() const { return logicalScreenSize; }

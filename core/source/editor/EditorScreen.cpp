@@ -25,8 +25,8 @@ const glm::vec3 sunDirection = normalize(glm::vec3(2, 2, 3));
 static glm::vec3 viewSunDirection;
 
 
-EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& testLevelCallback) :
-	scene(std::move(levelToEdit), [this] { updateEphemeralMeshes(); }) {
+EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& testLevelCallback, const std::function<void()>& openLevelCallback) :
+	openLevelCallback(openLevelCallback), scene(std::move(levelToEdit), [this] { updateEphemeralMeshes(); }) {
 	camera.reset(scene.level->arenaWidth, scene.level->arenaHeight);
 	viewUpDirection = camera.getWorldToViewRotationMatrix() * upDirection;
 	viewSunDirection = camera.getWorldToViewRotationMatrix() * sunDirection;
@@ -47,6 +47,19 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		.widthMode  = SizingMode::Wrap,
 		.heightMode = SizingMode::Wrap,
 	});
+
+	auto open = menuContent->addChild<UIButton>("Open", Theme::MenuBarButton);
+	open->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = {6.f, 4.f}
+	});
+	open->setTextLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+	open->setOnTrigger([this] { requestOpenLevel(); });
 
 	auto levelNameContainer = menuContent->addChild<UIHorizontalList>(0.f, 0.f);
 	levelNameContainer->setLayout({
@@ -433,6 +446,9 @@ void EditorScreen::processEvent(const Event& event) {
 				switch (*actionCode) {
 				case ActionCode::Save:
 					scene.saveLevel();
+					break;
+				case ActionCode::Open:
+					requestOpenLevel();
 					break;
 				case ActionCode::CycleToolMode:
 					if (currentMode == &transformMode)
@@ -1001,6 +1017,12 @@ void EditorScreen::updateObstacleShapePropertiesList() {
 	}
 
 	obstacleShapePropertiesListValid = true;
+}
+
+
+void EditorScreen::requestOpenLevel() {
+	if (scene.isSaved())
+		openLevelCallback();
 }
 
 

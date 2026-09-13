@@ -25,6 +25,7 @@ namespace AssetManager {
 
 	[[nodiscard]] bool exists(const std::string& path);
 	std::vector<std::string> getFileList(const std::string& directory, const std::string& extension);
+	[[nodiscard]] std::string findAvailableFileName(const std::string& directory, const std::string& desiredName, const std::string& extension);
 }
 
 #endif

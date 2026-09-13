@@ -1,9 +1,11 @@
 #include "game/LevelBrowserScreen.h"
 
-#include "utilities/AssetManager.h"
 #include "ui/Theme.h"
 #include "ui/UIButton.h"
 #include "ui/UIList.h"
+#include "utilities/AssetManager.h"
+
+#include <ranges>
 
 
 LevelBrowserScreen::LevelBrowserScreen(const std::function<void(std::string)>& playLevelCallback) {
@@ -11,7 +13,7 @@ LevelBrowserScreen::LevelBrowserScreen(const std::function<void(std::string)>& p
 	list->setLayout({ .padding = glm::vec2(60.f), });
 
 	auto levels = AssetManager::getFileList("levels", ".lvl");
-	for (const auto& levelName : levels) {
+	for (const auto& levelName : std::views::reverse(levels)) {
 		auto button = list->addChild<UIButton>(levelName, Theme::PrimaryButton);
 		button->setLayout({
 			.widthMode = SizingMode::Stretch,

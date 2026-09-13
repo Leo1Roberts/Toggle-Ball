@@ -2,11 +2,6 @@
 
 #include "level/Level.h"
 
-EditorMode::EditorMode() {
-	editorScreen = std::make_unique<EditorScreen>(LevelDescriptor::load("Level 1"), [this] { testLevel(); });
-	activeScreen = editorScreen.get();
-}
-
 
 void EditorMode::processEvent(const Event& event) {
 	if (auto* key = std::get_if<KeyEvent>(&event)) {
@@ -27,6 +22,18 @@ void EditorMode::processEvent(const Event& event) {
 	activeScreen->processEvent(event);
 }
 
+
+void EditorMode::openEntryScreen() {
+	editorEntryScreen = std::make_unique<EditorEntryScreen>([this](const std::string& levelName) { startEditing(levelName); });
+	resizeToMatchActiveScreen(editorEntryScreen.get());
+	activeScreen = editorEntryScreen.get();
+}
+
+void EditorMode::startEditing(const std::string& levelName) {
+	editorScreen = std::make_unique<EditorScreen>(LevelDescriptor::load(levelName), [this] { testLevel(); }, [this] { openEntryScreen(); });
+	resizeToMatchActiveScreen(editorScreen.get());
+	activeScreen = editorScreen.get();
+}
 
 void EditorMode::resumeEditing() {
 	resizeToMatchActiveScreen(editorScreen.get());

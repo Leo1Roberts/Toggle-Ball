@@ -74,6 +74,64 @@ namespace Theme {
 		}
 	};
 
+	inline constexpr ButtonStyle NegativeButton {
+		// --- Panel States ---
+		.normalPanel = {
+			.fillColor = {239, 68, 68, 255},     // Crimson Red
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 8.0f,
+			.strokeWidth = 0.0f
+		},
+		.hoveredPanel = {
+			.fillColor = {220, 38, 38, 255},     // Darker Red
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 8.0f,
+			.strokeWidth = 0.0f
+		},
+		.pressedPanel = {
+			.fillColor = {185, 28, 28, 255},     // Deep Burgundy Red
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 8.0f,
+			.strokeWidth = 0.0f
+		},
+		.disabledPanel = {
+			.fillColor = {60, 40, 40, 128},      // Dimmed greyed-out red
+			.strokeColor = {0, 0, 0, 0},
+			.cornerRadius = 8.0f,
+			.strokeWidth = 0.0f
+		},
+
+		// --- Text States ---
+		.normalText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 20.f,
+			.color = Color::White,
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.hoveredText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 20.f,
+			.color = Color::White,
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.pressedText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 20.f,
+			.color = {254, 226, 226, 255},       // Soft light pink tint
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		},
+		.disabledText = {
+			.font = FontId::Bahnschrift,
+			.fontSize = 20.f,
+			.color = {140, 120, 120, 255},       // Muted warm grey
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		}
+	};
+
 	inline constexpr PanelStyle GlassSurface {
 		.fillColor = {18, 20, 26, 180},      // Translucent dark background
 		.strokeColor = {255, 255, 255, 30},  // Soft semi-transparent white highlight

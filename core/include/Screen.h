@@ -10,9 +10,9 @@ class Screen : public ICursorProvider {
 public:
 	~Screen() override = default;
 
-	virtual void processEvent(const Event& event) = 0;
-	virtual void update(microseconds dt) = 0;
-	virtual void render() = 0;
+	virtual void processEvent(const Event& event) { uiManager.processEvent(event); }
+	virtual void update(microseconds dt) { uiManager.update(dt); }
+	virtual void render() { uiManager.render(); }
 
 	void resize(int screenWidth, int screenHeight, float screenDPIScale) {
 		width = screenWidth;
@@ -36,7 +36,7 @@ protected:
 	UIManager uiManager;
 
 private:
-	virtual void doResize() {}
+	virtual void doResize() { uiManager.resize(width, height, dpiScale); }
 };
 
 #endif // SCREEN_H

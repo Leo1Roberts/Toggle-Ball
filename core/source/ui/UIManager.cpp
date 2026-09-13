@@ -260,9 +260,14 @@ void UIManager::render() {
 void UIManager::removeAllChildrenOfNode(UINode* node) {
 	for (auto& child : node->getChildren())
 		unregisterNode(child.get());
-
 	node->clearChildren();
 }
+void UIManager::removeNode(UINode* node) {
+	unregisterNode(node);
+	if (auto parent = node->getParent())
+		parent->removeChild(node);
+}
+
 void UIManager::unregisterNode(UINode* node) {
 	if (focusedNode == node)
 		focusedNode = nullptr;

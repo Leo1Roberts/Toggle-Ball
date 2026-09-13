@@ -17,7 +17,7 @@ class UIVerticalList;
 
 class EditorScreen : public Screen {
 public:
-	explicit EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& testLevelCallback);
+	EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& testLevelCallback, const std::function<void()>& openLevelCallback);
 
 	void processEvent(const Event& event) override;
 	void update(microseconds dt) override;
@@ -40,6 +40,8 @@ private:
 	void updateObstacleMotionPropertiesList();
 	void updateObstacleShapePropertiesList();
 
+	std::function<void()> openLevelCallback;
+
 	EditorScene scene;
 	Camera camera;
 	GizmoRenderer gizmoRenderer{uiManager, camera};
@@ -51,6 +53,7 @@ private:
 	UIContainer* viewportUI;
 
 	UIText* unsavedIndicator;
+	void requestOpenLevel();
 
 	TransformMode transformMode{ctx};
 	ShapeMode shapeMode{ctx};

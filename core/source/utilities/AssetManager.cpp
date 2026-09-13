@@ -1,5 +1,6 @@
 #include "utilities/AssetManager.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 
@@ -68,10 +69,11 @@ namespace AssetManager {
 
 
 	bool remove(const std::string& path) {
-#if defined(PLATFORM_DESKTOP)
+#if defined(PLATFORM_ANDROID)
+		return false;
+#else
 		return std::filesystem::remove(std::string(ASSETS_PATH) + path);
 #endif
-		return false;
 	}
 
 
@@ -114,4 +116,35 @@ namespace AssetManager {
 
 		return fileList;
 	}
-}
+
+
+	std::string findAvailableFileName(const std::string& directory, const std::string& desiredName, const std::string& extension) {
+#if defined(PLATFORM_ANDROID)
+		return "";
+#else
+		auto existingNames = getFileList(directory, extension);
+
+		bool exactMatchFound = false;
+		for (const auto& existingName : existingNames)
+			if (existingName == desiredName) {
+				exactMatchFound = true;
+				break;
+			}
+
+		if (!exactMatchFound)
+			return desiredName;
+
+		int maxNumber = 0;
+		auto prefix = desiredName + " ";
+
+		for (const auto& existingName : existingNames)
+			if (existingName.starts_with(prefix)) {
+				auto suffix = existingName.substr(prefix.length());
+				if (!suffix.empty() && std::ranges::all_of(suffix, isdigit))
+					maxNumber = std::max(maxNumber, std::stoi(suffix));
+			}
+
+		return desiredName + " " + std::to_string(maxNumber + 1);
+#endif
+	}
+} // namespace AssetManager
