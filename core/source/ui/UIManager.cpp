@@ -46,10 +46,12 @@ bool UIManager::changeFocus(UINode* newFocus, bool cancel) {
 bool UIManager::processEvent(const Event& event) {
 	if (std::holds_alternative<KeyEvent>(event) ||
 		std::holds_alternative<char>(event)) {
-		if (focusedNode) {
-			switch (focusedNode->processEvent(event)) {
+		auto node = focusedNode;
+		while (node)
+			switch (node->processEvent(event)) {
 			case UIResponse::Ignored:
 			case UIResponse::ConsumedNeedsHoverUpdate:
+				node = node->getParent();
 				break;
 			case UIResponse::Consumed:
 				return true;
@@ -60,7 +62,6 @@ bool UIManager::processEvent(const Event& event) {
 				changeFocus(nullptr, true);
 				return true;
 			}
-		}
 		return false;
 	}
 

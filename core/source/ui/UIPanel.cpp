@@ -45,22 +45,22 @@ bool UIPanel::containsPrecise(glm::vec2 point) const {
 	float halfWidth = bounds.width() * 0.5f;
 	float halfHeight = bounds.height() * 0.5f;
 
-	float centerX = bounds.x() + halfWidth;
-	float centerY = bounds.y() + halfHeight;
+	float centreX = bounds.x() + halfWidth;
+	float centreY = bounds.y() + halfHeight;
 
-	float dx = std::abs(point.x - centerX);
-	float dy = std::abs(point.y - centerY);
+	float dx = std::abs(point.x - centreX);
+	float dy = std::abs(point.y - centreY);
 
 	float cornerRadius = std::min(panelStyle.cornerRadius, bounds.height());
 
-	float circleCenterX = halfWidth - cornerRadius;
-	float circleCenterY = halfHeight - cornerRadius;
+	float circleCentreX = halfWidth - cornerRadius;
+	float circleCentreY = halfHeight - cornerRadius;
 
-	if (dx <= circleCenterX || dy <= circleCenterY)
+	if (dx <= circleCentreX || dy <= circleCentreY)
 		return true;
 
-	float cornerDx = dx - circleCenterX;
-	float cornerDy = dy - circleCenterY;
+	float cornerDx = dx - circleCentreX;
+	float cornerDy = dy - circleCentreY;
 
 	return (cornerDx * cornerDx + cornerDy * cornerDy) <= (cornerRadius * cornerRadius);
 }

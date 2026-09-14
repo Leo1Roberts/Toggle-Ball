@@ -8,6 +8,7 @@
 #include "ui/Theme.h"
 #include "ui/UICheckbox.h"
 #include "ui/UIContainer.h"
+#include "ui/UIDialogue.h"
 #include "ui/UIList.h"
 #include "ui/UISegmentedControl.h"
 #include "ui/UITextBox.h"
@@ -1023,6 +1024,69 @@ void EditorScreen::updateObstacleShapePropertiesList() {
 void EditorScreen::requestOpenLevel() {
 	if (scene.isSaved())
 		openLevelCallback();
+	else {
+		auto dialogue = uiManager.addNode<UIDialogue>();
+
+		auto closeDialogue = [this, dialogue] { uiManager.removeNode(dialogue); };
+
+		dialogue->setOnReturn(closeDialogue);
+		dialogue->setOnConfirm(closeDialogue);
+		dialogue->setLayout({
+			.widthMode  = SizingMode::Absolute, .width = 400.f,
+			.heightMode = SizingMode::Wrap,
+			.padding = {15.f, 20.f}
+		});
+
+		auto content = dialogue->addChild<UIVerticalList>(20.f, 0.f);
+		content->setLayout({
+			.anchor = Anchor::Centre,
+			.widthMode  = SizingMode::Stretch,
+			.heightMode = SizingMode::Wrap,
+		});
+
+		auto title = content->addChild<UIText>("There are unsaved changes", TextStyle{
+			.font = FontId::Bahnschrift,
+			.fontSize = 32.f,
+			.color = Color::LightGrey,
+			.alignHorizontal = TextAlignHorizontal::Centre,
+			.alignVertical = TextAlignVertical::Middle
+		});
+		title->setLayout({ .heightMode = SizingMode::Wrap });
+
+		auto buttonsRow = content->addChild<UIHorizontalList>(0.f, 0.f);
+		buttonsRow->setLayout({
+			.widthMode  = SizingMode::Stretch,
+			.heightMode = SizingMode::Wrap,
+		});
+
+		auto exit = buttonsRow->addChild<UIButton>("Exit anyway", Theme::SecondaryOutline);
+		exit->setLayout({
+			.widthMode  = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+			.padding = glm::vec2(10.f)
+		});
+		exit->setTextLayout({
+			.widthMode  = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+		});
+		exit->setOnTrigger(openLevelCallback);
+
+		buttonsRow->addChild<UIContainer>(); // Spacer
+
+		auto cancel = buttonsRow->addChild<UIButton>("Cancel", Theme::PrimaryButton);
+		cancel->setLayout({
+			.widthMode  = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+			.padding = glm::vec2(10.f)
+		});
+		cancel->setTextLayout({
+			.widthMode  = SizingMode::Wrap,
+			.heightMode = SizingMode::Wrap,
+		});
+		cancel->setOnTrigger(closeDialogue);
+
+		uiManager.changeFocus(dialogue, true);
+	}
 }
 
 

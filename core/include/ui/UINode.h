@@ -27,11 +27,8 @@ public:
 
 	template <typename T>
 	T* addChild(std::unique_ptr<T> child) {
-		child->parent = this;
-		child->setChangeFocusCallback(changeFocusCallback);
 		T* ptr = child.get();
-		children.push_back(std::move(child));
-		invalidateLayout();
+		addChildNode(std::move(child));
 		return ptr;
 	}
 	template <typename T, typename... Args>
@@ -110,6 +107,13 @@ public:
 
 protected:
 	UINode() = default;
+
+	virtual void addChildNode(std::unique_ptr<UINode> child) {
+		child->parent = this;
+		child->setChangeFocusCallback(changeFocusCallback);
+		children.push_back(std::move(child));
+		invalidateLayout();
+	}
 
 	[[nodiscard]] virtual bool containsPrecise(glm::vec2 point) const { return true; }
 

@@ -7,7 +7,10 @@
 class UIList : public UINode {
 public:
 	UIList(bool vertical, float spacing, float scrollSpeed)
-		: vertical(vertical), spacing(spacing), scrollSpeed(scrollSpeed) {}
+		: vertical(vertical), spacing(spacing), scrollSpeed(scrollSpeed) {
+		if (scrollSpeed == 0.f)
+			setHitTestable(false);
+	}
 
 	glm::vec2 measure() override;
 	void arrangeChildren(Rectangle innerBounds) override;
