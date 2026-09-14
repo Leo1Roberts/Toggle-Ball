@@ -42,32 +42,32 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		.padding = glm::vec2(4.f)
 	});
 
-	auto menuContent = menuBar->addChild<UIHorizontalList>(0.f, 0.f);
+	auto menuContent = menuBar->addChild<UIHorizontalList>(3.f, 0.f);
 	menuContent->setLayout({
 		.anchor = Anchor::Centre,
 		.widthMode  = SizingMode::Wrap,
 		.heightMode = SizingMode::Wrap,
 	});
 
-	auto open = menuContent->addChild<UIButton>("Open", Theme::MenuBarButton);
-	open->setLayout({
+	auto openButton = menuContent->addChild<UIButton>("Open", Theme::MenuBarButton);
+	openButton->setLayout({
 		.anchor = Anchor::Centre,
 		.widthMode  = SizingMode::Wrap,
 		.heightMode = SizingMode::Wrap,
 		.padding = {6.f, 4.f}
 	});
-	open->setTextLayout({
+	openButton->setTextLayout({
 		.widthMode  = SizingMode::Wrap,
 		.heightMode = SizingMode::Wrap,
 	});
-	open->setOnTrigger([this] { requestOpenLevel(); });
+	openButton->setOnTrigger([this] { requestOpenLevel(); });
 
 	auto levelNameContainer = menuContent->addChild<UIHorizontalList>(0.f, 0.f);
 	levelNameContainer->setLayout({
 		.anchor = Anchor::Centre,
 		.widthMode  = SizingMode::Wrap,
 		.heightMode = SizingMode::Wrap,
-		.margin = {10.f, 0.f}
+		.margin = {7.f, 0.f}
 	});
 
 	unsavedIndicator = levelNameContainer->addChild<UIText>("*", Theme::DiscreetTextBox.normalText);
@@ -81,7 +81,7 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 	levelName->setOnConfirm([this](const UITextBox& tb) {
 		const auto& newName = tb.getValue<const std::string&>();
 		if (!newName.empty() && newName != scene.level->name)
-			scene.renameLevel(newName);
+			scene.renameLevelFile(newName);
 	});
 	levelName->setLayout({
 		.anchor = Anchor::Centre,
@@ -90,18 +90,31 @@ EditorScreen::EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const s
 		.padding = {4.f, 0.f}
 	});
 
-	auto save = menuContent->addChild<UIButton>("Save", Theme::MenuBarButton);
-	save->setLayout({
+	auto saveButton = menuContent->addChild<UIButton>("Save", Theme::MenuBarButton);
+	saveButton->setLayout({
 		.anchor = Anchor::Centre,
 		.widthMode  = SizingMode::Wrap,
 		.heightMode = SizingMode::Wrap,
 		.padding = {6.f, 4.f}
 	});
-	save->setTextLayout({
+	saveButton->setTextLayout({
 		.widthMode  = SizingMode::Wrap,
 		.heightMode = SizingMode::Wrap,
 	});
-	save->setOnTrigger([this] { scene.saveLevel(); });
+	saveButton->setOnTrigger([this] { scene.saveLevel(); });
+
+	auto saveAsButton = menuContent->addChild<UIButton>("Save as", Theme::MenuBarButton);
+	saveAsButton->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = {6.f, 4.f}
+	});
+	saveAsButton->setTextLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+	saveAsButton->setOnTrigger([this] { saveAs(); });
 
 
 	auto subLayout = layout->addChild<UIHorizontalList>(0.f, 0.f);
@@ -447,6 +460,9 @@ void EditorScreen::processEvent(const Event& event) {
 				switch (*actionCode) {
 				case ActionCode::Save:
 					scene.saveLevel();
+					break;
+				case ActionCode::SaveAs:
+					saveAs();
 					break;
 				case ActionCode::Open:
 					requestOpenLevel();
@@ -1020,6 +1036,90 @@ void EditorScreen::updateObstacleShapePropertiesList() {
 	obstacleShapePropertiesListValid = true;
 }
 
+
+void EditorScreen::saveAs() {
+	auto dialogue = uiManager.addNode<UIDialogue>();
+	dialogue->setLayout({
+		.widthMode  = SizingMode::Absolute, .width = 400.f,
+		.heightMode = SizingMode::Wrap,
+		.padding = {15.f, 20.f}
+	});
+
+	auto content = dialogue->addChild<UIVerticalList>(20.f, 0.f);
+	content->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Stretch,
+		.heightMode = SizingMode::Wrap,
+	});
+
+	auto title = content->addChild<UIText>("Save as", TextStyle{
+		.font = FontId::Bahnschrift,
+		.fontSize = 32.f,
+		.color = Color::LightGrey,
+		.alignHorizontal = TextAlignHorizontal::Centre,
+		.alignVertical = TextAlignVertical::Middle
+	});
+	title->setLayout({ .heightMode = SizingMode::Wrap });
+
+	auto textBox = content->addChild<UITextBox>(TextInputBuffer::File, Theme::PrimaryTextBox);
+	textBox->setLayout({
+		.widthMode  = SizingMode::Stretch,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(10.f)
+	});
+	textBox->setInitialText(scene.level->name);
+
+	auto closeDialogue = [this, dialogue] { uiManager.removeNode(dialogue); };
+	auto save = [this, textBox, dialogue] {
+		auto oldName = scene.level->name;
+		auto name = textBox->getValue<const std::string&>();
+		if (!AssetManager::exists("levels/" + name + ".lvl")) {
+			scene.renameLevel(name);
+			if (scene.saveLevel())
+				uiManager.removeNode(dialogue);
+			else
+				scene.renameLevel(oldName);
+		}
+	};
+
+	dialogue->setOnReturn(closeDialogue);
+	dialogue->setOnConfirm(save);
+
+
+	auto buttonsRow = content->addChild<UIHorizontalList>(0.f, 0.f);
+	buttonsRow->setLayout({
+		.widthMode  = SizingMode::Stretch,
+		.heightMode = SizingMode::Wrap,
+	});
+
+	auto cancel = buttonsRow->addChild<UIButton>("Cancel", Theme::SecondaryOutline);
+	cancel->setLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(10.f)
+	});
+	cancel->setTextLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+	cancel->setOnTrigger(closeDialogue);
+
+	buttonsRow->addChild<UIContainer>(); // Spacer
+
+	auto saveButton = buttonsRow->addChild<UIButton>("Save", Theme::PrimaryButton);
+	saveButton->setLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(10.f)
+	});
+	saveButton->setTextLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+	saveButton->setOnTrigger(save);
+
+	uiManager.changeFocus(textBox, true);
+}
 
 void EditorScreen::requestOpenLevel() {
 	if (scene.isSaved())

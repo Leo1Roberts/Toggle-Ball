@@ -146,12 +146,30 @@ void EditorScene::commitSelectionChange() {
 }
 
 
-void EditorScene::saveLevel() {
-	if (level->save())
+bool EditorScene::saveLevel() {
+	if (level->save()) {
 		savedNode = currentNode;
+		return true;
+	}
+	return false;
 }
 
-bool EditorScene::renameLevel(const std::string& newName) {
+void EditorScene::renameLevel(const std::string& newName) {
+	level->name = newName;
+
+	UndoNode* node = currentNode.get();
+	do {
+		node->level.name = newName;
+		node = node->previous.get();
+	} while (node);
+
+	node = currentNode->next.get();
+	while (node) {
+		node->level.name = newName;
+		node = node->next.get();
+	}
+}
+bool EditorScene::renameLevelFile(const std::string& newName) {
 	if (AssetManager::exists("levels/" + newName + ".lvl"))
 		return false;
 

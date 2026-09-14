@@ -53,6 +53,7 @@ private:
 	UIContainer* viewportUI;
 
 	UIText* unsavedIndicator;
+	void saveAs();
 	void requestOpenLevel();
 
 	TransformMode transformMode{ctx};

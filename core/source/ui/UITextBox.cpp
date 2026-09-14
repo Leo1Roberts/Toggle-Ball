@@ -20,6 +20,11 @@ UITextBox::UITextBox(const TextInputBuffer::Validator& validator, const TextBoxS
 	updateAppearance();
 }
 
+void UITextBox::setInitialText(const std::string& text) {
+	inputBuffer.setText(text);
+	updateText();
+}
+
 
 void UITextBox::arrangeChildren(Rectangle innerBounds) {
 	UIPanel::arrangeChildren(innerBounds);

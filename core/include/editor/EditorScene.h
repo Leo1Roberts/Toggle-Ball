@@ -67,9 +67,10 @@ public:
 	void commitLevelChange();
 	void commitSelectionChange();
 
-	void saveLevel();
+	bool saveLevel();
 	[[nodiscard]] bool isSaved() const { return savedNode == currentNode; }
-	bool renameLevel(const std::string& newName);
+	void renameLevel(const std::string& newName);
+	bool renameLevelFile(const std::string& newName);
 
 	void selectAll();
 	void deselectAll();
