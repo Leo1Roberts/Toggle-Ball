@@ -7,6 +7,9 @@
 class EditorEntryScreen : public Screen {
 public:
 	explicit EditorEntryScreen(const std::function<void(const std::string&)>& editLevelCallback);
+
+private:
+	void requestDeleteLevel(const std::string& levelName, UINode* listItem);
 };
 
 

@@ -3,6 +3,7 @@
 #include "level/Level.h"
 #include "ui/Theme.h"
 #include "ui/UIButton.h"
+#include "ui/UIDialogue.h"
 #include "ui/UIList.h"
 #include "utilities/AssetManager.h"
 
@@ -49,8 +50,111 @@ EditorEntryScreen::EditorEntryScreen(const std::function<void(const std::string&
 			.margin = glm::vec2(10.f)
 		});
 		deleteButton->setOnTrigger([this, levelName, item] {
-			if (AssetManager::remove("levels/" + levelName + ".lvl"))
-				uiManager.removeNode(item);
+			requestDeleteLevel(levelName, item);
 		});
 	}
+}
+
+
+void EditorEntryScreen::requestDeleteLevel(const std::string& levelName, UINode* listItem) {
+	auto dialogue = uiManager.addNode<UIDialogue>();
+
+	auto closeDialogue = [this, dialogue] { uiManager.removeNode(dialogue); };
+	auto deleteLevel = [this, levelName, listItem, dialogue] {
+		if (AssetManager::remove("levels/" + levelName + ".lvl"))
+			uiManager.removeNode(listItem);
+		uiManager.removeNode(dialogue);
+	};
+
+	dialogue->setOnReturn(closeDialogue);
+	dialogue->setOnConfirm(deleteLevel);
+	dialogue->setLayout({
+		.widthMode  = SizingMode::Absolute, .width = 400.f,
+		.heightMode = SizingMode::Wrap,
+		.padding = {15.f, 20.f}
+	});
+
+	auto content = dialogue->addChild<UIVerticalList>(20.f, 0.f);
+	content->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Stretch,
+		.heightMode = SizingMode::Wrap,
+	});
+
+	auto title = content->addChild<UIHorizontalList>(3.f, 0.f);
+	title->setLayout({
+		.anchor = Anchor::Centre,
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+	auto title_p1 = title->addChild<UIText>("Delete ", TextStyle{
+		.font = FontId::Bahnschrift,
+		.fontSize = 32.f,
+		.color = Color::LightGrey,
+		.alignHorizontal = TextAlignHorizontal::Centre,
+		.alignVertical = TextAlignVertical::Middle
+	});
+	title_p1->setLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap
+	});
+
+	auto title_p2 = title->addChild<UIText>(levelName, TextStyle{
+		.font = FontId::Bahnschrift,
+		.fontSize = 32.f,
+		.color = Color::White,
+		.alignHorizontal = TextAlignHorizontal::Centre,
+		.alignVertical = TextAlignVertical::Middle
+	});
+	title_p2->setLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap
+	});
+
+	auto title_p3 = title->addChild<UIText>("?", TextStyle{
+		.font = FontId::Bahnschrift,
+		.fontSize = 32.f,
+		.color = Color::LightGrey,
+		.alignHorizontal = TextAlignHorizontal::Centre,
+		.alignVertical = TextAlignVertical::Middle
+	});
+	title_p3->setLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap
+	});
+
+
+	auto buttonsRow = content->addChild<UIHorizontalList>(0.f, 0.f);
+	buttonsRow->setLayout({
+		.widthMode  = SizingMode::Stretch,
+		.heightMode = SizingMode::Wrap,
+	});
+
+	auto cancel = buttonsRow->addChild<UIButton>("Cancel", Theme::SecondaryOutline);
+	cancel->setLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(10.f)
+	});
+	cancel->setTextLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+	cancel->setOnTrigger(closeDialogue);
+
+	buttonsRow->addChild<UIContainer>(); // Spacer
+
+	auto deleteButton = buttonsRow->addChild<UIButton>("Delete", Theme::NegativeButton);
+	deleteButton->setLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+		.padding = glm::vec2(10.f)
+	});
+	deleteButton->setTextLayout({
+		.widthMode  = SizingMode::Wrap,
+		.heightMode = SizingMode::Wrap,
+	});
+	deleteButton->setOnTrigger(deleteLevel);
+
+	uiManager.changeFocus(dialogue, true);
 }
