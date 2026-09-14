@@ -52,6 +52,7 @@ public:
 	virtual void onPointerEntered() {}
 	virtual void onPointerExited() {}
 
+	virtual UIResponse interceptFocusedChildEvent(const Event& event) { return UIResponse::Ignored; }
 	virtual UIResponse processEvent(const Event& event) { return UIResponse::Ignored; }
 
 	void update(microseconds dt) {

@@ -46,12 +46,24 @@ bool UIManager::changeFocus(UINode* newFocus, bool cancel) {
 bool UIManager::processEvent(const Event& event) {
 	if (std::holds_alternative<KeyEvent>(event) ||
 		std::holds_alternative<char>(event)) {
+		std::vector<UINode*> focusableAncestors;
 		auto node = focusedNode;
-		while (node)
-			switch (node->processEvent(event)) {
+		while (node) {
+			if (node->isFocusable())
+				focusableAncestors.push_back(node);
+			node = node->getParent();
+		}
+
+		for (auto n : std::views::reverse(focusableAncestors)) {
+			auto response = n->interceptFocusedChildEvent(event);
+			if (response != UIResponse::Ignored)
+				return true;
+		}
+
+		for (auto n : focusableAncestors)
+			switch (n->processEvent(event)) {
 			case UIResponse::Ignored:
 			case UIResponse::ConsumedNeedsHoverUpdate:
-				node = node->getParent();
 				break;
 			case UIResponse::Consumed:
 				return true;
@@ -62,6 +74,7 @@ bool UIManager::processEvent(const Event& event) {
 				changeFocus(nullptr, true);
 				return true;
 			}
+
 		return false;
 	}
 

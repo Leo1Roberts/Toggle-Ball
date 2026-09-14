@@ -8,9 +8,10 @@ class UIDialogue : public UIPanel {
 public:
 	UIDialogue();
 
-	void setOnReturn(const std::function<void()>& callback) { onReturnCallback = dialogue->onReturnCallback = callback; }
-	void setOnConfirm(const std::function<void()>& callback) { onConfirmCallback = dialogue->onConfirmCallback = callback; }
+	void setOnReturn(const std::function<void()>& callback) { onReturnCallback = callback; }
+	void setOnConfirm(const std::function<void()>& callback) { onConfirmCallback = callback; }
 
+	UIResponse interceptFocusedChildEvent(const Event& event) override;
 	UIResponse processEvent(const Event& event) override;
 
 	void setLayout(Layout l) override;
@@ -28,10 +29,7 @@ protected:
 private:
 	struct DialogueBox : UIPanel {
 		explicit DialogueBox(const PanelStyle& style) : UIPanel(style) {}
-		UIResponse processEvent(const Event& event) override;
 		[[nodiscard]] bool isFocusable() const override { return true; }
-		std::function<void()> onReturnCallback;
-		std::function<void()> onConfirmCallback;
 	};
 
 	bool initialised = false;

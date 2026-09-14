@@ -17,35 +17,29 @@ UIDialogue::UIDialogue() {
 }
 
 
-UIResponse UIDialogue::DialogueBox::processEvent(const Event& event) {
+UIResponse UIDialogue::interceptFocusedChildEvent(const Event& event) {
 	if (auto key = std::get_if<KeyEvent>(&event)) {
 		if (key->action == KeyAction::Down) {
 			if (key->chord.code == KeyCode::Escape) {
 				if (onReturnCallback)
 					onReturnCallback();
-			} else if (key->chord.code == KeyCode::Enter) {
+				return UIResponse::Consumed;
+			}
+			if (key->chord.code == KeyCode::Enter) {
 				if (onConfirmCallback)
 					onConfirmCallback();
+				return UIResponse::Consumed;
 			}
 		}
-	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
-		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)
-			return UIResponse::Ignored;
 	}
-	return UIResponse::Consumed;
+	return UIResponse::Ignored;
 }
 UIResponse UIDialogue::processEvent(const Event& event) {
-	if (auto key = std::get_if<KeyEvent>(&event)) {
-		if (key->action == KeyAction::Down) {
-			if (key->chord.code == KeyCode::Escape) {
-				if (onReturnCallback)
-					onReturnCallback();
-			} else if (key->chord.code == KeyCode::Enter) {
-				if (onConfirmCallback)
-					onConfirmCallback();
-			}
-		}
-	} else if (auto* pointer = std::get_if<PointerEvent>(&event)) {
+	auto response = interceptFocusedChildEvent(event);
+	if (response != UIResponse::Ignored)
+		return response;
+
+	if (auto* pointer = std::get_if<PointerEvent>(&event)) {
 		if (pointer->action == PointerAction::Move || pointer->action == PointerAction::Drag)
 			return UIResponse::Ignored;
 
