@@ -22,8 +22,13 @@ void EditorMode::processEvent(const Event& event) {
 	activeScreen->processEvent(event);
 }
 
+bool EditorMode::requestQuit(const std::function<void()>& quitCallback) {
+	return editorScreen ? editorScreen->requestQuit(quitCallback) : true;
+}
+
 
 void EditorMode::openEntryScreen() {
+	editorScreen.reset();
 	editorEntryScreen = std::make_unique<EditorEntryScreen>([this](const std::string& levelName) { startEditing(levelName); });
 	resizeToMatchActiveScreen(editorEntryScreen.get());
 	activeScreen = editorEntryScreen.get();

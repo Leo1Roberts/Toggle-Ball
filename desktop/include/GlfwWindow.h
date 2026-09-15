@@ -21,8 +21,6 @@ public:
 
 	[[nodiscard]] bool isFullscreen() const override { return currentlyFullscreen; }
 
-	void close() override { glfwSetWindowShouldClose(windowHandle, GLFW_TRUE); }
-
 	void toggleFullscreen() override;
 
 	void updateWindowSize() override { glfwGetFramebufferSize(windowHandle, &config.width, &config.height); }

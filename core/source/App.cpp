@@ -41,7 +41,10 @@ App::App(std::unique_ptr<AbstractWindow> appWindow, std::unique_ptr<AppMode> app
 	overlayUI.resize(window->config.width, window->config.height, window->config.dpiScale);
 }
 
-void App::tick(microseconds dt) {
+bool App::tick(microseconds dt) {
+	if (quit)
+		return false;
+
 	glViewport(0, 0, window->config.width, window->config.height);
 	glScissor(0, 0, window->config.width, window->config.height);
 
@@ -60,6 +63,8 @@ void App::tick(microseconds dt) {
 		window->setCursor(*c);
 	else
 		window->setCursor();
+
+	return true;
 }
 
 
@@ -85,7 +90,7 @@ void App::processEvent(const Event& event) {
 			if (key->action == KeyAction::Down) {
 				switch (*actionCode) {
 				case ActionCode::Quit:
-					window->close();
+					requestQuit();
 					return;
 				case ActionCode::Fullscreen:
 					window->toggleFullscreen();
@@ -97,4 +102,9 @@ void App::processEvent(const Event& event) {
 	}
 
 	content->processEvent(event);
+}
+
+void App::requestQuit() {
+	if (content->requestQuit([this] { quit = true; }))
+		quit = true;
 }

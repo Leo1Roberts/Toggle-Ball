@@ -410,12 +410,19 @@ int main() {
 
 	microseconds t1 = now();
 
-	do {
+	while (true) {
 		glfwPollEvents();
 
+		if (glfwWindowShouldClose(rawWindow))
+			app.requestQuit();
+
 		microseconds t2 = now();
-		app.tick(t2 - t1);
+		if (app.tick(t2 - t1))
+			glfwSetWindowShouldClose(rawWindow, false);
+		else
+			break;
 		t1 = t2;
+
 		glfwSwapBuffers(rawWindow);
-	} while (!glfwWindowShouldClose(rawWindow));
+	}
 }

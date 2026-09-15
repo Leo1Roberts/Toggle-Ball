@@ -10,13 +10,11 @@ struct WindowConfiguration {
 	float dpiScale = 1.f;
 };
 
-class AbstractWindow {
-public:
+struct AbstractWindow {
 	virtual ~AbstractWindow() = default;
 
 	virtual void toggleFullscreen() = 0;
 	[[nodiscard]] virtual bool isFullscreen() const = 0;
-	virtual void close() = 0;
 
 	virtual void updateWindowSize() = 0;
 	virtual void updateWindowDPIScale() = 0;
@@ -29,7 +27,7 @@ public:
 
 	WindowConfiguration config{};
 	Cursor activeCursor{.style = Cursor::Style::COUNT}; // Make sure default cursor is generated
-	int cursorSize;
+	int cursorSize{};
 };
 
 

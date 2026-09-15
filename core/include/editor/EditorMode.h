@@ -12,6 +12,7 @@ public:
 	EditorMode() { openEntryScreen(); }
 
 	void processEvent(const Event& event) override;
+	bool requestQuit(const std::function<void()>& quitCallback) override;
 
 private:
 	void startEditing(const std::string& levelName);

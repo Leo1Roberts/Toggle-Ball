@@ -250,7 +250,8 @@ void android_main(struct android_app *androidApp) {
             processInputEvents(androidApp, app);
 
             microseconds t2 = now();
-            app->tick(t2 - t1);
+            if (!app->tick(t2 - t1))
+                GameActivity_finish(androidApp->activity);
             t1 = t2;
 
             if (eglSwapBuffers(eglDisplay, eglSurface) == EGL_FALSE) {

@@ -17,6 +17,7 @@ public:
 	virtual void processEvent(const Event& event) {
 		if (activeScreen) activeScreen->processEvent(event);
 	}
+	virtual bool requestQuit(const std::function<void()>& quitCallback) { return true; }
 
 	[[nodiscard]] std::optional<Cursor> queryCursor() const override {
 		if (activeScreen)

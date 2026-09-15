@@ -11,6 +11,7 @@ public:
 	~Screen() override = default;
 
 	virtual void processEvent(const Event& event) { uiManager.processEvent(event); }
+	virtual bool requestQuit(const std::function<void()>& quitCallback) { return true; }
 	virtual void update(microseconds dt) { uiManager.update(dt); }
 	virtual void render() { uiManager.render(); }
 

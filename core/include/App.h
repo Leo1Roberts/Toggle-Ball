@@ -3,7 +3,7 @@
 
 #include "ui/UIManager.h"
 
-class AbstractWindow;
+struct AbstractWindow;
 class AppMode;
 class FPSOverlay;
 
@@ -27,16 +27,19 @@ public:
 	App(const App&) = delete;
 	App& operator=(const App&) = delete;
 
-	void tick(microseconds dt);
+	bool tick(microseconds dt);
 
 	void resizeWindow();
 	void updateDPIScale();
 
 	void processEvent(const Event& event);
+	void requestQuit();
 
 	std::unique_ptr<AbstractWindow> window;
 
 private:
+	bool quit = false;
+
 	std::unique_ptr<AppMode> content;
 
 	UIManager overlayUI;

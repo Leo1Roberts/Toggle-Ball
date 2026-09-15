@@ -16,8 +16,6 @@ public:
 		return currentlyFullscreen;
 	}
 
-	void close() override { GameActivity_finish(app->activity); }
-
 	void toggleFullscreen() override;
 
     void updateWindowSize() override {
