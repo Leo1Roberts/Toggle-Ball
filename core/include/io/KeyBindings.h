@@ -32,6 +32,8 @@ enum class KeyCode : int {
 	Numpad0, Numpad1, Numpad2, Numpad3, Numpad4,
 	Numpad5, Numpad6, Numpad7, Numpad8, Numpad9,
 
+	Minus, Equals,
+
 	F1, F2, F3, F4, F5, F6, F7, F8, F9, F10,
 	F11, F12, F13, F14, F15, F16, F17, F18, F19, F20,
 	F21, F22, F23, F24, F25,
@@ -62,6 +64,8 @@ struct std::hash<KeyChord> {
 enum class ActionCode {
 	Quit,
 	Fullscreen,
+
+	DecreaseUIScale, IncreaseUIScale,
 
 	Save, SaveAs, Open,
 
@@ -110,6 +114,8 @@ private:
 	static constexpr Entry entries[] = {
 		{ ActionCode::Quit,                        "Quit"                          },
 		{ ActionCode::Fullscreen,                  "Fullscreen"                    },
+		{ ActionCode::DecreaseUIScale,             "Decrease UI scale"             },
+		{ ActionCode::IncreaseUIScale,             "Increase UI scale"             },
 		{ ActionCode::Save,                        "Save"                          },
 		{ ActionCode::SaveAs,                      "Save as"                       },
 		{ ActionCode::Open,                        "Open"                          },
@@ -190,6 +196,9 @@ private:
 	    { KeyCode::Numpad4, "NUMPAD4" }, { KeyCode::Numpad5, "NUMPAD5" },
 	    { KeyCode::Numpad6, "NUMPAD6" }, { KeyCode::Numpad7, "NUMPAD7" },
 	    { KeyCode::Numpad8, "NUMPAD8" }, { KeyCode::Numpad9, "NUMPAD9" },
+
+		{ KeyCode::Minus,  "MINUS"  },
+		{ KeyCode::Equals, "EQUALS" },
 
 	    { KeyCode::F1,  "F1"  }, { KeyCode::F2,  "F2"  }, { KeyCode::F3,  "F3"  },
 	    { KeyCode::F4,  "F4"  }, { KeyCode::F5,  "F5"  }, { KeyCode::F6,  "F6"  },

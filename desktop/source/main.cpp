@@ -142,6 +142,9 @@ void APIENTRY glDebugOutput(GLenum source,
 	case GLFW_KEY_KP_8: return KeyCode::Numpad8;
 	case GLFW_KEY_KP_9: return KeyCode::Numpad9;
 
+	case GLFW_KEY_MINUS: return KeyCode::Minus;
+	case GLFW_KEY_EQUAL: return KeyCode::Equals;
+
 	case GLFW_KEY_F1:  return KeyCode::F1;
 	case GLFW_KEY_F2:  return KeyCode::F2;
 	case GLFW_KEY_F3:  return KeyCode::F3;

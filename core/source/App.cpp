@@ -95,6 +95,14 @@ void App::processEvent(const Event& event) {
 				case ActionCode::Fullscreen:
 					window->toggleFullscreen();
 					return;
+				case ActionCode::DecreaseUIScale:
+					Settings::Sizes.uiScale = std::max(0.1f, Settings::Sizes.uiScale - 0.1f);
+					resizeWindow();
+					return;
+				case ActionCode::IncreaseUIScale:
+					Settings::Sizes.uiScale = std::min(Settings::Sizes.uiScale + 0.1f, 3.f);
+					resizeWindow();
+					return;
 				default:;
 				}
 			}
