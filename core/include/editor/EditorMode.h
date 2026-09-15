@@ -9,11 +9,13 @@
 
 class EditorMode : public AppMode {
 public:
-	EditorMode() { openEntryScreen(); }
+	EditorMode(const std::function<void()>& quitCallback);
 
-	void processEvent(const Event& event) override;
-	bool requestQuit(const std::function<void()>& quitCallback) override;
 	void tick(microseconds dt) override;
+	void resize(int windowWidth, int windowHeight, float windowDPI) override;
+	void processEvent(const Event& event) override;
+	bool requestQuit() override;
+	[[nodiscard]] std::optional<Cursor> queryCursor() const override;
 
 private:
 	void startEditing(const std::string& levelName);
@@ -26,6 +28,11 @@ private:
 	std::unique_ptr<EditorEntryScreen> editorEntryScreen;
 	std::unique_ptr<EditorScreen> editorScreen;
 	std::unique_ptr<PlayTestScreen> playTestScreen;
+
+	const std::function<void()>& quitCallback;
+
+	UIManager uiManager;
+	UIDialogue* confirmQuitDialogue;
 };
 
 

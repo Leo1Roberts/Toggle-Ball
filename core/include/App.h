@@ -22,7 +22,7 @@ struct ScreenVertex {
 
 class App {
 public:
-	App(std::unique_ptr<AbstractWindow> appWindow, std::unique_ptr<AppMode> appMode);
+	App(std::unique_ptr<AbstractWindow> appWindow);
 
 	App(const App&) = delete;
 	App& operator=(const App&) = delete;

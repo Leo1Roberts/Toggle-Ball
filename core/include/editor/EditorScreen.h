@@ -21,7 +21,7 @@ public:
 	EditorScreen(std::unique_ptr<LevelDescriptor> levelToEdit, const std::function<void()>& testLevelCallback, const std::function<void()>& openLevelCallback);
 
 	void processEvent(const Event& event) override;
-	bool requestQuit(const std::function<void()>& quitCallback) override;
+	bool canQuit() override;
 	void update(microseconds dt) override;
 	void render() override;
 
@@ -57,7 +57,6 @@ private:
 	UIText* unsavedIndicator;
 	void saveAs();
 	void requestOpenLevel();
-	UIDialogue* confirmQuitDialogue = nullptr;
 
 	TransformMode transformMode{ctx};
 	ShapeMode shapeMode{ctx};

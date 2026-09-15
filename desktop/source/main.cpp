@@ -407,7 +407,7 @@ int main() {
 	Fonts::load();
 	Cursor::loadTextures();
 
-	App app(std::make_unique<GlfwWindow>(rawWindow), std::make_unique<EditorMode>());
+	App app(std::make_unique<GlfwWindow>(rawWindow));
 
 	glfwSetWindowUserPointer(rawWindow, &app);
 

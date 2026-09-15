@@ -49,8 +49,13 @@ bool UIManager::processEvent(const Event& event) {
 		std::vector<UINode*> focusableAncestors;
 		auto node = focusedNode;
 		while (node) {
-			if (node->isFocusable())
+			if (node->isFocusable()) {
 				focusableAncestors.push_back(node);
+				if (!node->isActive()) {
+					focusedNode = nullptr;
+					return false;
+				}
+			}
 			node = node->getParent();
 		}
 

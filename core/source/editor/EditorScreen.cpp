@@ -527,79 +527,8 @@ void EditorScreen::processEvent(const Event& event) {
 	}
 }
 
-bool EditorScreen::requestQuit(const std::function<void()>& quitCallback) {
-	if (scene.isSaved())
-		return true;
-
-	if (!confirmQuitDialogue) {
-		confirmQuitDialogue = uiManager.addNode<UIDialogue>();
-
-		auto closeDialogue = [this] {
-			auto dialogue = confirmQuitDialogue;
-			confirmQuitDialogue = nullptr;
-			uiManager.removeNode(dialogue);
-		};
-
-		confirmQuitDialogue->setOnReturn(closeDialogue);
-		confirmQuitDialogue->setOnConfirm(closeDialogue);
-		confirmQuitDialogue->setLayout({
-			.widthMode  = SizingMode::Absolute, .width = 400.f,
-			.heightMode = SizingMode::Wrap,
-			.padding = {15.f, 20.f}
-		});
-
-		auto content = confirmQuitDialogue->addChild<UIVerticalList>(20.f, 0.f);
-		content->setLayout({
-			.anchor = Anchor::Centre,
-			.widthMode  = SizingMode::Stretch,
-			.heightMode = SizingMode::Wrap,
-		});
-
-		auto title = content->addChild<UIText>("There are unsaved changes", TextStyle{
-			.font = FontId::Bahnschrift,
-			.fontSize = 32.f,
-			.color = Color::LightGrey,
-			.alignHorizontal = TextAlignHorizontal::Centre,
-			.alignVertical = TextAlignVertical::Middle
-		});
-		title->setLayout({ .heightMode = SizingMode::Wrap });
-
-		auto buttonsRow = content->addChild<UIHorizontalList>(0.f, 0.f);
-		buttonsRow->setLayout({
-			.widthMode  = SizingMode::Stretch,
-			.heightMode = SizingMode::Wrap,
-		});
-
-		auto quit = buttonsRow->addChild<UIButton>("Quit anyway", Theme::SecondaryOutline);
-		quit->setLayout({
-			.widthMode  = SizingMode::Wrap,
-			.heightMode = SizingMode::Wrap,
-			.padding = glm::vec2(10.f)
-		});
-		quit->setTextLayout({
-			.widthMode  = SizingMode::Wrap,
-			.heightMode = SizingMode::Wrap,
-		});
-		quit->setOnTrigger(quitCallback);
-
-		buttonsRow->addChild<UIContainer>(); // Spacer
-
-		auto cancel = buttonsRow->addChild<UIButton>("Cancel", Theme::PrimaryButton);
-		cancel->setLayout({
-			.widthMode  = SizingMode::Wrap,
-			.heightMode = SizingMode::Wrap,
-			.padding = glm::vec2(10.f)
-		});
-		cancel->setTextLayout({
-			.widthMode  = SizingMode::Wrap,
-			.heightMode = SizingMode::Wrap,
-		});
-		cancel->setOnTrigger(closeDialogue);
-
-		uiManager.changeFocus(confirmQuitDialogue, true);
-	}
-
-	return false;
+bool EditorScreen::canQuit() {
+	return scene.isSaved();
 }
 
 

@@ -2,6 +2,8 @@
 
 #include "system/AbstractWindow.h"
 #include "AppMode.h"
+#include "editor/EditorMode.h"
+#include "game/GameMode.h"
 #include "ui/FPSOverlay.h"
 
 
@@ -13,10 +15,16 @@ void ScreenVertex::setupLayout() {
 	glEnableVertexAttribArray(1);
 }
 
-App::App(std::unique_ptr<AbstractWindow> appWindow, std::unique_ptr<AppMode> appMode) : window(std::move(appWindow)), content(std::move(appMode)) {
+App::App(std::unique_ptr<AbstractWindow> appWindow) : window(std::move(appWindow)) {
 	// auto fps = std::make_unique<FPSOverlay>();
 	// fps->setLayout({ .margin = glm::vec2(10.f) });
 	// fpsOverlay = overlayUI.addNode(std::move(fps));
+
+#if defined(PLATFORM_ANDROID)
+	content = std::make_unique<GameMode>();
+#else
+	content = std::make_unique<EditorMode>([this] { quit = true; } );
+#endif
 
 	quadVertices.emplace_back(glm::vec2(-1, 1), glm::vec2(0, 1));
 	quadVertices.emplace_back(glm::vec2(-1, -1), glm::vec2(0, 0));
@@ -113,6 +121,6 @@ void App::processEvent(const Event& event) {
 }
 
 void App::requestQuit() {
-	if (content->requestQuit([this] { quit = true; }))
+	if (content->requestQuit())
 		quit = true;
 }
