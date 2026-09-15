@@ -6,9 +6,6 @@
 #include "game/GameMode.h"
 #include "editor/EditorMode.h"
 
-#include <game-activity/GameActivity.cpp>
-#include <game-activity/native_app_glue/android_native_app_glue.c>
-#include <game-text-input/gametextinput.cpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/norm.hpp"
 
@@ -68,7 +65,7 @@ void handle_cmd(android_app *androidApp, int cmd) {
             Textures::load();
             Fonts::load();
 
-            androidApp->userData = new App(std::make_unique<AndroidWindow>(androidApp), std::make_unique<GameMode>());
+            androidApp->userData = new App(std::make_unique<AndroidWindow>(androidApp));
         }
     } break;
     case APP_CMD_TERM_WINDOW: {

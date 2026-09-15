@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <ranges>
 
 
 namespace AssetManager {
@@ -24,8 +25,19 @@ namespace AssetManager {
 		AAsset* asset = AAssetManager_open(androidAssetManager, path.c_str(), AASSET_MODE_BUFFER);
 		if (asset) {
 			size_t size = AAsset_getLength(asset);
-			buffer.resize(size);
-			AAsset_read(asset, buffer.data(), size);
+
+			if (type == FileType::Text) {
+				std::vector<byte> rawBuffer;
+				rawBuffer.resize(size);
+				AAsset_read(asset, rawBuffer.data(), size);
+				buffer = rawBuffer
+				         | std::views::filter([](byte b) { return (char)b != '\r'; })
+				         | std::ranges::to<std::vector<byte>>();
+			} else {
+				buffer.resize(size);
+				AAsset_read(asset, buffer.data(), size);
+			}
+
 			AAsset_close(asset);
 		}
 
