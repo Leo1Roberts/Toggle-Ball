@@ -27,7 +27,10 @@ add_executable(toggleball_desktop ${SOURCES})
 target_include_directories(toggleball_desktop PRIVATE include)
 
 # --- ASSETS PATH MACRO ---
-target_compile_definitions(core PUBLIC ASSETS_PATH_MACRO=\"${REPO_ROOT}/core/assets/\")
+target_compile_definitions(core PUBLIC
+    $<$<CONFIG:Release>:ASSETS_PATH_MACRO="assets/">
+    $<$<NOT:$<CONFIG:Release>>:ASSETS_PATH_MACRO="${REPO_ROOT}/core/assets/">
+)
 
 # --- INCLUDES & LINKING ---
 target_link_libraries(toggleball_desktop PRIVATE core)
@@ -40,6 +43,10 @@ if(WIN32)
     target_include_directories(toggleball_desktop PRIVATE "${GLFW_DIR}/include")
     target_link_directories(toggleball_desktop PRIVATE "${GLFW_DIR}/lib")
     target_link_libraries(toggleball_desktop PRIVATE glfw3 opengl32)
+
+    target_link_options(toggleball_desktop PRIVATE
+        $<$<CONFIG:Release>:-mwindows>
+    )
 else()
     target_link_libraries(toggleball_desktop PRIVATE
         glfw
