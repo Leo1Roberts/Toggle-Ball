@@ -46,6 +46,9 @@ if(WIN32)
 
     target_link_options(toggleball_desktop PRIVATE
         $<$<CONFIG:Release>:-mwindows>
+        $<$<CONFIG:Release>:-static-libgcc>
+        $<$<CONFIG:Release>:-static-libstdc++>
+        $<$<CONFIG:Release>:-static>
     )
 else()
     target_link_libraries(toggleball_desktop PRIVATE
