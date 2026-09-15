@@ -535,8 +535,9 @@ bool EditorScreen::requestQuit(const std::function<void()>& quitCallback) {
 		confirmQuitDialogue = uiManager.addNode<UIDialogue>();
 
 		auto closeDialogue = [this] {
-			uiManager.removeNode(confirmQuitDialogue);
+			auto dialogue = confirmQuitDialogue;
 			confirmQuitDialogue = nullptr;
+			uiManager.removeNode(dialogue);
 		};
 
 		confirmQuitDialogue->setOnReturn(closeDialogue);

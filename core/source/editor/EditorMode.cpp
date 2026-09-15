@@ -27,26 +27,44 @@ bool EditorMode::requestQuit(const std::function<void()>& quitCallback) {
 }
 
 
+void EditorMode::tick(microseconds dt) {
+	if (scheduledScreenChange) {
+		scheduledScreenChange();
+		scheduledScreenChange = nullptr;
+	}
+
+	if (activeScreen) {
+		activeScreen->update(dt);
+		activeScreen->render();
+	}
+}
+
+
 void EditorMode::openEntryScreen() {
-	editorScreen.reset();
-	editorEntryScreen = std::make_unique<EditorEntryScreen>([this](const std::string& levelName) { startEditing(levelName); });
+	editorEntryScreen = std::make_unique<EditorEntryScreen>(
+		[this](const std::string& levelName) { 	scheduledScreenChange = [this, levelName] { startEditing(levelName); }; });
 	resizeToMatchActiveScreen(editorEntryScreen.get());
+	editorScreen.reset();
 	activeScreen = editorEntryScreen.get();
 }
 
 void EditorMode::startEditing(const std::string& levelName) {
-	editorScreen = std::make_unique<EditorScreen>(LevelDescriptor::load(levelName), [this] { testLevel(); }, [this] { openEntryScreen(); });
+	editorScreen = std::make_unique<EditorScreen>(LevelDescriptor::load(levelName),
+		[this] { scheduledScreenChange = [this] { testLevel(); }; },
+		[this] { scheduledScreenChange = [this] { openEntryScreen(); }; });
 	resizeToMatchActiveScreen(editorScreen.get());
 	activeScreen = editorScreen.get();
 }
 
 void EditorMode::resumeEditing() {
 	resizeToMatchActiveScreen(editorScreen.get());
+	playTestScreen.reset();
 	activeScreen = editorScreen.get();
 }
 
 void EditorMode::testLevel() {
-	playTestScreen = std::make_unique<PlayTestScreen>(*editorScreen->getLevel(), [this] { resumeEditing(); });
+	playTestScreen = std::make_unique<PlayTestScreen>(*editorScreen->getLevel(),
+		[this] { scheduledScreenChange = [this] { resumeEditing(); }; });
 	resizeToMatchActiveScreen(playTestScreen.get());
 	activeScreen = playTestScreen.get();
 }

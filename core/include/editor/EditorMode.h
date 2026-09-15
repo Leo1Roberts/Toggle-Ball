@@ -13,12 +13,15 @@ public:
 
 	void processEvent(const Event& event) override;
 	bool requestQuit(const std::function<void()>& quitCallback) override;
+	void tick(microseconds dt) override;
 
 private:
 	void startEditing(const std::string& levelName);
 	void resumeEditing();
 	void testLevel();
 	void openEntryScreen();
+
+	std::function<void()> scheduledScreenChange;
 
 	std::unique_ptr<EditorEntryScreen> editorEntryScreen;
 	std::unique_ptr<EditorScreen> editorScreen;
