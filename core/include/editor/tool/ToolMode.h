@@ -1,6 +1,7 @@
 #ifndef TOOL_MODE_H
 #define TOOL_MODE_H
 
+#include "editor/operation/DrawOperation.h"
 #include "editor/operation/ManipulateCapsOperation.h"
 #include "editor/operation/ManipulateMidsectionOperation.h"
 #include "editor/operation/Operation.h"
@@ -34,6 +35,7 @@ public:
 	[[nodiscard]] bool hasActiveOperation() const { return activeOperation != nullptr; }
 	[[nodiscard]] bool shapeTypeMayHaveChanged() const {
 		return
+		dynamic_cast<DrawOperation*>(activeOperation.get()) ||
 		dynamic_cast<ManipulateMidsectionOperation*>(activeOperation.get()) ||
 		dynamic_cast<ManipulateCapOperation*>(activeOperation.get()) ||
 		dynamic_cast<ManipulateCapsOperation*>(activeOperation.get());
