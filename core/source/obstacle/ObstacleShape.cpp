@@ -7,10 +7,10 @@
 #include "Settings.h"
 #include "utilities/Utilities.h"
 
-#define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/norm.hpp"
 #include <iomanip>
 #include <sstream>
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/gtx/norm.hpp"
 
 
 std::string AbstractShapeSpec::serialize() const {
@@ -733,10 +733,16 @@ glm::vec2 SegmentSpec::getMidsectionSpineVector(glm::vec2 position, glm::mat2 ro
 	auto leftCapPos = position + rotation * leftCap;
 	auto rightCapPos = position + rotation * rightCap;
 
-	glm::vec2 seg = rightCapPos - leftCapPos;
-	glm::vec2 v = point - leftCapPos;
-	float t = dot(v, seg) / dot(seg, seg);
-	glm::vec2 closestPointOnSegment = leftCapPos + t * seg;
+	auto seg = rightCapPos - leftCapPos;
+	float segLengthSq = length2(seg);
+	float t;
+	if (segLengthSq < 0.00000001f)
+		t = 0.f;
+	else {
+		auto v = point - leftCapPos;
+		t = dot(v, seg) / segLengthSq;
+	}
+	auto closestPointOnSegment = leftCapPos + t * seg;
 
 	return point - closestPointOnSegment;
 }
@@ -798,8 +804,14 @@ std::vector<glm::vec2> SegmentSpec::getPointsOnCircle(const ObstacleKinematicSta
 	auto d = B - A;
 	auto f = A - circleCentre;
 
-	float a = glm::dot(d, d);
-	float b = 2.f * glm::dot(f, d);
+	float a = dot(d, d);
+	if (a < 0.00000001f) {
+		if (length2(circleCentre - pos) - circleRadius * circleRadius < 0.00000001f)
+			return {pos};
+		return {};
+	}
+
+	float b = 2.f * dot(f, d);
 	float c = glm::dot(f, f) - circleRadius * circleRadius;
 
 	float discriminant = b * b - 4.f * a * c;
