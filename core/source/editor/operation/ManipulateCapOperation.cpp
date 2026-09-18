@@ -22,7 +22,7 @@ std::vector<BindingHint> ManipulateCapOperation::getBindingHints() const {
 		{{KeyChord(KeyCode::Unknown, MOD_SHIFT), "Preserve shape"}};
 
 	if (preserveShape)
-		hints.emplace_back(KeyChord(KeyCode::Unknown, MOD_CTRL),  "Symmetrical");
+		hints.emplace_back(KeyChord(KeyCode::Unknown, MOD_CTRL), "Symmetrical");
 	else if (ctx.quickSettings.shape.alignWithTangent)
 		hints.emplace_back(KeyChord(KeyCode::Unknown, MOD_ALT), "Use snapped tangent");
 
@@ -173,22 +173,24 @@ void ManipulateCapOperation::applyOperationWithSnapResult(const SnapResult& prov
 					rightLength += diff;
 
 			float positionOffset = 0.f;
-			if (leftLength < 0.f) {
-				rightLength += leftLength;
-				positionOffset = leftLength;
-				leftLength = 0.f;
-			} else if (rightLength < 0.f) {
-				leftLength += rightLength;
-				positionOffset = rightLength;
-				rightLength = 0.f;
+			if (symmetrical) {
+				if (leftLength < 0.f) {
+					rightLength += leftLength;
+					positionOffset = -leftLength;
+					leftLength = 0.f;
+				} else if (rightLength < 0.f) {
+					leftLength += rightLength;
+					positionOffset = -rightLength;
+					rightLength = 0.f;
+				}
 			}
 
 			obstacle.descriptor->shape = std::make_unique<SegmentSpec>(minorRadius, leftLength, rightLength);
 
 			auto dirVec = glm::vec2(std::cos(dirAngle), std::sin(dirAngle));
-			if (symmetrical) {
+			if (symmetrical)
 				targetPosition = initialPosition + dirVec * positionOffset;
-			} else
+			else
 				targetPosition = fixedCapPlanarPosition + dirVec * (leftCap ? -rightLength : leftLength);
 		} else {
 			if (symmetrical) {
