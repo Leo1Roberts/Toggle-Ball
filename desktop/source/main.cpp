@@ -330,6 +330,14 @@ static void cursorPosCallback(GLFWwindow* window, double x, double y) {
 	app->processEvent(PointerEvent(0, mousePosition, dragging ? PointerAction::Drag : PointerAction::Move, PointerButton::Unknown, getUpdatedMods(window)));
 }
 
+static void cursorEnterExitCallback(GLFWwindow* window, int entered) {
+	auto* app = (App*)glfwGetWindowUserPointer(window);
+	if (!app) return;
+
+	if (!entered)
+		glfwSetCursor(window, nullptr);
+}
+
 static void scrollCallback(GLFWwindow* window, double xOffset, double yOffset) {
 	auto* app = (App*)glfwGetWindowUserPointer(window);
 	if (!app) return;
@@ -390,6 +398,7 @@ int main() {
 	glfwSetCharCallback(rawWindow, charCallback);
 	glfwSetMouseButtonCallback(rawWindow, mouseButtonCallback);
 	glfwSetCursorPosCallback(rawWindow, cursorPosCallback);
+	glfwSetCursorEnterCallback(rawWindow, cursorEnterExitCallback);
 	glfwSetScrollCallback(rawWindow, scrollCallback);
 
 	glfwSetFramebufferSizeCallback(rawWindow, framebufferSizeCallback);
