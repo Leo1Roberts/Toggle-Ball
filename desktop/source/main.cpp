@@ -7,6 +7,8 @@
 #include <cfenv>
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/norm.hpp"
+
+#include <csignal>
 #include <iostream>
 
 inline unsigned max_unsigned(unsigned a, unsigned b) { return (a > b) ? a : b; }
@@ -360,6 +362,7 @@ static void windowContentScaleCallback(GLFWwindow* window, float, float) {
 int main() {
 #if defined(PLATFORM_LINUX)
 	feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+	signal(SIGPIPE, SIG_IGN);
 #endif
 
 	if (!glfwInit())
@@ -375,8 +378,7 @@ int main() {
 
 	GLFWwindow* rawWindow = glfwCreateWindow(width, height, "Toggle Ball", nullptr, nullptr);
 
-	if (!rawWindow)
-	{
+	if (!rawWindow) {
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
@@ -385,14 +387,10 @@ int main() {
 
 	glfwSwapInterval(1);
 
-	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) // For GLAD 2 use the following instead: gladLoadGL(glfwGetProcAddress)
-	{
+	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) { // For GLAD 2 use the following instead: gladLoadGL(glfwGetProcAddress)
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
-
-	// glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-	// glfwSetInputMode(window, GLFW_LOCK_KEY_MODS, GLFW_TRUE);
 
 	glfwSetKeyCallback(rawWindow, keyCallback);
 	glfwSetCharCallback(rawWindow, charCallback);
