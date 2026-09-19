@@ -173,16 +173,14 @@ void ManipulateCapOperation::applyOperationWithSnapResult(const SnapResult& prov
 					rightLength += diff;
 
 			float positionOffset = 0.f;
-			if (symmetrical) {
-				if (leftLength < 0.f) {
-					rightLength += leftLength;
-					positionOffset = -leftLength;
-					leftLength = 0.f;
-				} else if (rightLength < 0.f) {
-					leftLength += rightLength;
-					positionOffset = -rightLength;
-					rightLength = 0.f;
-				}
+			if (leftLength < 0.f) {
+				rightLength += leftLength;
+				positionOffset = -leftLength;
+				leftLength = 0.f;
+			} else if (rightLength < 0.f) {
+				leftLength += rightLength;
+				positionOffset = -rightLength;
+				rightLength = 0.f;
 			}
 
 			obstacle.descriptor->shape = std::make_unique<SegmentSpec>(minorRadius, leftLength, rightLength);
